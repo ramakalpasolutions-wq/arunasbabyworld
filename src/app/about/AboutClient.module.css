@@ -1,0 +1,200 @@
+.about { overflow-x: hidden; }
+
+.sectionTitle { font-size: 2rem; margin-bottom: 10px; }
+.sectionSub { color: var(--text-secondary); margin-bottom: 50px; }
+
+/* Hero */
+.hero {
+  background: linear-gradient(135deg, #fdf6ff 0%, #fff0f7 100%);
+  padding: 80px 0;
+}
+
+.heroContent {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 60px;
+  align-items: center;
+}
+
+.tag {
+  display: inline-block;
+  background: var(--primary-light);
+  color: var(--primary);
+  font-size: 0.78rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  padding: 4px 14px;
+  border-radius: var(--radius-full);
+  margin-bottom: 16px;
+}
+
+.heroText h1 { font-size: clamp(1.8rem, 3.5vw, 2.8rem); margin-bottom: 20px; line-height: 1.2; }
+.heroText p { color: var(--text-secondary); line-height: 1.8; margin-bottom: 16px; font-size: 0.95rem; }
+
+.heroVisual { display: flex; flex-direction: column; gap: 16px; }
+
+.visualCard {
+  background: linear-gradient(135deg, #ff6b9d15, #c44dff10);
+  border-radius: var(--radius-xl);
+  padding: 28px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  box-shadow: var(--shadow-card);
+  transition: var(--transition);
+}
+
+.visualCard:hover { transform: translateX(8px); box-shadow: var(--shadow-md); }
+.visualCard span { font-size: 2.5rem; }
+.visualCard h3 { font-size: 1.2rem; margin-bottom: 4px; }
+.visualCard p { color: var(--text-secondary); font-size: 0.85rem; }
+
+/* Stats */
+.stats {
+  padding: 70px 0;
+  background: var(--text-primary);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 20px;
+}
+
+.statCard {
+  text-align: center;
+  padding: 24px 12px;
+}
+
+.statIcon { font-size: 2rem; display: block; margin-bottom: 12px; }
+
+.statNumber {
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: white;
+  display: block;
+  margin-bottom: 6px;
+  font-family: var(--font-display);
+}
+
+.statLabel {
+  font-size: 0.78rem;
+  color: rgba(255,255,255,0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+/* Mission */
+.missionSection { padding: 80px 0; background: white; }
+
+.missionGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 28px;
+}
+
+.missionCard {
+  border-radius: var(--radius-xl);
+  padding: 40px;
+  position: relative;
+  overflow: hidden;
+}
+
+.missionCard1 { background: linear-gradient(135deg, #fff0f7, #ffe4ef); }
+.missionCard2 { background: linear-gradient(135deg, #f3f0ff, #ede9fe); }
+
+.missionIcon { font-size: 3rem; margin-bottom: 20px; display: block; }
+.missionCard h2 { font-size: 1.6rem; margin-bottom: 16px; }
+.missionCard p { color: var(--text-secondary); line-height: 1.8; }
+
+/* Why */
+.whySection { padding: 80px 0; background: var(--bg-secondary); }
+
+.whyGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.whyCard {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: 32px 24px;
+  box-shadow: var(--shadow-card);
+  transition: var(--transition);
+  text-align: center;
+}
+
+.whyCard:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+
+.whyIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.8rem;
+  margin: 0 auto 16px;
+  transition: transform 0.3s;
+}
+
+.whyCard:hover .whyIcon { transform: scale(1.15) rotate(-5deg); }
+
+.whyCard h3 { font-family: var(--font-body); font-size: 1rem; font-weight: 700; margin-bottom: 10px; }
+.whyCard p { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.7; }
+
+/* Team */
+.teamSection { padding: 80px 0; }
+
+.teamGrid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.teamCard {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: 40px 28px;
+  text-align: center;
+  box-shadow: var(--shadow-card);
+  transition: var(--transition);
+  border-top: 4px solid var(--primary);
+}
+
+.teamCard:hover { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+
+.teamAvatar {
+  width: 80px;
+  height: 80px;
+  background: var(--primary-light);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  margin: 0 auto 16px;
+}
+
+.teamCard h3 { font-size: 1.15rem; margin-bottom: 4px; }
+.teamRole { color: var(--primary); font-size: 0.82rem; font-weight: 700; margin-bottom: 12px; }
+.teamDesc { font-size: 0.85rem; color: var(--text-secondary); line-height: 1.7; }
+
+@media (max-width: 1100px) {
+  .statsGrid { grid-template-columns: repeat(3, 1fr); }
+}
+
+@media (max-width: 768px) {
+  .heroContent { grid-template-columns: 1fr; gap: 32px; }
+  .missionGrid { grid-template-columns: 1fr; }
+  .whyGrid { grid-template-columns: repeat(2, 1fr); }
+  .teamGrid { grid-template-columns: 1fr; max-width: 400px; margin: 0 auto; }
+  .statsGrid { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 480px) {
+  .whyGrid { grid-template-columns: 1fr; }
+  .statsGrid { grid-template-columns: repeat(2, 1fr); }
+}

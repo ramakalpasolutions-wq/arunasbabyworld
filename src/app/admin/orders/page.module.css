@@ -1,0 +1,114 @@
+.customerCell {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.customerEmail {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+}
+
+.paid {
+  color: #10b981;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.unpaid {
+  color: #f59e0b;
+  font-size: 0.82rem;
+  font-weight: 700;
+}
+
+.statusBadge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  display: inline-block;
+  white-space: nowrap;
+}
+
+.statusSelect {
+  padding: 5px 8px;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  background: white;
+  cursor: pointer;
+  color: #333;
+  outline: none;
+  min-width: 100px;
+}
+
+.statusSelect:focus {
+  border-color: #ff6b9d;
+}
+
+/* ===== STATUS COUNT CARDS ===== */
+.statusCards {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.statusCard {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 14px 8px;
+  background: white;
+  border: 1.5px solid #f3f4f6;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+}
+
+.statusCard:hover {
+  border-color: var(--s-color);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+}
+
+.statusCardActive {
+  border-color: var(--s-color) !important;
+  background: color-mix(in srgb, var(--s-color) 8%, white);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important;
+}
+
+.statusCardEmoji {
+  font-size: 1.4rem;
+}
+
+.statusCardLabel {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #555;
+  text-align: center;
+}
+
+.statusCardCount {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 10px;
+  min-width: 24px;
+  text-align: center;
+}
+
+/* ===== RESPONSIVE ===== */
+@media (max-width: 1024px) {
+  .statusCards {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .statusCards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

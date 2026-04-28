@@ -1,0 +1,557 @@
+.header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  transition: var(--transition);
+}
+
+.scrolled {
+  box-shadow: var(--shadow-lg);
+}
+
+/* ===== TOP STRIP ===== */
+.topStrip {
+  background: linear-gradient(135deg, var(--text-primary), #2d1b69);
+  color: white;
+  padding: 6px 0;
+  font-size: 0.8rem;
+}
+
+.topContent {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.topLinks {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+.topLinks a,
+.topLinks span {
+  color: rgba(255, 255, 255, 0.85);
+  transition: var(--transition-fast);
+  cursor: pointer;
+}
+
+.topLinks a:hover {
+  color: var(--primary);
+}
+
+.stripBtn {
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.85);
+  cursor: pointer;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+}
+
+.stripBtn:hover {
+  color: var(--primary);
+}
+
+/* ===== MAIN HEADER ===== */
+.mainHeader {
+  background: white;
+  border-bottom: 1px solid var(--border-light);
+  padding: 12px 0;
+}
+
+.mainContent {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+/* ===== LOGO ===== */
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+  text-decoration: none;
+}
+
+.logoIcon {
+  font-size: 2rem;
+}
+
+.logoText {
+  display: flex;
+  flex-direction: column;
+}
+
+.logoMain {
+  font-family: var(--font-display);
+  font-size: 1.6rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1;
+}
+
+.logoSub {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+/* ===== SEARCH ===== */
+.searchForm {
+  flex: 1;
+}
+
+.searchBox {
+  display: flex;
+  align-items: center;
+  border: 2px solid var(--border);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  transition: var(--transition);
+  background: var(--bg-secondary);
+}
+
+.searchBox:focus-within {
+  border-color: var(--primary);
+  background: white;
+  box-shadow: 0 0 0 4px rgba(255, 107, 157, 0.1);
+}
+
+.searchIcon {
+  padding: 0 12px;
+  font-size: 1rem;
+}
+
+.searchInput {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 10px 0;
+  font-size: 0.9rem;
+  color: var(--text-primary);
+  outline: none;
+}
+
+.searchInput::placeholder {
+  color: var(--text-muted);
+}
+
+.searchBtn {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  color: white;
+  border: none;
+  font-weight: 600;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: var(--transition);
+  font-family: var(--font-body);
+  white-space: nowrap;
+}
+
+.searchBtn:hover {
+  opacity: 0.9;
+}
+
+/* ===== ACTIONS ===== */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.actionBtn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 12px;
+  border-radius: var(--radius-md);
+  position: relative;
+  transition: var(--transition);
+  cursor: pointer;
+  text-decoration: none;
+}
+
+.actionBtn:hover {
+  background: var(--primary-light);
+}
+
+.actionIcon {
+  font-size: 1.4rem;
+  line-height: 1;
+}
+
+.actionLabel {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  white-space: nowrap;
+}
+
+/* ===== BADGE ===== */
+.badge {
+  position: absolute;
+  top: 0px;
+  right: 4px;
+  min-width: 20px;
+  height: 20px;
+  background: var(--secondary);
+  color: white;
+  border-radius: 10px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 4px;
+  border: 2px solid white;
+}
+
+.badgePrimary {
+  background: var(--primary);
+}
+
+/* ===== AVATAR ===== */
+.avatar {
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+/* ===== CART BOUNCE ===== */
+.cartBounce {
+  animation: cartBounce 0.5s ease;
+}
+
+@keyframes cartBounce {
+  0%, 100% { transform: scale(1); }
+  30% { transform: scale(1.25); }
+  60% { transform: scale(0.9); }
+  80% { transform: scale(1.1); }
+}
+
+/* ===== MOBILE MENU BUTTON ===== */
+.mobileMenuBtn {
+  display: none;
+  flex-direction: column;
+  gap: 5px;
+  background: none;
+  border: none;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.mobileMenuBtn span {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--text-primary);
+  border-radius: 2px;
+  transition: var(--transition);
+}
+
+/* ===== CATEGORY NAV ===== */
+.categoryNav {
+  background: white;
+  background: linear-gradient(135deg, #219C90, #006989); border-top: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04); 
+}
+
+.navContent {
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.navContent::-webkit-scrollbar {
+  display: none;
+}
+
+.navItem {
+  position: relative;
+  flex-shrink: 0;
+}
+.navLink {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 12px 14px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.9);
+  white-space: nowrap;
+  transition: var(--transition);
+  border-bottom: 2px solid transparent;
+  text-decoration: none;
+}
+
+.navLink:hover {
+  color: #ffffff;
+  border-bottom-color: #E8F5E9;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.navFeatured {
+  color: var(--accent) !important;
+}
+
+.navTrending {
+  color: #FFD700 !important;
+}
+
+.navTrending:hover {
+  color: #ffffff !important;
+}
+
+/* ===== MEGA MENU ===== */
+.megaMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) var(--radius-lg);
+  box-shadow: var(--shadow-xl);
+  min-width: 320px;
+  z-index: 100;
+  animation: megaFadeIn 0.2s ease;
+}
+
+@keyframes megaFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.megaContent {
+  display: flex;
+  gap: 24px;
+  padding: 20px;
+}
+
+.megaCategory h3 {
+  font-size: 1rem;
+  font-family: var(--font-display);
+  margin-bottom: 8px;
+  white-space: nowrap;
+}
+
+.viewAll {
+  font-size: 0.8rem;
+  color: var(--primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.megaLinks {
+  list-style: none;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  flex: 1;
+  padding: 0;
+  margin: 0;
+}
+
+.megaLinks a {
+  display: block;
+  padding: 6px 10px;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  transition: var(--transition-fast);
+  white-space: nowrap;
+  text-decoration: none;
+}
+
+.megaLinks a:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+  padding-left: 14px;
+}
+
+/* ===== MOBILE MENU ===== */
+.mobileMenu {
+  background: white;
+  border-top: 1px solid var(--border);
+  box-shadow: var(--shadow-lg);
+  max-height: 80vh;
+  overflow-y: auto;
+}
+
+.mobileLinks {
+  display: flex;
+  flex-direction: column;
+  padding: 8px 0;
+}
+
+.mobileLink {
+  padding: 14px 20px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: var(--transition-fast);
+  text-decoration: none;
+  display: block;
+}
+
+.mobileLink:hover {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+/* ===== RESPONSIVE TABLET 768px ===== */
+@media (max-width: 768px) {
+  .topStrip {
+    display: none;
+  }
+
+  .mainContent {
+    gap: 12px;
+  }
+
+  .searchForm {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .searchBtn {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+  }
+
+  /* ✅ Show cart and wishlist icons always */
+  .actionLabel {
+    display: none;
+  }
+
+  .actionBtn {
+    padding: 6px 8px;
+  }
+
+  /* ✅ Make icons bigger on mobile */
+  .actionIcon {
+    font-size: 1.6rem;
+  }
+
+  .mobileMenuBtn {
+    display: flex;
+  }
+
+  .actions {
+    gap: 4px;
+  }
+
+  .logoSub {
+    display: none;
+  }
+
+  .logoMain {
+    font-size: 1.3rem;
+  }
+
+  .logoIcon {
+    font-size: 1.6rem;
+  }
+
+  /* ✅ Badge more visible */
+  .badge {
+    min-width: 18px;
+    height: 18px;
+    font-size: 0.6rem;
+    top: -2px;
+    right: 2px;
+  }
+}
+
+/* ===== RESPONSIVE MOBILE 480px ===== */
+@media (max-width: 480px) {
+  .categoryNav {
+    display: none;
+  }
+
+  .mainContent {
+    gap: 8px;
+  }
+
+  .logoMain {
+    font-size: 1.1rem;
+  }
+
+  .logoIcon {
+    font-size: 1.4rem;
+  }
+
+  /* ✅ Keep wishlist, cart, profile visible */
+  .actionBtn {
+    padding: 4px 6px;
+  }
+
+  .actionIcon {
+    font-size: 1.5rem;
+  }
+
+  /* ✅ Search bar smaller on mobile */
+  .searchInput {
+    font-size: 0.8rem;
+    padding: 8px 0;
+  }
+
+  .searchBtn {
+    padding: 8px 10px;
+    font-size: 0.75rem;
+  }
+
+  .searchIcon {
+    padding: 0 8px;
+  }
+}
+
+/* ===== RESPONSIVE SMALL 360px ===== */
+@media (max-width: 360px) {
+  .logoText {
+    display: none;
+  }
+
+  .actionIcon {
+    font-size: 1.4rem;
+  }
+
+  .actions {
+    gap: 2px;
+  }
+
+  .actionBtn {
+    padding: 4px 4px;
+  }
+}

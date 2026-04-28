@@ -1,0 +1,215 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String    @unique
+  password  String
+  phone     String?
+  role      String    @default("user")
+  avatar    String    @default("")
+  isActive  Boolean   @default(true)
+  addresses Address[]
+  wishlist  String[]  @db.ObjectId
+  orders    Order[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+type Address {
+  name      String?
+  phone     String?
+  address   String?
+  city      String?
+  state     String?
+  pincode   String?
+  isDefault Boolean @default(false)
+}
+
+model Category {
+  id          String          @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  slug        String          @unique
+  description String?
+  icon        String?
+  color       String          @default("#ff6b9d")
+  isActive    Boolean         @default(true)
+  order       Int             @default(0)
+  type        String          @default("normal")
+  banner      CategoryBanner?
+  gridImages  CategoryImage[]
+  products    Product[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+type CategoryBanner {
+  url      String?
+  publicId String?
+  title    String?
+  subtitle String?
+}
+
+type CategoryImage {
+  url      String?
+  publicId String?
+  title    String?
+}
+
+model Product {
+  id               String         @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  slug             String         @unique
+  description      String
+  shortDescription String?
+  price            Float
+  discountPrice    Float?
+  discountPercent  Float?
+  images           ProductImage[]
+  categoryId       String         @db.ObjectId
+  category         Category       @relation(fields: [categoryId], references: [id])
+  brand            String?
+  stock            Int            @default(0)
+  sku              String?        @unique
+  tags             String[]
+  features         String[]
+  ageGroup         String?
+  reviews          Review[]
+  rating           Float          @default(0)
+  numReviews       Int            @default(0)
+  isFeatured       Boolean        @default(false)
+  isTrending       Boolean        @default(false)
+  isActive         Boolean        @default(true)
+  weight           Float?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+type ProductImage {
+  url      String?
+  publicId String?
+}
+
+model Review {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  productId String   @db.ObjectId
+  product   Product  @relation(fields: [productId], references: [id])
+  userId    String   @db.ObjectId
+  name      String
+  rating    Int
+  comment   String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Banner {
+  id         String      @id @default(auto()) @map("_id") @db.ObjectId
+  title      String
+  subtitle   String?
+  image      BannerImage?
+  buttonText String      @default("Shop Now")
+  buttonLink String      @default("/products")
+  bgColor    String      @default("#ff6b9d")
+  isActive   Boolean     @default(true)
+  order      Int         @default(0)
+  type       String      @default("hero")
+  emoji      String?
+  price      Float?
+  offer      String?
+  color      String?
+  slug       String?
+  gender     String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+type BannerImage {
+  url      String?
+  publicId String?
+}
+
+model Order {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  userId          String      @db.ObjectId
+  user            User        @relation(fields: [userId], references: [id])
+  orderItems      OrderItem[]
+  shippingAddress ShipAddress
+  paymentMethod   String      @default("Razorpay")
+  paymentResult   PayResult?
+  itemsPrice      Float       @default(0)
+  shippingPrice   Float       @default(0)
+  taxPrice        Float       @default(0)
+  discountAmount  Float       @default(0)
+  totalPrice      Float       @default(0)
+  couponCode      String?
+  isPaid          Boolean     @default(false)
+  paidAt          DateTime?
+  orderStatus     String      @default("Pending")
+  isDelivered     Boolean     @default(false)
+  deliveredAt     DateTime?
+  trackingNumber  String?
+  notes           String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+}
+
+type OrderItem {
+  productId String?
+  name      String?
+  image     String?
+  price     Float?
+  quantity  Int?
+}
+
+type ShipAddress {
+  name    String?
+  phone   String?
+  address String?
+  city    String?
+  state   String?
+  pincode String?
+}
+
+type PayResult {
+  id                String?
+  status            String?
+  updateTime        String?
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  razorpaySignature String?
+}
+
+model Coupon {
+  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+  code                 String   @unique
+  description          String?
+  discountType         String   @default("percentage")
+  discountValue        Float
+  minOrderValue        Float    @default(0)
+  maxDiscount          Float?
+  usageLimit           Int?
+  usedCount            Int      @default(0)
+  expiryDate           DateTime
+  isActive             Boolean  @default(true)
+  applicableCategories String[]
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model Contact {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}

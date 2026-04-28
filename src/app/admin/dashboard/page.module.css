@@ -1,0 +1,190 @@
+.dashboard { display: flex; flex-direction: column; gap: 28px; }
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.header h1 { font-size: 1.8rem; margin-bottom: 4px; }
+.header p { color: var(--text-secondary); font-size: 0.9rem; }
+
+.dateInfo {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  background: white;
+  padding: 8px 16px;
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+}
+
+.statsGrid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+}
+
+.statCard {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  box-shadow: var(--shadow-card);
+  border-left: 4px solid var(--card-color);
+  transition: var(--transition);
+  cursor: pointer;
+}
+
+.statCard:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.statIcon { font-size: 2rem; }
+
+.statInfo { flex: 1; }
+
+.statValue {
+  font-size: 1.6rem;
+  font-weight: 800;
+  color: var(--text-primary);
+  line-height: 1;
+  margin-bottom: 4px;
+}
+
+.statLabel {
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
+
+.statArrow { font-size: 1.2rem; color: var(--card-color); opacity: 0.6; }
+
+/* Sections */
+.section {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: 24px;
+  box-shadow: var(--shadow-card);
+}
+
+.section h2 {
+  font-size: 1.1rem;
+  font-family: var(--font-body);
+  margin-bottom: 20px;
+}
+
+.sectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.sectionHeader h2 { margin: 0; }
+
+.viewAll { color: var(--primary); font-size: 0.85rem; font-weight: 700; }
+
+/* Quick actions */
+.quickActions {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 14px;
+}
+
+.quickAction {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  padding: 20px 16px;
+  border-radius: var(--radius-lg);
+  background: var(--bg-secondary);
+  border: 2px solid transparent;
+  transition: var(--transition);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-secondary);
+  text-align: center;
+}
+
+.quickAction:hover {
+  border-color: var(--action-color);
+  background: white;
+  color: var(--action-color);
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-md);
+}
+
+.qaIcon { font-size: 1.6rem; }
+
+/* Orders table */
+.ordersTable { overflow-x: auto; }
+
+.ordersTable table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.88rem;
+}
+
+.ordersTable th {
+  text-align: left;
+  padding: 10px 14px;
+  background: var(--bg-secondary);
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  font-weight: 700;
+}
+
+.ordersTable th:first-child { border-radius: var(--radius-sm) 0 0 var(--radius-sm); }
+.ordersTable th:last-child { border-radius: 0 var(--radius-sm) var(--radius-sm) 0; }
+
+.ordersTable td {
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border-light);
+  color: var(--text-secondary);
+}
+
+.ordersTable tr:last-child td { border-bottom: none; }
+.ordersTable tr:hover td { background: var(--bg-secondary); }
+
+.orderId { font-weight: 700; color: var(--text-primary); font-family: monospace; }
+
+.loading { text-align: center; color: var(--text-muted); padding: 20px !important; }
+
+.statusBadge {
+  padding: 3px 10px;
+  border-radius: var(--radius-full);
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.statusPending { background: var(--accent-light); color: #92400e; }
+.statusConfirmed { background: #dbeafe; color: #1e40af; }
+.statusProcessing { background: #ede9fe; color: #5b21b6; }
+.statusShipped { background: #e0f2fe; color: #0369a1; }
+.statusDelivered { background: #d1fae5; color: #065f46; }
+.statusCancelled { background: #fee2e2; color: #991b1b; }
+
+.viewBtn {
+  color: var(--primary);
+  font-weight: 700;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 1100px) {
+  .statsGrid { grid-template-columns: repeat(2, 1fr); }
+  .quickActions { grid-template-columns: repeat(2, 1fr); }
+}
+
+@media (max-width: 600px) {
+  .statsGrid { grid-template-columns: 1fr 1fr; gap: 12px; }
+}

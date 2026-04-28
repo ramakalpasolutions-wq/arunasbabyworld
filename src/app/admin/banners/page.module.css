@@ -1,0 +1,92 @@
+.uploadLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.uploadLabel:hover { border-color: var(--primary); background: var(--primary-light); }
+.uploadLabel span { font-size: 0.88rem; font-weight: 600; color: var(--text-secondary); }
+
+.bannersGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 16px;
+}
+
+.bannerCard {
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+  min-height: 180px;
+  position: relative;
+  box-shadow: var(--shadow-card);
+}
+
+.bannerOverlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.bannerInfo h3 { color: white; font-size: 1.1rem; margin-bottom: 4px; }
+.bannerInfo p { color: rgba(255,255,255,0.8); font-size: 0.85rem; margin-bottom: 10px; }
+.btnPreview {
+  display: inline-block;
+  background: white;
+  color: var(--primary);
+  padding: 5px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.bannerActions { display: flex; gap: 8px; }
+
+.actionBtn {
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: all 0.2s;
+}
+
+.activeBtn { background: rgba(16,185,129,0.9); color: white; }
+.inactiveBtn { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); }
+
+.deleteActionBtn {
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  font-size: 0.78rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  background: rgba(239,68,68,0.8);
+  color: white;
+  font-family: var(--font-body);
+  transition: all 0.2s;
+}
+
+.deleteActionBtn:hover { background: rgba(239,68,68,1); }
+
+.empty {
+  grid-column: 1 / -1;
+  text-align: center;
+  padding: 60px;
+  background: white;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-card);
+  color: var(--text-muted);
+}
+
+.empty span { font-size: 3rem; display: block; margin-bottom: 12px; }
