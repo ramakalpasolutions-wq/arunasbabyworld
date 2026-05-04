@@ -42,15 +42,15 @@ export async function POST(request) {
     };
 
     // ✅ image — use set wrapper for MongoDB embedded type
-    if (body.image?.url) {
-      bannerData.image = {
-        set: {
-          url:      body.image.url      || '',
-          publicId: body.image.publicId || '',
-          title:    body.image.title    || '',
-        }
-      };
+    // ✅ image — only url and publicId (no title — not in old schema)
+if (body.image?.url) {
+  bannerData.image = {
+    set: {
+      url:      body.image.url      || '',
+      publicId: body.image.publicId || '',
     }
+  };
+}
 
     // ✅ gridImages — use set wrapper
     bannerData.gridImages = {

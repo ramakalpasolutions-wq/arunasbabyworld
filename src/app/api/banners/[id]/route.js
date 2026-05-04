@@ -43,17 +43,16 @@ export async function PUT(request, { params }) {
     if (body.gender     !== undefined) updateData.gender     = body.gender;
 
     // ✅ image — use set wrapper
-    if (body.image?.url) {
-      updateData.image = {
-        set: {
-          url:      body.image.url      || '',
-          publicId: body.image.publicId || '',
-          title:    body.image.title    || '',
-        }
-      };
-    } else if (body.image === null) {
-      updateData.image = { set: null };
+   if (body.image?.url) {
+  updateData.image = {
+    set: {
+      url:      body.image.url      || '',
+      publicId: body.image.publicId || '',
     }
+  };
+} else if (body.image === null) {
+  updateData.image = { set: null };
+}
 
     // ✅ gridImages — use set wrapper
     if (body.gridImages !== undefined) {
