@@ -1,4 +1,3 @@
-// src/app/page.js
 import MainLayout from '@/components/layout/MainLayout';
 import HomeClient from './HomeClient';
 import prisma from '@/lib/prisma';
@@ -17,7 +16,6 @@ async function getBanners() {
       where: { isActive: true },
       orderBy: { order: 'asc' },
     });
-
     return {
       heroBanners:         banners.filter(b => b.type === 'hero' || !b.type),
       budgetBanners:       banners.filter(b => b.type === 'budget'),
@@ -44,7 +42,6 @@ async function getProducts(params = {}) {
     const where = { isActive: true };
     if (params.featured) where.isFeatured = true;
     if (params.trending) where.isTrending = true;
-
     return await prisma.product.findMany({
       where,
       take: params.limit || 8,
