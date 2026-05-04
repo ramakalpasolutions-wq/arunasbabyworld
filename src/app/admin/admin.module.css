@@ -1,3 +1,4 @@
+/* src/app/admin/admin.module.css */
 .adminLayout {
   display: flex;
   min-height: 100vh;
@@ -10,8 +11,19 @@
   padding: 28px;
   min-height: 100vh;
   overflow-x: hidden;
+  transition: margin-left 0.3s ease;
+  box-sizing: border-box;
 }
 
 @media (max-width: 900px) {
-  .adminMain { margin-left: 0; padding: 16px; }
+  .adminMain {
+    margin-left: 0;
+    padding: 72px 14px 20px 14px;
+  }
+}
+
+@media (max-width: 480px) {
+  .adminMain {
+    padding: 68px 10px 16px 10px;
+  }
 }

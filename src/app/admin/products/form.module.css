@@ -1,4 +1,30 @@
 /* ===== BASE ===== */
+/* ADD at bottom of form.module.css */
+
+@media (max-width: 640px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+
+  .card { padding: 16px; }
+  .card h3 { font-size: 0.72rem; }
+
+  .row2 { grid-template-columns: 1fr; gap: 0; }
+
+  .previewGrid { grid-template-columns: repeat(3, 1fr); }
+
+  .submitRow {
+    flex-direction: column;
+  }
+
+  .submitRow button { width: 100%; }
+
+  .dropZone { padding: 24px 16px; min-height: 140px; }
+}
+
+@media (max-width: 400px) {
+  .previewGrid { grid-template-columns: repeat(2, 1fr); }
+}
 .page { display: flex; flex-direction: column; gap: 24px; }
 
 .header {

@@ -1,10 +1,38 @@
-.page { display: flex; flex-direction: column; gap: 24px; }
+/* src/app/admin/categories/page.module.css */
 
-.header { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
-.header h1 { font-size: 1.6rem; margin-bottom: 2px; }
-.header p { color: var(--text-muted); font-size: 0.85rem; }
+.page {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
 
-/* Modal */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.header h1 {
+  font-size: 1.6rem;
+  margin-bottom: 2px;
+}
+
+.header p {
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}
+
+/* ── HEADER ACTIONS ── */
+.headerActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+/* ── MODAL ── */
 .modal {
   position: fixed;
   inset: 0;
@@ -13,44 +41,82 @@
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: 20px;
+  padding: 16px;
   backdrop-filter: blur(4px);
+  overflow-y: auto;
 }
 
 .modalCard {
   background: white;
   border-radius: var(--radius-xl);
-  padding: 32px;
+  padding: 28px;
   width: 100%;
   max-width: 520px;
   box-shadow: var(--shadow-xl);
   animation: modalIn 0.3s ease;
+  max-height: 90vh;
+  overflow-y: auto;
+  margin: auto;
 }
 
 @keyframes modalIn {
   from { opacity: 0; transform: scale(0.95) translateY(-10px); }
-  to { opacity: 1; transform: scale(1) translateY(0); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
 }
 
-.modalHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-.modalHeader h2 { font-size: 1.2rem; }
+.modalHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 2;
+  padding-bottom: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.modalHeader h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin: 0;
+}
 
 .closeBtn {
-  width: 32px; height: 32px;
+  width: 32px;
+  height: 32px;
   background: var(--bg-secondary);
-  border: none; border-radius: 50%;
-  font-size: 1rem; cursor: pointer;
-  display: flex; align-items: center; justify-content: center;
+  border: none;
+  border-radius: 50%;
+  font-size: 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   transition: background 0.2s;
+  flex-shrink: 0;
 }
 
-.closeBtn:hover { background: var(--border); }
+.closeBtn:hover { background: #fee2e2; color: #dc2626; }
 
-.form { display: flex; flex-direction: column; gap: 4px; }
+.form {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
 
-.row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 0 16px; }
+.row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0 16px;
+}
 
-.colorRow { display: flex; gap: 8px; align-items: center; }
+.colorRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
 
 .colorPicker {
   width: 44px;
@@ -62,17 +128,31 @@
   background: white;
 }
 
-.formActions { display: flex; gap: 12px; margin-top: 8px; }
+.formActions {
+  display: flex;
+  gap: 12px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #f0f0f0;
+}
 
-/* Category grid */
+/* ── CATEGORY GRID ── */
 .catGrid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
   gap: 16px;
 }
 
-.skeletonCard { height: 160px; border-radius: var(--radius-xl); }
-.loadingGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+.skeletonCard {
+  height: 160px;
+  border-radius: var(--radius-xl);
+}
+
+.loadingGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 16px;
+}
 
 .catCard {
   background: white;
@@ -83,9 +163,17 @@
   transition: var(--transition);
 }
 
-.catCard:hover { transform: translateY(-3px); box-shadow: var(--shadow-lg); }
+.catCard:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--shadow-lg);
+}
 
-.catHeader { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.catHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
 
 .catIcon {
   width: 44px;
@@ -96,6 +184,7 @@
   justify-content: center;
   font-size: 1.3rem;
   font-weight: 700;
+  flex-shrink: 0;
 }
 
 .catActions { display: flex; gap: 6px; }
@@ -111,6 +200,7 @@
   border: none;
   cursor: pointer;
   font-family: var(--font-body);
+  white-space: nowrap;
 }
 
 .editBtn:hover { background: var(--secondary); color: white; }
@@ -126,12 +216,24 @@
   cursor: pointer;
   transition: all 0.2s;
   font-family: var(--font-body);
+  white-space: nowrap;
 }
 
 .deleteBtn:hover { background: var(--danger); color: white; }
 
-.catName { font-size: 1rem; font-family: var(--font-body); margin-bottom: 6px; }
-.catDesc { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 10px; line-height: 1.5; }
+.catName {
+  font-size: 1rem;
+  font-family: var(--font-body);
+  margin-bottom: 6px;
+  font-weight: 700;
+}
+
+.catDesc {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  margin-bottom: 10px;
+  line-height: 1.5;
+}
 
 .catMeta span {
   display: inline-block;
@@ -140,4 +242,71 @@
   padding: 3px 8px;
   border-radius: var(--radius-full);
   font-weight: 600;
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media (max-width: 900px) {
+  .header h1 { font-size: 1.3rem; }
+
+  .modalCard {
+    padding: 20px;
+    max-width: 95vw;
+  }
+
+  /* Categories form — stack columns */
+  .modalCard > form > div[style*="grid-template-columns: 1fr 1fr"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .row2 {
+    grid-template-columns: 1fr;
+    gap: 0;
+  }
+
+  .catGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+}
+
+@media (max-width: 640px) {
+  .header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .headerActions {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .headerActions button,
+  .headerActions a {
+    font-size: 12px !important;
+    padding: 8px 12px !important;
+  }
+
+  .catGrid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .catCard { padding: 14px; }
+
+  .formActions { flex-direction: column; }
+
+  .modalCard {
+    padding: 14px;
+    border-radius: 14px;
+  }
+
+  .modalHeader h2 { font-size: 0.95rem; }
+}
+
+@media (max-width: 400px) {
+  .catGrid {
+    grid-template-columns: 1fr;
+  }
 }

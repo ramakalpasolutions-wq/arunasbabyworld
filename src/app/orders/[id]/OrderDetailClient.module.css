@@ -1,18 +1,29 @@
+/* src/app/orders/[id]/OrderDetailClient.module.css */
+
 .page { padding: 28px 20px 60px; }
 
-.loading { min-height: 60vh; display: flex; align-items: center; justify-content: center; }
+.loading {
+  min-height: 60vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
 
 .notFound {
   min-height: 60vh;
-  display: flex; flex-direction: column;
-  align-items: center; justify-content: center;
-  text-align: center; gap: 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 16px;
+  padding: 40px 20px;
 }
 
 .notFound span { font-size: 4rem; }
-.notFound h2 { font-size: 1.6rem; }
+.notFound h2   { font-size: 1.6rem; }
 
-/* Header */
+/* ── Header ── */
 .header {
   display: flex;
   align-items: flex-start;
@@ -22,9 +33,9 @@
   margin-bottom: 28px;
 }
 
-.header h1 { font-size: 1.8rem; margin-bottom: 6px; }
-.orderId { font-family: monospace; color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 4px; }
-.orderDate { color: var(--text-muted); font-size: 0.85rem; }
+.header h1  { font-size: 1.8rem; margin-bottom: 6px; }
+.orderId    { font-family: monospace; color: var(--text-secondary); font-size: 0.95rem; margin-bottom: 4px; word-break: break-all; }
+.orderDate  { color: var(--text-muted); font-size: 0.85rem; }
 
 .headerRight {
   display: flex;
@@ -39,24 +50,35 @@
   font-size: 0.88rem;
   font-weight: 700;
   display: inline-block;
+  white-space: nowrap;
 }
 
-/* Tracker */
+/* ── Tracker ── */
 .tracker {
   background: white;
   border-radius: var(--radius-xl);
   padding: 28px;
   box-shadow: var(--shadow-card);
   margin-bottom: 24px;
+  overflow-x: auto;
 }
 
-.tracker h3 { font-family: var(--font-body); font-size: 0.95rem; font-weight: 700; margin-bottom: 24px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.8px; }
+.tracker h3 {
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 24px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+}
 
 .steps {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   position: relative;
+  min-width: 480px; /* allow scroll on mobile */
 }
 
 .step {
@@ -82,13 +104,19 @@
   font-weight: 700;
   z-index: 1;
   transition: all 0.4s;
+  flex-shrink: 0;
 }
 
-.stepDone .stepCircle { border-color: var(--success); background: var(--success); color: white; }
-.stepCurrent .stepCircle { border-color: var(--primary); background: var(--primary); color: white; box-shadow: 0 0 0 4px rgba(255,107,157,0.2); }
+.stepDone .stepCircle    { border-color: var(--success); background: var(--success); color: white; }
+.stepCurrent .stepCircle {
+  border-color: var(--primary);
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 0 0 4px rgba(255,107,157,0.2);
+}
 
-.stepLabel { font-size: 0.75rem; font-weight: 600; text-align: center; }
-.stepDone .stepLabel { color: var(--success); }
+.stepLabel { font-size: 0.72rem; font-weight: 600; text-align: center; }
+.stepDone .stepLabel    { color: var(--success); }
 .stepCurrent .stepLabel { color: var(--primary); }
 
 .stepLine {
@@ -103,7 +131,7 @@
 
 .stepLineDone { background: var(--success); }
 
-/* Cancelled banner */
+/* ── Cancelled banner ── */
 .cancelledBanner {
   background: #fee2e2;
   border: 1px solid #fca5a5;
@@ -117,9 +145,9 @@
 }
 
 .cancelledBanner strong { display: block; color: var(--danger); margin-bottom: 4px; }
-.cancelledBanner p { font-size: 0.88rem; color: #991b1b; }
+.cancelledBanner p      { font-size: 0.88rem; color: #991b1b; }
 
-/* Layout */
+/* ── Layout ── */
 .layout {
   display: grid;
   grid-template-columns: 1fr 360px;
@@ -128,9 +156,15 @@
 }
 
 .mainCol { display: flex; flex-direction: column; gap: 20px; }
-.sideCol { display: flex; flex-direction: column; gap: 16px; position: sticky; top: calc(var(--header-height) + 16px); }
+.sideCol {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  position: sticky;
+  top: calc(var(--header-height) + 16px);
+}
 
-/* Card */
+/* ── Card ── */
 .card {
   background: white;
   border-radius: var(--radius-xl);
@@ -150,7 +184,7 @@
   border-bottom: 1px solid var(--border-light);
 }
 
-/* Items */
+/* ── Items ── */
 .items { display: flex; flex-direction: column; gap: 14px; }
 
 .item {
@@ -162,31 +196,69 @@
   background: var(--bg-secondary);
 }
 
-.itemImg { width: 64px; height: 64px; border-radius: var(--radius-md); overflow: hidden; flex-shrink: 0; }
+.itemImg {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
 .itemImg img { width: 100%; height: 100%; object-fit: cover; }
-.itemInfo { flex: 1; }
-.itemName { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; }
-.itemQty { font-size: 0.82rem; color: var(--text-muted); }
-.itemTotal { font-weight: 700; font-size: 0.95rem; white-space: nowrap; }
 
-/* Payment grid */
+.itemInfo     { flex: 1; min-width: 0; }
+.itemName     { font-weight: 600; font-size: 0.9rem; margin-bottom: 4px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.itemQty      { font-size: 0.82rem; color: var(--text-muted); }
+.itemTotal    { font-weight: 700; font-size: 0.95rem; white-space: nowrap; flex-shrink: 0; }
+
+/* ── Payment grid ── */
 .paymentGrid { display: flex; flex-direction: column; gap: 12px; }
-.payRow { display: flex; justify-content: space-between; align-items: center; font-size: 0.88rem; }
-.payRow span { color: var(--text-secondary); }
 
-/* Summary */
-.summaryRows { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
-.summaryRow { display: flex; justify-content: space-between; font-size: 0.88rem; color: var(--text-secondary); }
-.discount { color: var(--success); font-weight: 600; }
-.totalRow { display: flex; justify-content: space-between; font-size: 1.05rem; padding-top: 14px; border-top: 2px solid var(--border); }
+.payRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 0.88rem;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.payRow span   { color: var(--text-secondary); }
+.payRow strong { word-break: break-all; }
+
+/* ── Summary ── */
+.summaryRows {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.summaryRow  { display: flex; justify-content: space-between; font-size: 0.88rem; color: var(--text-secondary); gap: 8px; }
+.discount    { color: var(--success); font-weight: 600; }
+
+.totalRow {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.05rem;
+  padding-top: 14px;
+  border-top: 2px solid var(--border);
+  gap: 8px;
+}
+
 .totalRow strong { font-size: 1.2rem; }
 
-/* Address */
-.address { font-size: 0.88rem; color: var(--text-secondary); line-height: 1.7; }
-.address p { margin-bottom: 2px; }
-.noAddress { color: var(--text-muted); font-size: 0.88rem; }
+/* ── Address ── */
+.address {
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+  line-height: 1.7;
+}
 
-/* Delivered card */
+.address p    { margin-bottom: 2px; }
+.noAddress    { color: var(--text-muted); font-size: 0.88rem; }
+
+/* ── Delivered card ── */
 .deliveredCard {
   background: #d1fae5;
   border-radius: var(--radius-lg);
@@ -198,12 +270,51 @@
 }
 
 .deliveredCard strong { display: block; color: #065f46; font-size: 0.9rem; }
-.deliveredCard p { color: #047857; font-size: 0.82rem; }
+.deliveredCard p      { color: #047857; font-size: 0.82rem; }
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
 
 @media (max-width: 900px) {
-  .layout { grid-template-columns: 1fr; }
+  .layout {
+    grid-template-columns: 1fr;
+  }
+
   .sideCol { position: static; }
-  .steps { gap: 4px; }
-  .stepLabel { font-size: 0.65rem; }
-  .stepLine { display: none; }
+}
+
+@media (max-width: 640px) {
+  .page { padding: 14px 12px 40px; }
+
+  .header { gap: 12px; }
+  .header h1 { font-size: 1.4rem; }
+
+  .headerRight {
+    width: 100%;
+    justify-content: flex-start;
+  }
+
+  .tracker { padding: 18px 14px; }
+  /* steps will scroll horizontally */
+
+  .card { padding: 16px 14px; }
+
+  .item { gap: 10px; padding: 10px; }
+  .itemImg { width: 52px; height: 52px; }
+
+  .cancelledBanner {
+    font-size: 1.4rem;
+    padding: 14px;
+    gap: 10px;
+  }
+
+  .cancelledBanner p { font-size: 0.82rem; }
+}
+
+@media (max-width: 400px) {
+  .page  { padding: 10px 10px 36px; }
+  .card  { padding: 12px 10px; }
+  .itemImg { width: 46px; height: 46px; }
+  .header h1 { font-size: 1.2rem; }
 }

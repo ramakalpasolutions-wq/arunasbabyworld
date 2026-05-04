@@ -14,17 +14,10 @@ const BASE_URL = process.env.NEXTAUTH_URL || 'http://localhost:3000';
 async function getBanners() {
   try {
     const res = await fetch(`${BASE_URL}/api/banners/active`, { cache: 'no-store' });
-    if (!res.ok) return { heroBanners: [], budgetBanners: [], sunnyBanners: [], promoBanners: [], genderBanners: [] };
-    const data = await res.json();
-    return {
-      heroBanners: data.heroBanners || [],
-      budgetBanners: data.budgetBanners || [],
-      sunnyBanners: data.sunnyBanners || [],
-      promoBanners: data.promoBanners || [],
-      genderBanners: data.genderBanners || [],
-    };
+    if (!res.ok) return {};
+    return await res.json();
   } catch {
-    return { heroBanners: [], budgetBanners: [], sunnyBanners: [], promoBanners: [], genderBanners: [] };
+    return {};
   }
 }
 
@@ -37,48 +30,31 @@ async function getProducts(params = '') {
   } catch { return []; }
 }
 
-async function getCategories() {
-  try {
-    const res = await fetch(`${BASE_URL}/api/categories`, { cache: 'no-store' });
-    if (!res.ok) return [];
-    const data = await res.json();
-    return data.categories || [];
-  } catch { return []; }
-}
-
 export default async function HomePage() {
-  const [
-    { heroBanners, budgetBanners, sunnyBanners, promoBanners, genderBanners },
-    featured,
-    trending,
-    allCategories,
-  ] = await Promise.all([
+  const [bannerData, featured, trending] = await Promise.all([
     getBanners(),
     getProducts('featured=true&limit=8'),
     getProducts('trending=true&limit=8'),
-    getCategories(),
   ]);
-
-  // ✅ Separate categories by type
-  const normalCats = allCategories.filter(c => c.type === 'normal' || !c.type);
-  const maternityCats = allCategories.filter(c => c.type === 'maternity');
-  const personalCareCats = allCategories.filter(c => c.type === 'personal-care');
-  const healthyCareCats = allCategories.filter(c => c.type === 'healthy-care');
 
   return (
     <MainLayout>
       <HomeClient
-        banners={heroBanners}
-        budgetBanners={budgetBanners}
-        sunnyBanners={sunnyBanners}
-        promoBanners={promoBanners}
-        genderBanners={genderBanners}
+        banners={bannerData.heroBanners || []}
+        budgetBanners={bannerData.budgetBanners || []}
+        sunnyBanners={bannerData.sunnyBanners || []}
+        promoBanners={bannerData.promoBanners || []}
+        genderBanners={bannerData.genderBanners || []}
+        twoHeroBanners={bannerData.twoHeroBanners || []}
+        gradientBanners={bannerData.gradientBanners || []}
+        horizontalBanners={bannerData.horizontalBanners || []}
+        fullPromoBanners={bannerData.fullPromoBanners || []}
+        asymmetricBanners={bannerData.asymmetricBanners || []}
+        maternityBanners={bannerData.maternityBanners || []}
+        personalCareBanners={bannerData.personalCareBanners || []}
+        healthCareBanners={bannerData.healthCareBanners || []}
         featured={featured}
         trending={trending}
-        categories={normalCats}
-        maternityCats={maternityCats}
-        personalCareCats={personalCareCats}
-        healthyCareCats={healthyCareCats}
       />
     </MainLayout>
   );

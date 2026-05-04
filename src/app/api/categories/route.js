@@ -3,15 +3,40 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
 
-export async function GET() {
+export async function GET(request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const withCount = searchParams.get('withCount');
+
     const categories = await prisma.category.findMany({
       where: { isActive: true },
       orderBy: { order: 'asc' },
     });
+
+    // ✅ If withCount=true — add product count
+    if (withCount === 'true') {
+      const categoriesWithCount = await Promise.all(
+        categories.map(async (cat) => {
+          const productCount = await prisma.product.count({
+            where: {
+              categoryId: cat.id,
+              isActive:   true,
+            },
+          });
+          return { ...cat, productCount };
+        })
+      );
+      return NextResponse.json({ categories: categoriesWithCount });
+    }
+
     return NextResponse.json({ categories });
+
   } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    console.error('Categories GET error:', error);
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -30,14 +55,14 @@ export async function POST(request) {
       .replace(/^-|-$/g, '');
 
     const categoryData = {
-      name: data.name,
+      name:        data.name,
       slug,
       description: data.description || null,
-      icon: data.icon || null,
-      color: data.color || '#ff6b9d',
-      isActive: data.isActive !== false,
-      order: parseInt(data.order) || 0,
-      type: data.type || 'normal',
+      icon:        data.icon        || null,
+      color:       data.color       || '#ff6b9d',
+      isActive:    data.isActive !== false,
+      order:       parseInt(data.order) || 0,
+      type:        data.type || 'normal',
     };
 
     if (data.banner && data.banner.url) {
@@ -50,7 +75,11 @@ export async function POST(request) {
 
     const category = await prisma.category.create({ data: categoryData });
     return NextResponse.json({ category }, { status: 201 });
+
   } catch (error) {
-    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: error.message || 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

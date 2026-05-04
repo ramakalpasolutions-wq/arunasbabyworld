@@ -28,31 +28,45 @@ export async function POST(request) {
     const body = await request.json();
 
     const bannerData = {
-      title: body.title,
-      subtitle: body.subtitle || null,
+      title:      body.title,
+      subtitle:   body.subtitle   || null,
       buttonText: body.buttonText || 'Shop Now',
       buttonLink: body.buttonLink || '/products',
-      bgColor: body.bgColor || '#ff6b9d',
-      isActive: body.isActive !== false,
-      order: parseInt(body.order) || 0,
-      type: body.type || 'hero',
-      emoji: body.emoji || null,
-      price: body.price ? parseFloat(body.price) : null,
-      offer: body.offer || null,
-      color: body.color || null,
-      slug: body.slug || null,
-      gender: body.gender || null,
+      bgColor:    body.bgColor    || '#ff6b9d',
+      isActive:   body.isActive !== false,
+      order:      parseInt(body.order) || 0,
+      type:       body.type   || 'hero',
+      emoji:      body.emoji  || null,
+      price:      body.price  ? parseFloat(body.price) : null,
+      offer:      body.offer  || null,
+      color:      body.color  || null,
+      slug:       body.slug   || null,
+      gender:     body.gender || null,
     };
 
+    // ✅ Fix — image object
     if (body.image && body.image.url) {
       bannerData.image = {
-        url: body.image.url,
+        url:      body.image.url      || '',
         publicId: body.image.publicId || '',
+        title:    body.image.title    || '',
       };
+    }
+
+    // ✅ Fix — gridImages array
+    if (body.gridImages && body.gridImages.length > 0) {
+      bannerData.gridImages = body.gridImages.map(img => ({
+        url:      img.url      || '',
+        publicId: img.publicId || '',
+        title:    img.title    || '',
+      }));
+    } else {
+      bannerData.gridImages = [];
     }
 
     const banner = await prisma.banner.create({ data: bannerData });
     return NextResponse.json({ banner }, { status: 201 });
+
   } catch (error) {
     console.error('Banners POST error:', error);
     return NextResponse.json(

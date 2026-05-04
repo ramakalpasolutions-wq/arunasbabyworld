@@ -1,92 +1,273 @@
-.uploadLabel {
+/* src/app/admin/banners/page.module.css */
+
+/* ── Tab Scroll ── */
+.tabsWrapper {
   display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 16px;
-  border: 2px dashed var(--border);
-  border-radius: var(--radius-lg);
-  cursor: pointer;
-  transition: all 0.3s;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
 }
 
-.uploadLabel:hover { border-color: var(--primary); background: var(--primary-light); }
-.uploadLabel span { font-size: 0.88rem; font-weight: 600; color: var(--text-secondary); }
-
+/* ── Banners Grid ── */
 .bannersGrid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 16px;
 }
 
+/* ── Banner Card ── */
 .bannerCard {
-  border-radius: var(--radius-xl);
+  border-radius: 16px;
   overflow: hidden;
   min-height: 180px;
   position: relative;
-  box-shadow: var(--shadow-card);
+  box-shadow: 0 4px 16px rgba(0,0,0,0.08);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.bannerCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.15);
 }
 
 .bannerOverlay {
   position: absolute;
   inset: 0;
   background: rgba(0,0,0,0.45);
-  padding: 20px;
+  padding: 16px;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
 }
 
-.bannerInfo h3 { color: white; font-size: 1.1rem; margin-bottom: 4px; }
-.bannerInfo p { color: rgba(255,255,255,0.8); font-size: 0.85rem; margin-bottom: 10px; }
+.bannerInfo h3 {
+  color: white;
+  font-size: 1rem;
+  margin-bottom: 4px;
+  font-weight: 700;
+}
+
+.bannerInfo p {
+  color: rgba(255,255,255,0.8);
+  font-size: 0.82rem;
+  margin-bottom: 8px;
+}
+
 .btnPreview {
   display: inline-block;
   background: white;
-  color: var(--primary);
-  padding: 5px 14px;
-  border-radius: var(--radius-full);
-  font-size: 0.78rem;
+  color: #ff6b9d;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 0.76rem;
   font-weight: 700;
 }
 
-.bannerActions { display: flex; gap: 8px; }
+.bannerActions {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
 
 .actionBtn {
-  padding: 6px 14px;
-  border-radius: var(--radius-full);
-  font-size: 0.78rem;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
   font-weight: 700;
   border: none;
   cursor: pointer;
-  font-family: var(--font-body);
+  font-family: inherit;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
-.activeBtn { background: rgba(16,185,129,0.9); color: white; }
-.inactiveBtn { background: rgba(255,255,255,0.2); color: white; border: 1px solid rgba(255,255,255,0.4); }
+.activeBtn   { background: rgba(16,185,129,0.9); color: white; }
+.inactiveBtn { background: rgba(255,255,255,0.2); color: white;
+  border: 1px solid rgba(255,255,255,0.4); }
 
 .deleteActionBtn {
-  padding: 6px 14px;
-  border-radius: var(--radius-full);
-  font-size: 0.78rem;
+  padding: 5px 12px;
+  border-radius: 999px;
+  font-size: 0.75rem;
   font-weight: 700;
   border: none;
   cursor: pointer;
   background: rgba(239,68,68,0.8);
   color: white;
-  font-family: var(--font-body);
+  font-family: inherit;
   transition: all 0.2s;
+  white-space: nowrap;
 }
 
 .deleteActionBtn:hover { background: rgba(239,68,68,1); }
 
+/* ── Upload Label ── */
+.uploadLabel {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 2px dashed #e5e7eb;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.uploadLabel:hover {
+  border-color: #ff6b9d;
+  background: #fff8fb;
+}
+
+.uploadLabel span {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #6b7280;
+}
+
+/* ── Empty ── */
 .empty {
   grid-column: 1 / -1;
   text-align: center;
-  padding: 60px;
+  padding: 60px 20px;
   background: white;
-  border-radius: var(--radius-xl);
-  box-shadow: var(--shadow-card);
-  color: var(--text-muted);
+  border-radius: 16px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  color: #9ca3af;
 }
 
-.empty span { font-size: 3rem; display: block; margin-bottom: 12px; }
+.empty span {
+  font-size: 3rem;
+  display: block;
+  margin-bottom: 12px;
+}
+
+/* ── Modal ── */
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 16px;
+  overflow-y: auto;
+}
+
+.modalCard {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+  width: 100%;
+  margin: auto;
+}
+
+.modalHeader {
+  position: sticky;
+  top: 0;
+  background: white;
+  z-index: 10;
+  padding: 18px 22px 14px;
+  border-bottom: 1px solid #f0f0f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.modalHeader h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0;
+  color: #2D1A4A;
+}
+
+.closeBtn {
+  background: #f3f4f6;
+  border: none;
+  border-radius: 8px;
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.closeBtn:hover { background: #fee2e2; color: #dc2626; }
+
+.form {
+  padding: 18px 22px 16px;
+}
+
+.formActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid #f0f0f0;
+  position: sticky;
+  bottom: 0;
+  background: white;
+  padding-bottom: 4px;
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .bannersGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .bannersGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .bannerCard   { min-height: 160px; }
+  .bannerOverlay { padding: 12px; }
+
+  .bannerInfo h3 { font-size: 0.92rem; }
+
+  .actionBtn, .deleteActionBtn {
+    padding: 4px 10px;
+    font-size: 0.70rem;
+  }
+
+  /* Banner form — stack grid */
+  .modalCard .form > div[style*="grid-template-columns: 1fr 240px"] {
+    grid-template-columns: 1fr !important;
+  }
+
+  .form { padding: 14px 16px; }
+  .modalHeader { padding: 14px 16px; }
+  .formActions { flex-direction: column; }
+}
+
+@media (max-width: 480px) {
+  .bannersGrid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .bannerCard   { min-height: 140px; }
+  .bannerOverlay { padding: 10px; }
+
+  .bannerInfo h3 { font-size: 0.85rem; }
+  .bannerInfo p  { font-size: 0.74rem; }
+
+  .bannerActions { gap: 4px; }
+
+  .actionBtn, .deleteActionBtn {
+    padding: 3px 8px;
+    font-size: 0.66rem;
+  }
+
+  .empty { padding: 40px 16px; }
+}

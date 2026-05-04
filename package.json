@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "next build",
     "start": "next start",
     "lint": "next lint"
   },
@@ -21,6 +21,7 @@
     "next": "^16.2.4",
     "next-auth": "^4.24.7",
     "nodemailer": "^7.0.13",
+    "prisma": "^5.22.0",
     "razorpay": "^2.9.3",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
@@ -31,7 +32,6 @@
   },
   "devDependencies": {
     "eslint": "^8",
-    "eslint-config-next": "14.2.5",
-    "prisma": "^5.22.0"
+    "eslint-config-next": "14.2.5"
   }
 }

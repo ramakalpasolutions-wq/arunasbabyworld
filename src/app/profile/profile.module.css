@@ -1,25 +1,61 @@
+/* ============================================================
+   PROFILE PAGE — Responsive
+   ============================================================ */
+
 .profilePage {
   max-width: 900px;
   margin: 0 auto;
   padding: 24px 16px 60px;
 }
+/* ADD at bottom of profile.module.css */
 
-/* ===== HERO ===== */
+@media (max-width: 320px) {
+  .profilePage { padding: 10px 8px 36px; }
+  .profileHero { padding: 14px 12px; }
+  .avatarBig   { width: 56px; height: 56px; font-size: 1.4rem; }
+  .heroInfo h1 { font-size: 1rem; }
+  .tab         { font-size: 11px; padding: 7px 4px; }
+  .statCard    { padding: 10px 6px; }
+  .statNum     { font-size: 1.3rem; }
+}
+/* ── Loading ── */
+.loadingWrap {
+  display: flex;
+  align-items: center;
+  justifycontent: center;
+  min-height: 60vh;
+  flex-direction: column;
+  gap: 16px;
+  justify-content: center;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #fce4ec;
+  border-top: 4px solid #ff6b9d;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Hero ── */
 .profileHero {
   display: flex;
   align-items: center;
   gap: 20px;
   background: linear-gradient(135deg, #ff6b9d, #7c3aed);
   border-radius: 20px;
-  padding: 28px;
+  padding: 24px 28px;
   margin-bottom: 24px;
   flex-wrap: wrap;
   position: relative;
 }
 
 .avatarBig {
-  width: 80px;
-  height: 80px;
+  width: 76px;
+  height: 76px;
   border-radius: 50%;
   background: rgba(255,255,255,0.25);
   color: white;
@@ -32,21 +68,32 @@
   flex-shrink: 0;
 }
 
+.heroInfo {
+  flex: 1;
+  min-width: 0;
+}
+
 .heroInfo h1 {
   color: white;
   font-size: 1.5rem;
   margin: 0 0 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .heroInfo p {
   color: rgba(255,255,255,0.85);
-  font-size: 0.9rem;
+  font-size: 0.88rem;
   margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .adminBadge {
   display: inline-block;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.20);
   color: white;
   padding: 2px 10px;
   border-radius: 20px;
@@ -55,23 +102,52 @@
   margin-top: 6px;
 }
 
+/* ✅ Hero action buttons */
+.heroActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+
 .adminLink {
-  margin-left: auto;
-  background: rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.20);
   color: white;
   padding: 8px 16px;
   border-radius: 10px;
-  font-size: 13px;
+  font-size: 0.82rem;
   font-weight: 700;
   text-decoration: none;
   transition: background 0.2s;
+  white-space: nowrap;
 }
 
 .adminLink:hover {
-  background: rgba(255,255,255,0.3);
+  background: rgba(255,255,255,0.30);
 }
 
-/* ===== QUICK STATS ===== */
+/* ✅ Logout button in hero */
+.logoutBtn {
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border: 1.5px solid rgba(255,255,255,0.30);
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.logoutBtn:hover {
+  background: rgba(255,255,255,0.25);
+  border-color: rgba(255,255,255,0.50);
+}
+
+/* ── Quick Stats ── */
 .quickStats {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -82,10 +158,16 @@
 .statCard {
   background: white;
   border-radius: 14px;
-  padding: 16px;
+  padding: 16px 12px;
   text-align: center;
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   border: 1px solid #f3f4f6;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.statCard:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(255,107,157,0.12);
 }
 
 .statNum {
@@ -98,14 +180,14 @@
 }
 
 .statLabel {
-  font-size: 0.72rem;
+  font-size: 0.70rem;
   color: #888;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
-/* ===== TABS ===== */
+/* ── Tabs ── */
 .tabs {
   display: flex;
   gap: 8px;
@@ -130,6 +212,7 @@
   align-items: center;
   justify-content: center;
   gap: 6px;
+  font-family: inherit;
 }
 
 .activeTab {
@@ -147,23 +230,24 @@
   font-weight: 700;
 }
 
-/* ===== TAB CONTENT ===== */
+/* ── Tab Content ── */
 .tabContent {
   animation: fadeIn 0.3s ease;
 }
 
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: translateY(0); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
-/* ===== FORM CARD ===== */
+/* ── Form Card ── */
 .formCard {
   background: white;
   border-radius: 16px;
   padding: 28px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   margin-bottom: 16px;
+  border: 1px solid #f3f4f6;
 }
 
 .formCard h2 {
@@ -171,6 +255,12 @@
   font-weight: 800;
   color: #1a1a2e;
   margin: 0 0 4px;
+}
+
+.formSubtitle {
+  color: #888;
+  font-size: 14px;
+  margin-bottom: 24px;
 }
 
 .form {
@@ -214,10 +304,10 @@
   display: flex;
   align-items: center;
   border-right: 1.5px solid #e5e7eb;
+  flex-shrink: 0;
 }
 
-.inputWrap input,
-.inputWrap textarea {
+.inputWrap input {
   flex: 1;
   border: none;
   outline: none;
@@ -225,12 +315,21 @@
   font-size: 0.9rem;
   background: transparent;
   color: #1a1a2e;
+  font-family: inherit;
+  min-width: 0;
 }
 
 .disabledField {
   background: #f9fafb !important;
   color: #888 !important;
   cursor: not-allowed;
+}
+
+.warningText {
+  color: #f59e0b;
+  font-size: 12px;
+  margin-top: 4px;
+  display: block;
 }
 
 .saveBtn {
@@ -244,9 +343,10 @@
   cursor: pointer;
   transition: all 0.2s;
   align-self: flex-start;
+  font-family: inherit;
 }
 
-.saveBtn:hover {
+.saveBtn:hover:not(:disabled) {
   opacity: 0.9;
   transform: translateY(-1px);
 }
@@ -254,14 +354,14 @@
 .saveBtn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
 }
 
-/* ===== QUICK LINKS ===== */
+/* ── Quick Links ── */
 .quickLinks {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 12px;
+  margin-bottom: 16px;
 }
 
 .quickLink {
@@ -269,7 +369,7 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  padding: 16px;
+  padding: 16px 8px;
   background: white;
   border-radius: 14px;
   text-decoration: none;
@@ -279,24 +379,74 @@
   box-shadow: 0 2px 8px rgba(0,0,0,0.06);
   transition: all 0.2s;
   border: 1.5px solid transparent;
+  text-align: center;
 }
 
 .quickLink:hover {
   border-color: #ff6b9d;
   color: #ff6b9d;
   transform: translateY(-3px);
+  box-shadow: 0 8px 20px rgba(255,107,157,0.12);
 }
 
 .quickLink span:first-child {
   font-size: 1.6rem;
 }
 
-/* ===== ORDERS ===== */
+/* ✅ Logout card */
+.logoutCard {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: white;
+  border-radius: 14px;
+  border: 1.5px solid #fee2e2;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.logoutCardInfo h4 {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #1a1a2e;
+  margin: 0 0 4px;
+}
+
+.logoutCardInfo p {
+  font-size: 0.84rem;
+  color: #888;
+  margin: 0;
+}
+
+.logoutCardBtn {
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  border: none;
+  padding: 10px 24px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 0.90rem;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.logoutCardBtn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(239,68,68,0.28);
+}
+
+/* ── Orders ── */
 .emptyOrders {
   text-align: center;
   padding: 60px 20px;
   background: white;
   border-radius: 16px;
+  border: 1px solid #f3f4f6;
 }
 
 .emptyOrders span {
@@ -308,6 +458,7 @@
 .emptyOrders h3 {
   font-size: 1.3rem;
   margin-bottom: 8px;
+  color: #1a1a2e;
 }
 
 .emptyOrders p {
@@ -323,6 +474,12 @@
   border-radius: 10px;
   font-weight: 700;
   text-decoration: none;
+  transition: all 0.2s;
+}
+
+.shopNowBtn:hover {
+  transform: translateY(-2px);
+  opacity: 0.9;
 }
 
 .ordersList {
@@ -337,11 +494,12 @@
   padding: 20px;
   box-shadow: 0 2px 12px rgba(0,0,0,0.06);
   border: 1.5px solid #f3f4f6;
-  transition: box-shadow 0.2s;
+  transition: box-shadow 0.2s, transform 0.2s;
 }
 
 .orderCard:hover {
-  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.10);
+  transform: translateY(-2px);
 }
 
 .orderTop {
@@ -349,6 +507,8 @@
   justify-content: space-between;
   align-items: center;
   margin-bottom: 14px;
+  gap: 12px;
+  flex-wrap: wrap;
 }
 
 .orderIdWrap {
@@ -370,10 +530,11 @@
 }
 
 .statusBadge {
-  padding: 4px 12px;
+  padding: 5px 14px;
   border-radius: 20px;
   font-size: 0.78rem;
   font-weight: 700;
+  white-space: nowrap;
 }
 
 .orderItems {
@@ -395,6 +556,7 @@
   align-items: center;
   padding-top: 14px;
   border-top: 1px solid #f3f4f6;
+  gap: 12px;
 }
 
 .orderMeta {
@@ -403,6 +565,7 @@
   align-items: center;
   font-size: 13px;
   color: #666;
+  flex-wrap: wrap;
 }
 
 .viewBtn {
@@ -414,6 +577,8 @@
   font-weight: 700;
   text-decoration: none;
   transition: all 0.2s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .viewBtn:hover {
@@ -421,7 +586,7 @@
   transform: translateY(-1px);
 }
 
-/* ===== MINI TRACKER ===== */
+/* ── Mini Tracker ── */
 .miniTracker {
   display: flex;
   align-items: center;
@@ -451,57 +616,141 @@
   transition: background 0.3s;
 }
 
-/* ===== LOADING ===== */
-.loadingWrap {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-height: 60vh;
-  flex-direction: column;
-  gap: 16px;
-}
-
-.spinner {
-  width: 40px;
-  height: 40px;
-  border: 4px solid #fce4ec;
-  border-top: 4px solid #ff6b9d;
-  border-radius: 50%;
-  animation: spin 0.8s linear infinite;
-}
-
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
-
-/* ===== RESPONSIVE ===== */
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
 @media (max-width: 768px) {
+  .profilePage {
+    padding: 16px 12px 48px;
+  }
+
+  .profileHero {
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .heroInfo h1 {
+    font-size: 1.2rem;
+  }
+
   .quickStats {
     grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
   }
 
   .quickLinks {
     grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .formCard {
+    padding: 20px;
+  }
+
+  .tabs {
+    gap: 6px;
+  }
+
+  .tab {
+    font-size: 13px;
+    padding: 9px 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .profilePage {
+    padding: 12px 10px 40px;
   }
 
   .profileHero {
     flex-direction: column;
     text-align: center;
+    padding: 18px 16px;
   }
 
-  .adminLink {
-    margin-left: 0;
+  .avatarBig {
+    width: 64px;
+    height: 64px;
+    font-size: 1.6rem;
   }
-}
 
-@media (max-width: 480px) {
+  .heroInfo h1 {
+    font-size: 1.1rem;
+    white-space: normal;
+  }
+
+  .heroInfo p {
+    font-size: 0.80rem;
+    white-space: normal;
+    word-break: break-all;
+  }
+
+  .heroActions {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .adminLink,
+  .logoutBtn {
+    flex: 1;
+    text-align: center;
+    padding: 9px 12px;
+    font-size: 0.78rem;
+  }
+
   .quickStats {
     grid-template-columns: repeat(2, 1fr);
     gap: 8px;
   }
 
+  .statNum { font-size: 1.5rem; }
+  .statLabel { font-size: 0.64rem; }
+  .statCard { padding: 12px 8px; }
+
+  .tabs {
+    padding: 4px;
+  }
+
+  .tab {
+    font-size: 12px;
+    padding: 8px 6px;
+    gap: 4px;
+  }
+
+  .formCard {
+    padding: 16px;
+  }
+
+  .formCard h2 {
+    font-size: 1rem;
+  }
+
+  .saveBtn {
+    width: 100%;
+    text-align: center;
+  }
+
   .quickLinks {
     grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .quickLink {
+    padding: 14px 6px;
+    font-size: 12px;
+  }
+
+  .quickLink span:first-child {
+    font-size: 1.4rem;
+  }
+
+  .logoutCard {
+    flex-direction: column;
+    padding: 16px;
+  }
+
+  .logoutCardBtn {
+    width: 100%;
   }
 
   .orderTop {
@@ -512,12 +761,38 @@
 
   .orderFooter {
     flex-direction: column;
-    gap: 10px;
     align-items: flex-start;
   }
 
   .viewBtn {
     width: 100%;
     text-align: center;
+  }
+
+  .orderMeta {
+    gap: 10px;
+    font-size: 12px;
+  }
+
+  .miniTracker {
+    overflow-x: auto;
+    padding-bottom: 4px;
+  }
+}
+
+@media (max-width: 360px) {
+  .quickStats {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .quickLinks {
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+  }
+
+  .tab {
+    font-size: 11px;
+    padding: 7px 4px;
   }
 }

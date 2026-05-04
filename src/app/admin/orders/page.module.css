@@ -1,3 +1,5 @@
+/* src/app/admin/orders/page.module.css */
+
 .customerCell {
   display: flex;
   flex-direction: column;
@@ -7,19 +9,14 @@
 .customerEmail {
   font-size: 0.75rem;
   color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 150px;
 }
 
-.paid {
-  color: #10b981;
-  font-size: 0.82rem;
-  font-weight: 700;
-}
-
-.unpaid {
-  color: #f59e0b;
-  font-size: 0.82rem;
-  font-weight: 700;
-}
+.paid   { color: #10b981; font-size: 0.82rem; font-weight: 700; white-space: nowrap; }
+.unpaid { color: #f59e0b; font-size: 0.82rem; font-weight: 700; white-space: nowrap; }
 
 .statusBadge {
   padding: 4px 10px;
@@ -34,19 +31,18 @@
   padding: 5px 8px;
   border: 1.5px solid #e5e7eb;
   border-radius: 8px;
-  font-size: 0.8rem;
+  font-size: 0.78rem;
   background: white;
   cursor: pointer;
   color: #333;
   outline: none;
-  min-width: 100px;
+  min-width: 90px;
+  max-width: 120px;
 }
 
-.statusSelect:focus {
-  border-color: #ff6b9d;
-}
+.statusSelect:focus { border-color: #ff6b9d; }
 
-/* ===== STATUS COUNT CARDS ===== */
+/* ── STATUS COUNT CARDS ── */
 .statusCards {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
@@ -58,8 +54,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 6px;
-  padding: 14px 8px;
+  gap: 5px;
+  padding: 12px 6px;
   background: white;
   border: 1.5px solid #f3f4f6;
   border-radius: 12px;
@@ -80,35 +76,123 @@
   box-shadow: 0 4px 16px rgba(0,0,0,0.12) !important;
 }
 
-.statusCardEmoji {
-  font-size: 1.4rem;
-}
+.statusCardEmoji { font-size: 1.3rem; }
 
 .statusCardLabel {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   font-weight: 700;
   color: #555;
   text-align: center;
+  white-space: nowrap;
 }
 
 .statusCardCount {
-  font-size: 0.72rem;
+  font-size: 0.70rem;
   font-weight: 800;
   padding: 2px 8px;
   border-radius: 10px;
-  min-width: 24px;
+  min-width: 22px;
   text-align: center;
 }
 
-/* ===== RESPONSIVE ===== */
-@media (max-width: 1024px) {
+/* ── MOBILE ORDER CARDS ── */
+.mobileOrderCards {
+  display: none;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mobileOrderCard {
+  background: white;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.07);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.mobileOrderTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mobileOrderId {
+  font-family: monospace;
+  font-weight: 700;
+  font-size: 0.85rem;
+  color: #7c3aed;
+}
+
+.mobileOrderMid {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.mobileOrderCustomer {
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: #111827;
+}
+
+.mobileOrderAmount {
+  font-weight: 700;
+  font-size: 1rem;
+  color: #ff6b9d;
+}
+
+.mobileOrderBottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.mobileOrderDate {
+  font-size: 0.75rem;
+  color: #9ca3af;
+}
+
+.mobileOrderActions {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+/* ══════════════════════════════════════
+   RESPONSIVE
+══════════════════════════════════════ */
+@media (max-width: 1100px) {
   .statusCards {
     grid-template-columns: repeat(3, 1fr);
   }
 }
 
-@media (max-width: 640px) {
+@media (max-width: 768px) {
+  .statusCards {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+  }
+
+  .statusCard { padding: 10px 6px; }
+  .statusCardEmoji { font-size: 1.1rem; }
+  .statusCardLabel { font-size: 0.64rem; }
+
+  /* Hide desktop table, show mobile cards */
+  .mobileOrderCards { display: flex; }
+}
+
+@media (max-width: 480px) {
   .statusCards {
     grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
   }
+
+  .statusCard { padding: 10px 8px; }
 }

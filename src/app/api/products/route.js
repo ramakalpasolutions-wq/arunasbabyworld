@@ -7,51 +7,109 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
 
-    const page = parseInt(searchParams.get('page') || '1');
-    const limit = parseInt(searchParams.get('limit') || '12');
+    const page     = parseInt(searchParams.get('page')  || '1');
+    const limit    = parseInt(searchParams.get('limit') || '12');
     const category = searchParams.get('category');
-    const search = searchParams.get('search');
-    const sort = searchParams.get('sort') || 'createdAt';
-    const order = searchParams.get('order') || 'desc';
+    const search   = searchParams.get('search');
+    const sort     = searchParams.get('sort')  || 'createdAt';
+    const order    = searchParams.get('order') || 'desc';
     const featured = searchParams.get('featured');
     const trending = searchParams.get('trending');
-    const minPrice = searchParams.get('minPrice');
-    const maxPrice = searchParams.get('maxPrice');
+
+    // ✅ Get min/max price
+    let minPrice = searchParams.get('minPrice')
+      ? parseFloat(searchParams.get('minPrice'))
+      : null;
+    let maxPrice = searchParams.get('maxPrice')
+      ? parseFloat(searchParams.get('maxPrice'))
+      : null;
+
+    // ✅ Auto swap if min > max
+    if (minPrice !== null && maxPrice !== null && minPrice > maxPrice) {
+      [minPrice, maxPrice] = [maxPrice, minPrice];
+    }
+
+    console.log('🔍 Price filter:', { minPrice, maxPrice });
 
     const where = { isActive: true };
 
     if (featured === 'true') where.isFeatured = true;
     if (trending === 'true') where.isTrending = true;
 
-    if (minPrice || maxPrice) {
-      where.price = {};
-      if (minPrice) where.price.gte = parseFloat(minPrice);
-      if (maxPrice) where.price.lte = parseFloat(maxPrice);
-    }
-
-    if (search) {
+    // ✅ Price filter — checks BOTH price and discountPrice
+    if (minPrice !== null || maxPrice !== null) {
       where.OR = [
-        { name: { contains: search, mode: 'insensitive' } },
-        { tags: { has: search } },
+        // ✅ Case 1: Product has discountPrice — filter by discountPrice
+        {
+          discountPrice: {
+            not: null,
+            ...(minPrice !== null && { gte: minPrice }),
+            ...(maxPrice !== null && { lte: maxPrice }),
+          },
+        },
+        // ✅ Case 2: Product has NO discountPrice — filter by regular price
+        {
+          discountPrice: null,
+          price: {
+            ...(minPrice !== null && { gte: minPrice }),
+            ...(maxPrice !== null && { lte: maxPrice }),
+          },
+        },
       ];
     }
 
-    // ✅ Handle category by ID or slug
-    if (category) {
-      const isObjectId = /^[a-f\d]{24}$/i.test(category);
-      if (isObjectId) {
-        // ✅ Filter by category ID directly
-        where.categoryId = category;
+    if (search) {
+      // ✅ If price filter already set OR, we need to combine with search
+      if (where.OR) {
+        where.AND = [
+          { OR: where.OR },
+          {
+            OR: [
+              { name: { contains: search, mode: 'insensitive' } },
+              { tags: { has: search } },
+            ],
+          },
+        ];
+        delete where.OR;
       } else {
-        // Filter by slug
-        const cat = await prisma.category.findFirst({
-          where: { slug: category },
-        });
-        if (cat) where.categoryId = cat.id;
+        where.OR = [
+          { name: { contains: search, mode: 'insensitive' } },
+          { tags: { has: search } },
+        ];
       }
     }
 
+    // ✅ Handle category by ID first, then slug
+    if (category) {
+      try {
+        const catById = await prisma.category.findUnique({
+          where: { id: category },
+        });
+
+        if (catById) {
+          where.categoryId = category;
+        } else {
+          const catBySlug = await prisma.category.findFirst({
+            where: { slug: category },
+          });
+          if (catBySlug) {
+            where.categoryId = catBySlug.id;
+          }
+        }
+      } catch {
+        const catBySlug = await prisma.category.findFirst({
+          where: { slug: category },
+        });
+        if (catBySlug) {
+          where.categoryId = catBySlug.id;
+        }
+      }
+    }
+
+    console.log('📦 Where query:', JSON.stringify(where, null, 2));
+
     const total = await prisma.product.count({ where });
+
     const products = await prisma.product.findMany({
       where,
       include: {
@@ -62,6 +120,8 @@ export async function GET(request) {
       take: limit,
     });
 
+    console.log(`✅ Found ${total} products`);
+
     return NextResponse.json({
       products,
       pagination: {
@@ -71,6 +131,7 @@ export async function GET(request) {
         pages: Math.ceil(total / limit),
       },
     });
+
   } catch (error) {
     console.error('Products GET error:', error);
     return NextResponse.json(
@@ -89,11 +150,18 @@ export async function POST(request) {
 
     const data = await request.json();
 
-    // ✅ Handle category by slug or ID
     let categoryId = data.categoryId;
-    const isValidObjectId = /^[a-f\d]{24}$/i.test(categoryId);
 
-    if (!isValidObjectId) {
+    let foundCat = null;
+    try {
+      foundCat = await prisma.category.findUnique({
+        where: { id: categoryId },
+      });
+    } catch {
+      foundCat = null;
+    }
+
+    if (!foundCat) {
       const slug = data.categorySlug || categoryId;
       let cat = await prisma.category.findFirst({
         where: { slug },
@@ -101,30 +169,30 @@ export async function POST(request) {
 
       if (!cat) {
         const nameMap = {
-          'clothing': { name: 'Clothing', icon: '👕', color: '#ff6b9d' },
-          'toys-games': { name: 'Toys & Games', icon: '🧸', color: '#7c3aed' },
-          'baby-gear': { name: 'Baby Gear', icon: '🍼', color: '#0ea5e9' },
-          'feeding': { name: 'Feeding', icon: '🥛', color: '#10b981' },
+          'clothing':      { name: 'Clothing',        icon: '👕', color: '#ff6b9d' },
+          'toys-games':    { name: 'Toys & Games',    icon: '🧸', color: '#7c3aed' },
+          'baby-gear':     { name: 'Baby Gear',       icon: '🍼', color: '#0ea5e9' },
+          'feeding':       { name: 'Feeding',         icon: '🥛', color: '#10b981' },
           'health-safety': { name: 'Health & Safety', icon: '🏥', color: '#f59e0b' },
-          'nursery': { name: 'Nursery', icon: '🛏️', color: '#ef4444' },
-          'books': { name: 'Books', icon: '📚', color: '#8b5cf6' },
-          'outdoor': { name: 'Outdoor', icon: '🌿', color: '#059669' },
+          'nursery':       { name: 'Nursery',         icon: '🛏️', color: '#ef4444' },
+          'books':         { name: 'Books',           icon: '📚', color: '#8b5cf6' },
+          'outdoor':       { name: 'Outdoor',         icon: '🌿', color: '#059669' },
         };
 
         const catInfo = nameMap[slug] || {
-          name: slug,
-          icon: '📦',
+          name:  slug,
+          icon:  '📦',
           color: '#666',
         };
 
         cat = await prisma.category.create({
           data: {
-            name: catInfo.name,
+            name:     catInfo.name,
             slug,
-            icon: catInfo.icon,
-            color: catInfo.color,
+            icon:     catInfo.icon,
+            color:    catInfo.color,
             isActive: true,
-            order: 0,
+            order:    0,
           },
         });
       }
@@ -148,30 +216,31 @@ export async function POST(request) {
 
     const product = await prisma.product.create({
       data: {
-        name: data.name,
-        description: data.description,
+        name:             data.name,
+        description:      data.description,
         shortDescription: data.shortDescription || null,
-        price: parseFloat(data.price),
-        discountPrice: data.discountPrice
+        price:            parseFloat(data.price),
+        discountPrice:    data.discountPrice
           ? parseFloat(data.discountPrice)
           : null,
         discountPercent,
-        stock: parseInt(data.stock),
-        brand: data.brand || null,
+        stock:      parseInt(data.stock),
+        brand:      data.brand    || null,
         categoryId,
-        ageGroup: data.ageGroup || null,
-        tags: data.tags || [],
-        features: data.features || [],
+        ageGroup:   data.ageGroup || null,
+        tags:       data.tags     || [],
+        features:   data.features || [],
         isFeatured: data.isFeatured || false,
         isTrending: data.isTrending || false,
-        isActive: data.isActive !== false,
-        images: data.images || [],
+        isActive:   data.isActive !== false,
+        images:     data.images   || [],
         slug,
         sku,
       },
     });
 
     return NextResponse.json({ product }, { status: 201 });
+
   } catch (error) {
     console.error('Products POST error:', error);
     return NextResponse.json(

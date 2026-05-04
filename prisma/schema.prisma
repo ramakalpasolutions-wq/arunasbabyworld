@@ -81,6 +81,10 @@ model Product {
   tags             String[]
   features         String[]
   ageGroup         String?
+  size             String?
+  gender           String?
+  color            String?
+  material         String?
   reviews          Review[]
   rating           Float          @default(0)
   numReviews       Int            @default(0)
@@ -109,30 +113,34 @@ model Review {
   updatedAt DateTime @updatedAt
 }
 
+// ✅ ONE Banner model — with gridImages
 model Banner {
-  id         String      @id @default(auto()) @map("_id") @db.ObjectId
+  id         String        @id @default(auto()) @map("_id") @db.ObjectId
   title      String
   subtitle   String?
   image      BannerImage?
-  buttonText String      @default("Shop Now")
-  buttonLink String      @default("/products")
-  bgColor    String      @default("#ff6b9d")
-  isActive   Boolean     @default(true)
-  order      Int         @default(0)
-  type       String      @default("hero")
+  gridImages BannerImage[]
+  buttonText String        @default("Shop Now")
+  buttonLink String        @default("/products")
+  bgColor    String        @default("#ff6b9d")
+  isActive   Boolean       @default(true)
+  order      Int           @default(0)
+  type       String        @default("hero")
   emoji      String?
   price      Float?
   offer      String?
   color      String?
   slug       String?
   gender     String?
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
+  createdAt  DateTime      @default(now())
+  updatedAt  DateTime      @updatedAt
 }
 
+// ✅ ONE BannerImage type — with title
 type BannerImage {
   url      String?
   publicId String?
+  title    String?
 }
 
 model Order {

@@ -1,47 +1,43 @@
 'use client';
 import { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useSession, signOut } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import styles from './profile.module.css';
 
 const STATUS_COLOR = {
-  Pending: '#f59e0b',
-  Confirmed: '#3b82f6',
+  Pending:    '#f59e0b',
+  Confirmed:  '#3b82f6',
   Processing: '#8b5cf6',
-  Shipped: '#06b6d4',
-  Delivered: '#10b981',
-  Cancelled: '#ef4444',
-  Refunded: '#6b7280',
+  Shipped:    '#06b6d4',
+  Delivered:  '#10b981',
+  Cancelled:  '#ef4444',
+  Refunded:   '#6b7280',
 };
 
 const STATUS_EMOJI = {
-  Pending: '⏳',
-  Confirmed: '✅',
+  Pending:    '⏳',
+  Confirmed:  '✅',
   Processing: '⚙️',
-  Shipped: '🚚',
-  Delivered: '🎉',
-  Cancelled: '❌',
-  Refunded: '↩️',
+  Shipped:    '🚚',
+  Delivered:  '🎉',
+  Cancelled:  '❌',
+  Refunded:   '↩️',
 };
 
 export default function ProfileClient() {
   const { data: session, status } = useSession();
-  const router = useRouter();
+  const router       = useRouter();
   const searchParams = useSearchParams();
-  const defaultTab = searchParams.get('tab') || 'profile';
+  const defaultTab   = searchParams.get('tab') || 'profile';
 
-  const [activeTab, setActiveTab] = useState(defaultTab);
-  const [userData, setUserData] = useState({
-    name: '',
-    email: '',
-    phone: '',
-  });
-  const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [activeTab,      setActiveTab]      = useState(defaultTab);
+  const [userData,       setUserData]       = useState({ name: '', email: '', phone: '' });
+  const [orders,         setOrders]         = useState([]);
+  const [loading,        setLoading]        = useState(true);
+  const [saving,         setSaving]         = useState(false);
+  const [ordersLoading,  setOrdersLoading]  = useState(false);
 
   useEffect(() => {
     if (status === 'unauthenticated') {
@@ -62,7 +58,7 @@ export default function ProfileClient() {
       if (res.ok) {
         const data = await res.json();
         setUserData({
-          name: data.user?.name || session?.user?.name || '',
+          name:  data.user?.name  || session?.user?.name  || '',
           email: data.user?.email || session?.user?.email || '',
           phone: data.user?.phone || '',
         });
@@ -97,13 +93,8 @@ export default function ProfileClient() {
       const res = await fetch('/api/users/profile', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-       body: JSON.stringify({
-  name: userData.name,
-  phone: userData.phone,
-  email: userData.email,
-        }),
+        body: JSON.stringify({ name: userData.name, phone: userData.phone }),
       });
-
       if (res.ok) {
         toast.success('✅ Profile updated successfully!');
       } else {
@@ -119,8 +110,8 @@ export default function ProfileClient() {
 
   if (status === 'loading' || loading) {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: '16px' }}>
-        <div style={{ width: '40px', height: '40px', border: '4px solid #fce4ec', borderTop: '4px solid #ff6b9d', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <div className={styles.loadingWrap}>
+        <div className={styles.spinner} />
         <p style={{ color: '#888' }}>Loading your profile...</p>
       </div>
     );
@@ -131,11 +122,12 @@ export default function ProfileClient() {
   return (
     <div className={styles.profilePage}>
 
-      {/* ===== PROFILE HERO ===== */}
+      {/* ── PROFILE HERO ── */}
       <div className={styles.profileHero}>
         <div className={styles.avatarBig}>
           {session?.user?.name?.[0]?.toUpperCase() || 'U'}
         </div>
+
         <div className={styles.heroInfo}>
           <h1>{session?.user?.name || 'Customer'}</h1>
           <p>{session?.user?.email}</p>
@@ -143,14 +135,25 @@ export default function ProfileClient() {
             <span className={styles.adminBadge}>⚙️ Admin</span>
           )}
         </div>
-        {session?.user?.role === 'admin' && (
-          <Link href="/admin/dashboard" className={styles.adminLink}>
-            Go to Admin Panel →
-          </Link>
-        )}
+
+        {/* ✅ Action buttons top right */}
+        <div className={styles.heroActions}>
+          {session?.user?.role === 'admin' && (
+            <Link href="/admin/dashboard" className={styles.adminLink}>
+              ⚙️ Admin Panel
+            </Link>
+          )}
+          {/* ✅ Logout button */}
+          <button
+            className={styles.logoutBtn}
+            onClick={() => signOut({ callbackUrl: '/' })}
+          >
+            🚪 Logout
+          </button>
+        </div>
       </div>
 
-      {/* ===== QUICK STATS ===== */}
+      {/* ── QUICK STATS ── */}
       <div className={styles.quickStats}>
         <div className={styles.statCard}>
           <span className={styles.statNum}>{orders.length}</span>
@@ -176,7 +179,7 @@ export default function ProfileClient() {
         </div>
       </div>
 
-      {/* ===== TABS ===== */}
+      {/* ── TABS ── */}
       <div className={styles.tabs}>
         <button
           className={`${styles.tab} ${activeTab === 'profile' ? styles.activeTab : ''}`}
@@ -195,30 +198,29 @@ export default function ProfileClient() {
         </button>
       </div>
 
-      {/* ===== PROFILE TAB ===== */}
+      {/* ── PROFILE TAB ── */}
       {activeTab === 'profile' && (
         <div className={styles.tabContent}>
           <div className={styles.formCard}>
             <h2>Personal Information</h2>
-            <p style={{ color: '#888', fontSize: '14px', marginBottom: '24px' }}>
-              Update your profile details below
-            </p>
+            <p className={styles.formSubtitle}>Update your profile details below</p>
 
             <form onSubmit={handleSave} className={styles.form}>
 
-              {/* Name */}
+              {/* Full Name */}
               <div className={styles.formGroup}>
-  <label>Email Address</label>
-  <div className={styles.inputWrap}>
-    <span className={styles.inputIcon}>✉️</span>
-    <input
-      type="email"
-      value={userData.email}
-      onChange={e => setUserData(p => ({ ...p, email: e.target.value }))}
-      placeholder="your@email.com"
-    />
-  </div>
-</div>
+                <label>Full Name *</label>
+                <div className={styles.inputWrap}>
+                  <span className={styles.inputIcon}>👤</span>
+                  <input
+                    type="text"
+                    value={userData.name}
+                    onChange={e => setUserData(p => ({ ...p, name: e.target.value }))}
+                    placeholder="Your full name"
+                    required
+                  />
+                </div>
+              </div>
 
               {/* Email */}
               <div className={styles.formGroup}>
@@ -232,7 +234,7 @@ export default function ProfileClient() {
                     className={styles.disabledField}
                   />
                 </div>
-                <small style={{ color: '#f59e0b', fontSize: '12px', marginTop: '4px', display: 'block' }}>
+                <small className={styles.warningText}>
                   ⚠️ Email cannot be changed
                 </small>
               </div>
@@ -251,11 +253,7 @@ export default function ProfileClient() {
                 </div>
               </div>
 
-              <button
-                type="submit"
-                className={styles.saveBtn}
-                disabled={saving}
-              >
+              <button type="submit" className={styles.saveBtn} disabled={saving}>
                 {saving ? '⏳ Saving...' : '💾 Save Changes'}
               </button>
             </form>
@@ -280,10 +278,24 @@ export default function ProfileClient() {
               <span>Contact Us</span>
             </Link>
           </div>
+
+          {/* ✅ Logout card at bottom */}
+          <div className={styles.logoutCard}>
+            <div className={styles.logoutCardInfo}>
+              <h4>Sign Out</h4>
+              <p>Sign out from your BabyBliss account</p>
+            </div>
+            <button
+              className={styles.logoutCardBtn}
+              onClick={() => signOut({ callbackUrl: '/' })}
+            >
+              🚪 Logout
+            </button>
+          </div>
         </div>
       )}
 
-      {/* ===== ORDERS TAB ===== */}
+      {/* ── ORDERS TAB ── */}
       {activeTab === 'orders' && (
         <div className={styles.tabContent}>
           {ordersLoading ? (
@@ -312,9 +324,7 @@ export default function ProfileClient() {
                       </span>
                       <span className={styles.orderDate}>
                         {new Date(order.createdAt).toLocaleDateString('en-IN', {
-                          day: 'numeric',
-                          month: 'short',
-                          year: 'numeric',
+                          day: 'numeric', month: 'short', year: 'numeric',
                         })}
                       </span>
                     </div>
@@ -329,7 +339,7 @@ export default function ProfileClient() {
                     </span>
                   </div>
 
-                  {/* Order Items Preview */}
+                  {/* Order Items */}
                   <div className={styles.orderItems}>
                     {order.orderItems?.slice(0, 2).map((item, i) => (
                       <div key={i} className={styles.orderItemPreview}>
@@ -358,15 +368,12 @@ export default function ProfileClient() {
                         ₹{order.totalPrice?.toLocaleString('en-IN')}
                       </span>
                     </div>
-                    <Link
-                      href={`/orders/${order.id}`}
-                      className={styles.viewBtn}
-                    >
+                    <Link href={`/orders/${order.id}`} className={styles.viewBtn}>
                       Track Order →
                     </Link>
                   </div>
 
-                  {/* ✅ Tracking Progress Bar */}
+                  {/* Mini Tracker */}
                   {order.orderStatus !== 'Cancelled' && order.orderStatus !== 'Refunded' && (
                     <div className={styles.miniTracker}>
                       {['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered'].map((step, i) => {
@@ -375,16 +382,12 @@ export default function ProfileClient() {
                           <div key={step} className={styles.miniStep}>
                             <div
                               className={styles.miniDot}
-                              style={{
-                                background: i <= currentIndex ? STATUS_COLOR[order.orderStatus] : '#e5e7eb',
-                              }}
+                              style={{ background: i <= currentIndex ? STATUS_COLOR[order.orderStatus] : '#e5e7eb' }}
                             />
                             {i < 4 && (
                               <div
                                 className={styles.miniLine}
-                                style={{
-                                  background: i < currentIndex ? STATUS_COLOR[order.orderStatus] : '#e5e7eb',
-                                }}
+                                style={{ background: i < currentIndex ? STATUS_COLOR[order.orderStatus] : '#e5e7eb' }}
                               />
                             )}
                           </div>
