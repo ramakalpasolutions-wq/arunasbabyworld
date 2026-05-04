@@ -1,3 +1,4 @@
+// src/app/page.js
 import MainLayout from '@/components/layout/MainLayout';
 import HomeClient from './HomeClient';
 import prisma from '@/lib/prisma';
@@ -44,21 +45,18 @@ async function getProducts(params = {}) {
     if (params.featured) where.isFeatured = true;
     if (params.trending) where.isTrending = true;
 
-    const products = await prisma.product.findMany({
+    return await prisma.product.findMany({
       where,
       take: params.limit || 8,
       orderBy: { createdAt: 'desc' },
       include: { category: true },
     });
-
-    return products;
   } catch (err) {
     console.error('getProducts error:', err);
     return [];
   }
 }
 
-// ✅ Serialize Prisma Date objects for client components
 const serialize = (data) => JSON.parse(JSON.stringify(data));
 
 export default async function HomePage() {
