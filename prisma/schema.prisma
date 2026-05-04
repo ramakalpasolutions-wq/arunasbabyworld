@@ -141,6 +141,9 @@ type BannerImage {
   url      String?
   publicId String?
   title    String?
+  link     String?   // ✅ add this
+  brand    String?   // ✅ add this
+  price    Float? 
 }
 
 model Order {

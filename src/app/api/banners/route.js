@@ -44,8 +44,8 @@ export async function POST(request) {
       gender:     body.gender || null,
     };
 
-    // ✅ Fix — image object
-    if (body.image && body.image.url) {
+    // ✅ image object
+    if (body.image?.url) {
       bannerData.image = {
         url:      body.image.url      || '',
         publicId: body.image.publicId || '',
@@ -53,12 +53,15 @@ export async function POST(request) {
       };
     }
 
-    // ✅ Fix — gridImages array
-    if (body.gridImages && body.gridImages.length > 0) {
+    // ✅ gridImages — now with link, brand, price
+    if (body.gridImages?.length > 0) {
       bannerData.gridImages = body.gridImages.map(img => ({
         url:      img.url      || '',
         publicId: img.publicId || '',
         title:    img.title    || '',
+        link:     img.link     || '',
+        brand:    img.brand    || '',
+        price:    img.price    ? parseFloat(img.price) : null,
       }));
     } else {
       bannerData.gridImages = [];

@@ -42,8 +42,8 @@ export async function PUT(request, { params }) {
     if (body.slug       !== undefined) updateData.slug       = body.slug;
     if (body.gender     !== undefined) updateData.gender     = body.gender;
 
-    // ✅ Fix — image object
-    if (body.image && body.image.url) {
+    // ✅ image object
+    if (body.image?.url) {
       updateData.image = {
         url:      body.image.url      || '',
         publicId: body.image.publicId || '',
@@ -53,12 +53,15 @@ export async function PUT(request, { params }) {
       updateData.image = null;
     }
 
-    // ✅ Fix — gridImages array
+    // ✅ gridImages — now with link, brand, price
     if (body.gridImages !== undefined) {
       updateData.gridImages = (body.gridImages || []).map(img => ({
         url:      img.url      || '',
         publicId: img.publicId || '',
         title:    img.title    || '',
+        link:     img.link     || '',
+        brand:    img.brand    || '',
+        price:    img.price    ? parseFloat(img.price) : null,
       }));
     }
 
