@@ -78,22 +78,52 @@ const offerBanners = [
   },
 ];
 
+/* ── Default fallback data ── */
+const defaultMaternityGrid = [
+  { emoji: '🤰', title: 'Maternity Tops',    link: '/products?search=maternity+tops' },
+  { emoji: '👗', title: 'Maternity Dresses', link: '/products?search=maternity+dresses' },
+  { emoji: '🩱', title: 'Loungewear',        link: '/products?search=maternity+loungewear' },
+  { emoji: '👚', title: 'Nightwear',         link: '/products?search=maternity+nightwear' },
+];
+
+const defaultPersonalCareItems = [
+  { emoji: '🧴', title: 'Baby Lotion',   link: '/products?search=baby+lotion',   brand: 'Himalaya' },
+  { emoji: '🛁', title: 'Baby Wash',     link: '/products?search=baby+wash',     brand: 'Mee Mee' },
+  { emoji: '🧼', title: 'Baby Soap',     link: '/products?search=baby+soap',     brand: 'Dove Baby' },
+  { emoji: '💊', title: 'Baby Powder',   link: '/products?search=baby+powder',   brand: 'Johnson' },
+  { emoji: '🪥', title: 'Baby Shampoo',  link: '/products?search=baby+shampoo',  brand: 'Mamaearth' },
+  { emoji: '🧻', title: 'Baby Wipes',    link: '/products?search=baby+wipes',    brand: 'Pampers' },
+  { emoji: '🌿', title: 'Diaper Cream',  link: '/products?search=diaper+cream',  brand: 'Chicco' },
+  { emoji: '💆', title: 'Baby Massage',  link: '/products?search=baby+massage',  brand: 'Dabur' },
+];
+
+const COLORS   = ['#FF6B35', '#7B2FBE', '#FF8C5A', '#9B4FDE'];
+const COLORS_L = ['#FF8C5A', '#9B4FDE', '#FFB347', '#C084FC'];
+const MAT_COLORS = ['#FF6B35', '#FF8C5A', '#7B2FBE', '#9B4FDE'];
+const MAT_COLORS_L = ['#FF8C5A', '#FFB347', '#9B4FDE', '#C084FC'];
+
 /* ════════════════════════════════════════
    MATERNITY SECTION
    ════════════════════════════════════════ */
 function MaternitySection({ banners }) {
   if (!banners?.length) return null;
+
   const mainBanner = banners[0];
-  const gridItems  = banners.flatMap(b =>
+  const dbGridItems = banners.flatMap(b =>
     (b.gridImages || []).map(img => ({
       ...img,
       link: img.link || b.buttonLink || '/products?category=maternity',
     }))
   );
 
+  /* ✅ Use DB items if exist, else show defaults */
+  const gridItems = dbGridItems.length > 0 ? dbGridItems : defaultMaternityGrid;
+
   return (
     <section style={{ padding: '60px 20px', background: 'linear-gradient(135deg, #FFF5F9, #FDF4FF)' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+
+        {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <span style={{ display: 'inline-block', padding: '4px 14px', background: 'linear-gradient(135deg, #FFF3EC, #F3E8FF)', border: '1.5px solid #FFD4B8', borderRadius: '999px', fontSize: '0.70rem', fontWeight: '800', color: '#FF6B35', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>
@@ -103,11 +133,13 @@ function MaternitySection({ banners }) {
               🤰 Maternity Collection
             </h2>
           </div>
-          <Link href={mainBanner.buttonLink || '/products?category=maternity'} style={{ padding: '10px 22px', background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)', color: 'white', borderRadius: '999px', textDecoration: 'none', fontSize: '0.84rem', fontWeight: '700', boxShadow: '0 4px 14px rgba(255,107,53,0.28)' }}>
+          <Link href={mainBanner.buttonLink || '/products?category=maternity'}
+            style={{ padding: '10px 22px', background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)', color: 'white', borderRadius: '999px', textDecoration: 'none', fontSize: '0.84rem', fontWeight: '700', boxShadow: '0 4px 14px rgba(255,107,53,0.28)' }}>
             View All →
           </Link>
         </div>
 
+        {/* Main Banner */}
         <Link href={mainBanner.buttonLink || '/products?category=maternity'}
           style={{ display: 'block', borderRadius: '24px', overflow: 'hidden', height: '380px', position: 'relative', textDecoration: 'none', marginBottom: '20px', transition: 'transform 0.35s ease, box-shadow 0.35s ease' }}
           onMouseEnter={e => { e.currentTarget.style.transform = 'scale(1.01)'; e.currentTarget.style.boxShadow = '0 20px 60px rgba(0,0,0,0.18)'; }}
@@ -116,7 +148,10 @@ function MaternitySection({ banners }) {
           {mainBanner.image?.url ? (
             <img src={mainBanner.image.url} alt={mainBanner.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           ) : (
-            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #FF6B35, #FF8C5A, #7B2FBE)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8rem' }}>🤰</div>
+            <div style={{ width: '100%', height: '100%', background: 'linear-gradient(135deg, #FF6B35, #FF8C5A, #7B2FBE)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+              <span style={{ fontSize: '6rem' }}>🤰</span>
+              <span style={{ color: 'white', fontSize: '1.4rem', fontWeight: '700' }}>Maternity Collection</span>
+            </div>
           )}
           <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.20) 55%, transparent 100%)' }} />
           <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: '40px 48px' }}>
@@ -128,31 +163,35 @@ function MaternitySection({ banners }) {
           </div>
         </Link>
 
-        {gridItems.length > 0 && (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
-            {gridItems.map((item, i) => (
-              <Link key={i} href={item.link || '/products?category=maternity'} style={{ textDecoration: 'none', display: 'block' }}>
-                <div style={{ borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', background: 'white', transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 16px 40px rgba(0,0,0,0.14)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)'; }}
-                >
-                  {item.url ? (
-                    <img src={item.url} alt={item.title || `Maternity ${i + 1}`} style={{ width: '100%', height: '220px', objectFit: 'cover' }} />
-                  ) : (
-                    <div style={{ height: '220px', background: 'linear-gradient(135deg, #FF6B35, #FF8C5A)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem' }}>🤰</div>
-                  )}
-                  <div style={{ padding: '14px' }}>
-                    {item.title && <h4 style={{ fontSize: '0.90rem', fontWeight: '700', color: '#2D1A4A', margin: '0 0 6px', lineHeight: 1.3 }}>{item.title}</h4>}
-                    {item.price && <p style={{ fontSize: '0.95rem', fontWeight: '800', color: '#FF6B35', margin: 0 }}>₹{item.price}</p>}
-                    <span style={{ display: 'inline-block', marginTop: '8px', padding: '5px 14px', background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)', color: 'white', borderRadius: '999px', fontSize: '0.75rem', fontWeight: '700' }}>
-                      Shop Now →
-                    </span>
+        {/* Grid — DB items or defaults */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px' }}>
+          {gridItems.map((item, i) => (
+            <Link key={i} href={item.link || '/products?category=maternity'} style={{ textDecoration: 'none', display: 'block' }}>
+              <div
+                style={{ borderRadius: '16px', overflow: 'hidden', boxShadow: '0 4px 16px rgba(0,0,0,0.08)', background: 'white', transition: 'transform 0.3s ease, box-shadow 0.3s ease' }}
+                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 16px 40px rgba(0,0,0,0.14)'; }}
+                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 16px rgba(0,0,0,0.08)'; }}
+              >
+                {item.url ? (
+                  <img src={item.url} alt={item.title || `Maternity ${i + 1}`} style={{ width: '100%', height: '220px', objectFit: 'cover' }} />
+                ) : (
+                  <div style={{ height: '220px', background: `linear-gradient(135deg, ${MAT_COLORS[i % 4]}, ${MAT_COLORS_L[i % 4]})`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem' }}>
+                    {item.emoji || '🤰'}
                   </div>
+                )}
+                <div style={{ padding: '14px' }}>
+                  <h4 style={{ fontSize: '0.90rem', fontWeight: '700', color: '#2D1A4A', margin: '0 0 6px', lineHeight: 1.3 }}>
+                    {item.title || 'Maternity Wear'}
+                  </h4>
+                  {item.price && <p style={{ fontSize: '0.95rem', fontWeight: '800', color: '#FF6B35', margin: 0 }}>₹{item.price}</p>}
+                  <span style={{ display: 'inline-block', marginTop: '8px', padding: '5px 14px', background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)', color: 'white', borderRadius: '999px', fontSize: '0.75rem', fontWeight: '700' }}>
+                    Shop Now →
+                  </span>
                 </div>
-              </Link>
-            ))}
-          </div>
-        )}
+              </div>
+            </Link>
+          ))}
+        </div>
       </div>
     </section>
   );
@@ -164,19 +203,21 @@ function MaternitySection({ banners }) {
 function PersonalCareSection({ banners }) {
   if (!banners?.length) return null;
 
-  const items = banners.flatMap(b =>
+  const dbItems = banners.flatMap(b =>
     (b.gridImages || []).map(img => ({
       ...img,
       link: img.link || b.buttonLink || '/products?category=personal-care',
     }))
   );
 
-  if (!items.length) return null;
-
+  /* ✅ Use DB items if exist, else show defaults — NO more return null! */
+  const items = dbItems.length > 0 ? dbItems : defaultPersonalCareItems;
   const loopItems = [...items, ...items, ...items];
 
   return (
     <section style={{ padding: '60px 0', background: 'white', overflow: 'hidden' }}>
+
+      {/* Header */}
       <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '0 20px', marginBottom: '28px' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
           <div>
@@ -187,12 +228,14 @@ function PersonalCareSection({ banners }) {
               🧴 Personal Care
             </h2>
           </div>
-          <Link href={banners[0]?.buttonLink || '/products?category=personal-care'} style={{ padding: '10px 22px', background: 'linear-gradient(135deg, #7B2FBE, #FF6B35)', color: 'white', borderRadius: '999px', textDecoration: 'none', fontSize: '0.84rem', fontWeight: '700' }}>
+          <Link href={banners[0]?.buttonLink || '/products?category=personal-care'}
+            style={{ padding: '10px 22px', background: 'linear-gradient(135deg, #7B2FBE, #FF6B35)', color: 'white', borderRadius: '999px', textDecoration: 'none', fontSize: '0.84rem', fontWeight: '700' }}>
             View All →
           </Link>
         </div>
       </div>
 
+      {/* Auto scroll */}
       <div style={{ position: 'relative', overflow: 'hidden' }}>
         <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '80px', background: 'linear-gradient(to right, white, transparent)', zIndex: 2, pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '80px', background: 'linear-gradient(to left, white, transparent)', zIndex: 2, pointerEvents: 'none' }} />
@@ -203,16 +246,20 @@ function PersonalCareSection({ banners }) {
           onMouseLeave={e => e.currentTarget.style.animationPlayState = 'running'}
         >
           {loopItems.map((item, i) => (
-            <Link key={i} href={item.link}
+            <Link key={i}
+              href={item.link || '/products?category=personal-care'}
               style={{ flexShrink: 0, width: '200px', display: 'block', textDecoration: 'none', transition: 'transform 0.3s ease' }}
               onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-6px)'}
               onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
             >
               <div style={{ borderRadius: '18px', overflow: 'hidden', boxShadow: '0 4px 16px rgba(123,47,190,0.10)', background: 'white' }}>
                 {item.url ? (
-                  <img src={item.url} alt={item.title || `Personal Care ${i + 1}`} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
+                  <img src={item.url} alt={item.title || 'Personal Care'} style={{ width: '100%', height: '200px', objectFit: 'cover' }} />
                 ) : (
-                  <div style={{ height: '200px', background: `linear-gradient(135deg, ${['#FF6B35','#7B2FBE','#FF8C5A','#9B4FDE'][i % 4]}20, ${['#FF6B35','#7B2FBE','#FF8C5A','#9B4FDE'][i % 4]}40)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem' }}>🧴</div>
+                  <div style={{ height: '200px', background: `linear-gradient(135deg, ${COLORS[i % 4]}20, ${COLORS[i % 4]}40)`, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+                    <span style={{ fontSize: '3.5rem' }}>{item.emoji || '🧴'}</span>
+                    {item.brand && <span style={{ fontSize: '0.75rem', fontWeight: '800', color: COLORS[i % 4] }}>{item.brand}</span>}
+                  </div>
                 )}
                 <div style={{ padding: '12px' }}>
                   {item.brand && (
@@ -220,15 +267,11 @@ function PersonalCareSection({ banners }) {
                       {item.brand}
                     </p>
                   )}
-                  {item.title && (
-                    <h4 style={{ fontSize: '0.84rem', fontWeight: '700', color: '#2D1A4A', margin: '0 0 4px', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                      {item.title}
-                    </h4>
-                  )}
+                  <h4 style={{ fontSize: '0.84rem', fontWeight: '700', color: '#2D1A4A', margin: '0 0 4px', lineHeight: 1.3, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {item.title || 'Baby Care'}
+                  </h4>
                   {item.price && (
-                    <p style={{ fontSize: '0.90rem', fontWeight: '800', color: '#FF6B35', margin: 0 }}>
-                      ₹{item.price}
-                    </p>
+                    <p style={{ fontSize: '0.90rem', fontWeight: '800', color: '#FF6B35', margin: 0 }}>₹{item.price}</p>
                   )}
                 </div>
               </div>
@@ -253,10 +296,10 @@ function PersonalCareSection({ banners }) {
 function HealthCareSection({ banners }) {
   if (!banners?.length) return null;
 
+  const mainBanner    = banners[0];
   const allGridImages = banners.flatMap(b => b.gridImages || []);
-  const childImg = allGridImages[0] || null;
-  const womenImg = allGridImages[1] || allGridImages[0] || null;
-  const mainBanner = banners[0];
+  const childImg      = allGridImages[0] || null;
+  const womenImg      = allGridImages[1] || allGridImages[0] || null;
 
   const cards = [
     {
@@ -264,24 +307,26 @@ function HealthCareSection({ banners }) {
       label:        '👶 Child',
       subtitle:     childImg?.title || 'Baby care, monitors & safety',
       color:        '#FF6B35',
-      link:         childImg?.link || '/products?search=child+health',
+      link:         childImg?.link  || '/products?search=child+health',
       defaultEmoji: '👶',
-      defaultBg:    'linear-gradient(135deg, #FFF3EC, #FFD4B8)',
+      defaultBg:    'linear-gradient(135deg, #FFF3EC 0%, #FFD4B8 50%, #FF6B35 100%)',
     },
     {
       img:          womenImg,
       label:        '👩 Women',
       subtitle:     womenImg?.title || 'Personal care, hygiene & wellness',
       color:        '#7B2FBE',
-      link:         womenImg?.link || '/products?search=women+health',
+      link:         womenImg?.link  || '/products?search=women+health',
       defaultEmoji: '👩',
-      defaultBg:    'linear-gradient(135deg, #F3E8FF, #DFC5F8)',
+      defaultBg:    'linear-gradient(135deg, #F3E8FF 0%, #DFC5F8 50%, #7B2FBE 100%)',
     },
   ];
 
   return (
     <section style={{ padding: '60px 20px', background: 'linear-gradient(135deg, #F0FDF4, #F3E8FF)' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+
+        {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '32px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <span style={{ display: 'inline-block', padding: '4px 14px', background: 'linear-gradient(135deg, #F0FDF4, #F3E8FF)', border: '1.5px solid #BBF7D0', borderRadius: '999px', fontSize: '0.70rem', fontWeight: '800', color: '#166534', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px' }}>
@@ -291,31 +336,46 @@ function HealthCareSection({ banners }) {
               🏥 Health & Safety
             </h2>
           </div>
-          <Link href={mainBanner?.buttonLink || '/products?category=health-care'} style={{ padding: '10px 22px', background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)', color: 'white', borderRadius: '999px', textDecoration: 'none', fontSize: '0.84rem', fontWeight: '700', boxShadow: '0 4px 14px rgba(255,107,53,0.28)' }}>
+          <Link href={mainBanner?.buttonLink || '/products?category=health-care'}
+            style={{ padding: '10px 22px', background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)', color: 'white', borderRadius: '999px', textDecoration: 'none', fontSize: '0.84rem', fontWeight: '700', boxShadow: '0 4px 14px rgba(255,107,53,0.28)' }}>
             View All →
           </Link>
         </div>
 
+        {/* Child | Women cards */}
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '24px' }}>
           {cards.map((card, i) => (
             <Link key={i} href={card.link} style={{ textDecoration: 'none', display: 'block' }}>
-              <div style={{ borderRadius: '24px', overflow: 'hidden', boxShadow: '0 10px 40px rgba(0,0,0,0.12)', transition: 'transform 0.35s ease, box-shadow 0.35s ease', position: 'relative' }}
+              <div
+                style={{ borderRadius: '24px', overflow: 'hidden', boxShadow: '0 10px 40px rgba(0,0,0,0.12)', transition: 'transform 0.35s ease, box-shadow 0.35s ease', position: 'relative' }}
                 onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-8px)'; e.currentTarget.style.boxShadow = '0 24px 60px rgba(0,0,0,0.18)'; }}
                 onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 10px 40px rgba(0,0,0,0.12)'; }}
               >
                 {card.img?.url ? (
-                  <img src={card.img.url} alt={card.label} style={{ width: '100%', height: '360px', objectFit: 'cover', display: 'block', transition: 'transform 0.5s ease' }}
+                  <img
+                    src={card.img.url}
+                    alt={card.label}
+                    style={{ width: '100%', height: '360px', objectFit: 'cover', display: 'block', transition: 'transform 0.5s ease' }}
                     onMouseEnter={e => e.target.style.transform = 'scale(1.04)'}
                     onMouseLeave={e => e.target.style.transform = 'scale(1)'}
                   />
                 ) : (
-                  <div style={{ height: '360px', background: card.defaultBg, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '8rem' }}>
-                    {card.defaultEmoji}
+                  /* ✅ Beautiful gradient fallback — always shows */
+                  <div style={{ height: '360px', background: card.defaultBg, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+                    <span style={{ fontSize: '8rem', filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.15))' }}>
+                      {card.defaultEmoji}
+                    </span>
+                    <span style={{ color: 'white', fontSize: '1.1rem', fontWeight: '700', textShadow: '0 2px 8px rgba(0,0,0,0.3)' }}>
+                      {card.label} Health Care
+                    </span>
                   </div>
                 )}
+
+                {/* Label badge */}
                 <div style={{ position: 'absolute', top: '20px', left: '20px', padding: '8px 18px', background: card.color, color: 'white', borderRadius: '999px', fontSize: '0.86rem', fontWeight: '800', boxShadow: '0 4px 14px rgba(0,0,0,0.20)' }}>
                   {card.label}
                 </div>
+
                 <div style={{ padding: '20px 24px', background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                   <div>
                     <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: '#2D1A4A', margin: '0 0 4px' }}>
@@ -391,8 +451,8 @@ export default function HomeClient({
       }))
     : defaultSunnyItems;
 
-  const girlBanner = genderBanners.find(b => b.gender === 'girl') || defaultGenderItems[0];
-  const boyBanner  = genderBanners.find(b => b.gender === 'boy')  || defaultGenderItems[1];
+  const girlBanner  = genderBanners.find(b => b.gender === 'girl') || defaultGenderItems[0];
+  const boyBanner   = genderBanners.find(b => b.gender === 'boy')  || defaultGenderItems[1];
   const genderItems = [
     { ...defaultGenderItems[0], title: girlBanner.title || 'For Her 👧', subtitle: girlBanner.subtitle || 'Cute & stylish picks for girls', image: girlBanner.image?.url || defaultGenderItems[0].image, link: girlBanner.buttonLink || '/products?search=girl' },
     { ...defaultGenderItems[1], title: boyBanner.title  || 'For Him 👦', subtitle: boyBanner.subtitle  || 'Cool & fun picks for boys',    image: boyBanner.image?.url  || defaultGenderItems[1].image, link: boyBanner.buttonLink  || '/products?search=boy' },
@@ -420,9 +480,7 @@ export default function HomeClient({
         <div className={styles.brandMarquee}>
           <div className={styles.brandTrack}>
             {[...topBrands, ...topBrands].map((brand, i) => (
-              <Link
-                key={i}
-                href={`/products?brand=${encodeURIComponent(brand.name)}`}
+              <Link key={i} href={`/products?brand=${encodeURIComponent(brand.name)}`}
                 className={styles.brandCard}
                 style={{ '--brand-color': brand.color }}
                 onMouseEnter={() => setHoveredBrand(i)}
@@ -451,8 +509,7 @@ export default function HomeClient({
             </div>
             <div className={styles.budgetGrid}>
               {displayBudget.map((item, i) => (
-                <Link
-                  key={i}
+                <Link key={i}
                   href={item.link || `/products?maxPrice=${item.price}`}
                   className={styles.budgetCard}
                   style={{ '--card-color': item.color, '--card-bg': item.bg, animationDelay: `${i * 0.1}s` }}
@@ -482,8 +539,7 @@ export default function HomeClient({
           </div>
           <div className={styles.sunnyGrid}>
             {displaySunny.map((cat, i) => (
-              <Link
-                key={i}
+              <Link key={i}
                 href={`/products?category=${cat.slug}`}
                 className={styles.sunnyCard}
                 style={{ '--sunny-color': cat.color, animationDelay: `${i * 0.1}s` }}
@@ -512,8 +568,7 @@ export default function HomeClient({
           <div className="container">
             <div className={styles.promoSlider}>
               {promoBanners.map((promo, i) => (
-                <Link
-                  key={promo.id || i}
+                <Link key={promo.id || i}
                   href={promo.buttonLink || '/products'}
                   className={`${styles.promoCard} ${i === promoIndex ? styles.promoActive : styles.promoHidden}`}
                 >
@@ -539,9 +594,7 @@ export default function HomeClient({
               {promoBanners.length > 1 && (
                 <div className={styles.promoDots}>
                   {promoBanners.map((_, i) => (
-                    <button
-                      key={i}
-                      onClick={() => setPromoIndex(i)}
+                    <button key={i} onClick={() => setPromoIndex(i)}
                       className={`${styles.promoDot} ${i === promoIndex ? styles.promoDotActive : ''}`}
                     />
                   ))}
@@ -552,7 +605,7 @@ export default function HomeClient({
         </section>
       )}
 
-           {/* ── GENDER SECTION ── */}
+      {/* ── GENDER SECTION ── */}
       <section className={styles.genderSection}>
         <div className="container">
           <div className={styles.genderHeader}>
@@ -581,41 +634,26 @@ export default function HomeClient({
         </div>
       </section>
 
-      {/* ══════════════════════════════════════════
-          3 NEW SECTIONS BELOW GENDER
-      ══════════════════════════════════════════ */}
-
-      {/* ── MATERNITY: Long Banner + 4 col Grid ── */}
+      {/* ── MATERNITY ── */}
       <MaternitySection banners={maternityBanners} />
 
-      {/* ── PERSONAL CARE: Auto scroll with Brand + Price ── */}
+      {/* ── PERSONAL CARE ── */}
       <PersonalCareSection banners={personalCareBanners} />
 
-      {/* ── HEALTH CARE: Child | Women from grid images ── */}
+      {/* ── HEALTH CARE ── */}
       <HealthCareSection banners={healthCareBanners} />
 
       {/* ── OFFER BANNERS ── */}
       <section className={`${styles.offerSection} container`}>
         <div className={styles.offerGrid}>
           {offerBanners.map((offer, i) => (
-            <Link
-              key={i}
-              href={offer.link}
+            <Link key={i} href={offer.link}
               className={styles.offerCard}
-              style={{
-                background: offer.bg,
-                borderColor: offer.borderColor,
-                animationDelay: `${i * 0.12}s`,
-                overflow: 'hidden',
-                position: 'relative',
-              }}
+              style={{ background: offer.bg, borderColor: offer.borderColor, overflow: 'hidden', position: 'relative' }}
             >
               <div className={styles.offerImgWrap}>
                 <img src={offer.image} alt={offer.title} className={styles.offerImg} />
-                <div
-                  className={styles.offerImgOverlay}
-                  style={{ background: `linear-gradient(to top, ${offer.iconBg}99 0%, transparent 60%)` }}
-                />
+                <div className={styles.offerImgOverlay} style={{ background: `linear-gradient(to top, ${offer.iconBg}99 0%, transparent 60%)` }} />
               </div>
               <div className={styles.offerContent}>
                 <h3>{offer.title}</h3>
@@ -681,14 +719,9 @@ export default function HomeClient({
               <div className={styles.ctaVisual}>
                 <div style={{ position: 'relative', width: '320px', height: '380px', flexShrink: 0 }}>
                   <div style={{ width: '260px', height: '340px', borderRadius: '24px', overflow: 'hidden', position: 'absolute', top: 0, left: '50%', transform: 'translateX(-50%)', boxShadow: '0 20px 60px rgba(0,0,0,0.25)', border: '4px solid rgba(255,255,255,0.3)' }}>
-                    <img
-                      src="https://images.unsplash.com/photo-1519689680058-324335c77eba?w=520&h=680&fit=crop&auto=format"
-                      alt="Happy Baby"
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
+                    <img src="https://images.unsplash.com/photo-1519689680058-324335c77eba?w=520&h=680&fit=crop&auto=format" alt="Happy Baby" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(255,107,53,0.3) 0%, transparent 60%)' }} />
                   </div>
-
                   <div style={{ position: 'absolute', top: '16px', left: '0', background: 'white', borderRadius: '14px', padding: '10px 14px', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', gap: '8px', animation: 'badgeFloat 3s ease-in-out infinite' }}>
                     <span style={{ fontSize: '1.4rem' }}>🧸</span>
                     <div>
@@ -696,7 +729,6 @@ export default function HomeClient({
                       <p style={{ margin: 0, fontSize: '0.62rem', color: '#888', fontWeight: '500' }}>Happy Families</p>
                     </div>
                   </div>
-
                   <div style={{ position: 'absolute', bottom: '10px', right: '0', background: 'white', borderRadius: '14px', padding: '10px 14px', boxShadow: '0 8px 24px rgba(0,0,0,0.15)', display: 'flex', alignItems: 'center', gap: '8px', animation: 'badgeFloat 3s ease-in-out infinite 1.5s' }}>
                     <span style={{ fontSize: '1.4rem' }}>⭐</span>
                     <div>
@@ -704,16 +736,9 @@ export default function HomeClient({
                       <p style={{ margin: 0, fontSize: '0.62rem', color: '#888', fontWeight: '500' }}>500+ Reviews</p>
                     </div>
                   </div>
-
-                  <div style={{ position: 'absolute', top: '80px', right: '0', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', borderRadius: '50%', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '2px solid rgba(255,255,255,0.3)', animation: 'badgeFloat 4s ease-in-out infinite 0.5s' }}>
-                    🍼
-                  </div>
-
-                  <div style={{ position: 'absolute', bottom: '80px', left: '0', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', borderRadius: '50%', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '2px solid rgba(255,255,255,0.3)', animation: 'badgeFloat 4s ease-in-out infinite 2s' }}>
-                    🎀
-                  </div>
+                  <div style={{ position: 'absolute', top: '80px', right: '0', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', borderRadius: '50%', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '2px solid rgba(255,255,255,0.3)', animation: 'badgeFloat 4s ease-in-out infinite 0.5s' }}>🍼</div>
+                  <div style={{ position: 'absolute', bottom: '80px', left: '0', background: 'rgba(255,255,255,0.15)', backdropFilter: 'blur(8px)', borderRadius: '50%', width: '48px', height: '48px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.5rem', border: '2px solid rgba(255,255,255,0.3)', animation: 'badgeFloat 4s ease-in-out infinite 2s' }}>🎀</div>
                 </div>
-
                 <style>{`
                   @keyframes badgeFloat {
                     0%, 100% { transform: translateY(0); }
