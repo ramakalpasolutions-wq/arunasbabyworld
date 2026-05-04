@@ -11,7 +11,10 @@ export async function GET() {
     return NextResponse.json({ banners });
   } catch (error) {
     console.error('Banners GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -41,31 +44,24 @@ export async function POST(request) {
       gender:     body.gender || null,
     };
 
-    // ✅ Fix — image with set
-    if (body.image?.url) {
+    // ✅ Fix — image object
+    if (body.image && body.image.url) {
       bannerData.image = {
-        set: {
-          url:      body.image.url      || '',
-          publicId: body.image.publicId || '',
-          title:    body.image.title    || '',
-        }
+        url:      body.image.url      || '',
+        publicId: body.image.publicId || '',
+        title:    body.image.title    || '',
       };
     }
 
-    // ✅ Fix — gridImages with set
-    if (body.gridImages?.length > 0) {
-      bannerData.gridImages = {
-        set: body.gridImages.map(img => ({
-          url:      img.url      || '',
-          publicId: img.publicId || '',
-          title:    img.title    || '',
-          link:     img.link     || '',
-          brand:    img.brand    || '',
-          price:    img.price    ? parseFloat(img.price) : null,
-        }))
-      };
+    // ✅ Fix — gridImages array
+    if (body.gridImages && body.gridImages.length > 0) {
+      bannerData.gridImages = body.gridImages.map(img => ({
+        url:      img.url      || '',
+        publicId: img.publicId || '',
+        title:    img.title    || '',
+      }));
     } else {
-      bannerData.gridImages = { set: [] };
+      bannerData.gridImages = [];
     }
 
     const banner = await prisma.banner.create({ data: bannerData });
