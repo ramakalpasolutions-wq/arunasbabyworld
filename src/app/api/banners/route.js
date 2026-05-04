@@ -11,10 +11,7 @@ export async function GET() {
     return NextResponse.json({ banners });
   } catch (error) {
     console.error('Banners GET error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -44,25 +41,28 @@ export async function POST(request) {
       gender:     body.gender || null,
     };
 
-    // ✅ Fix — image object
-    if (body.image && body.image.url) {
+    // ✅ image — use set wrapper for MongoDB embedded type
+    if (body.image?.url) {
       bannerData.image = {
-        url:      body.image.url      || '',
-        publicId: body.image.publicId || '',
-        title:    body.image.title    || '',
+        set: {
+          url:      body.image.url      || '',
+          publicId: body.image.publicId || '',
+          title:    body.image.title    || '',
+        }
       };
     }
 
-    // ✅ Fix — gridImages array
-    if (body.gridImages && body.gridImages.length > 0) {
-      bannerData.gridImages = body.gridImages.map(img => ({
+    // ✅ gridImages — use set wrapper
+    bannerData.gridImages = {
+      set: (body.gridImages || []).map(img => ({
         url:      img.url      || '',
         publicId: img.publicId || '',
         title:    img.title    || '',
-      }));
-    } else {
-      bannerData.gridImages = [];
-    }
+        link:     img.link     || '',
+        brand:    img.brand    || '',
+        price:    img.price    ? parseFloat(img.price) : null,
+      }))
+    };
 
     const banner = await prisma.banner.create({ data: bannerData });
     return NextResponse.json({ banner }, { status: 201 });
