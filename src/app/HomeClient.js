@@ -552,7 +552,7 @@ export default function HomeClient({
         </section>
       )}
 
-      {/* ── GENDER SECTION ── */}
+           {/* ── GENDER SECTION ── */}
       <section className={styles.genderSection}>
         <div className="container">
           <div className={styles.genderHeader}>
@@ -581,13 +581,17 @@ export default function HomeClient({
         </div>
       </section>
 
-      {/* ── MATERNITY ── */}
+      {/* ══════════════════════════════════════════
+          3 NEW SECTIONS BELOW GENDER
+      ══════════════════════════════════════════ */}
+
+      {/* ── MATERNITY: Long Banner + 4 col Grid ── */}
       <MaternitySection banners={maternityBanners} />
 
-      {/* ── PERSONAL CARE ── */}
+      {/* ── PERSONAL CARE: Auto scroll with Brand + Price ── */}
       <PersonalCareSection banners={personalCareBanners} />
 
-      {/* ── HEALTH CARE ── */}
+      {/* ── HEALTH CARE: Child | Women from grid images ── */}
       <HealthCareSection banners={healthCareBanners} />
 
       {/* ── OFFER BANNERS ── */}
