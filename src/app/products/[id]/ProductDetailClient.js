@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
@@ -8,35 +8,128 @@ import toast from 'react-hot-toast';
 import styles from './ProductDetailClient.module.css';
 
 export default function ProductDetailClient({ id }) {
-  const [product, setProduct]         = useState(null);
-  const [loading, setLoading]         = useState(true);
+  const [product,       setProduct]       = useState(null);
+  const [related,       setRelated]       = useState([]);
+  const [loading,       setLoading]       = useState(true);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [quantity, setQuantity]       = useState(1);
-  const [tab, setTab]                 = useState('description');
-  const { addItem }                   = useCart();
-  const { isWishlisted, toggle }      = useWishlist();
+  const [quantity,      setQuantity]      = useState(1);
+  const [tab,           setTab]           = useState('description');
+  const [imgLoaded,     setImgLoaded]     = useState(false);
 
+  // ✅ Auto slide states
+  const [isHovered, setIsHovered] = useState(false);
+  const [progress,  setProgress]  = useState(0);
+  const intervalRef = useRef(null);
+  const progressRef = useRef(null);
+  const SLIDE_DELAY = 3000;
+
+  const { addItem }              = useCart();
+  const { isWishlisted, toggle } = useWishlist();
+
+  /* ── Fetch product ── */
   useEffect(() => {
+    setLoading(true);
+    setSelectedImage(0);
+    setImgLoaded(false);
     fetch(`/api/products/${id}`)
       .then(r => r.json())
-      .then(d => { setProduct(d.product); setLoading(false); })
+      .then(d => {
+        setProduct(d.product);
+        setLoading(false);
+
+        if (d.product?.categoryId) {
+          fetch(
+            `/api/products?category=${d.product.categoryId}&limit=8&sort=createdAt&order=desc`
+          )
+            .then(r => r.json())
+            .then(rd => {
+              const filtered = (rd.products || []).filter(p => p.id !== d.product.id);
+              setRelated(filtered.slice(0, 6));
+            })
+            .catch(() => {});
+        }
+      })
       .catch(() => setLoading(false));
   }, [id]);
 
+  /* ── Auto slide logic ── */
+  useEffect(() => {
+    if (!product) return;
+
+    const images = product.images?.length > 0
+      ? product.images
+      : [{ url: `https://via.placeholder.com/500x500` }];
+
+    if (images.length <= 1) return;
+
+    clearInterval(intervalRef.current);
+    clearInterval(progressRef.current);
+    setProgress(0);
+
+    if (isHovered) return;
+
+    let step = 0;
+    progressRef.current = setInterval(() => {
+      step += 1;
+      setProgress((step / (SLIDE_DELAY / 30)) * 100);
+    }, 30);
+
+    intervalRef.current = setInterval(() => {
+      setSelectedImage(prev => {
+        const next = (prev + 1) % images.length;
+        setImgLoaded(false);
+        return next;
+      });
+      step = 0;
+      setProgress(0);
+    }, SLIDE_DELAY);
+
+    return () => {
+      clearInterval(intervalRef.current);
+      clearInterval(progressRef.current);
+    };
+  }, [isHovered, product, selectedImage]);
+
+  /* ── Manual navigation ── */
+  const goToSlide = useCallback((index) => {
+    setSelectedImage(index);
+    setImgLoaded(false);
+    setProgress(0);
+    clearInterval(intervalRef.current);
+    clearInterval(progressRef.current);
+  }, []);
+
+  const goPrev = (images) => {
+    goToSlide((selectedImage - 1 + images.length) % images.length);
+  };
+
+  const goNext = (images) => {
+    goToSlide((selectedImage + 1) % images.length);
+  };
+
+  /* ── Loading skeleton ── */
   if (loading) return (
-    <div className={`container ${styles.loading}`}>
+    <div className={`container ${styles.page}`}>
       <div className={styles.skeletonLayout}>
-        <div className={`skeleton ${styles.skeletonImages}`} />
-        <div className={styles.skeletonInfo}>
-          <div className={`skeleton ${styles.skeletonTitle}`} />
-          <div className={`skeleton ${styles.skeletonPrice}`} />
-          <div className={`skeleton ${styles.skeletonDesc}`} />
-          <div className={`skeleton ${styles.skeletonBtn}`} />
+        <div className={styles.skeletonLeft}>
+          <div className={`${styles.skeletonBox} ${styles.skeletonMainImg}`} />
+          <div className={styles.skeletonThumbs}>
+            {[1,2,3,4].map(i => (
+              <div key={i} className={`${styles.skeletonBox} ${styles.skeletonThumb}`} />
+            ))}
+          </div>
+        </div>
+        <div className={styles.skeletonRight}>
+          <div className={`${styles.skeletonBox} ${styles.skeletonTitle}`} />
+          <div className={`${styles.skeletonBox} ${styles.skeletonPrice}`} />
+          <div className={`${styles.skeletonBox} ${styles.skeletonDesc}`} />
+          <div className={`${styles.skeletonBox} ${styles.skeletonBtn}`} />
         </div>
       </div>
     </div>
   );
 
+  /* ── Not found ── */
   if (!product) return (
     <div className={`container ${styles.notFound}`}>
       <span>😕</span>
@@ -66,12 +159,11 @@ export default function ProductDetailClient({ id }) {
     toast.success(inWishlist ? 'Removed from wishlist' : 'Added to wishlist! ❤️');
   };
 
-  // ✅ Check if clothing category
-  const isClothing = product.category?.name?.toLowerCase().includes('cloth') ||
-                     product.category?.slug?.toLowerCase().includes('cloth') ||
-                     product.size || product.gender || product.color || product.material;
+  const isClothing =
+    product.category?.name?.toLowerCase().includes('cloth') ||
+    product.category?.slug?.toLowerCase().includes('cloth') ||
+    product.size || product.gender || product.color || product.material;
 
-  // ✅ Gender display
   const genderDisplay = {
     boy:    { label: 'Boy',    emoji: '👦', color: '#0EA5E9', bg: '#E0F2FE' },
     girl:   { label: 'Girl',   emoji: '👧', color: '#EC4899', bg: '#FDF2F8' },
@@ -79,8 +171,13 @@ export default function ProductDetailClient({ id }) {
   };
 
   const genderInfo = product.gender
-    ? genderDisplay[product.gender.toLowerCase()] || { label: product.gender, emoji: '🧒', color: '#7B2FBE', bg: '#F3E8FF' }
+    ? genderDisplay[product.gender.toLowerCase()] || {
+        label: product.gender, emoji: '🧒', color: '#7B2FBE', bg: '#F3E8FF',
+      }
     : null;
+
+  const viewLabels = [];
+  const viewIcons  = [];
 
   return (
     <div className={`container ${styles.page}`}>
@@ -88,69 +185,296 @@ export default function ProductDetailClient({ id }) {
       {/* ── BREADCRUMB ── */}
       <nav className={styles.breadcrumb}>
         <Link href="/">Home</Link>
-        {' / '}
+        <span className={styles.breadSep}>/</span>
         <Link href="/products">Products</Link>
-        {' / '}
         {product.category && (
           <>
+            <span className={styles.breadSep}>/</span>
             <Link href={`/products?category=${product.category?.id}`}>
               {product.category.name}
             </Link>
-            {' / '}
           </>
         )}
-        <span>{product.name}</span>
+        <span className={styles.breadSep}>/</span>
+        <span className={styles.breadCurrent}>{product.name}</span>
       </nav>
 
+      {/* ══ MAIN LAYOUT ══ */}
       <div className={styles.layout}>
 
-        {/* ── IMAGES ── */}
+        {/* ── IMAGES SECTION ── */}
         <div className={styles.imagesSection}>
-          <div className={styles.mainImage}>
+
+          {/* ✅ Main Image with Auto Slide */}
+          <div
+            className={styles.mainImageWrap}
+            onMouseEnter={() => setIsHovered(true)}
+            onMouseLeave={() => setIsHovered(false)}
+            style={{ position: 'relative', overflow: 'hidden' }}
+          >
+            {/* Skeleton */}
+            {!imgLoaded && (
+              <div className={styles.imgSkeleton}>
+                <span className={styles.imgSkeletonIcon}>🖼️</span>
+              </div>
+            )}
+
+            {/* Main Image */}
             <Image
               src={images[selectedImage]?.url || images[0]?.url}
               alt={product.name}
               width={500}
               height={500}
-              className={styles.mainImg}
-              style={{ objectFit: 'cover' }}
+              className={`${styles.mainImg} ${
+                imgLoaded ? styles.mainImgVisible : styles.mainImgHidden
+              }`}
+              style={{ objectFit: 'cover', transition: 'opacity 0.4s ease' }}
+              onLoad={() => setImgLoaded(true)}
+              priority
             />
+
+            {/* Discount Badge */}
             {discount > 0 && (
               <span className={styles.discountTag}>{discount}% OFF</span>
             )}
+
+            {/* Trending Badge */}
+            {product.isTrending && (
+              <span className={styles.trendingTag}>🔥 Trending</span>
+            )}
+            {/* ✅ Left Arrow */}
+            {images.length > 1 && (
+              <button
+                onClick={() => goPrev(images)}
+                style={{
+                  position:       'absolute',
+                  left:           '10px',
+                  top:            '50%',
+                  transform:      'translateY(-50%)',
+                  background:     'rgba(255,255,255,0.92)',
+                  border:         'none',
+                  borderRadius:   '50%',
+                  width:          '38px',
+                  height:         '38px',
+                  display:        'flex',
+                  alignItems:     'center',
+                  justifyContent: 'center',
+                  cursor:         'pointer',
+                  fontSize:       '1.4rem',
+                  fontWeight:     '800',
+                  color:          '#2D1A4A',
+                  boxShadow:      '0 2px 12px rgba(0,0,0,0.15)',
+                  zIndex:         4,
+                  transition:     'all 0.2s ease',
+                  lineHeight:     1,
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg,#FF6B35,#7B2FBE)';
+                  e.currentTarget.style.color      = 'white';
+                  e.currentTarget.style.transform  = 'translateY(-50%) scale(1.1)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.92)';
+                  e.currentTarget.style.color      = '#2D1A4A';
+                  e.currentTarget.style.transform  = 'translateY(-50%) scale(1)';
+                }}
+              >
+                ‹
+              </button>
+            )}
+
+            {/* ✅ Right Arrow */}
+            {images.length > 1 && (
+              <button
+                onClick={() => goNext(images)}
+                style={{
+                  position:       'absolute',
+                  right:          '10px',
+                  top:            '50%',
+                  transform:      'translateY(-50%)',
+                  background:     'rgba(255,255,255,0.92)',
+                  border:         'none',
+                  borderRadius:   '50%',
+                  width:          '38px',
+                  height:         '38px',
+                  display:        'flex',
+                  alignItems:     'center',
+                  justifyContent: 'center',
+                  cursor:         'pointer',
+                  fontSize:       '1.4rem',
+                  fontWeight:     '800',
+                  color:          '#2D1A4A',
+                  boxShadow:      '0 2px 12px rgba(0,0,0,0.15)',
+                  zIndex:         4,
+                  transition:     'all 0.2s ease',
+                  lineHeight:     1,
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg,#FF6B35,#7B2FBE)';
+                  e.currentTarget.style.color      = 'white';
+                  e.currentTarget.style.transform  = 'translateY(-50%) scale(1.1)';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'rgba(255,255,255,0.92)';
+                  e.currentTarget.style.color      = '#2D1A4A';
+                  e.currentTarget.style.transform  = 'translateY(-50%) scale(1)';
+                }}
+              >
+                ›
+              </button>
+            )}
+
+            {/* ✅ Progress Bar */}
+            {images.length > 1 && !isHovered && (
+              <div style={{
+                position:   'absolute',
+                bottom:     0,
+                left:       0,
+                right:      0,
+                height:     '3px',
+                background: 'rgba(255,255,255,0.25)',
+                zIndex:     4,
+              }}>
+                <div style={{
+                  height:           '100%',
+                  width:            `${progress}%`,
+                  background:       'linear-gradient(90deg,#FF6B35,#7B2FBE)',
+                  transition:       'width 0.03s linear',
+                  borderRadius:     '0 2px 2px 0',
+                }} />
+              </div>
+            )}
+
+            {/* ✅ Paused Badge */}
+            {images.length > 1 && isHovered && (
+              <div style={{
+                position:       'absolute',
+                bottom:         '12px',
+                right:          '12px',
+                background:     'rgba(45,26,74,0.75)',
+                color:          'white',
+                padding:        '3px 10px',
+                borderRadius:   '999px',
+                fontSize:       '0.65rem',
+                fontWeight:     '700',
+                backdropFilter: 'blur(4px)',
+                zIndex:         4,
+              }}>
+                ⏸ Paused
+              </div>
+            )}
+
+            {/* ✅ Dot Indicators */}
+            {images.length > 1 && (
+              <div style={{
+                position:       'absolute',
+                bottom:         '12px',
+                left:           '50%',
+                transform:      'translateX(-50%)',
+                display:        'flex',
+                gap:            '6px',
+                zIndex:         4,
+              }}>
+                {images.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => goToSlide(i)}
+                    style={{
+                      width:        i === selectedImage ? '20px' : '8px',
+                      height:       '8px',
+                      borderRadius: '999px',
+                      border:       'none',
+                      background:   i === selectedImage
+                        ? 'linear-gradient(135deg,#FF6B35,#7B2FBE)'
+                        : 'rgba(255,255,255,0.6)',
+                      cursor:       'pointer',
+                      padding:      0,
+                      transition:   'all 0.3s ease',
+                      boxShadow:    i === selectedImage
+                        ? '0 2px 8px rgba(255,107,53,0.5)'
+                        : 'none',
+                    }}
+                  />
+                ))}
+              </div>
+            )}
           </div>
 
+          {/* ✅ Thumbnails with Labels */}
           {images.length > 1 && (
             <div className={styles.thumbnails}>
               {images.map((img, i) => (
                 <button
                   key={i}
-                  className={`${styles.thumbnail} ${i === selectedImage ? styles.activeThumbnail : ''}`}
-                  onClick={() => setSelectedImage(i)}
+                  className={`${styles.thumb} ${
+                    i === selectedImage ? styles.thumbActive : ''
+                  }`}
+                  onClick={() => goToSlide(i)}
+                  aria-label={viewLabels[i] || `View ${i + 1}`}
+                  style={{
+                    position:   'relative',
+                    overflow:   'hidden',
+                    border:     i === selectedImage
+                      ? '2px solid #FF6B35'
+                      : '2px solid #EDD9FF',
+                    transition: 'all 0.2s ease',
+                    padding:    0,
+                  }}
                 >
                   <Image
                     src={img.url}
-                    alt={`${product.name} ${i + 1}`}
+                    alt={`${product.name} ${viewLabels[i] || i + 1}`}
                     width={80}
                     height={80}
-                    style={{ objectFit: 'cover' }}
+                    style={{ objectFit: 'cover', display: 'block' }}
                   />
+
+                  {/* View Label */}
+                  <span style={{
+                    position:      'absolute',
+                    bottom:        0,
+                    left:          0,
+                    right:         0,
+                    background:    i === selectedImage
+                      ? 'linear-gradient(135deg,#FF6B35,#7B2FBE)'
+                      : 'rgba(0,0,0,0.55)',
+                    color:         'white',
+                    fontSize:      '0.55rem',
+                    fontWeight:    '800',
+                    textAlign:     'center',
+                    padding:       '2px 4px',
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.3px',
+                    transition:    'background 0.2s',
+                  }}>
+                    {viewIcons[i] || '🖼️'} {viewLabels[i] || `View ${i + 1}`}
+                  </span>
+
+                  {/* ✅ Progress on active thumb */}
+                  {i === selectedImage && !isHovered && (
+                    <div style={{
+                      position:     'absolute',
+                      bottom:       0,
+                      left:         0,
+                      height:       '2px',
+                      width:        `${progress}%`,
+                      background:   'linear-gradient(90deg,#FF6B35,#7B2FBE)',
+                      transition:   'width 0.03s linear',
+                      zIndex:       2,
+                    }} />
+                  )}
                 </button>
               ))}
             </div>
           )}
 
-          {images.length > 1 && (
-            <p className={styles.imageCount}>
-              📸 {selectedImage + 1} / {images.length} images
-            </p>
-          )}
+
         </div>
 
-        {/* ── INFO ── */}
+        {/* ── INFO SECTION ── */}
         <div className={styles.infoSection}>
 
-          {/* Category */}
+          {/* Category link */}
           {product.category && (
             <Link
               href={`/products?category=${product.category?.id}`}
@@ -160,7 +484,7 @@ export default function ProductDetailClient({ id }) {
             </Link>
           )}
 
-          {/* Name */}
+          {/* Product name */}
           <h1 className={styles.productName}>{product.name}</h1>
 
           {/* Rating */}
@@ -170,7 +494,8 @@ export default function ProductDetailClient({ id }) {
                 {[1,2,3,4,5].map(s => (
                   <span
                     key={s}
-                    style={{ color: s <= Math.round(product.rating) ? '#f59e0b' : '#e2e8f0' }}
+                    className={s <= Math.round(product.rating)
+                      ? styles.starOn : styles.starOff}
                   >★</span>
                 ))}
               </div>
@@ -190,200 +515,80 @@ export default function ProductDetailClient({ id }) {
                 <span className={styles.originalPrice}>
                   ₹{product.price.toLocaleString('en-IN')}
                 </span>
-                <span className={styles.discountLabel}>
+                <span className={styles.saveBadge}>
                   Save ₹{(product.price - finalPrice).toLocaleString('en-IN')}
                 </span>
               </>
             )}
           </div>
 
-          {/* Short desc */}
+          {/* Short description */}
           {product.shortDescription && (
             <p className={styles.shortDesc}>{product.shortDescription}</p>
           )}
 
-          {/* ✅ CLOTHING DETAILS SECTION */}
-          {isClothing && (product.gender || product.size || product.color || product.material || product.ageGroup) && (
-            <div style={{
-              background: 'linear-gradient(135deg, #FFF3EC, #F3E8FF)',
-              border: '2px solid #EDD9FF',
-              borderRadius: '16px',
-              padding: '16px 18px',
-              marginBottom: '4px',
-            }}>
-              <h4 style={{
-                fontSize: '0.82rem',
-                fontWeight: '800',
-                color: '#FF6B35',
-                textTransform: 'uppercase',
-                letterSpacing: '1px',
-                marginBottom: '14px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-              }}>
-                👗 Clothing Details
-              </h4>
-
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '10px',
-              }}>
-
-                {/* Gender */}
+          {/* ── CLOTHING DETAILS ── */}
+          {isClothing && (
+            product.gender || product.size || product.color ||
+            product.material || product.ageGroup
+          ) && (
+            <div className={styles.clothingCard}>
+              <h4 className={styles.clothingTitle}>👗 Clothing Details</h4>
+              <div className={styles.clothingGrid}>
                 {genderInfo && (
-                  <div style={{
-                    background: genderInfo.bg,
-                    borderRadius: '12px',
-                    padding: '10px 14px',
-                    border: `1.5px solid ${genderInfo.color}30`,
-                  }}>
-                    <div style={{
-                      fontSize: '0.68rem',
-                      fontWeight: '700',
-                      color: '#9585B0',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                      marginBottom: '4px',
-                    }}>
-                      Gender
-                    </div>
-                    <div style={{
-                      fontSize: '0.92rem',
-                      fontWeight: '800',
-                      color: genderInfo.color,
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                    }}>
+                  <div
+                    className={styles.clothingItem}
+                    style={{
+                      background:  genderInfo.bg,
+                      borderColor: `${genderInfo.color}30`,
+                    }}
+                  >
+                    <span className={styles.clothingLabel}>Gender</span>
+                    <span className={styles.clothingValue} style={{ color: genderInfo.color }}>
                       {genderInfo.emoji} {genderInfo.label}
-                    </div>
+                    </span>
                   </div>
                 )}
-
-                {/* Size */}
                 {product.size && (
-                  <div style={{
-                    background: '#F3E8FF',
-                    borderRadius: '12px',
-                    padding: '10px 14px',
-                    border: '1.5px solid #DFC5F830',
-                  }}>
-                    <div style={{
-                      fontSize: '0.68rem',
-                      fontWeight: '700',
-                      color: '#9585B0',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                      marginBottom: '4px',
-                    }}>
-                      Size
-                    </div>
-                    <div style={{
-                      fontSize: '0.92rem',
-                      fontWeight: '800',
-                      color: '#7B2FBE',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                    }}>
+                  <div className={styles.clothingItem}
+                    style={{ background: '#F3E8FF', borderColor: '#DFC5F830' }}>
+                    <span className={styles.clothingLabel}>Size</span>
+                    <span className={styles.clothingValue} style={{ color: '#7B2FBE' }}>
                       📏 {product.size}
-                    </div>
+                    </span>
                   </div>
                 )}
-
-                {/* Color */}
                 {product.color && (
-                  <div style={{
-                    background: '#FFF3EC',
-                    borderRadius: '12px',
-                    padding: '10px 14px',
-                    border: '1.5px solid #FFD4B830',
-                  }}>
-                    <div style={{
-                      fontSize: '0.68rem',
-                      fontWeight: '700',
-                      color: '#9585B0',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                      marginBottom: '4px',
-                    }}>
-                      Color
-                    </div>
-                    <div style={{
-                      fontSize: '0.92rem',
-                      fontWeight: '800',
-                      color: '#FF6B35',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                    }}>
+                  <div className={styles.clothingItem}
+                    style={{ background: '#FFF3EC', borderColor: '#FFD4B830' }}>
+                    <span className={styles.clothingLabel}>Color</span>
+                    <span className={styles.clothingValue} style={{ color: '#FF6B35' }}>
                       🎨 {product.color}
-                    </div>
+                    </span>
                   </div>
                 )}
-
-                {/* Material */}
                 {product.material && (
-                  <div style={{
-                    background: '#F0FDF4',
-                    borderRadius: '12px',
-                    padding: '10px 14px',
-                    border: '1.5px solid #BBF7D030',
-                  }}>
-                    <div style={{
-                      fontSize: '0.68rem',
-                      fontWeight: '700',
-                      color: '#9585B0',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                      marginBottom: '4px',
-                    }}>
-                      Material
-                    </div>
-                    <div style={{
-                      fontSize: '0.92rem',
-                      fontWeight: '800',
-                      color: '#22C55E',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                    }}>
+                  <div className={styles.clothingItem}
+                    style={{ background: '#F0FDF4', borderColor: '#BBF7D030' }}>
+                    <span className={styles.clothingLabel}>Material</span>
+                    <span className={styles.clothingValue} style={{ color: '#22C55E' }}>
                       🧵 {product.material}
-                    </div>
+                    </span>
                   </div>
                 )}
-
-                {/* Age Group */}
                 {product.ageGroup && (
-                  <div style={{
-                    background: '#FFFBEB',
-                    borderRadius: '12px',
-                    padding: '10px 14px',
-                    border: '1.5px solid #FDE68A30',
-                    gridColumn: product.color && product.material ? 'auto' : 'span 2',
-                  }}>
-                    <div style={{
-                      fontSize: '0.68rem',
-                      fontWeight: '700',
-                      color: '#9585B0',
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.5px',
-                      marginBottom: '4px',
-                    }}>
-                      Age Group
-                    </div>
-                    <div style={{
-                      fontSize: '0.92rem',
-                      fontWeight: '800',
-                      color: '#F59E0B',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '5px',
-                    }}>
+                  <div
+                    className={styles.clothingItem}
+                    style={{
+                      background:  '#FFFBEB',
+                      borderColor: '#FDE68A30',
+                      gridColumn:  (product.color && product.material) ? 'auto' : 'span 2',
+                    }}
+                  >
+                    <span className={styles.clothingLabel}>Age Group</span>
+                    <span className={styles.clothingValue} style={{ color: '#F59E0B' }}>
                       👶 {product.ageGroup}
-                    </div>
+                    </span>
                   </div>
                 )}
               </div>
@@ -391,7 +596,7 @@ export default function ProductDetailClient({ id }) {
           )}
 
           {/* Stock */}
-          <div className={styles.stockInfo}>
+          <div className={styles.stockRow}>
             {product.stock > 0 ? (
               <span className={styles.inStock}>
                 ✅ In Stock ({product.stock} available)
@@ -399,32 +604,44 @@ export default function ProductDetailClient({ id }) {
             ) : (
               <span className={styles.outOfStock}>❌ Out of Stock</span>
             )}
+            {product.stock > 0 && product.stock <= 10 && (
+              <span className={styles.lowStockWarn}>
+                ⚠️ Only {product.stock} left!
+              </span>
+            )}
           </div>
 
           {/* Quantity */}
           {product.stock > 0 && (
             <div className={styles.quantityRow}>
-              <span>Quantity:</span>
+              <span className={styles.quantityLabel}>Quantity:</span>
               <div className={styles.quantityControl}>
-                <button onClick={() => setQuantity(q => Math.max(1, q - 1))}>−</button>
-                <span>{quantity}</span>
-                <button onClick={() => setQuantity(q => Math.min(product.stock, q + 1))}>+</button>
+                <button
+                  className={styles.qtyBtn}
+                  onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                >−</button>
+                <span className={styles.qtyNum}>{quantity}</span>
+                <button
+                  className={styles.qtyBtn}
+                  onClick={() => setQuantity(q => Math.min(product.stock, q + 1))}
+                >+</button>
               </div>
             </div>
           )}
 
-          {/* Action Buttons */}
-          <div className={styles.actionButtons}>
+          {/* Action buttons */}
+          <div className={styles.actionBtns}>
             <button
-              className={`btn btn-primary ${styles.addCartBtn}`}
+              className={styles.cartBtn}
               onClick={handleAddToCart}
               disabled={product.stock === 0}
             >
-              🛒 Add to Cart
+              🛒 {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
             </button>
             <button
-              className={`${styles.wishlistBtn} ${inWishlist ? styles.wishlisted : ''}`}
+              className={`${styles.wishBtn} ${inWishlist ? styles.wishActive : ''}`}
               onClick={handleWishlist}
+              aria-label="Toggle wishlist"
             >
               {inWishlist ? '❤️' : '🤍'}
             </button>
@@ -432,25 +649,27 @@ export default function ProductDetailClient({ id }) {
 
           {/* Highlights */}
           <div className={styles.highlights}>
-            <div className={styles.highlight}>
-              <span>🚚</span> Free delivery on orders above ₹499
-            </div>
-            <div className={styles.highlight}>
-              <span>↩️</span> 30-day easy returns
-            </div>
-            <div className={styles.highlight}>
-              <span>🔒</span> 100% secure payment
-            </div>
+            {[
+              { icon: '🚚', text: 'Free delivery on orders above ₹499' },
+              { icon: '↩️', text: '30-day easy returns'                 },
+              { icon: '🔒', text: '100% secure payment'                 },
+            ].map((h, i) => (
+              <div key={i} className={styles.highlightItem}>
+                <span>{h.icon}</span>
+                <span>{h.text}</span>
+              </div>
+            ))}
             {product.brand && (
-              <div className={styles.highlight}>
-                <span>🏷️</span> Brand: <strong>{product.brand}</strong>
+              <div className={styles.highlightItem}>
+                <span>🏷️</span>
+                <span>Brand: <strong>{product.brand}</strong></span>
               </div>
             )}
           </div>
         </div>
       </div>
 
-      {/* ── TABS ── */}
+      {/* ══ TABS ══ */}
       <div className={styles.tabs}>
         <div className={styles.tabHeader}>
           {['description', 'specifications', 'reviews'].map(t => (
@@ -459,6 +678,9 @@ export default function ProductDetailClient({ id }) {
               className={`${styles.tabBtn} ${tab === t ? styles.tabActive : ''}`}
               onClick={() => setTab(t)}
             >
+              {t === 'description'    && '📝 '}
+              {t === 'specifications' && '📋 '}
+              {t === 'reviews'        && '⭐ '}
               {t.charAt(0).toUpperCase() + t.slice(1)}
             </button>
           ))}
@@ -468,14 +690,16 @@ export default function ProductDetailClient({ id }) {
 
           {/* Description */}
           {tab === 'description' && (
-            <div className={styles.description}>
-              <p>{product.description}</p>
+            <div className={styles.descTab}>
+              <p className={styles.descText}>{product.description}</p>
               {product.features?.length > 0 && (
                 <>
-                  <h4>Key Features</h4>
-                  <ul>
+                  <h4 className={styles.featuresTitle}>✨ Key Features</h4>
+                  <ul className={styles.featuresList}>
                     {product.features.map((f, i) => (
-                      <li key={i}>✅ {f}</li>
+                      <li key={i} className={styles.featureItem}>
+                        <span className={styles.featureCheck}>✅</span> {f}
+                      </li>
                     ))}
                   </ul>
                 </>
@@ -492,15 +716,15 @@ export default function ProductDetailClient({ id }) {
 
           {/* Specifications */}
           {tab === 'specifications' && (
-            <div className={styles.specs}>
+            <div className={styles.specsTab}>
               <table className={styles.specTable}>
                 <tbody>
-                  {/* ✅ Show clothing specs automatically */}
                   {product.gender && (
                     <tr>
                       <td className={styles.specKey}>Gender</td>
                       <td>
-                        {product.gender === 'boy' ? '👦' : product.gender === 'girl' ? '👧' : '🧒'}
+                        {product.gender === 'boy'
+                          ? '👦' : product.gender === 'girl' ? '👧' : '🧒'}
                         {' '}{product.gender.charAt(0).toUpperCase() + product.gender.slice(1)}
                       </td>
                     </tr>
@@ -544,22 +768,16 @@ export default function ProductDetailClient({ id }) {
                   {product.sku && (
                     <tr>
                       <td className={styles.specKey}>SKU</td>
-                      <td>{product.sku}</td>
+                      <td><code>{product.sku}</code></td>
                     </tr>
                   )}
-                  {/* Original specifications if any */}
-                  {product.specifications?.map((spec, i) => (
-                    <tr key={i}>
-                      <td className={styles.specKey}>{spec.key}</td>
-                      <td>{spec.value}</td>
-                    </tr>
-                  ))}
-                  {/* Show message if nothing */}
                   {!product.gender && !product.size && !product.color &&
                    !product.material && !product.ageGroup && !product.brand &&
                    !product.weight && !product.specifications?.length && (
                     <tr>
-                      <td colSpan={2} style={{ textAlign: 'center', color: '#9585B0' }}>
+                      <td colSpan={2} style={{
+                        textAlign: 'center', color: '#9585B0', padding: '28px',
+                      }}>
                         No specifications available
                       </td>
                     </tr>
@@ -571,36 +789,195 @@ export default function ProductDetailClient({ id }) {
 
           {/* Reviews */}
           {tab === 'reviews' && (
-            <div className={styles.reviews}>
+            <div className={styles.reviewsTab}>
               {product.reviews?.length > 0 ? (
                 product.reviews.map((r, i) => (
-                  <div key={i} className={styles.review}>
-                    <div className={styles.reviewHeader}>
+                  <div key={i} className={styles.reviewCard}>
+                    <div className={styles.reviewTop}>
                       <div className={styles.reviewAvatar}>
                         {r.name?.[0] || '?'}
                       </div>
                       <div>
-                        <strong>{r.name}</strong>
+                        <strong className={styles.reviewName}>{r.name}</strong>
                         <div className={styles.reviewStars}>
                           {[1,2,3,4,5].map(s => (
                             <span
                               key={s}
-                              style={{ color: s <= r.rating ? '#f59e0b' : '#e2e8f0' }}
+                              className={s <= r.rating ? styles.starOn : styles.starOff}
                             >★</span>
                           ))}
                         </div>
                       </div>
                     </div>
-                    <p className={styles.reviewComment}>{r.comment}</p>
+                    <p className={styles.reviewText}>{r.comment}</p>
                   </div>
                 ))
               ) : (
-                <p>No reviews yet. Be the first to review this product!</p>
+                <div className={styles.noReviews}>
+                  <span>⭐</span>
+                  <p>No reviews yet. Be the first to review this product!</p>
+                </div>
               )}
             </div>
           )}
         </div>
       </div>
+
+      {/* ══ RELATED PRODUCTS ══ */}
+      {related.length > 0 && (
+        <section className={styles.relatedSection}>
+          <div className={styles.relatedHeader}>
+            <div>
+              <span className={styles.relatedLabel}>
+                {product.category?.name || 'Similar'}
+              </span>
+              <h2 className={styles.relatedTitle}>🛍️ You May Also Like</h2>
+              <p className={styles.relatedSub}>
+                More products from {product.category?.name || 'this category'}
+              </p>
+            </div>
+            <Link
+              href={`/products?category=${product.categoryId}`}
+              className={styles.viewAllBtn}
+            >
+              View All →
+            </Link>
+          </div>
+
+          <div className={styles.relatedGrid}>
+            {related.map((p, i) => (
+              <RelatedCard key={p.id} product={p} index={i} />
+            ))}
+          </div>
+        </section>
+      )}
     </div>
+  );
+}
+
+/* ============================================================
+   RELATED PRODUCT CARD
+   ============================================================ */
+function RelatedCard({ product, index }) {
+  const { addItem }              = useCart();
+  const { isWishlisted, toggle } = useWishlist();
+  const [imgLoaded, setImgLoaded] = useState(false);
+  const [adding,    setAdding]    = useState(false);
+
+  const inWishlist = isWishlisted(product.id);
+  const imageUrl   = product.images?.[0]?.url || null;
+  const price      = product.discountPrice || product.price;
+  const discount   = product.discountPrice
+    ? Math.round(((product.price - product.discountPrice) / product.price) * 100)
+    : 0;
+
+  const handleCart = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (adding || product.stock === 0) return;
+    setAdding(true);
+    addItem({ ...product, quantity: 1 });
+    toast.success('Added to cart! 🛒', {
+      style: {
+        background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+        color: 'white', fontWeight: 700, borderRadius: 999,
+      },
+      icon: null, duration: 1800,
+    });
+    setTimeout(() => setAdding(false), 1200);
+  };
+
+  const handleWish = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggle(product);
+    toast.success(inWishlist ? 'Removed 💔' : 'Saved ❤️', { duration: 1500 });
+  };
+
+  return (
+    <Link
+      href={`/products/${product.id}`}
+      className={styles.relatedCard}
+      style={{ animationDelay: `${index * 60}ms` }}
+    >
+      {/* Image */}
+      <div className={styles.relatedImgWrap}>
+        {!imgLoaded && (
+          <div className={styles.relatedImgSkeleton}>
+            <span>🛍️</span>
+          </div>
+        )}
+        {imageUrl ? (
+          <Image
+            src={imageUrl}
+            alt={product.name}
+            width={220}
+            height={220}
+            className={`${styles.relatedImg} ${
+              imgLoaded ? styles.relatedImgVisible : styles.relatedImgHidden
+            }`}
+            style={{ objectFit: 'cover' }}
+            onLoad={() => setImgLoaded(true)}
+          />
+        ) : (
+          <div className={styles.relatedNoImg}>🛍️</div>
+        )}
+
+        {/* Badges */}
+        <div className={styles.relatedBadges}>
+          {discount > 0 && (
+            <span className={styles.relatedDiscount}>-{discount}%</span>
+          )}
+          {product.isTrending && (
+            <span className={styles.relatedTrending}>🔥</span>
+          )}
+        </div>
+
+        {/* Wishlist */}
+        <button
+          className={`${styles.relatedWish} ${inWishlist ? styles.relatedWishOn : ''}`}
+          onClick={handleWish}
+          aria-label="Wishlist"
+        >
+          {inWishlist ? '❤️' : '🤍'}
+        </button>
+
+        {/* Out of stock */}
+        {product.stock === 0 && (
+          <div className={styles.relatedOos}>Out of Stock</div>
+        )}
+      </div>
+
+      {/* Info */}
+      <div className={styles.relatedInfo}>
+        <p className={styles.relatedCat}>{product.category?.name || ''}</p>
+        <h3 className={styles.relatedName}>{product.name}</h3>
+
+        <div className={styles.relatedPriceRow}>
+          <span className={styles.relatedPrice}>
+            ₹{price.toLocaleString('en-IN')}
+          </span>
+          {product.discountPrice && (
+            <span className={styles.relatedOldPrice}>
+              ₹{product.price.toLocaleString('en-IN')}
+            </span>
+          )}
+        </div>
+
+        <button
+          className={`${styles.relatedCartBtn} ${adding ? styles.relatedAdding : ''} ${
+            product.stock === 0 ? styles.relatedDisabled : ''
+          }`}
+          onClick={handleCart}
+          disabled={product.stock === 0}
+        >
+          {adding
+            ? '✓ Added!'
+            : product.stock === 0
+              ? 'Out of Stock'
+              : '🛒 Add to Cart'}
+        </button>
+      </div>
+    </Link>
   );
 }

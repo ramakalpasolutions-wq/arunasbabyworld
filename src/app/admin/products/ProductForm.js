@@ -4,26 +4,26 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import styles from './form.module.css';
 
-// ✅ Clothing specific options
+const CATEGORY_ORDER = [
+  'clothing', 'personal-care', 'health-care', 'baby-gear',
+  'walkers', 'toys', 'cradles-cribs', 'electric-vehicles', 'food',
+];
+
 const CLOTHING_SIZES = [
   'XS', 'S', 'M', 'L', 'XL', 'XXL',
-  '0-3M', '3-6M', '6-9M', '6-12M',
-  '12-18M', '18-24M',
-  '1Y', '2Y', '3Y', '4Y', '5Y',
-  '6Y', '7Y', '8Y', '9Y', '10Y',
-  'Free Size',
+  '0-3M', '3-6M', '6-9M', '6-12M', '12-18M', '18-24M',
+  '1Y', '2Y', '3Y', '4Y', '5Y', '6Y', '7Y', '8Y', '9Y', '10Y', 'Free Size',
 ];
 
 const CLOTHING_GENDERS = [
-  { value: 'boy',    label: '👦 Boy' },
-  { value: 'girl',   label: '👧 Girl' },
+  { value: 'boy',    label: '👦 Boy'    },
+  { value: 'girl',   label: '👧 Girl'   },
   { value: 'unisex', label: '🧒 Unisex' },
 ];
 
 const CLOTHING_COLORS = [
-  'Red', 'Blue', 'Green', 'Yellow', 'Pink',
-  'Purple', 'Orange', 'White', 'Black', 'Grey',
-  'Brown', 'Navy', 'Maroon', 'Multicolor', 'Printed',
+  'Red', 'Blue', 'Green', 'Yellow', 'Pink', 'Purple', 'Orange',
+  'White', 'Black', 'Grey', 'Brown', 'Navy', 'Maroon', 'Multicolor', 'Printed',
 ];
 
 const CLOTHING_MATERIALS = [
@@ -31,88 +31,325 @@ const CLOTHING_MATERIALS = [
   'Fleece', 'Denim', 'Linen', 'Silk', 'Blend',
 ];
 
-// ✅ Age groups
 const AGE_GROUPS = [
-  '0-3 months', '3-6 months', '6-12 months',
-  '1-2 years', '2-3 years', '3-5 years',
-  '5-8 years', '8-12 years', '12+ years',
-  'All ages',
+  '0-3 months', '3-6 months', '6-12 months', '1-2 years',
+  '2-3 years', '3-5 years', '5-8 years', '8-12 years', '12+ years', 'All ages',
 ];
 
-/* ── Drag & Drop Image Upload ── */
-function ImageUploader({ images, onUpload, onRemove, uploading }) {
-  const [dragOver, setDragOver] = useState(false);
+// ✅ 4 Fixed image slots
+const IMAGE_SLOTS = [
+  { key: 'front', label: 'Front View',  icon: '🖼️', required: true  },
+  { key: 'back',  label: 'Back View',   icon: '🔄', required: false },
+  { key: 'side',  label: 'Side View',   icon: '↔️', required: false },
+  { key: 'top',   label: 'Top View',    icon: '⬆️', required: false },
+];
+
+/* ── Single Image Slot Uploader ── */
+function ImageSlot({ slot, image, onUpload, onRemove, uploading, index }) {
   const inputRef = useRef(null);
+  const [dragOver, setDragOver] = useState(false);
 
   const handleDrop = (e) => {
     e.preventDefault();
     setDragOver(false);
-    const files = Array.from(e.dataTransfer.files).filter(f =>
-      f.type.startsWith('image/')
-    );
-    if (files.length) onUpload(files);
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) onUpload(file, index);
   };
 
   return (
-    <div className={styles.uploaderWrap}>
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      gap: '8px',
+    }}>
+      {/* Slot Label */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        fontSize: '0.80rem',
+        fontWeight: '800',
+        color: '#6B4E8A',
+        textTransform: 'uppercase',
+        letterSpacing: '0.5px',
+      }}>
+        <span>{slot.icon}</span>
+        <span>{slot.label}</span>
+        {slot.required && (
+          <span style={{
+            fontSize: '0.65rem',
+            background: '#FF6B35',
+            color: 'white',
+            padding: '1px 6px',
+            borderRadius: '999px',
+            fontWeight: '800',
+          }}>Required</span>
+        )}
+        {index === 0 && image && (
+          <span style={{
+            fontSize: '0.65rem',
+            background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+            color: 'white',
+            padding: '1px 8px',
+            borderRadius: '999px',
+            fontWeight: '800',
+          }}>⭐ Main</span>
+        )}
+      </div>
+
+      {/* Upload Box */}
       <div
-        className={`${styles.dropZone} ${dragOver ? styles.dragOver : ''} ${uploading ? styles.uploading : ''}`}
         onDrop={handleDrop}
         onDragOver={e => { e.preventDefault(); setDragOver(true); }}
         onDragLeave={() => setDragOver(false)}
-        onClick={() => !uploading && inputRef.current?.click()}
+        onClick={() => !uploading && !image && inputRef.current?.click()}
+        style={{
+          width: '100%',
+          aspectRatio: '1',
+          border: `2px dashed ${
+            image       ? '#22C55E'  :
+            dragOver    ? '#7B2FBE'  :
+            slot.required && !image ? '#FF6B35' : '#EDD9FF'
+          }`,
+          borderRadius: '14px',
+          background: image
+            ? 'transparent'
+            : dragOver ? '#F3E8FF' : '#FBF7FF',
+          cursor: image || uploading ? 'default' : 'pointer',
+          position: 'relative',
+          overflow: 'hidden',
+          transition: 'all 0.2s ease',
+          boxShadow: image
+            ? '0 4px 16px rgba(34,197,94,0.15)'
+            : dragOver
+              ? '0 4px 16px rgba(123,47,190,0.15)'
+              : 'none',
+        }}
       >
         <input
           ref={inputRef}
           type="file"
-          multiple
           accept="image/png,image/jpeg,image/jpg,image/webp"
-          onChange={e => { if (e.target.files.length) onUpload(Array.from(e.target.files)); e.target.value = ''; }}
+          onChange={e => {
+            if (e.target.files[0]) onUpload(e.target.files[0], index);
+            e.target.value = '';
+          }}
           style={{ display: 'none' }}
-          disabled={uploading}
+          disabled={uploading || !!image}
         />
-        {uploading ? (
-          <div className={styles.uploadingState}>
-            <div className={styles.spinner} />
-            <p>Uploading images...</p>
+
+        {/* Uploaded Image */}
+        {image ? (
+          <>
+            <img
+              src={image.url}
+              alt={slot.label}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                display: 'block',
+              }}
+            />
+            {/* Overlay on hover */}
+            <div style={{
+              position: 'absolute',
+              inset: 0,
+              background: 'rgba(0,0,0,0.45)',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '8px',
+              opacity: 0,
+              transition: 'opacity 0.2s',
+            }}
+              onMouseEnter={e => e.currentTarget.style.opacity = '1'}
+              onMouseLeave={e => e.currentTarget.style.opacity = '0'}
+            >
+              <button
+                type="button"
+                onClick={e => { e.stopPropagation(); onRemove(index); }}
+                style={{
+                  background: '#DC2626',
+                  color: 'white',
+                  border: 'none',
+                  padding: '6px 14px',
+                  borderRadius: '8px',
+                  fontSize: '0.78rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                🗑️ Remove
+              </button>
+              <button
+                type="button"
+                onClick={e => { e.stopPropagation(); onRemove(index); setTimeout(() => inputRef.current?.click(), 100); }}
+                style={{
+                  background: '#7B2FBE',
+                  color: 'white',
+                  border: 'none',
+                  padding: '6px 14px',
+                  borderRadius: '8px',
+                  fontSize: '0.78rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                🔄 Replace
+              </button>
+            </div>
+
+            {/* Green check */}
+            <div style={{
+              position: 'absolute',
+              top: '6px',
+              right: '6px',
+              background: '#22C55E',
+              color: 'white',
+              width: '22px',
+              height: '22px',
+              borderRadius: '50%',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '0.70rem',
+              fontWeight: '800',
+            }}>✓</div>
+          </>
+        ) : uploading ? (
+          /* Uploading Spinner */
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            gap: '8px',
+          }}>
+            <div style={{
+              width: '28px',
+              height: '28px',
+              border: '3px solid rgba(255,107,53,0.2)',
+              borderTop: '3px solid #FF6B35',
+              borderRadius: '50%',
+              animation: 'spin 0.7s linear infinite',
+            }} />
+            <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+            <span style={{ fontSize: '0.72rem', color: '#FF6B35', fontWeight: '700' }}>
+              Uploading...
+            </span>
           </div>
         ) : (
-          <div className={styles.dropContent}>
-            <div className={styles.uploadIcon}>📤</div>
-            <p className={styles.dropTitle}>Drag & Drop images here</p>
-            <p className={styles.dropOr}>— or —</p>
-            <button type="button" className={styles.browseBtn}
-              onClick={e => { e.stopPropagation(); inputRef.current?.click(); }}>
-              📁 Browse Files
-            </button>
-            <p className={styles.dropHint}>PNG, JPG, JPEG, WEBP • Max 5MB each</p>
+          /* Empty Slot */
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            gap: '6px',
+            padding: '12px',
+          }}>
+            <span style={{ fontSize: '1.8rem' }}>{slot.icon}</span>
+            <span style={{
+              fontSize: '0.72rem',
+              fontWeight: '700',
+              color: '#9585B0',
+              textAlign: 'center',
+              lineHeight: 1.3,
+            }}>
+              Click or drop<br />{slot.label}
+            </span>
           </div>
         )}
       </div>
+    </div>
+  );
+}
 
-      {images.length > 0 && (
-        <div className={styles.previewSection}>
-          <div className={styles.previewHeader}>
-            <h4>Uploaded Images ({images.length})</h4>
-            <small>First image is the main product image</small>
-          </div>
-          <div className={styles.previewGrid}>
-            {images.map((img, i) => (
-              <div key={i} className={styles.previewCard}>
-                <div className={styles.previewImgWrap}>
-                  <img src={img.url} alt={`Product ${i + 1}`} className={styles.previewImg} />
-                  {i === 0 && <span className={styles.mainBadge}>⭐ Main</span>}
-                  <button type="button" className={styles.removeImgBtn} onClick={() => onRemove(i)}>🗑️</button>
-                </div>
-                <p className={styles.imgLabel}>{i === 0 ? 'Main Image' : `Image ${i + 1}`}</p>
-              </div>
-            ))}
-            <div className={styles.addMoreCard} onClick={() => inputRef.current?.click()}>
-              <span>+</span><p>Add More</p>
-            </div>
-          </div>
+/* ── 4-Slot Image Uploader ── */
+function MultiImageUploader({ images, onUploadSlot, onRemoveSlot, uploadingSlot }) {
+  const uploadedCount = images.filter(Boolean).length;
+
+  return (
+    <div>
+      {/* Progress Bar */}
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '12px',
+      }}>
+        <span style={{
+          fontSize: '0.80rem',
+          fontWeight: '700',
+          color: '#6B4E8A',
+        }}>
+          {uploadedCount}/4 images uploaded
+        </span>
+        <div style={{
+          display: 'flex',
+          gap: '4px',
+        }}>
+          {IMAGE_SLOTS.map((_, i) => (
+            <div key={i} style={{
+              width: '28px',
+              height: '6px',
+              borderRadius: '999px',
+              background: images[i] ? '#22C55E' : '#EDD9FF',
+              transition: 'background 0.3s',
+            }} />
+          ))}
         </div>
-      )}
+      </div>
+
+      {/* 4 Slots Grid */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(4, 1fr)',
+        gap: '12px',
+      }}>
+        {IMAGE_SLOTS.map((slot, i) => (
+          <ImageSlot
+            key={slot.key}
+            slot={slot}
+            image={images[i] || null}
+            onUpload={onUploadSlot}
+            onRemove={onRemoveSlot}
+            uploading={uploadingSlot === i}
+            index={i}
+          />
+        ))}
+      </div>
+
+      {/* Helper Text */}
+      <div style={{
+        marginTop: '12px',
+        padding: '10px 14px',
+        background: uploadedCount === 0
+          ? '#FFF3EC'
+          : uploadedCount === 4
+            ? '#F0FDF4'
+            : '#FBF7FF',
+        border: `1.5px solid ${
+          uploadedCount === 0 ? '#FFD4B8' :
+          uploadedCount === 4 ? '#BBF7D0' : '#EDD9FF'
+        }`,
+        borderRadius: '10px',
+        fontSize: '0.78rem',
+        fontWeight: '600',
+        color: uploadedCount === 4 ? '#166534' : '#6B4E8A',
+      }}>
+        {uploadedCount === 0 && '📸 Upload Front View first (required). Other views are optional.'}
+        {uploadedCount === 1 && '✅ Front image uploaded! Add more views for better product display.'}
+        {uploadedCount === 2 && '✅ 2 images uploaded! You can add 2 more views.'}
+        {uploadedCount === 3 && '✅ 3 images uploaded! One more slot available.'}
+        {uploadedCount === 4 && '🎉 All 4 product views uploaded! Customers will love this.'}
+      </div>
     </div>
   );
 }
@@ -121,19 +358,16 @@ export default function ProductForm({ id }) {
   const router  = useRouter();
   const isEdit  = !!id;
 
-  const [categories, setCategories] = useState([]);
-  const [loading,    setLoading]    = useState(false);
-  const [uploading,  setUploading]  = useState(false);
+  const [categories,    setCategories]    = useState([]);
+  const [loading,       setLoading]       = useState(false);
+  const [uploadingSlot, setUploadingSlot] = useState(null); // which slot is uploading
 
-  // ✅ Check if selected category is clothing
   const [selectedCatSlug, setSelectedCatSlug] = useState('');
   const isClothing = selectedCatSlug?.toLowerCase().includes('cloth') ||
                      selectedCatSlug?.toLowerCase().includes('apparel') ||
-                     selectedCatSlug?.toLowerCase().includes('wear') ||
-                     selectedCatSlug?.toLowerCase().includes('dress') ||
-                     selectedCatSlug?.toLowerCase().includes('tops') ||
-                     selectedCatSlug?.toLowerCase().includes('shirt');
+                     selectedCatSlug?.toLowerCase().includes('wear');
 
+  // ✅ images is now array of 4 slots [front, back, side, top]
   const [form, setForm] = useState({
     name:             '',
     description:      '',
@@ -149,20 +383,28 @@ export default function ProductForm({ id }) {
     isTrending:       false,
     isActive:         true,
     features:         '',
-    images:           [],
-    // ✅ New clothing fields
+    images:           [null, null, null, null], // 4 slots
     size:             '',
     gender:           '',
     color:            '',
     material:         '',
   });
 
+  /* ── Fetch categories & product (edit mode) ── */
   useEffect(() => {
-    fetch('/api/categories')
+    fetch('/api/categories?all=true')
       .then(r => r.json())
       .then(d => {
-        if (d.categories?.length > 0) setCategories(d.categories);
-      });
+        let cats = d.categories || [];
+        const ALLOWED = [
+          'clothing', 'personal-care', 'health-care', 'baby-gear',
+          'walkers', 'toys', 'cradles-cribs', 'electric-vehicles', 'food',
+        ];
+        cats = cats.filter(c => ALLOWED.includes(c.slug));
+        cats.sort((a, b) => ALLOWED.indexOf(a.slug) - ALLOWED.indexOf(b.slug));
+        setCategories(cats);
+      })
+      .catch(() => toast.error('Failed to load categories'));
 
     if (isEdit) {
       fetch(`/api/products/${id}`)
@@ -170,6 +412,16 @@ export default function ProductForm({ id }) {
         .then(d => {
           const p = d.product;
           if (!p) return;
+
+          // ✅ Map existing images into 4 slots
+          const existingImages = p.images || [];
+          const slottedImages = [
+            existingImages[0] || null,
+            existingImages[1] || null,
+            existingImages[2] || null,
+            existingImages[3] || null,
+          ];
+
           setForm({
             name:             p.name             || '',
             description:      p.description      || '',
@@ -185,68 +437,81 @@ export default function ProductForm({ id }) {
             isTrending:       p.isTrending       || false,
             isActive:         p.isActive !== false,
             features:         p.features?.join('\n') || '',
-            images:           p.images           || [],
+            images:           slottedImages,
             size:             p.size             || '',
             gender:           p.gender           || '',
             color:            p.color            || '',
             material:         p.material         || '',
           });
-          // ✅ Set category slug for clothing detection
-          const cat = d.product?.category;
+
+          const cat = p.category;
           if (cat) setSelectedCatSlug(cat.slug || cat.name || '');
         });
     }
   }, [id, isEdit]);
 
-  // ✅ When category changes — update slug for clothing detection
   const handleCategoryChange = (catId) => {
     set('categoryId', catId);
     const cat = categories.find(c => c.id === catId);
     setSelectedCatSlug(cat?.slug || cat?.name || '');
-
-    // ✅ Reset clothing fields if category changes
     set('size', '');
     set('gender', '');
     set('color', '');
     set('material', '');
   };
 
-  const handleImageUpload = async (files) => {
-    if (!files.length) return;
-    setUploading(true);
+  /* ── Upload single slot ── */
+  const handleSlotUpload = async (file, slotIndex) => {
+    if (!file) return;
+
+    // Validate size
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error(`Image too large. Max 5MB`);
+      return;
+    }
+
+    setUploadingSlot(slotIndex);
     try {
-      for (const file of files) {
-        if (file.size > 5 * 1024 * 1024) {
-          toast.error(`${file.name} is too large. Max 5MB`);
-          setUploading(false);
-          return;
-        }
-      }
       const fd = new FormData();
-      for (const file of files) fd.append('file', file);
+      fd.append('file', file);
       fd.append('folder', 'firstcry/products');
 
       const res  = await fetch('/api/upload', { method: 'POST', body: fd });
       const data = await res.json();
+
       if (!res.ok) throw new Error(data.error || 'Upload failed');
 
-      const newImages = data.images || [];
-      if (!newImages.length) { toast.error('No images uploaded'); return; }
+      const uploaded = data.images?.[0] || { url: data.url, publicId: data.publicId };
+      if (!uploaded?.url) throw new Error('No image URL returned');
 
-      setForm(f => ({ ...f, images: [...f.images, ...newImages] }));
-      toast.success(`${newImages.length} image(s) uploaded ✅`);
+      // ✅ Place image in correct slot
+      setForm(f => {
+        const newImages = [...f.images];
+        newImages[slotIndex] = uploaded;
+        return { ...f, images: newImages };
+      });
+
+      const slotNames = ['Front', 'Back', 'Side', 'Top'];
+      toast.success(`${slotNames[slotIndex]} view uploaded! ✅`);
     } catch (err) {
       toast.error(err.message || 'Upload failed');
     } finally {
-      setUploading(false);
+      setUploadingSlot(null);
     }
   };
 
-  const removeImage = (idx) => {
-    setForm(f => ({ ...f, images: f.images.filter((_, i) => i !== idx) }));
-    toast.success('Image removed');
+  /* ── Remove single slot ── */
+  const handleSlotRemove = (slotIndex) => {
+    setForm(f => {
+      const newImages = [...f.images];
+      newImages[slotIndex] = null;
+      return { ...f, images: newImages };
+    });
+    const slotNames = ['Front', 'Back', 'Side', 'Top'];
+    toast.success(`${slotNames[slotIndex]} view removed`);
   };
 
+  /* ── Submit ── */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -254,12 +519,13 @@ export default function ProductForm({ id }) {
       toast.error('Please fill all required fields');
       return;
     }
-    if (form.images.length === 0) {
-      toast.error('Please upload at least one product image');
+
+    // ✅ At least front image required
+    if (!form.images[0]) {
+      toast.error('Please upload at least the Front View image');
       return;
     }
 
-    // ✅ Clothing validation
     if (isClothing && !form.size) {
       toast.error('Please select size for clothing product');
       return;
@@ -271,6 +537,9 @@ export default function ProductForm({ id }) {
 
     setLoading(true);
     try {
+      // ✅ Filter out null slots — only send uploaded images
+      const uploadedImages = form.images.filter(Boolean);
+
       const payload = {
         name:             form.name,
         description:      form.description,
@@ -286,8 +555,7 @@ export default function ProductForm({ id }) {
         isFeatured:       form.isFeatured,
         isTrending:       form.isTrending,
         isActive:         form.isActive,
-        images:           form.images,
-        // ✅ Clothing fields
+        images:           uploadedImages, // ✅ array with view labels
         size:             form.size     || null,
         gender:           form.gender   || null,
         color:            form.color    || null,
@@ -322,6 +590,7 @@ export default function ProductForm({ id }) {
   };
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
+  const uploadedCount = form.images.filter(Boolean).length;
 
   return (
     <div className={styles.page}>
@@ -344,72 +613,67 @@ export default function ProductForm({ id }) {
 
               <div className="form-group">
                 <label>Product Name *</label>
-                <input
-                  className="form-control"
-                  value={form.name}
+                <input className="form-control" value={form.name}
                   onChange={e => set('name', e.target.value)}
-                  placeholder="Enter product name"
-                  required
-                />
+                  placeholder="Enter product name" required />
               </div>
 
               <div className="form-group">
                 <label>Short Description</label>
-                <input
-                  className="form-control"
-                  value={form.shortDescription}
+                <input className="form-control" value={form.shortDescription}
                   onChange={e => set('shortDescription', e.target.value)}
-                  placeholder="Brief description shown on product cards"
-                />
+                  placeholder="Brief description shown on product cards" />
               </div>
 
               <div className="form-group">
                 <label>Full Description *</label>
-                <textarea
-                  className="form-control"
-                  rows={5}
-                  value={form.description}
+                <textarea className="form-control" rows={5} value={form.description}
                   onChange={e => set('description', e.target.value)}
-                  placeholder="Detailed product description..."
-                  required
-                />
+                  placeholder="Detailed product description..." required />
               </div>
 
               <div className="form-group">
                 <label>Key Features (one per line)</label>
-                <textarea
-                  className="form-control"
-                  rows={4}
-                  value={form.features}
+                <textarea className="form-control" rows={4} value={form.features}
                   onChange={e => set('features', e.target.value)}
-                  placeholder={`Soft cotton material\nMachine washable\nBIS certified safe`}
-                />
+                  placeholder={`Soft cotton material\nMachine washable\nBIS certified safe`} />
               </div>
             </div>
 
-            {/* Images */}
+            {/* ✅ 4-Slot Image Uploader */}
             <div className={styles.card}>
-              <h3>🖼️ Product Images</h3>
-              <ImageUploader
+              <h3>
+                🖼️ Product Images
+                <span style={{
+                  marginLeft: '10px',
+                  fontSize: '0.70rem',
+                  background: uploadedCount > 0
+                    ? 'linear-gradient(135deg,#22C55E,#16A34A)'
+                    : '#FFF3EC',
+                  color: uploadedCount > 0 ? 'white' : '#FF6B35',
+                  padding: '2px 10px',
+                  borderRadius: '999px',
+                  fontWeight: '800',
+                }}>
+                  {uploadedCount}/4 uploaded
+                </span>
+              </h3>
+
+              <MultiImageUploader
                 images={form.images}
-                onUpload={handleImageUpload}
-                onRemove={removeImage}
-                uploading={uploading}
+                onUploadSlot={handleSlotUpload}
+                onRemoveSlot={handleSlotRemove}
+                uploadingSlot={uploadingSlot}
               />
             </div>
 
-            {/* ✅ CLOTHING FIELDS — only shows when clothing category selected */}
+            {/* Clothing Fields */}
             {isClothing && (
               <div className={styles.card} style={{
                 border: '2px solid #FF6B35',
                 borderRadius: '16px',
               }}>
-                <h3 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  color: '#FF6B35',
-                }}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#FF6B35' }}>
                   👗 Clothing Details
                   <span style={{
                     fontSize: '0.70rem',
@@ -419,180 +683,91 @@ export default function ProductForm({ id }) {
                     borderRadius: '999px',
                     fontWeight: '700',
                     textTransform: 'uppercase',
-                  }}>
-                    Required for clothing
-                  </span>
+                  }}>Required for clothing</span>
                 </h3>
 
-                {/* Gender */}
                 <div className="form-group">
                   <label>Gender *</label>
-                  <div style={{
-                    display: 'flex',
-                    gap: '10px',
-                    flexWrap: 'wrap',
-                    marginTop: '6px',
-                  }}>
+                  <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '6px' }}>
                     {CLOTHING_GENDERS.map(g => (
-                      <button
-                        key={g.value}
-                        type="button"
-                        onClick={() => set('gender', g.value)}
+                      <button key={g.value} type="button" onClick={() => set('gender', g.value)}
                         style={{
-                          padding: '8px 20px',
-                          borderRadius: '999px',
-                          border: '2px solid',
+                          padding: '8px 20px', borderRadius: '999px', border: '2px solid',
                           borderColor: form.gender === g.value ? '#FF6B35' : '#EDD9FF',
                           background: form.gender === g.value
-                            ? 'linear-gradient(135deg, #FF6B35, #7B2FBE)'
-                            : 'white',
+                            ? 'linear-gradient(135deg,#FF6B35,#7B2FBE)' : 'white',
                           color: form.gender === g.value ? 'white' : '#6B4E8A',
-                          fontWeight: '700',
-                          fontSize: '0.88rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          fontFamily: 'inherit',
-                        }}
-                      >
-                        {g.label}
-                      </button>
+                          fontWeight: '700', fontSize: '0.88rem', cursor: 'pointer',
+                          transition: 'all 0.2s', fontFamily: 'inherit',
+                        }}>{g.label}</button>
                     ))}
                   </div>
                 </div>
 
-                {/* Size */}
                 <div className="form-group">
                   <label>Size *</label>
-                  <div style={{
-                    display: 'flex',
-                    gap: '8px',
-                    flexWrap: 'wrap',
-                    marginTop: '6px',
-                  }}>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
                     {CLOTHING_SIZES.map(s => (
-                      <button
-                        key={s}
-                        type="button"
-                        onClick={() => set('size', s)}
+                      <button key={s} type="button" onClick={() => set('size', s)}
                         style={{
-                          padding: '6px 14px',
-                          borderRadius: '10px',
-                          border: '2px solid',
+                          padding: '6px 14px', borderRadius: '10px', border: '2px solid',
                           borderColor: form.size === s ? '#7B2FBE' : '#EDD9FF',
                           background: form.size === s
-                            ? 'linear-gradient(135deg, #7B2FBE, #9B4FDE)'
-                            : 'white',
+                            ? 'linear-gradient(135deg,#7B2FBE,#9B4FDE)' : 'white',
                           color: form.size === s ? 'white' : '#6B4E8A',
-                          fontWeight: '700',
-                          fontSize: '0.80rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          fontFamily: 'inherit',
-                        }}
-                      >
-                        {s}
-                      </button>
+                          fontWeight: '700', fontSize: '0.80rem', cursor: 'pointer',
+                          transition: 'all 0.2s', fontFamily: 'inherit',
+                        }}>{s}</button>
                     ))}
                   </div>
                 </div>
 
-                {/* Color */}
                 <div className="form-group">
                   <label>Color</label>
-                  <div style={{
-                    display: 'flex',
-                    gap: '8px',
-                    flexWrap: 'wrap',
-                    marginTop: '6px',
-                  }}>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
                     {CLOTHING_COLORS.map(c => (
-                      <button
-                        key={c}
-                        type="button"
-                        onClick={() => set('color', c)}
+                      <button key={c} type="button" onClick={() => set('color', c)}
                         style={{
-                          padding: '5px 14px',
-                          borderRadius: '8px',
-                          border: '2px solid',
+                          padding: '5px 14px', borderRadius: '8px', border: '2px solid',
                           borderColor: form.color === c ? '#FF6B35' : '#EDD9FF',
                           background: form.color === c ? '#FFF3EC' : 'white',
                           color: form.color === c ? '#FF6B35' : '#6B4E8A',
-                          fontWeight: '700',
-                          fontSize: '0.78rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          fontFamily: 'inherit',
-                        }}
-                      >
-                        {c}
-                      </button>
+                          fontWeight: '700', fontSize: '0.78rem', cursor: 'pointer',
+                          transition: 'all 0.2s', fontFamily: 'inherit',
+                        }}>{c}</button>
                     ))}
                   </div>
-                  {/* Custom color input */}
-                  <input
-                    className="form-control"
-                    value={form.color}
+                  <input className="form-control" value={form.color}
                     onChange={e => set('color', e.target.value)}
-                    placeholder="Or type custom color..."
-                    style={{ marginTop: '10px' }}
-                  />
+                    placeholder="Or type custom color..." style={{ marginTop: '10px' }} />
                 </div>
 
-                {/* Material */}
                 <div className="form-group">
                   <label>Material</label>
-                  <div style={{
-                    display: 'flex',
-                    gap: '8px',
-                    flexWrap: 'wrap',
-                    marginTop: '6px',
-                  }}>
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
                     {CLOTHING_MATERIALS.map(m => (
-                      <button
-                        key={m}
-                        type="button"
-                        onClick={() => set('material', m)}
+                      <button key={m} type="button" onClick={() => set('material', m)}
                         style={{
-                          padding: '5px 14px',
-                          borderRadius: '8px',
-                          border: '2px solid',
+                          padding: '5px 14px', borderRadius: '8px', border: '2px solid',
                           borderColor: form.material === m ? '#7B2FBE' : '#EDD9FF',
                           background: form.material === m ? '#F3E8FF' : 'white',
                           color: form.material === m ? '#7B2FBE' : '#6B4E8A',
-                          fontWeight: '700',
-                          fontSize: '0.78rem',
-                          cursor: 'pointer',
-                          transition: 'all 0.2s ease',
-                          fontFamily: 'inherit',
-                        }}
-                      >
-                        {m}
-                      </button>
+                          fontWeight: '700', fontSize: '0.78rem', cursor: 'pointer',
+                          transition: 'all 0.2s', fontFamily: 'inherit',
+                        }}>{m}</button>
                     ))}
                   </div>
                 </div>
 
-                {/* ✅ Clothing summary */}
                 {(form.gender || form.size || form.color) && (
                   <div style={{
-                    marginTop: '12px',
-                    padding: '12px 16px',
-                    background: 'linear-gradient(135deg, #FFF3EC, #F3E8FF)',
-                    borderRadius: '12px',
-                    border: '1.5px solid #EDD9FF',
-                    fontSize: '0.84rem',
-                    fontWeight: '600',
-                    color: '#2D1A4A',
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '10px',
+                    marginTop: '12px', padding: '12px 16px',
+                    background: 'linear-gradient(135deg,#FFF3EC,#F3E8FF)',
+                    borderRadius: '12px', border: '1.5px solid #EDD9FF',
+                    fontSize: '0.84rem', fontWeight: '600', color: '#2D1A4A',
+                    display: 'flex', flexWrap: 'wrap', gap: '10px',
                   }}>
-                    {form.gender && (
-                      <span>
-                        {form.gender === 'boy' ? '👦' : form.gender === 'girl' ? '👧' : '🧒'}
-                        {' '}{form.gender}
-                      </span>
-                    )}
+                    {form.gender   && <span>{form.gender === 'boy' ? '👦' : form.gender === 'girl' ? '👧' : '🧒'} {form.gender}</span>}
                     {form.size     && <span>📏 {form.size}</span>}
                     {form.color    && <span>🎨 {form.color}</span>}
                     {form.material && <span>🧵 {form.material}</span>}
@@ -605,69 +780,47 @@ export default function ProductForm({ id }) {
           {/* ══ RIGHT COLUMN ══ */}
           <div className={styles.col}>
 
-            {/* Pricing */}
             <div className={styles.card}>
               <h3>💰 Pricing & Stock</h3>
               <div className={styles.row2}>
                 <div className="form-group">
                   <label>Price (₹) *</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    value={form.price}
+                  <input type="number" className="form-control" value={form.price}
                     onChange={e => set('price', e.target.value)}
-                    placeholder="0.00"
-                    min="0" step="0.01" required
-                  />
+                    placeholder="0.00" min="0" step="0.01" required />
                 </div>
                 <div className="form-group">
                   <label>Discount Price (₹)</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    value={form.discountPrice}
+                  <input type="number" className="form-control" value={form.discountPrice}
                     onChange={e => set('discountPrice', e.target.value)}
-                    placeholder="Optional"
-                    min="0" step="0.01"
-                  />
+                    placeholder="Optional" min="0" step="0.01" />
                 </div>
               </div>
 
               {form.price && form.discountPrice && (
                 <div className={styles.discountPreview}>
-                  🏷️ Discount:{' '}
-                  <strong>
+                  🏷️ Discount: <strong>
                     {Math.round(((form.price - form.discountPrice) / form.price) * 100)}% off
                   </strong>
-                  {' '}— Customer saves{' '}
-                  <strong>₹{(form.price - form.discountPrice).toFixed(2)}</strong>
+                  {' '}— Save <strong>₹{(form.price - form.discountPrice).toFixed(2)}</strong>
                 </div>
               )}
 
               <div className="form-group">
                 <label>Stock Quantity *</label>
-                <input
-                  type="number"
-                  className="form-control"
-                  value={form.stock}
+                <input type="number" className="form-control" value={form.stock}
                   onChange={e => set('stock', e.target.value)}
-                  placeholder="0" min="0" required
-                />
+                  placeholder="0" min="0" required />
               </div>
             </div>
 
-            {/* Organization */}
             <div className={styles.card}>
               <h3>🗂️ Organization</h3>
 
               <div className="form-group">
                 <label>Category *</label>
-                <select
-                  className="form-control"
-                  value={form.categoryId}
-                  onChange={e => handleCategoryChange(e.target.value)}
-                  required
-                >
+                <select className="form-control" value={form.categoryId}
+                  onChange={e => handleCategoryChange(e.target.value)} required>
                   <option value="">-- Select Category --</option>
                   {categories.map(c => (
                     <option key={c.id} value={c.id}>
@@ -678,41 +831,28 @@ export default function ProductForm({ id }) {
                 {categories.length === 0 && (
                   <small style={{ color: 'red' }}>⚠️ No categories found</small>
                 )}
-
-                {/* ✅ Clothing badge */}
                 {isClothing && (
                   <div style={{
-                    marginTop: '8px',
-                    padding: '6px 14px',
-                    background: '#FFF3EC',
-                    border: '1.5px solid #FFD4B8',
-                    borderRadius: '8px',
-                    fontSize: '0.78rem',
-                    fontWeight: '700',
-                    color: '#FF6B35',
+                    marginTop: '8px', padding: '6px 14px',
+                    background: '#FFF3EC', border: '1.5px solid #FFD4B8',
+                    borderRadius: '8px', fontSize: '0.78rem',
+                    fontWeight: '700', color: '#FF6B35',
                   }}>
-                    👗 Clothing category detected — Size & Gender fields are now required!
+                    👗 Clothing detected — Size & Gender required!
                   </div>
                 )}
               </div>
 
               <div className="form-group">
                 <label>Brand</label>
-                <input
-                  className="form-control"
-                  value={form.brand}
-                  onChange={e => set('brand', e.target.value)}
-                  placeholder="Brand name"
-                />
+                <input className="form-control" value={form.brand}
+                  onChange={e => set('brand', e.target.value)} placeholder="Brand name" />
               </div>
 
               <div className="form-group">
                 <label>Age Group</label>
-                <select
-                  className="form-control"
-                  value={form.ageGroup}
-                  onChange={e => set('ageGroup', e.target.value)}
-                >
+                <select className="form-control" value={form.ageGroup}
+                  onChange={e => set('ageGroup', e.target.value)}>
                   <option value="">Select Age Group</option>
                   {AGE_GROUPS.map(a => (
                     <option key={a} value={a}>{a}</option>
@@ -722,56 +862,102 @@ export default function ProductForm({ id }) {
 
               <div className="form-group">
                 <label>Tags (comma-separated)</label>
-                <input
-                  className="form-control"
-                  value={form.tags}
+                <input className="form-control" value={form.tags}
                   onChange={e => set('tags', e.target.value)}
-                  placeholder="cotton, newborn, summer"
-                />
+                  placeholder="cotton, newborn, summer" />
               </div>
             </div>
 
-            {/* Visibility */}
             <div className={styles.card}>
               <h3>👁️ Visibility</h3>
               <div className={styles.checkboxes}>
                 {[
                   { key: 'isActive',   label: '✅ Active (visible to customers)' },
-                  { key: 'isFeatured', label: '⭐ Featured (shown on home page)' },
-                  { key: 'isTrending', label: '🔥 Trending (shown on home page)' },
+                  { key: 'isFeatured', label: '⭐ Featured (shown on home page)'  },
+                  { key: 'isTrending', label: '🔥 Trending (shown on home page)'  },
                 ].map(({ key, label }) => (
                   <label key={key} className={styles.checkLabel}>
-                    <input
-                      type="checkbox"
-                      checked={form[key]}
-                      onChange={e => set(key, e.target.checked)}
-                    />
+                    <input type="checkbox" checked={form[key]}
+                      onChange={e => set(key, e.target.checked)} />
                     {label}
                   </label>
                 ))}
               </div>
             </div>
 
-            {/* Submit */}
+            {/* Image Preview Summary */}
+            {uploadedCount > 0 && (
+              <div className={styles.card}>
+                <h3>📸 Image Preview</h3>
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(4, 1fr)',
+                  gap: '8px',
+                }}>
+                  {IMAGE_SLOTS.map((slot, i) => (
+                    <div key={i} style={{ textAlign: 'center' }}>
+                      {form.images[i] ? (
+                        <div style={{
+                          aspectRatio: '1',
+                          borderRadius: '10px',
+                          overflow: 'hidden',
+                          border: i === 0
+                            ? '2px solid #FF6B35'
+                            : '2px solid #EDD9FF',
+                        }}>
+                          <img
+                            src={form.images[i].url}
+                            alt={slot.label}
+                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                          />
+                        </div>
+                      ) : (
+                        <div style={{
+                          aspectRatio: '1',
+                          borderRadius: '10px',
+                          border: '2px dashed #EDD9FF',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          background: '#FBF7FF',
+                          fontSize: '1.2rem',
+                        }}>
+                          {slot.icon}
+                        </div>
+                      )}
+                      <p style={{
+                        fontSize: '0.65rem',
+                        fontWeight: '700',
+                        color: form.images[i] ? '#22C55E' : '#9585B0',
+                        margin: '4px 0 0',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.3px',
+                      }}>
+                        {slot.label}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className={styles.submitRow}>
-              <button
-                type="button"
-                className="btn btn-outline"
-                onClick={() => router.back()}
-              >
+              <button type="button" className="btn btn-outline" onClick={() => router.back()}>
                 Cancel
               </button>
               <button
                 type="submit"
                 className="btn btn-primary"
-                disabled={loading || uploading}
+                disabled={loading || uploadingSlot !== null}
                 style={{ flex: 1 }}
               >
                 {loading
                   ? '⏳ Saving...'
-                  : isEdit
-                    ? '💾 Update Product'
-                    : '✨ Create Product'}
+                  : uploadingSlot !== null
+                    ? '⏳ Uploading image...'
+                    : isEdit
+                      ? '💾 Update Product'
+                      : '✨ Create Product'}
               </button>
             </div>
           </div>

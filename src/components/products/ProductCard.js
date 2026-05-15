@@ -7,21 +7,47 @@ import { useWishlist } from '@/context/WishlistContext';
 import toast from 'react-hot-toast';
 import styles from './ProductCard.module.css';
 
-/* ── baby accent per category ── */
+/* ── baby accent per category — all 9 required categories ── */
 const CATEGORY_ACCENTS = {
-  clothing:  { color: '#FF6B35', emoji: '👕', pastel: '#FFF2EB' },
-  toys:      { color: '#7B2FBE', emoji: '🧸', pastel: '#F3E8FF' },
-  feeding:   { color: '#22C55E', emoji: '🍼', pastel: '#ECFDF5' },
-  nursery:   { color: '#0EA5E9', emoji: '🛏️', pastel: '#E0F2FE' },
-  health:    { color: '#F59E0B', emoji: '🏥', pastel: '#FFFBEB' },
-  maternity: { color: '#EC4899', emoji: '🤰', pastel: '#FDF2F8' },
-  default:   { color: '#FF6B35', emoji: '🎁', pastel: '#FFF2EB' },
+  'clothing':          { color: '#FF6B35', emoji: '👗', pastel: '#FFF2EB' },
+  'personal-care':     { color: '#7B2FBE', emoji: '🧴', pastel: '#F3E8FF' },
+  'personal':          { color: '#7B2FBE', emoji: '🧴', pastel: '#F3E8FF' },
+  'health-care':       { color: '#0EA5E9', emoji: '💊', pastel: '#E0F2FE' },
+  'health':            { color: '#0EA5E9', emoji: '💊', pastel: '#E0F2FE' },
+  'baby-gear':         { color: '#10B981', emoji: '🎒', pastel: '#ECFDF5' },
+  'baby':              { color: '#10B981', emoji: '🎒', pastel: '#ECFDF5' },
+  'walkers':           { color: '#F59E0B', emoji: '🚶', pastel: '#FFFBEB' },
+  'walker':            { color: '#F59E0B', emoji: '🚶', pastel: '#FFFBEB' },
+  'toys':              { color: '#EF4444', emoji: '🎠', pastel: '#FEF2F2' },
+  'toy':               { color: '#EF4444', emoji: '🎠', pastel: '#FEF2F2' },
+  'cradles-cribs':     { color: '#8B5CF6', emoji: '🛏️', pastel: '#EDE9FE' },
+  'cradles':           { color: '#8B5CF6', emoji: '🛏️', pastel: '#EDE9FE' },
+  'cribs':             { color: '#8B5CF6', emoji: '🛏️', pastel: '#EDE9FE' },
+  'electric-vehicles': { color: '#059669', emoji: '🚗', pastel: '#ECFDF5' },
+  'electric':          { color: '#059669', emoji: '🚗', pastel: '#ECFDF5' },
+  'food':              { color: '#F97316', emoji: '🍎', pastel: '#FFF7ED' },
+  'default':           { color: '#FF6B35', emoji: '🎁', pastel: '#FFF2EB' },
 };
 
-function getCategoryAccent(categoryName = '') {
-  const key = categoryName.toLowerCase();
-  for (const [k, v] of Object.entries(CATEGORY_ACCENTS)) {
-    if (key.includes(k)) return v;
+/* ── Get accent by slug first, then name ── */
+function getCategoryAccent(categoryName = '', categorySlug = '') {
+  // Try exact slug match first
+  if (categorySlug) {
+    if (CATEGORY_ACCENTS[categorySlug]) return CATEGORY_ACCENTS[categorySlug];
+    // Try partial slug match
+    for (const [k, v] of Object.entries(CATEGORY_ACCENTS)) {
+      if (k === 'default') continue;
+      if (categorySlug.includes(k) || k.includes(categorySlug)) return v;
+    }
+  }
+  // Try name match
+  if (categoryName) {
+    const key = categoryName.toLowerCase().replace(/\s+/g, '-');
+    if (CATEGORY_ACCENTS[key]) return CATEGORY_ACCENTS[key];
+    for (const [k, v] of Object.entries(CATEGORY_ACCENTS)) {
+      if (k === 'default') continue;
+      if (key.includes(k) || k.includes(key)) return v;
+    }
   }
   return CATEGORY_ACCENTS.default;
 }
@@ -42,20 +68,19 @@ export function ProductCardSkeleton() {
 }
 
 export default function ProductCard({ product }) {
-  // ✅ Both function names work — using the ones that exist
   const { addItem, addToCart } = useCart();
   const { toggle, isWishlisted, isInWishlist } = useWishlist();
 
   const cardRef = useRef(null);
-  const [tilt, setTilt]               = useState({ x: 0, y: 0 });
-  const [isHovered, setHovered]       = useState(false);
+  const [tilt,        setTilt]        = useState({ x: 0, y: 0 });
+  const [isHovered,   setHovered]     = useState(false);
   const [imgParallax, setImgParallax] = useState({ x: 0, y: 0 });
-  const [imgLoaded, setImgLoaded]     = useState(false);
-  const [cartAdding, setCartAdding]   = useState(false);
+  const [imgLoaded,   setImgLoaded]   = useState(false);
+  const [cartAdding,  setCartAdding]  = useState(false);
 
   if (!product) return null;
 
-  // ✅ Support both isWishlisted and isInWishlist
+  // Support both isWishlisted and isInWishlist
   const inWishlist = isWishlisted
     ? isWishlisted(product.id)
     : isInWishlist
@@ -63,7 +88,12 @@ export default function ProductCard({ product }) {
       : false;
 
   const imageUrl = product.images?.[0]?.url || null;
-  const accent   = getCategoryAccent(product.category?.name);
+
+  // ✅ Use slug first, then name
+  const accent = getCategoryAccent(
+    product.category?.name || '',
+    product.category?.slug || ''
+  );
 
   /* ── 3D tilt handler ── */
   const handleMouseMove = (e) => {
@@ -84,16 +114,14 @@ export default function ProductCard({ product }) {
     setImgParallax({ x: 0, y: 0 });
   };
 
-  /* ── cart — stops event bubbling ── */
+  /* ── Add to cart ── */
   const handleAddToCart = (e) => {
-    // ✅ Stop click from going to product page
     e.preventDefault();
     e.stopPropagation();
 
     if (cartAdding || product.stock === 0) return;
     setCartAdding(true);
 
-    // ✅ Use whichever function exists
     const addFn = addItem || addToCart;
     addFn({ ...product, quantity: 1 });
 
@@ -115,9 +143,8 @@ export default function ProductCard({ product }) {
     setTimeout(() => setCartAdding(false), 1200);
   };
 
-  /* ── wishlist — stops event bubbling ── */
+  /* ── Wishlist ── */
   const handleWishlist = (e) => {
-    // ✅ Stop click from going to product page
     e.preventDefault();
     e.stopPropagation();
 
@@ -161,7 +188,7 @@ export default function ProductCard({ product }) {
           : 'perspective(900px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1)',
       }}
     >
-      {/* ── gloss layer ── */}
+      {/* Gloss layer */}
       <div className={styles.gloss} />
 
       {/* ── IMAGE AREA ── */}
@@ -169,10 +196,8 @@ export default function ProductCard({ product }) {
         className={styles.imageWrap}
         style={{ background: accent.pastel }}
       >
-        {/* Dot pattern */}
         <div className={styles.dotPattern} />
 
-        {/* Product image with parallax */}
         <div
           className={styles.imageInner}
           style={{
@@ -222,7 +247,7 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
-        {/* ✅ Wishlist button — e.stopPropagation() added */}
+        {/* Wishlist button */}
         <button
           className={`${styles.wishBtn} ${inWishlist ? styles.wishActive : ''}`}
           onClick={handleWishlist}
@@ -321,7 +346,7 @@ export default function ProductCard({ product }) {
           </p>
         )}
 
-        {/* ✅ Add to Cart button — e.stopPropagation() added */}
+        {/* Add to Cart button */}
         <button
           className={`
             ${styles.cartBtn}

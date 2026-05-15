@@ -113,37 +113,66 @@ model Review {
   updatedAt DateTime @updatedAt
 }
 
-// ✅ ONE Banner model — with gridImages
-model Banner {
-  id         String        @id @default(auto()) @map("_id") @db.ObjectId
-  title      String
-  subtitle   String?
-  image      BannerImage?
-  gridImages BannerImage[]
-  buttonText String        @default("Shop Now")
-  buttonLink String        @default("/products")
-  bgColor    String        @default("#ff6b9d")
-  isActive   Boolean       @default(true)
-  order      Int           @default(0)
-  type       String        @default("hero")
-  emoji      String?
-  price      Float?
-  offer      String?
-  color      String?
-  slug       String?
-  gender     String?
-  createdAt  DateTime      @default(now())
-  updatedAt  DateTime      @updatedAt
+// ✅ Brand model — fully editable from admin
+model Brand {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  color     String   @default("#FF6B35")
+  logo      BrandLogo?
+  link      String   @default("/products")
+  isActive  Boolean  @default(true)
+  order     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("brands")
 }
 
-// ✅ ONE BannerImage type — with title
+type BrandLogo {
+  url      String?
+  publicId String?
+}
+
+// ✅ Banner model — ALL fields
+model Banner {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  title         String
+  subtitle      String?
+  image         BannerImage?
+  mobileImage   BannerImage?
+  gridImages    BannerImage[]
+  buttonText    String        @default("Shop Now")
+  buttonLink    String        @default("/products")
+  bgColor       String        @default("#ff6b9d")
+  isActive      Boolean       @default(true)
+  order         Int           @default(0)
+  type          String        @default("hero")
+  emoji         String?
+  price         Float?
+  offer         String?
+  color         String?
+  slug          String?
+  gender        String?
+  festivalName  String?
+  startDate     DateTime?
+  endDate       DateTime?
+  foodCategory  String?
+  evGender      String?
+  newBornGender String?
+  ageGroup      String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@map("banners")
+}
+
 type BannerImage {
   url      String?
   publicId String?
   title    String?
-  link     String?
   brand    String?
-  price    Float?
+  price    String?
+  link     String?
 }
 
 model Order {

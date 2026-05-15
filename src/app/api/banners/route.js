@@ -11,7 +11,10 @@ export async function GET() {
     return NextResponse.json({ banners });
   } catch (error) {
     console.error('Banners GET error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -25,44 +28,59 @@ export async function POST(request) {
     const body = await request.json();
 
     const bannerData = {
-      title:      body.title,
-      subtitle:   body.subtitle   || null,
-      buttonText: body.buttonText || 'Shop Now',
-      buttonLink: body.buttonLink || '/products',
-      bgColor:    body.bgColor    || '#ff6b9d',
-      isActive:   body.isActive !== false,
-      order:      parseInt(body.order) || 0,
-      type:       body.type   || 'hero',
-      emoji:      body.emoji  || null,
-      price:      body.price  ? parseFloat(body.price) : null,
-      offer:      body.offer  || null,
-      color:      body.color  || null,
-      slug:       body.slug   || null,
-      gender:     body.gender || null,
+      title:         body.title,
+      subtitle:      body.subtitle      || null,
+      buttonText:    body.buttonText    || 'Shop Now',
+      buttonLink:    body.buttonLink    || '/products',
+      bgColor:       body.bgColor       || '#ff6b9d',
+      isActive:      body.isActive !== false,
+      order:         parseInt(body.order) || 0,
+      type:          body.type          || 'hero',
+      emoji:         body.emoji         || null,
+      price:         body.price         ? parseFloat(body.price) : null,
+      offer:         body.offer         || null,
+      color:         body.color         || null,
+      slug:          body.slug          || null,
+      gender:        body.gender        || null,
+      festivalName:  body.festivalName  || null,
+      startDate:     body.startDate     ? new Date(body.startDate) : null,
+      endDate:       body.endDate       ? new Date(body.endDate)   : null,
+      foodCategory:  body.foodCategory  || null,
+      evGender:      body.evGender      || null,
+      newBornGender: body.newBornGender || null,
+      ageGroup:      body.ageGroup      || null,
     };
 
-    // ✅ image — use set wrapper for MongoDB embedded type
-    // ✅ image — only url and publicId (no title — not in old schema)
-if (body.image?.url) {
-  bannerData.image = {
-    set: {
-      url:      body.image.url      || '',
-      publicId: body.image.publicId || '',
+    // ✅ Main image
+    if (body.image && body.image.url) {
+      bannerData.image = {
+        url:      body.image.url      || '',
+        publicId: body.image.publicId || '',
+        title:    body.image.title    || '',
+      };
     }
-  };
-}
 
-    // ✅ gridImages — use set wrapper
-    bannerData.gridImages = {
-      set: (body.gridImages || []).map(img => ({
+    // ✅ Mobile image
+    if (body.mobileImage && body.mobileImage.url) {
+      bannerData.mobileImage = {
+        url:      body.mobileImage.url      || '',
+        publicId: body.mobileImage.publicId || '',
+      };
+    }
+
+    // ✅ Grid images
+    if (body.gridImages && body.gridImages.length > 0) {
+      bannerData.gridImages = body.gridImages.map(img => ({
         url:      img.url      || '',
         publicId: img.publicId || '',
         title:    img.title    || '',
-        link:     img.link     || '',
         brand:    img.brand    || '',
-        price:    img.price    ? parseFloat(img.price) : null,
-      }))
-    };
+        price:    img.price    || '',
+        link:     img.link     || '',
+      }));
+    } else {
+      bannerData.gridImages = [];
+    }
 
     const banner = await prisma.banner.create({ data: bannerData });
     return NextResponse.json({ banner }, { status: 201 });

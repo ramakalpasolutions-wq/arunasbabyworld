@@ -1,4 +1,3 @@
-// src/components/layout/Header.js
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
@@ -8,27 +7,15 @@ import { useWishlist } from '@/context/WishlistContext';
 import { useRouter } from 'next/navigation';
 import styles from './Header.module.css';
 
-const categories = [
-  {
-    name: 'Clothing', slug: 'clothing',
-    sub: ['Newborn','Tops & T-Shirts','Bottoms','Dresses',
-          'Ethnic Wear','Sleepwear','Winter Wear'],
-  },
-  {
-    name: 'Toys & Games', slug: 'toys-games',
-    sub: ['Educational Toys','Soft Toys','Action Figures',
-          'Board Games','Outdoor Toys','Building Blocks'],
-  },
-  {
-    name: 'Baby Gear', slug: 'baby-gear',
-    sub: ['Strollers','Car Seats','Baby Carriers',
-          'Swings','High Chairs','Play Gyms'],
-  },
-  {
-    name: 'Feeding', slug: 'feeding',
-    sub: ['Bottles','Breast Pumps','Baby Food',
-          'Bibs','Bowls & Spoons','Sippy Cups'],
-  },
+const CATEGORY_ORDER = [
+  'clothing',
+  'personal-care',
+  'health-care',
+  'walkers',
+  'toys',
+  'cradles-cribs',
+  'electric-vehicles',
+  'food',
 ];
 
 export default function Header() {
@@ -37,23 +24,48 @@ export default function Header() {
   const { items: wishlistItems } = useWishlist();
   const router = useRouter();
 
-  const [scrolled, setScrolled]       = useState(false);
+  const [scrolled,    setScrolled]    = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const [activeMega, setActiveMega]   = useState(null);
-  const [mobileOpen, setMobileOpen]   = useState(false);
-  const [cartBounce, setCartBounce]   = useState(false);
+  const [activeMega,  setActiveMega]  = useState(null);
+  const [mobileOpen,  setMobileOpen]  = useState(false);
+  const [cartBounce,  setCartBounce]  = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+  const [navCategories, setNavCategories] = useState([]);
+  const [catLoading,    setCatLoading]    = useState(true);
 
   const prevItems  = useRef(totalItems);
   const profileRef = useRef(null);
   const searchRef  = useRef(null);
 
+  /* ── Fetch categories ── */
+  useEffect(() => {
+    setCatLoading(true);
+    fetch('/api/categories?all=true')
+      .then(r => r.json())
+      .then(d => {
+        const allCats = d.categories || [];
+        const filtered = allCats.filter(
+          cat => CATEGORY_ORDER.includes(cat.slug)
+        );
+        filtered.sort((a, b) => {
+          const aIdx = CATEGORY_ORDER.indexOf(a.slug);
+          const bIdx = CATEGORY_ORDER.indexOf(b.slug);
+          return aIdx - bIdx;
+        });
+        setNavCategories(filtered);
+      })
+      .catch(() => {})
+      .finally(() => setCatLoading(false));
+  }, []);
+
+  /* ── Scroll ── */
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  /* ── Cart bounce ── */
   useEffect(() => {
     if (totalItems > prevItems.current) {
       setCartBounce(true);
@@ -62,6 +74,7 @@ export default function Header() {
     prevItems.current = totalItems;
   }, [totalItems]);
 
+  /* ── Close profile on outside click ── */
   useEffect(() => {
     const handle = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
@@ -72,8 +85,10 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handle);
   }, []);
 
+  /* ── Close mobile on route change ── */
   useEffect(() => { setMobileOpen(false); }, [router]);
 
+  /* ── Lock body scroll ── */
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
@@ -91,20 +106,22 @@ export default function Header() {
   const closeMobile = () => setMobileOpen(false);
 
   return (
-    <header className={styles.header + (scrolled ? ' ' + styles.scrolled : '')}>
+    <header className={`${styles.header} ${scrolled ? styles.scrolled : ''}`}>
 
-      {/* MAIN HEADER */}
+      {/* ══ MAIN HEADER ══ */}
       <div className={styles.mainHeader}>
-        <div className={'container ' + styles.mainContent}>
+        <div className={`container ${styles.mainContent}`}>
 
+          {/* Logo */}
           <Link href="/" className={styles.logo} onClick={closeMobile}>
-            <div className={styles.logoIcon}>🍼</div>
+            <div className={styles.logoIcon}></div>
             <div className={styles.logoText}>
-              <span className={styles.logoMain}>BabyBliss</span>
+              <span className={styles.logoMain}>Babys World</span>
               <span className={styles.logoSub}>Everything for little ones</span>
             </div>
           </Link>
 
+          {/* Search */}
           <form onSubmit={handleSearch} className={styles.searchForm}>
             <div className={styles.searchBox}>
               <span className={styles.searchIcon}>🔍</span>
@@ -119,6 +136,7 @@ export default function Header() {
             </div>
           </form>
 
+          {/* Actions */}
           <div className={styles.actions}>
 
             <Link href="/wishlist" className={styles.actionBtn}>
@@ -131,11 +149,11 @@ export default function Header() {
 
             <Link
               href="/cart"
-              className={styles.actionBtn + (cartBounce ? ' ' + styles.cartBounce : '')}
+              className={`${styles.actionBtn} ${cartBounce ? styles.cartBounce : ''}`}
             >
               <span className={styles.actionIcon}>🛒</span>
               {totalItems > 0 && (
-                <span className={styles.badge + ' ' + styles.badgePrimary}>
+                <span className={`${styles.badge} ${styles.badgePrimary}`}>
                   {totalItems}
                 </span>
               )}
@@ -191,7 +209,7 @@ export default function Header() {
                       <>
                         <div className={styles.profileDivider} />
                         <Link href="/admin/dashboard"
-                          className={styles.profileItem + ' ' + styles.profileAdmin}
+                          className={`${styles.profileItem} ${styles.profileAdmin}`}
                           onClick={() => setProfileOpen(false)}>
                           <span>⚙️</span> Admin Dashboard
                         </Link>
@@ -199,7 +217,7 @@ export default function Header() {
                     )}
                     <div className={styles.profileDivider} />
                     <button
-                      className={styles.profileItem + ' ' + styles.profileLogout}
+                      className={`${styles.profileItem} ${styles.profileLogout}`}
                       onClick={() => {
                         setProfileOpen(false);
                         signOut({ callbackUrl: '/' });
@@ -217,58 +235,54 @@ export default function Header() {
               </Link>
             )}
 
+            {/* Hamburger */}
             <button
               className={styles.mobileMenuBtn}
               onClick={() => setMobileOpen(p => !p)}
               aria-label={mobileOpen ? 'Close menu' : 'Open menu'}
             >
-              <span style={mobileOpen ? { transform: 'translateY(7px) rotate(45deg)' } : {}} />
-              <span style={mobileOpen ? { opacity: 0, transform: 'scaleX(0)' } : {}} />
-              <span style={mobileOpen ? { transform: 'translateY(-7px) rotate(-45deg)' } : {}} />
+              <span style={mobileOpen
+                ? { transform: 'translateY(7px) rotate(45deg)' } : {}} />
+              <span style={mobileOpen
+                ? { opacity: 0, transform: 'scaleX(0)' } : {}} />
+              <span style={mobileOpen
+                ? { transform: 'translateY(-7px) rotate(-45deg)' } : {}} />
             </button>
           </div>
         </div>
       </div>
 
-      {/* CATEGORY NAV — ALL buttons visible, scrollable */}
+      {/* ══ DESKTOP CATEGORY NAV ══ */}
       <nav className={styles.categoryNav}>
-        <div className={'container ' + styles.navContent}>
+        <div className={`container ${styles.navContent}`}>
 
-          {categories.map(cat => (
+          {/* ✅ Dynamic categories — NO emojis */}
+          {navCategories.map(cat => (
             <div
-              key={cat.name}
+              key={cat.id}
               className={styles.navItem}
-              onMouseEnter={() => setActiveMega(cat.name)}
+              onMouseEnter={() => setActiveMega(cat.id)}
               onMouseLeave={() => setActiveMega(null)}
             >
               <Link
-                href={'/products?category=' + cat.slug}
+                href={`/products?category=${cat.id}`}
                 className={styles.navLink}
               >
                 {cat.name}
               </Link>
 
-              {activeMega === cat.name && (
+              {activeMega === cat.id && (
                 <div className={styles.megaMenu}>
                   <div className={styles.megaContent}>
                     <div className={styles.megaCategory}>
                       <h3>{cat.name}</h3>
                       <Link
-                        href={'/products?category=' + cat.slug}
+                        href={`/products?category=${cat.id}`}
                         className={styles.viewAll}
                       >
                         View All →
                       </Link>
                     </div>
-                    <ul className={styles.megaLinks}>
-                      {cat.sub.map(sub => (
-                        <li key={sub}>
-                          <Link href={'/products?search=' + encodeURIComponent(sub.toLowerCase())}>
-                            {sub}
-                          </Link>
-                        </li>
-                      ))}
-                    </ul>
                   </div>
                 </div>
               )}
@@ -279,7 +293,7 @@ export default function Header() {
 
           <Link
             href="/products?featured=true"
-            className={styles.navBtn + ' ' + styles.navBtnFeatured}
+            className={`${styles.navBtn} ${styles.navBtnFeatured}`}
           >
             <span className={styles.navBtnDot} />
             ⭐ Featured
@@ -287,7 +301,7 @@ export default function Header() {
 
           <Link
             href="/products?sort=createdAt&order=desc"
-            className={styles.navBtn + ' ' + styles.navBtnNew}
+            className={`${styles.navBtn} ${styles.navBtnNew}`}
           >
             <span className={styles.navBtnDot} />
             ✨ New Arrivals
@@ -295,7 +309,7 @@ export default function Header() {
 
           <Link
             href="/products?trending=true"
-            className={styles.navBtn + ' ' + styles.navBtnTrending}
+            className={`${styles.navBtn} ${styles.navBtnTrending}`}
           >
             <span className={styles.navBtnPulse} />
             🔥 Trending
@@ -303,32 +317,33 @@ export default function Header() {
 
           <Link
             href="/contact"
-            className={styles.navBtn + ' ' + styles.navBtnContact}
+            className={`${styles.navBtn} ${styles.navBtnContact}`}
           >
             <span className={styles.navBtnDot} />
             📞 Contact
           </Link>
-
         </div>
       </nav>
 
-      {/* MOBILE OVERLAY */}
+      {/* ══ MOBILE OVERLAY ══ */}
       {mobileOpen && (
         <div
           onClick={closeMobile}
           style={{
-            position: 'fixed',
-            inset: 0,
-            background: 'rgba(0,0,0,0.45)',
-            zIndex: 998,
+            position:       'fixed',
+            inset:          0,
+            background:     'rgba(0,0,0,0.45)',
+            zIndex:         998,
+            backdropFilter: 'blur(2px)',
           }}
         />
       )}
 
-      {/* MOBILE MENU */}
+      {/* ══ MOBILE MENU ══ */}
       {mobileOpen && (
         <div className={styles.mobileMenu}>
 
+          {/* Search */}
           <div className={styles.mobileSearch}>
             <form onSubmit={handleSearch}>
               <div className={styles.searchBox}>
@@ -348,117 +363,136 @@ export default function Header() {
 
           <div className={styles.mobileLinks}>
 
-            {categories.map(cat => (
-              <Link
-                key={cat.name}
-                href={'/products?category=' + cat.slug}
-                className={styles.mobileLink}
-                onClick={closeMobile}
-              >
-                {cat.name}
-              </Link>
-            ))}
+            {/* ✅ CATEGORIES — Clean list, no colors, no emojis */}
+            <div className={styles.mobileCatSection}>
+              <p className={styles.mobileCatTitle}>Shop by Category</p>
 
-            <div className={styles.mobileBtnGroup}>
-              <Link href="/products?featured=true" className={styles.mobilePill}
-                style={{ background: 'linear-gradient(135deg,#FF6B35,#FF8C5A)' }}
-                onClick={closeMobile}>
-                ⭐ Featured
-              </Link>
-              <Link href="/products?sort=createdAt&order=desc" className={styles.mobilePill}
-                style={{ background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)' }}
-                onClick={closeMobile}>
-                ✨ New
-              </Link>
-              <Link href="/products?trending=true" className={styles.mobilePill}
-                style={{ background: 'linear-gradient(135deg,#FF3366,#FF6B35)' }}
-                onClick={closeMobile}>
-                🔥 Trending
-              </Link>
-              <Link href="/contact" className={styles.mobilePill}
-                style={{ background: 'linear-gradient(135deg,#0EA5E9,#7B2FBE)' }}
-                onClick={closeMobile}>
-                📞 Contact
-              </Link>
+              {catLoading ? (
+                <div className={styles.mobileCatList}>
+                  {[...Array(8)].map((_, i) => (
+                    <div key={i} className={styles.mobileCatSkeleton} />
+                  ))}
+                </div>
+              ) : (
+                <div className={styles.mobileCatList}>
+                  {navCategories.map((cat, i) => (
+                    <Link
+                      key={cat.id}
+                      href={`/products?category=${cat.id}`}
+                      className={styles.mobileCatItem}
+                      onClick={closeMobile}
+                      style={{ animationDelay: `${i * 40}ms` }}
+                    >
+                      <span className={styles.mobileCatItemName}>
+                        {cat.name}
+                      </span>
+                      <span className={styles.mobileCatItemArrow}>›</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
             </div>
 
+            {/* Divider */}
+            <div className={styles.mobileDivider} />
+
+            {/* Quick Pills */}
+            <div className={styles.mobileBtnGroup}>
+              <Link
+                href="/products?featured=true"
+                className={styles.mobilePill}
+                style={{ background: 'linear-gradient(135deg,#FF6B35,#FF8C5A)' }}
+                onClick={closeMobile}
+              >⭐ Featured</Link>
+
+              <Link
+                href="/products?sort=createdAt&order=desc"
+                className={styles.mobilePill}
+                style={{ background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)' }}
+                onClick={closeMobile}
+              >✨ New</Link>
+
+              <Link
+                href="/products?trending=true"
+                className={styles.mobilePill}
+                style={{ background: 'linear-gradient(135deg,#FF3366,#FF6B35)' }}
+                onClick={closeMobile}
+              >🔥 Trending</Link>
+
+              <Link
+                href="/contact"
+                className={styles.mobilePill}
+                style={{ background: 'linear-gradient(135deg,#0EA5E9,#7B2FBE)' }}
+                onClick={closeMobile}
+              >📞 Contact</Link>
+            </div>
+
+            {/* Divider */}
+            <div className={styles.mobileDivider} />
+
+            {/* Cart & Wishlist */}
             <Link href="/cart" className={styles.mobileLink} onClick={closeMobile}>
-              🛒 Cart {totalItems > 0 && '(' + totalItems + ')'}
+              🛒 Cart {totalItems > 0 && `(${totalItems})`}
             </Link>
             <Link href="/wishlist" className={styles.mobileLink} onClick={closeMobile}>
-              ❤️ Wishlist {wishlistItems.length > 0 && '(' + wishlistItems.length + ')'}
+              ❤️ Wishlist {wishlistItems.length > 0 && `(${wishlistItems.length})`}
             </Link>
 
+            {/* Divider */}
+            <div className={styles.mobileDivider} />
+
+            {/* User section */}
             {session ? (
               <>
-                <div style={{
-                  display: 'flex', alignItems: 'center', gap: '10px',
-                  padding: '12px 20px',
-                  background: 'linear-gradient(135deg,#FFF3EC,#F3E8FF)',
-                  borderTop: '1px solid #EDD9FF',
-                  borderBottom: '1px solid #EDD9FF',
-                  margin: '6px 0',
-                }}>
-                  <div style={{
-                    width: '38px', height: '38px', borderRadius: '50%',
-                    background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
-                    color: 'white', display: 'flex', alignItems: 'center',
-                    justifyContent: 'center', fontWeight: '800', fontSize: '0.95rem',
-                    flexShrink: 0,
-                  }}>
+                <div className={styles.mobileUserCard}>
+                  <div className={styles.mobileUserAvatar}>
                     {session.user.name?.[0]?.toUpperCase() || 'U'}
                   </div>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{
-                      fontWeight: '800', fontSize: '0.90rem', color: '#2D1A4A',
-                      whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                    }}>
+                  <div className={styles.mobileUserInfo}>
+                    <div className={styles.mobileUserName}>
                       {session.user.name}
                     </div>
-                    <div style={{
-                      fontSize: '0.72rem', color: '#9585B0',
-                      overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>
+                    <div className={styles.mobileUserEmail}>
                       {session.user.email}
                     </div>
                   </div>
                 </div>
 
-                <Link href="/profile" className={styles.mobileLink} onClick={closeMobile}>
-                  👤 My Profile
-                </Link>
-                <Link href="/orders" className={styles.mobileLink} onClick={closeMobile}>
-                  📦 My Orders
-                </Link>
-                <Link href="/track-order" className={styles.mobileLink} onClick={closeMobile}>
-                  🔍 Track Order
-                </Link>
+                <Link href="/profile" className={styles.mobileLink}
+                  onClick={closeMobile}>👤 My Profile</Link>
+                <Link href="/orders" className={styles.mobileLink}
+                  onClick={closeMobile}>📦 My Orders</Link>
+                <Link href="/track-order" className={styles.mobileLink}
+                  onClick={closeMobile}>🔍 Track Order</Link>
+
                 {session.user.role === 'admin' && (
-                  <Link href="/admin/dashboard" className={styles.mobileLink}
-                    onClick={closeMobile} style={{ color: '#7B2FBE', fontWeight: '800' }}>
-                    ⚙️ Admin Dashboard
-                  </Link>
+                  <Link href="/admin/dashboard"
+                    className={styles.mobileLink}
+                    onClick={closeMobile}
+                    style={{ color: '#7B2FBE', fontWeight: '800' }}
+                  >⚙️ Admin Dashboard</Link>
                 )}
-                <button className={styles.mobileLink}
+
+                <button
+                  className={styles.mobileLink}
                   style={{ color: '#ef4444' }}
-                  onClick={() => { signOut({ callbackUrl: '/' }); closeMobile(); }}>
-                  🚪 Logout
-                </button>
+                  onClick={() => {
+                    signOut({ callbackUrl: '/' });
+                    closeMobile();
+                  }}
+                >🚪 Logout</button>
               </>
             ) : (
               <>
-                <Link href="/login" className={styles.mobileLink} onClick={closeMobile}>
-                  🔑 Login
-                </Link>
-                <Link href="/register" className={styles.mobileLink} onClick={closeMobile}>
-                  ✨ Create Account
-                </Link>
+                <Link href="/login" className={styles.mobileLink}
+                  onClick={closeMobile}>🔑 Login</Link>
+                <Link href="/register" className={styles.mobileLink}
+                  onClick={closeMobile}>✨ Create Account</Link>
               </>
             )}
           </div>
         </div>
       )}
-
     </header>
   );
 }

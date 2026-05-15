@@ -6,19 +6,31 @@ import { signOut } from 'next-auth/react';
 import styles from './AdminSidebar.module.css';
 
 const navItems = [
-  { href: '/admin/dashboard',  icon: '📊', label: 'Dashboard' },
-  { href: '/admin/products',   icon: '📦', label: 'Products' },
-  { href: '/admin/categories', icon: '🗂️', label: 'Categories' },
-  { href: '/admin/banners',    icon: '🖼️', label: 'Banners' },
-  { href: '/admin/orders',     icon: '🛍️', label: 'Orders' },
-  { href: '/admin/coupons',    icon: '🎟️', label: 'Coupons' },
-  { href: '/admin/users',      icon: '👥', label: 'Users' },
-  { href: '/admin/contacts',   icon: '📩', label: 'Messages' },
+  { href: '/admin/dashboard',          icon: '📊', label: 'Dashboard'     },
+  { href: '/admin/products',           icon: '📦', label: 'Products'      },
+  { href: '/admin/categories',         icon: '🗂️', label: 'Categories'    },
+  { href: '/admin/banners',            icon: '🖼️', label: 'Banners'       },
+  { href: '/admin/banners/settings',   icon: '🎨', label: 'Section Names' }, // ✅ NEW
+  { href: '/admin/orders',             icon: '🛍️', label: 'Orders'        },
+  { href: '/admin/coupons',            icon: '🎟️', label: 'Coupons'       },
+  { href: '/admin/users',              icon: '👥', label: 'Users'         },
+  { href: '/admin/contacts',           icon: '📩', label: 'Messages'      },
 ];
 
 export default function AdminSidebar() {
-  const pathname = usePathname();
+  const pathname    = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  // ✅ Active check — also matches sub-routes
+  const isActive = (href) => {
+    if (href === '/admin/banners/settings') {
+      return pathname === '/admin/banners/settings';
+    }
+    if (href === '/admin/banners') {
+      return pathname === '/admin/banners';
+    }
+    return pathname === href || pathname.startsWith(href + '/');
+  };
 
   return (
     <>
@@ -40,7 +52,7 @@ export default function AdminSidebar() {
         <Link href="/" className={styles.mobileStoreLink}>🏠</Link>
       </div>
 
-      {/* ✅ Overlay for mobile */}
+      {/* ✅ Overlay */}
       {mobileOpen && (
         <div
           className={styles.overlay}
@@ -50,6 +62,7 @@ export default function AdminSidebar() {
 
       {/* ✅ Sidebar */}
       <aside className={`${styles.sidebar} ${mobileOpen ? styles.sidebarOpen : ''}`}>
+
         {/* Logo */}
         <div className={styles.logo}>
           <span>🍼</span>
@@ -57,7 +70,6 @@ export default function AdminSidebar() {
             <div className={styles.logoText}>BabyBliss</div>
             <div className={styles.logoSub}>Admin Panel</div>
           </div>
-          {/* Close button on mobile */}
           <button
             className={styles.closeBtn}
             onClick={() => setMobileOpen(false)}
@@ -68,20 +80,25 @@ export default function AdminSidebar() {
 
         {/* Nav */}
         <nav className={styles.nav}>
-          {navItems.map((item) => (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`${styles.navItem} ${pathname === item.href ? styles.navActive : ''}`}
-              onClick={() => setMobileOpen(false)}
-            >
-              <span className={styles.navIcon}>{item.icon}</span>
-              <span>{item.label}</span>
-              {pathname === item.href && (
-                <span className={styles.activeIndicator} />
-              )}
-            </Link>
-          ))}
+          {navItems.map((item) => {
+
+            // ✅ Section Names — shown as sub-item under Banners
+            const isSubItem = item.href === '/admin/banners/settings';
+            const active    = isActive(item.href);
+
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`${styles.navItem} ${active ? styles.navActive : ''} ${isSubItem ? styles.navSubItem : ''}`}
+                onClick={() => setMobileOpen(false)}
+              >
+                <span className={styles.navIcon}>{item.icon}</span>
+                <span>{item.label}</span>
+                {active && <span className={styles.activeIndicator} />}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Bottom */}

@@ -338,4 +338,27 @@
   .mobileLogoText {
     font-size: 0.9rem;
   }
+}/* ✅ Sub-item style — indented below Banners */
+.navSubItem {
+  padding-left: 44px !important;
+  font-size: 0.84rem !important;
+  opacity: 0.9;
+  position: relative;
+}
+
+/* Left line connecting to parent */
+.navSubItem::before {
+  content: '';
+  position: absolute;
+  left: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 1.5px;
+  background: rgba(255, 255, 255, 0.35);
+  border-radius: 999px;
+}
+
+.navSubItem:hover::before {
+  background: rgba(255, 255, 255, 0.8);
 }

@@ -36,8 +36,8 @@ export default function Footer() {
             {/* Brand */}
             <div className={`${styles.brand} ${styles.reveal}`}>
               <div className={styles.logo}>
-                <span>🍼</span>
-                <span className={styles.logoText}>BabyBliss</span>
+                <span></span>
+                <span className={styles.logoText}>Baby's World</span>
               </div>
               <p>Your one-stop destination for premium baby & kids products. Quality, safety, and joy — delivered to your door.</p>
               <div className={styles.socials}>
@@ -152,7 +152,7 @@ export default function Footer() {
       <div className={`${styles.bottom} ${styles.reveal}`}>
         <div className="container">
           <div className={styles.bottomContent}>
-            <p>© {new Date().getFullYear()} BabyBliss. All rights reserved. Made with ❤️ for parents.</p>
+            <p>© {new Date().getFullYear()} Powderd by RAMAKALPA SOLUTIONS.</p>
             <div className={styles.bottomLinks}>
               <Link href="/privacy">Privacy</Link>
               <Link href="/terms">Terms</Link>

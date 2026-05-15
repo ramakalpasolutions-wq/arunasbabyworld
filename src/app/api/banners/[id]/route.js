@@ -12,7 +12,10 @@ export async function GET(request, { params }) {
     }
     return NextResponse.json({ banner });
   } catch (error) {
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -27,6 +30,7 @@ export async function PUT(request, { params }) {
     const body       = await request.json();
     const updateData = {};
 
+    // ✅ Existing fields
     if (body.title      !== undefined) updateData.title      = body.title;
     if (body.subtitle   !== undefined) updateData.subtitle   = body.subtitle;
     if (body.buttonText !== undefined) updateData.buttonText = body.buttonText;
@@ -42,41 +46,62 @@ export async function PUT(request, { params }) {
     if (body.slug       !== undefined) updateData.slug       = body.slug;
     if (body.gender     !== undefined) updateData.gender     = body.gender;
 
-    // ✅ image — use set wrapper
-   if (body.image?.url) {
-  updateData.image = {
-    set: {
-      url:      body.image.url      || '',
-      publicId: body.image.publicId || '',
-    }
-  };
-} else if (body.image === null) {
-  updateData.image = { set: null };
-}
+    // ✅ New fields
+    if (body.festivalName  !== undefined) updateData.festivalName  = body.festivalName  || null;
+    if (body.startDate     !== undefined) updateData.startDate     = body.startDate ? new Date(body.startDate) : null;
+    if (body.endDate       !== undefined) updateData.endDate       = body.endDate   ? new Date(body.endDate)   : null;
+    if (body.foodCategory  !== undefined) updateData.foodCategory  = body.foodCategory  || null;
+    if (body.evGender      !== undefined) updateData.evGender      = body.evGender      || null;
+    if (body.newBornGender !== undefined) updateData.newBornGender = body.newBornGender || null;
+    if (body.ageGroup      !== undefined) updateData.ageGroup      = body.ageGroup      || null;
 
-    // ✅ gridImages — use set wrapper
-    if (body.gridImages !== undefined) {
-      updateData.gridImages = {
-        set: (body.gridImages || []).map(img => ({
-          url:      img.url      || '',
-          publicId: img.publicId || '',
-          title:    img.title    || '',
-          link:     img.link     || '',
-          brand:    img.brand    || '',
-          price:    img.price    ? parseFloat(img.price) : null,
-        }))
+    // ✅ Main image
+    if (body.image && body.image.url) {
+      updateData.image = {
+        url:      body.image.url      || '',
+        publicId: body.image.publicId || '',
+        title:    body.image.title    || '',
       };
+    } else if (body.image === null) {
+      updateData.image = null;
     }
 
+    // ✅ Mobile image
+    if (body.mobileImage && body.mobileImage.url) {
+      updateData.mobileImage = {
+        url:      body.mobileImage.url      || '',
+        publicId: body.mobileImage.publicId || '',
+      };
+    } else if (body.mobileImage === null) {
+      updateData.mobileImage = null;
+    }
+
+    // ✅ Grid images
+    if (body.gridImages !== undefined) {
+      updateData.gridImages = (body.gridImages || []).map(img => ({
+        url:      img.url      || '',
+        publicId: img.publicId || '',
+        title:    img.title    || '',
+        brand:    img.brand    || '',
+        price:    img.price    || '',
+        link:     img.link     || '',
+      }));
+    }
+
+    // ✅ FIXED — prisma.banner not prisma.brand
     const banner = await prisma.banner.update({
       where: { id },
       data:  updateData,
     });
 
     return NextResponse.json({ banner });
+
   } catch (error) {
     console.error('Banner PUT error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }
 
@@ -86,11 +111,18 @@ export async function DELETE(request, { params }) {
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
+
     const { id } = await params;
+
     await prisma.banner.delete({ where: { id } });
+
     return NextResponse.json({ message: 'Banner deleted successfully' });
+
   } catch (error) {
     console.error('Banner DELETE error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

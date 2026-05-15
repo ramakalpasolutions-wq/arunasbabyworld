@@ -1,4 +1,3 @@
-// src/app/products/ProductsClient.js
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
@@ -7,26 +6,33 @@ import styles from './ProductsClient.module.css';
 import React from 'react';
 
 const SORT_OPTIONS = [
-  { value: 'createdAt-desc', label: '✨ Newest First' },
-  { value: 'price-asc',      label: '💰 Price: Low to High' },
-  { value: 'price-desc',     label: '💎 Price: High to Low' },
-  { value: 'rating-desc',    label: '⭐ Top Rated' },
+  { value: 'createdAt-desc', label: 'Newest First'       },
+  { value: 'price-asc',      label: 'Price: Low to High' },
+  { value: 'price-desc',     label: 'Price: High to Low' },
+  { value: 'rating-desc',    label: 'Top Rated'          },
+];
+
+const CATEGORY_ORDER = [
+  'clothing', 'personal-care', 'health-care', 'walkers',
+  'toys', 'cradles-cribs', 'electric-vehicles', 'food',
 ];
 
 const CATEGORY_ICONS = {
-  all:          '🧸',
-  clothing:     '👗',
-  footwear:     '👟',
-  'health-care':'🧴',
-  'toys-games': '🎠',
-  feeding:      '🍼',
-  bedding:      '🛏️',
-  gear:         '🎒',
-  maternity:    '🌸',
-  default:      '✨',
+  'all':               '🧸',
+  'clothing':          '👗',
+  'personal-care':     '🧴',
+  'health-care':       '💊',
+  'baby-gear':         '🎒',
+  'walkers':           '🚶',
+  'toys':              '🎠',
+  'cradles-cribs':     '🛏️',
+  'electric-vehicles': '🚗',
+  'food':              '🍎',
+  'default':           '📦',
 };
 
-/* ── Scroll reveal hook ── */
+const EXCLUDED_SLUGS = ['maternity', 'nursery'];
+
 function useReveal() {
   const ref = useRef(null);
   const [visible, setVisible] = useState(false);
@@ -45,7 +51,6 @@ function useReveal() {
   return [ref, visible];
 }
 
-/* ── Parallax orb ── */
 function ParallaxOrb({ className }) {
   const ref = useRef(null);
   useEffect(() => {
@@ -59,7 +64,6 @@ function ParallaxOrb({ className }) {
   return <div ref={ref} className={className} />;
 }
 
-/* ── Reveal card wrapper ── */
 function RevealCard({ children, delay = 0 }) {
   const [ref, visible] = useReveal();
   return (
@@ -73,19 +77,113 @@ function RevealCard({ children, delay = 0 }) {
   );
 }
 
+/* ============================================================
+   AUTO SCROLL CATEGORY BAR
+   ============================================================ */
+function AutoScrollCatBar({
+  categories, filters, handleCategoryClick, catLoading,
+}) {
+  const trackRef = useRef(null);
+  const isPaused = useRef(false);
+  const posRef   = useRef(0);
+  const rafRef   = useRef(null);
+  const SPEED    = 0.5;
+
+  const allItems = [
+    { id: '', slug: 'all', name: 'All', icon: '🧸', productCount: 0 },
+    ...categories,
+  ];
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track || catLoading || allItems.length <= 1) return;
+
+    const step = () => {
+      if (!isPaused.current) {
+        posRef.current += SPEED;
+        const halfWidth = track.scrollWidth / 2;
+        if (posRef.current >= halfWidth) posRef.current = 0;
+        track.style.transform = `translateX(-${posRef.current}px)`;
+      }
+      rafRef.current = requestAnimationFrame(step);
+    };
+
+    rafRef.current = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(rafRef.current);
+  }, [catLoading, categories.length]);
+
+  const pause  = () => { isPaused.current = true;  };
+  const resume = () => { isPaused.current = false; };
+
+  const isCatActive = (cat) =>
+    cat.id === '' ? !filters.category : filters.category === cat.id;
+
+  if (catLoading) {
+    return (
+      <div className={styles.autoScrollWrap}>
+        <div className={styles.autoScrollTrack}>
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className={styles.mobileCatSkeleton} />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  const doubled = [...allItems, ...allItems];
+
+  return (
+    <div className={styles.autoScrollWrap}>
+      <div className={styles.autoScrollFadeLeft} />
+      <div
+        className={styles.autoScrollTrackWrap}
+        onMouseEnter={pause}
+        onMouseLeave={resume}
+        onTouchStart={pause}
+        onTouchEnd={resume}
+      >
+        <div ref={trackRef} className={styles.autoScrollTrack}>
+          {doubled.map((cat, i) => (
+            <button
+              key={`${cat.id || 'all'}-${i}`}
+              className={`${styles.mobileCatPill} ${
+                isCatActive(cat) ? styles.mobileCatPillActive : ''
+              }`}
+              onClick={() => handleCategoryClick(cat.id)}
+            >
+              <span className={styles.mobileCatIcon}>
+                {cat.icon || CATEGORY_ICONS[cat.slug] || CATEGORY_ICONS.default}
+              </span>
+              <span className={styles.mobileCatLabel}>{cat.name}</span>
+              {cat.productCount > 0 && (
+                <span className={styles.mobileCatCount}>{cat.productCount}</span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div className={styles.autoScrollFadeRight} />
+    </div>
+  );
+}
+
+/* ============================================================
+   MAIN COMPONENT
+   ============================================================ */
 export default function ProductsClient() {
   const searchParams = useSearchParams();
 
   const [products,    setProducts]    = useState([]);
   const [categories,  setCategories]  = useState([]);
   const [loading,     setLoading]     = useState(true);
+  const [catLoading,  setCatLoading]  = useState(true);
   const [pagination,  setPagination]  = useState({ page: 1, pages: 1, total: 0 });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeQuick, setActiveQuick] = useState('all');
   const [priceError,  setPriceError]  = useState('');
 
-  const [localMin, setLocalMin]     = useState('');
-  const [localMax, setLocalMax]     = useState('');
+  const [localMin,   setLocalMin]   = useState('');
+  const [localMax,   setLocalMax]   = useState('');
   const [appliedMin, setAppliedMin] = useState('');
   const [appliedMax, setAppliedMax] = useState('');
 
@@ -97,43 +195,46 @@ export default function ProductsClient() {
     maxPrice: '',
     featured: searchParams.get('featured') || '',
     trending: searchParams.get('trending') || '',
-    page: 1,
+    page:     1,
   });
 
-  /* ── Lock body scroll when sidebar open on mobile ── */
+  /* ── Body scroll lock ── */
   useEffect(() => {
-    if (sidebarOpen) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = '';
-    }
+    document.body.style.overflow = sidebarOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [sidebarOpen]);
 
-  /* ── Close sidebar on ESC key ── */
+  /* ── ESC key ── */
   useEffect(() => {
-    const handleKey = (e) => {
-      if (e.key === 'Escape' && sidebarOpen) {
-        setSidebarOpen(false);
-      }
+    const onKey = (e) => {
+      if (e.key === 'Escape' && sidebarOpen) setSidebarOpen(false);
     };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
   }, [sidebarOpen]);
 
   /* ── Fetch categories ── */
   useEffect(() => {
-    fetch('/api/categories?withCount=true')
+    setCatLoading(true);
+    fetch('/api/categories?withCount=true&all=true')
       .then(r => r.json())
       .then(d => {
-        const catsWithProducts = (d.categories || []).filter(
-          cat => cat.productCount > 0
+        const allCats = d.categories || [];
+        const filtered = allCats.filter(
+          cat => !EXCLUDED_SLUGS.includes(cat.slug)
         );
-        setCategories(catsWithProducts);
-      });
+        filtered.sort((a, b) => {
+          const aIdx = CATEGORY_ORDER.indexOf(a.slug);
+          const bIdx = CATEGORY_ORDER.indexOf(b.slug);
+          return (aIdx === -1 ? 999 : aIdx) - (bIdx === -1 ? 999 : bIdx);
+        });
+        setCategories(filtered);
+      })
+      .catch(err => console.error('Failed to fetch categories:', err))
+      .finally(() => setCatLoading(false));
   }, []);
 
-  /* ── Sync URL search params ── */
+  /* ── Sync URL params ── */
   useEffect(() => {
     setFilters(prev => ({
       ...prev,
@@ -141,51 +242,61 @@ export default function ProductsClient() {
       search:   searchParams.get('search')   || '',
       featured: searchParams.get('featured') || '',
       trending: searchParams.get('trending') || '',
-      page: 1,
+      page:     1,
     }));
   }, [searchParams]);
 
   /* ── Fetch products ── */
-  const fetchProducts = useCallback(async () => {
-    setLoading(true);
-    try {
-      const [sortField, sortOrder] = filters.sort.split('-');
+const fetchProducts = useCallback(async () => {
+  setLoading(true);
+  try {
+    const [sortField, sortOrder] = filters.sort.split('-');
 
-      let minP = filters.minPrice !== '' ? parseFloat(filters.minPrice) : null;
-      let maxP = filters.maxPrice !== '' ? parseFloat(filters.maxPrice) : null;
+    let minP = filters.minPrice !== '' ? parseFloat(filters.minPrice) : null;
+    let maxP = filters.maxPrice !== '' ? parseFloat(filters.maxPrice) : null;
+    if (minP !== null && maxP !== null && minP > maxP) [minP, maxP] = [maxP, minP];
 
-      if (minP !== null && maxP !== null && minP > maxP) {
-        [minP, maxP] = [maxP, minP];
-      }
+    const paramObj = {
+      page:  String(filters.page),
+      limit: '12',   // ✅ show 12 per page
+      sort:  sortField,
+      order: sortOrder,
+    };
 
-      const paramObj = {
-        page:  String(filters.page),
-        limit: '12',
-        sort:  sortField,
-        order: sortOrder,
-      };
+    // ✅ Only add if not empty
+    if (filters.search   && filters.search.trim())
+      paramObj.search   = filters.search.trim();
+    if (filters.category)
+      paramObj.category = filters.category;
+    if (filters.featured)
+      paramObj.featured = filters.featured;
+    if (filters.trending)
+      paramObj.trending = filters.trending;
+    if (minP !== null)
+      paramObj.minPrice = String(minP);
+    if (maxP !== null)
+      paramObj.maxPrice = String(maxP);
 
-      if (filters.search)   paramObj.search   = filters.search;
-      if (filters.category) paramObj.category = filters.category;
-      if (filters.featured) paramObj.featured = filters.featured;
-      if (filters.trending) paramObj.trending = filters.trending;
-      if (minP !== null)    paramObj.minPrice = String(minP);
-      if (maxP !== null)    paramObj.maxPrice = String(maxP);
+    console.log('🔍 Fetching products with params:', paramObj);
 
-      const params = new URLSearchParams(paramObj);
-      const res    = await fetch(`/api/products?${params.toString()}`);
-      const data   = await res.json();
-      setProducts(data.products     || []);
-      setPagination(data.pagination || { page: 1, pages: 1, total: 0 });
-    } catch (err) {
-      console.error('Fetch error:', err);
-    } finally {
-      setLoading(false);
-    }
-  }, [filters]);
+    const res  = await fetch(`/api/products?${new URLSearchParams(paramObj)}`);
+    const data = await res.json();
+
+    console.log('📦 Products found:', data.pagination?.total);
+
+    setProducts(data.products     || []);
+    setPagination(data.pagination || { page: 1, pages: 1, total: 0 });
+  } catch (err) {
+    console.error('Fetch products error:', err);
+    setProducts([]);
+  } finally {
+    setLoading(false);
+  }
+}, [filters]); 
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
+  /* ── Handlers ── */
   const updateFilter = (key, value) =>
     setFilters(prev => ({
       ...prev,
@@ -193,44 +304,31 @@ export default function ProductsClient() {
       page: key !== 'page' ? 1 : value,
     }));
 
-  /* ── Apply price filter ── */
   const handleApplyPrice = () => {
     setPriceError('');
     const minVal = localMin.trim();
     const maxVal = localMax.trim();
-
     if (!minVal && !maxVal) { handleClearPrice(); return; }
-
     const min = minVal !== '' ? parseFloat(minVal) : null;
     const max = maxVal !== '' ? parseFloat(maxVal) : null;
-
     if (minVal !== '' && (isNaN(min) || min < 0)) {
-      setPriceError('⚠️ Enter a valid min price (0 or above)');
-      return;
+      setPriceError('⚠️ Enter a valid min price'); return;
     }
     if (maxVal !== '' && (isNaN(max) || max < 0)) {
-      setPriceError('⚠️ Enter a valid max price (0 or above)');
-      return;
+      setPriceError('⚠️ Enter a valid max price'); return;
     }
-
-    let finalMin = min;
-    let finalMax = max;
+    let finalMin = min; let finalMax = max;
     if (finalMin !== null && finalMax !== null && finalMin > finalMax) {
       [finalMin, finalMax] = [finalMax, finalMin];
-      setLocalMin(String(finalMin));
-      setLocalMax(String(finalMax));
-      setPriceError('⚠️ Min was greater than Max — values swapped!');
+      setLocalMin(String(finalMin)); setLocalMax(String(finalMax));
+      setPriceError('⚠️ Min > Max — values swapped!');
     }
-
     const minStr = finalMin !== null ? String(finalMin) : '';
     const maxStr = finalMax !== null ? String(finalMax) : '';
-
-    setAppliedMin(minStr);
-    setAppliedMax(maxStr);
+    setAppliedMin(minStr); setAppliedMax(maxStr);
     setFilters(prev => ({ ...prev, minPrice: minStr, maxPrice: maxStr, page: 1 }));
   };
 
-  /* ── Clear price filter ── */
   const handleClearPrice = () => {
     setPriceError('');
     setLocalMin(''); setLocalMax('');
@@ -238,7 +336,6 @@ export default function ProductsClient() {
     setFilters(prev => ({ ...prev, minPrice: '', maxPrice: '', page: 1 }));
   };
 
-  /* ── Clear all filters ── */
   const clearAll = () => {
     setPriceError('');
     setLocalMin(''); setLocalMax('');
@@ -250,16 +347,13 @@ export default function ProductsClient() {
     });
   };
 
-  /* ── Close sidebar + apply filter (mobile UX) ── */
-  const handleCategoryClick = (value) => {
-    updateFilter('category', value);
-    // close sidebar on mobile after picking category
-    if (window.innerWidth < 900) {
-      setSidebarOpen(false);
-    }
-  };
+  const handleCategoryClick = useCallback((categoryId) => {
+    setFilters(prev => ({ ...prev, category: categoryId, page: 1 }));
+    setSidebarOpen(false);
+    setActiveQuick('all');
+  }, []);
 
-  const isCategoryActive     = cat => filters.category === cat.id;
+  const isCategoryActive     = (cat) => filters.category === cat.id;
   const selectedCategory     = categories.find(c => c.id === filters.category);
   const selectedCategoryName = selectedCategory?.name || '';
 
@@ -276,21 +370,41 @@ export default function ProductsClient() {
     },
     {
       key: 'trending', label: 'Trending', icon: '🔥',
-      action: () => { updateFilter('trending', 'true'); setActiveQuick('trending'); },
+      action: () => {
+        setFilters(prev => ({
+          ...prev, trending: 'true', featured: '', page: 1,
+        }));
+        setActiveQuick('trending');
+      },
     },
     {
       key: 'featured', label: 'Featured', icon: '⭐',
-      action: () => { updateFilter('featured', 'true'); setActiveQuick('featured'); },
+      action: () => {
+        setFilters(prev => ({
+          ...prev, featured: 'true', trending: '', page: 1,
+        }));
+        setActiveQuick('featured');
+      },
     },
     {
       key: 'new', label: 'New In', icon: '✨',
-      action: () => { updateFilter('sort', 'createdAt-desc'); setActiveQuick('new'); },
+      action: () => {
+        setFilters(prev => ({
+          ...prev, sort: 'createdAt-desc', page: 1,
+        }));
+        setActiveQuick('new');
+      },
     },
   ];
 
-  const hasActiveFilters = filters.category || filters.minPrice || filters.maxPrice
-    || filters.featured || filters.trending;
+  const hasActiveFilters = !!(
+    filters.category || filters.minPrice || filters.maxPrice ||
+    filters.featured || filters.trending
+  );
 
+  /* ============================================================
+     RENDER
+     ============================================================ */
   return (
     <div className={styles.pageRoot}>
 
@@ -330,18 +444,22 @@ export default function ProductsClient() {
             </p>
           </div>
 
-          <div className={styles.quickPills}>
-            {quickFilters.map(q => (
-              <button
-                key={q.key}
-                className={`${styles.quickPill} ${
-                  activeQuick === q.key ? styles.quickPillActive : ''
-                }`}
-                onClick={q.action}
-              >
-                <span>{q.icon}</span> {q.label}
-              </button>
-            ))}
+          {/* ✅ Quick pills — scrollable, never cut off */}
+          <div className={styles.quickPillsWrap}>
+            <div className={styles.quickPills}>
+              {quickFilters.map(q => (
+                <button
+                  key={q.key}
+                  className={`${styles.quickPill} ${
+                    activeQuick === q.key ? styles.quickPillActive : ''
+                  }`}
+                  onClick={q.action}
+                >
+                  <span>{q.icon}</span>
+                  <span>{q.label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
         <div className={styles.heroDecor1} />
@@ -366,78 +484,147 @@ export default function ProductsClient() {
               <button
                 className={styles.searchClear}
                 onClick={() => updateFilter('search', '')}
-              >
-                ✕
-              </button>
+              >✕</button>
             )}
           </div>
 
-          {/* Sort + Filter toggle */}
           <div className={styles.toolbarRight}>
-            <select
-              value={filters.sort}
-              onChange={e => updateFilter('sort', e.target.value)}
-              className={styles.sortSelect}
-            >
-              {SORT_OPTIONS.map(o => (
-                <option key={o.value} value={o.value}>{o.label}</option>
-              ))}
-            </select>
+            {/* Sort */}
+            <div className={styles.sortWrap}>
+              <span className={styles.sortIcon}>↕</span>
+              <select
+                value={filters.sort}
+                onChange={e => updateFilter('sort', e.target.value)}
+                className={styles.sortSelect}
+              >
+                {SORT_OPTIONS.map(o => (
+                  <option key={o.value} value={o.value}>{o.label}</option>
+                ))}
+              </select>
+            </div>
 
-            {/* ✅ Filter toggle button */}
+            {/* Filter button */}
             <button
-              className={styles.filterToggle}
+              className={`${styles.filterToggle} ${
+                hasActiveFilters ? styles.filterToggleActive : ''
+              }`}
               onClick={() => setSidebarOpen(prev => !prev)}
               aria-label="Toggle filters"
-              aria-expanded={sidebarOpen}
             >
-              <span>🎛️</span>
-              <span>Filters</span>
-              {hasActiveFilters && (
-                <span className={styles.filterBadge}>!</span>
-              )}
+              <svg
+                width="15" height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              >
+                <line x1="4"  y1="6"  x2="20" y2="6"  />
+                <line x1="8"  y1="12" x2="20" y2="12" />
+                <line x1="12" y1="18" x2="20" y2="18" />
+                <circle cx="4"  cy="6"  r="2" fill="currentColor" stroke="none" />
+                <circle cx="8"  cy="12" r="2" fill="currentColor" stroke="none" />
+                <circle cx="12" cy="18" r="2" fill="currentColor" stroke="none" />
+              </svg>
+              <span className={styles.filterToggleText}>Filter</span>
+              {hasActiveFilters && <span className={styles.filterBadge} />}
             </button>
           </div>
         </div>
+
+        {/* Active filter tags */}
+        {hasActiveFilters && (
+          <div className={styles.activeFiltersRow}>
+            <div className={styles.activeFilterTags}>
+              {filters.category && selectedCategoryName && (
+                <span className={styles.activeTag}>
+                  {CATEGORY_ICONS[selectedCategory?.slug] || '📦'} {selectedCategoryName}
+                  <button onClick={() => handleCategoryClick('')}>✕</button>
+                </span>
+              )}
+              {filters.featured === 'true' && (
+                <span className={styles.activeTag}>
+                  ⭐ Featured
+                  <button onClick={() => updateFilter('featured', '')}>✕</button>
+                </span>
+              )}
+              {filters.trending === 'true' && (
+                <span className={styles.activeTag}>
+                  🔥 Trending
+                  <button onClick={() => updateFilter('trending', '')}>✕</button>
+                </span>
+              )}
+              {(appliedMin || appliedMax) && (
+                <span className={styles.activeTag}>
+                  💰 ₹{appliedMin || '0'} – ₹{appliedMax || '∞'}
+                  <button onClick={handleClearPrice}>✕</button>
+                </span>
+              )}
+            </div>
+            <button className={styles.clearAllTagBtn} onClick={clearAll}>
+              Clear all
+            </button>
+          </div>
+        )}
+      </div>
+
+      {/* ✅ MOBILE CATEGORY BAR — Auto scroll */}
+      <div className={styles.mobileCatBar}>
+        <AutoScrollCatBar
+          categories={categories}
+          filters={filters}
+          handleCategoryClick={handleCategoryClick}
+          catLoading={catLoading}
+        />
+        {filters.category && selectedCategoryName && (
+          <div className={styles.activeCatBanner}>
+            <span>
+              {CATEGORY_ICONS[selectedCategory?.slug] || '📦'} Showing:{' '}
+              <strong>{selectedCategoryName}</strong>
+            </span>
+            <button
+              className={styles.activeCatClear}
+              onClick={() => handleCategoryClick('')}
+            >✕ Clear</button>
+          </div>
+        )}
       </div>
 
       {/* ══ MAIN LAYOUT ══ */}
       <div className={styles.container}>
         <div className={styles.layout}>
 
-          {/* ══ SIDEBAR FILTER DRAWER ══ */}
+          {/* ✅ SIDEBAR — fixed z-index */}
           <aside
             className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}
-            aria-hidden={!sidebarOpen}
           >
-            {/* Sidebar header */}
             <div className={styles.sidebarTop}>
               <div className={styles.sidebarTitle}>
                 <span>🎛️</span>
                 <span>Filters</span>
               </div>
-              <button
-                className={styles.clearAllBtn}
-                onClick={() => { clearAll(); }}
-              >
+              <button className={styles.clearAllBtn} onClick={clearAll}>
                 Clear all
               </button>
               <button
                 className={styles.closeSidebar}
                 onClick={() => setSidebarOpen(false)}
-                aria-label="Close filters"
-              >
-                ✕
-              </button>
+              >✕</button>
             </div>
 
-            {/* ── Categories ── */}
-            {categories.length > 0 && (
-              <div className={styles.filterBlock}>
-                <div className={styles.filterBlockTitle}>
-                  <span className={styles.filterBlockIcon}>📂</span>
-                  Category
+            {/* Categories — desktop only */}
+            <div className={`${styles.filterBlock} ${styles.desktopCatBlock}`}>
+              <div className={styles.filterBlockTitle}>
+                <span className={styles.filterBlockIcon}>📂</span>
+                Category
+              </div>
+              {catLoading ? (
+                <div className={styles.catList}>
+                  {[...Array(8)].map((_, i) => (
+                    <div key={i} className={styles.catSkeleton} />
+                  ))}
                 </div>
+              ) : (
                 <div className={styles.catList}>
                   <button
                     className={`${styles.catBtn} ${
@@ -446,7 +633,7 @@ export default function ProductsClient() {
                     onClick={() => handleCategoryClick('')}
                   >
                     <span className={styles.catIcon}>🧸</span>
-                    <span>All Categories</span>
+                    <span className={styles.catName}>All Categories</span>
                   </button>
                   {categories.map(cat => (
                     <button
@@ -459,29 +646,27 @@ export default function ProductsClient() {
                       <span className={styles.catIcon}>
                         {cat.icon || CATEGORY_ICONS[cat.slug] || CATEGORY_ICONS.default}
                       </span>
-                      <span>{cat.name}</span>
+                      <span className={styles.catName}>{cat.name}</span>
+                      {cat.productCount > 0 && (
+                        <span className={styles.catCount}>{cat.productCount}</span>
+                      )}
                     </button>
                   ))}
+                  {categories.length === 0 && (
+                    <p className={styles.noCats}>No categories yet</p>
+                  )}
                 </div>
-              </div>
-            )}
+              )}
+            </div>
 
-            {/* ── Price Range ── */}
+            {/* Price Range */}
             <div className={styles.filterBlock}>
               <div className={styles.filterBlockTitle}>
                 <span className={styles.filterBlockIcon}>💰</span>
                 Price Range (₹)
               </div>
-
-              {/* Min */}
-              <div style={{ marginBottom: '10px' }}>
-                <label style={{
-                  display: 'block', fontSize: '0.72rem', fontWeight: '700',
-                  color: '#9585B0', marginBottom: '5px',
-                  textTransform: 'uppercase', letterSpacing: '0.5px',
-                }}>
-                  Min Price ₹
-                </label>
+              <div className={styles.priceInputWrap}>
+                <label className={styles.priceLabel}>Min Price ₹</label>
                 <input
                   type="number"
                   value={localMin}
@@ -492,16 +677,8 @@ export default function ProductsClient() {
                   className={styles.priceInput}
                 />
               </div>
-
-              {/* Max */}
-              <div style={{ marginBottom: '12px' }}>
-                <label style={{
-                  display: 'block', fontSize: '0.72rem', fontWeight: '700',
-                  color: '#9585B0', marginBottom: '5px',
-                  textTransform: 'uppercase', letterSpacing: '0.5px',
-                }}>
-                  Max Price ₹
-                </label>
+              <div className={styles.priceInputWrap}>
+                <label className={styles.priceLabel}>Max Price ₹</label>
                 <input
                   type="number"
                   value={localMax}
@@ -512,60 +689,23 @@ export default function ProductsClient() {
                   className={styles.priceInput}
                 />
               </div>
-
-              {/* Error */}
               {priceError && (
-                <div style={{
-                  fontSize: '0.72rem', color: '#FF6B35', fontWeight: '700',
-                  marginBottom: '10px', padding: '7px 10px',
-                  background: '#FFF3EC', borderRadius: '8px',
-                  border: '1px solid #FFD4B8', lineHeight: 1.5,
-                }}>
-                  {priceError}
-                </div>
+                <div className={styles.priceError}>{priceError}</div>
               )}
-
-              {/* Apply button */}
-              <button
-                onClick={handleApplyPrice}
-                style={{
-                  width: '100%', padding: '11px',
-                  background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
-                  color: 'white', border: 'none', borderRadius: '12px',
-                  fontSize: '0.86rem', fontWeight: '800', cursor: 'pointer',
-                  fontFamily: 'inherit', marginBottom: '8px',
-                  boxShadow: '0 4px 14px rgba(255,107,53,0.28)',
-                }}
-              >
+              <button className={styles.applyPriceBtn} onClick={handleApplyPrice}>
                 🔍 Apply Price Filter
               </button>
-
-              {/* Applied price display */}
               {(appliedMin || appliedMax) && (
-                <div style={{
-                  padding: '9px 12px',
-                  background: 'linear-gradient(135deg, #FFF3EC, #F3E8FF)',
-                  borderRadius: '10px', border: '1.5px solid #EDD9FF',
-                  fontSize: '0.80rem', fontWeight: '700', color: '#7B2FBE',
-                  display: 'flex', alignItems: 'center',
-                  justifyContent: 'space-between', gap: '8px',
-                }}>
+                <div className={styles.appliedPrice}>
                   <span>✅ ₹{appliedMin || '0'} — ₹{appliedMax || '∞'}</span>
-                  <button
-                    onClick={handleClearPrice}
-                    style={{
-                      background: '#FF6B35', border: 'none', cursor: 'pointer',
-                      color: 'white', fontWeight: '800', fontSize: '0.70rem',
-                      padding: '3px 10px', borderRadius: '6px', fontFamily: 'inherit',
-                    }}
-                  >
+                  <button className={styles.clearPriceBtn} onClick={handleClearPrice}>
                     Clear
                   </button>
                 </div>
               )}
             </div>
 
-            {/* ── Quick Filters ── */}
+            {/* Quick Filters */}
             <div className={styles.filterBlock}>
               <div className={styles.filterBlockTitle}>
                 <span className={styles.filterBlockIcon}>⚡</span>
@@ -577,9 +717,9 @@ export default function ProductsClient() {
                   className={`${styles.toggle} ${
                     filters.featured === 'true' ? styles.toggleOn : ''
                   }`}
-                  onClick={() =>
-                    updateFilter('featured', filters.featured === 'true' ? '' : 'true')
-                  }
+                  onClick={() => updateFilter(
+                    'featured', filters.featured === 'true' ? '' : 'true'
+                  )}
                 />
               </label>
               <label className={styles.toggleRow}>
@@ -588,9 +728,9 @@ export default function ProductsClient() {
                   className={`${styles.toggle} ${
                     filters.trending === 'true' ? styles.toggleOn : ''
                   }`}
-                  onClick={() =>
-                    updateFilter('trending', filters.trending === 'true' ? '' : 'true')
-                  }
+                  onClick={() => updateFilter(
+                    'trending', filters.trending === 'true' ? '' : 'true'
+                  )}
                 />
               </label>
             </div>
@@ -625,21 +765,18 @@ export default function ProductsClient() {
                   ))}
                 </div>
 
-                {/* Pagination */}
                 {pagination.pages > 1 && (
                   <div className={styles.pagination}>
                     <button
                       className={styles.pageBtn}
                       disabled={pagination.page === 1}
                       onClick={() => updateFilter('page', pagination.page - 1)}
-                    >
-                      ← Prev
-                    </button>
+                    >← Prev</button>
+
                     <div className={styles.pageNumbers}>
                       {Array.from({ length: pagination.pages }, (_, i) => i + 1)
                         .filter(p =>
-                          p === 1 ||
-                          p === pagination.pages ||
+                          p === 1 || p === pagination.pages ||
                           Math.abs(p - pagination.page) <= 1
                         )
                         .map((p, idx, arr) => (
@@ -652,19 +789,16 @@ export default function ProductsClient() {
                                 p === pagination.page ? styles.pageBtnActive : ''
                               }`}
                               onClick={() => updateFilter('page', p)}
-                            >
-                              {p}
-                            </button>
+                            >{p}</button>
                           </React.Fragment>
                         ))}
                     </div>
+
                     <button
                       className={styles.pageBtn}
                       disabled={pagination.page === pagination.pages}
                       onClick={() => updateFilter('page', pagination.page + 1)}
-                    >
-                      Next →
-                    </button>
+                    >Next →</button>
                   </div>
                 )}
               </>
@@ -674,9 +808,11 @@ export default function ProductsClient() {
                 <span className={styles.emptyEmoji}>🔍</span>
                 <h3>No products found</h3>
                 <p>
-                  {selectedCategoryName
-                    ? `No products in "${selectedCategoryName}" yet`
-                    : 'Try adjusting your filters or search something else 🧸'}
+                  {filters.search
+                    ? `No results for "${filters.search}"`
+                    : selectedCategoryName
+                      ? `No products in "${selectedCategoryName}" yet`
+                      : 'Try adjusting your filters 🧸'}
                 </p>
                 <button className={styles.emptyBtn} onClick={clearAll}>
                   Clear All Filters
@@ -687,12 +823,11 @@ export default function ProductsClient() {
         </div>
       </div>
 
-      {/* ✅ OVERLAY — fixed z-index and blur */}
+      {/* ✅ Overlay — MUST be above sidebar */}
       {sidebarOpen && (
         <div
           className={styles.overlay}
           onClick={() => setSidebarOpen(false)}
-          aria-label="Close filters overlay"
         />
       )}
     </div>

@@ -161,17 +161,6 @@ export default function HeroBanner({ banners = [] }) {
   const slide = slides[current];
   const theme = themeMap[slide.theme] || themeMap.orange;
 
-  const categories = [
-    { icon: '👶', label: 'All', link: '/products' },
-    { icon: '👗', label: 'Clothing', link: '/products?category=clothing' },
-    { icon: '👟', label: 'Footwear', link: '/products?category=footwear' },
-    { icon: '🧴', label: 'Care', link: '/products?category=health-care' },
-    { icon: '🧸', label: 'Toys', link: '/products?category=toys-games' },
-    { icon: '🍼', label: 'Feeding', link: '/products?category=feeding' },
-    { icon: '🛏️', label: 'Bedding', link: '/products?category=bedding' },
-    { icon: '🎒', label: 'Gear', link: '/products?category=gear' },
-  ];
-
   return (
     <section
       className={styles.hero}
@@ -179,27 +168,14 @@ export default function HeroBanner({ banners = [] }) {
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
     >
-      {/* Animated gradient background */}
-      <div
-        className={styles.heroBg}
-        style={{ background: theme.bg }}
-      />
-
-      {/* Soft wave pattern */}
+      <div className={styles.heroBg} style={{ background: theme.bg }} />
       <div className={styles.wavePattern} />
-
-      {/* Floating soft blobs */}
       <div className={styles.blob1} style={{ background: theme.accentSoft, opacity: 0.35 }} />
       <div className={styles.blob2} style={{ background: theme.circleBg, opacity: 0.25 }} />
       <div className={styles.blob3} style={{ background: theme.accentSoft, opacity: 0.2 }} />
 
-      {/* ===== MAIN LAYOUT ===== */}
       <div className={`container ${styles.layout}`}>
-
-        {/* ===== LEFT — TEXT CONTENT ===== */}
         <div className={`${styles.textCol} ${animating ? styles.textOut : styles.textIn}`}>
-
-          {/* Tag pill */}
           <div className={styles.tagRow}>
             <span
               className={styles.tag}
@@ -214,7 +190,6 @@ export default function HeroBanner({ banners = [] }) {
             </span>
           </div>
 
-          {/* Headline */}
           <h1 className={styles.headline}>
             {slide.title.split('\n').map((line, i) => (
               <span key={i} className={i === 1 ? styles.headlineAccent : ''} style={i === 1 ? { color: theme.accent } : {}}>
@@ -224,10 +199,8 @@ export default function HeroBanner({ banners = [] }) {
             ))}
           </h1>
 
-          {/* Subtitle */}
           <p className={styles.subtitle}>{slide.subtitle}</p>
 
-          {/* CTA Buttons */}
           <div className={styles.ctaRow}>
             <Link
               href={slide.buttonLink || '/products'}
@@ -247,7 +220,6 @@ export default function HeroBanner({ banners = [] }) {
             </Link>
           </div>
 
-          {/* Trust badges */}
           <div className={styles.trustRow}>
             <div className={styles.trustBadge}>
               <span className={styles.trustIcon}>🛡️</span>
@@ -263,7 +235,6 @@ export default function HeroBanner({ banners = [] }) {
             </div>
           </div>
 
-          {/* Stats */}
           <div className={styles.statsRow}>
             {slide.stats?.map((stat, i) => (
               <div key={i} className={styles.statItem}>
@@ -275,16 +246,10 @@ export default function HeroBanner({ banners = [] }) {
           </div>
         </div>
 
-        {/* ===== RIGHT — VISUAL COLUMN ===== */}
         <div className={`${styles.imageCol} ${animating ? styles.imageOut : styles.imageIn}`}>
-
-          {/* Main visual card */}
           <div className={styles.imageCard} style={{ background: theme.cardBg }}>
-
-            {/* Soft circle bg */}
             <div className={styles.circleBg} style={{ background: theme.circleBg }} />
 
-            {/* Product image or emoji */}
             {slide.image?.url ? (
               <img
                 src={slide.image.url}
@@ -294,14 +259,12 @@ export default function HeroBanner({ banners = [] }) {
             ) : (
               <div className={styles.emojiWrap}>
                 <span className={styles.mainEmoji}>{slide.emoji}</span>
-                {/* Decorative floating emojis inside card */}
                 <span className={`${styles.decorEmoji} ${styles.decor1}`}>{slide.decorEmoji1}</span>
                 <span className={`${styles.decorEmoji} ${styles.decor2}`}>{slide.decorEmoji2}</span>
                 <span className={`${styles.decorEmoji} ${styles.decor3}`}>{slide.decorEmoji3}</span>
               </div>
             )}
 
-            {/* Floating badge top-left */}
             <div className={styles.floatBadge} style={{ top: '16px', left: '16px' }}>
               <div className={styles.floatBadgeDot} style={{ background: theme.accent }} />
               <div>
@@ -310,13 +273,11 @@ export default function HeroBanner({ banners = [] }) {
               </div>
             </div>
 
-            {/* Delivery badge bottom */}
             <div className={styles.floatDelivery} style={{ background: theme.accentSoft, color: theme.tagColor }}>
               <span>🚚</span>
               <span>{slide.deliveryText}</span>
             </div>
 
-            {/* Soft dots corner decoration */}
             <div className={styles.dotGrid}>
               {[...Array(9)].map((_, i) => (
                 <div key={i} className={styles.dotCell} style={{ background: `${theme.accent}30` }} />
@@ -324,13 +285,11 @@ export default function HeroBanner({ banners = [] }) {
             </div>
           </div>
 
-          {/* Floating soft shapes outside card */}
           <div className={`${styles.outerShape} ${styles.outerShape1}`} style={{ background: theme.accentSoft, opacity: 0.5 }} />
           <div className={`${styles.outerShape} ${styles.outerShape2}`} style={{ background: `${theme.accent}15` }} />
         </div>
       </div>
 
-      {/* ===== BOTTOM CONTROLS ===== */}
       <div className={styles.controls}>
         <div className={styles.dots}>
           {slides.map((s, i) => {
@@ -361,7 +320,6 @@ export default function HeroBanner({ banners = [] }) {
         </div>
       </div>
 
-      {/* ===== ARROW BUTTONS ===== */}
       <button
         className={`${styles.arrow} ${styles.arrowLeft}`}
         onClick={goPrev}
@@ -379,28 +337,6 @@ export default function HeroBanner({ banners = [] }) {
       >
         ›
       </button>
-
-      {/* ===== CATEGORY PILLS ===== */}
-      <div className={styles.pillStrip}>
-        <div className={styles.pillScroll}>
-          {categories.map((item, i) => (
-            <Link
-              key={i}
-              href={item.link}
-              className={`${styles.pill} ${i === 0 ? styles.pillActive : ''}`}
-              style={i === 0 ? {
-                background: theme.btnGrad,
-                color: 'white',
-                borderColor: theme.accent,
-                boxShadow: `0 4px 14px ${theme.accentGlow}`,
-              } : {}}
-            >
-              <span className={styles.pillIcon}>{item.icon}</span>
-              <span>{item.label}</span>
-            </Link>
-          ))}
-        </div>
-      </div>
     </section>
   );
 }

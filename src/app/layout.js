@@ -5,7 +5,7 @@ import { WishlistProvider } from '@/context/WishlistContext';
 import '@/styles/globals.css';
 
 export const metadata = {
-  title: { default: 'BabyBliss - Premium Baby & Kids Store', template: '%s | BabyBliss' },
+  title: { default: 'BabyBliss - Premium Baby & Kids Store', template: '%s | Babys' },
   description: 'Shop the best baby clothing, toys, gear, and more. Premium quality for your little ones.',
   keywords: ['baby products', 'kids clothing', 'toys', 'baby gear'],
 };
@@ -17,7 +17,7 @@ export default function RootLayout({ children }) {
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
       </head>
-      <body>
+      <body suppressHydrationWarning={true}>
         <SessionWrapper>
           <CartProvider>
             <WishlistProvider>

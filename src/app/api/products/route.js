@@ -16,7 +16,6 @@ export async function GET(request) {
     const featured = searchParams.get('featured');
     const trending = searchParams.get('trending');
 
-    // ✅ Get min/max price
     let minPrice = searchParams.get('minPrice')
       ? parseFloat(searchParams.get('minPrice'))
       : null;
@@ -24,22 +23,18 @@ export async function GET(request) {
       ? parseFloat(searchParams.get('maxPrice'))
       : null;
 
-    // ✅ Auto swap if min > max
     if (minPrice !== null && maxPrice !== null && minPrice > maxPrice) {
       [minPrice, maxPrice] = [maxPrice, minPrice];
     }
-
-    console.log('🔍 Price filter:', { minPrice, maxPrice });
 
     const where = { isActive: true };
 
     if (featured === 'true') where.isFeatured = true;
     if (trending === 'true') where.isTrending = true;
 
-    // ✅ Price filter — checks BOTH price and discountPrice
+    // ✅ Price filter
     if (minPrice !== null || maxPrice !== null) {
       where.OR = [
-        // ✅ Case 1: Product has discountPrice — filter by discountPrice
         {
           discountPrice: {
             not: null,
@@ -47,7 +42,6 @@ export async function GET(request) {
             ...(maxPrice !== null && { lte: maxPrice }),
           },
         },
-        // ✅ Case 2: Product has NO discountPrice — filter by regular price
         {
           discountPrice: null,
           price: {
@@ -58,69 +52,85 @@ export async function GET(request) {
       ];
     }
 
-    if (search) {
-      // ✅ If price filter already set OR, we need to combine with search
+    // ✅ FIXED Search filter — search name, description, brand, tags
+    if (search && search.trim()) {
+      const s = search.trim();
+
+      const searchConditions = [
+        // Search in product name
+        { name: { contains: s, mode: 'insensitive' } },
+        // Search in description
+        { description: { contains: s, mode: 'insensitive' } },
+        // Search in short description
+        { shortDescription: { contains: s, mode: 'insensitive' } },
+        // Search in brand
+        { brand: { contains: s, mode: 'insensitive' } },
+        // Search in category name
+        {
+          category: {
+            name: { contains: s, mode: 'insensitive' },
+          },
+        },
+        // Search in category slug
+        {
+          category: {
+            slug: { contains: s, mode: 'insensitive' },
+          },
+        },
+      ];
+
       if (where.OR) {
+        // ✅ Price filter already using OR — combine with AND
         where.AND = [
           { OR: where.OR },
-          {
-            OR: [
-              { name: { contains: search, mode: 'insensitive' } },
-              { tags: { has: search } },
-            ],
-          },
+          { OR: searchConditions },
         ];
         delete where.OR;
       } else {
-        where.OR = [
-          { name: { contains: search, mode: 'insensitive' } },
-          { tags: { has: search } },
-        ];
+        where.OR = searchConditions;
       }
     }
 
-    // ✅ Handle category by ID first, then slug
+    // ✅ Category filter
     if (category) {
-      try {
-        const catById = await prisma.category.findUnique({
-          where: { id: category },
-        });
+      const isObjectId = /^[a-f\d]{24}$/i.test(category);
 
-        if (catById) {
-          where.categoryId = category;
-        } else {
-          const catBySlug = await prisma.category.findFirst({
-            where: { slug: category },
-          });
-          if (catBySlug) {
-            where.categoryId = catBySlug.id;
-          }
-        }
-      } catch {
+      if (isObjectId) {
+        where.categoryId = category;
+      } else {
+        // ✅ It's a slug — find category by slug
         const catBySlug = await prisma.category.findFirst({
           where: { slug: category },
         });
         if (catBySlug) {
           where.categoryId = catBySlug.id;
+        } else {
+          // ✅ Try partial slug match
+          const catByPartial = await prisma.category.findFirst({
+            where: {
+              slug: { contains: category, mode: 'insensitive' },
+            },
+          });
+          if (catByPartial) {
+            where.categoryId = catByPartial.id;
+          }
         }
       }
     }
 
-    console.log('📦 Where query:', JSON.stringify(where, null, 2));
-
+    // ✅ Count total matching products
     const total = await prisma.product.count({ where });
 
+    // ✅ Fetch products — NO hardcoded limit
     const products = await prisma.product.findMany({
       where,
       include: {
-        category: { select: { name: true, slug: true } },
+        category: { select: { id: true, name: true, slug: true } },
       },
       orderBy: { [sort]: order },
       skip: (page - 1) * limit,
       take: limit,
     });
-
-    console.log(`✅ Found ${total} products`);
 
     return NextResponse.json({
       products,
@@ -152,13 +162,13 @@ export async function POST(request) {
 
     let categoryId = data.categoryId;
 
+    const isObjectId = /^[a-f\d]{24}$/i.test(categoryId);
+
     let foundCat = null;
-    try {
+    if (isObjectId) {
       foundCat = await prisma.category.findUnique({
         where: { id: categoryId },
       });
-    } catch {
-      foundCat = null;
     }
 
     if (!foundCat) {
@@ -169,21 +179,17 @@ export async function POST(request) {
 
       if (!cat) {
         const nameMap = {
-          'clothing':      { name: 'Clothing',        icon: '👕', color: '#ff6b9d' },
-          'toys-games':    { name: 'Toys & Games',    icon: '🧸', color: '#7c3aed' },
-          'baby-gear':     { name: 'Baby Gear',       icon: '🍼', color: '#0ea5e9' },
-          'feeding':       { name: 'Feeding',         icon: '🥛', color: '#10b981' },
-          'health-safety': { name: 'Health & Safety', icon: '🏥', color: '#f59e0b' },
-          'nursery':       { name: 'Nursery',         icon: '🛏️', color: '#ef4444' },
-          'books':         { name: 'Books',           icon: '📚', color: '#8b5cf6' },
-          'outdoor':       { name: 'Outdoor',         icon: '🌿', color: '#059669' },
+          'clothing':          { name: 'Clothing',          icon: '👗', color: '#ff6b9d' },
+          'personal-care':     { name: 'Personal Care',     icon: '🧴', color: '#7c3aed' },
+          'health-care':       { name: 'Health Care',       icon: '💊', color: '#0ea5e9' },
+          'baby-gear':         { name: 'Baby Gear',         icon: '🎒', color: '#10b981' },
+          'walkers':           { name: 'Walkers',           icon: '🚶', color: '#f59e0b' },
+          'toys':              { name: 'Toys',              icon: '🎠', color: '#ef4444' },
+          'cradles-cribs':     { name: 'Cradles & Cribs',   icon: '🛏️', color: '#8b5cf6' },
+          'electric-vehicles': { name: 'Electric Vehicles', icon: '🚗', color: '#059669' },
+          'food':              { name: 'Food',              icon: '🍎', color: '#f97316' },
         };
-
-        const catInfo = nameMap[slug] || {
-          name:  slug,
-          icon:  '📦',
-          color: '#666',
-        };
+        const catInfo = nameMap[slug] || { name: slug, icon: '📦', color: '#666' };
 
         cat = await prisma.category.create({
           data: {
@@ -199,7 +205,7 @@ export async function POST(request) {
       categoryId = cat.id;
     }
 
-    const slug = data.name
+    const productSlug = data.name
       .toLowerCase()
       .replace(/[^a-z0-9]/g, '-')
       .replace(/-+/g, '-')
@@ -220,21 +226,19 @@ export async function POST(request) {
         description:      data.description,
         shortDescription: data.shortDescription || null,
         price:            parseFloat(data.price),
-        discountPrice:    data.discountPrice
-          ? parseFloat(data.discountPrice)
-          : null,
+        discountPrice:    data.discountPrice ? parseFloat(data.discountPrice) : null,
         discountPercent,
-        stock:      parseInt(data.stock),
-        brand:      data.brand    || null,
+        stock:            parseInt(data.stock),
+        brand:            data.brand    || null,
         categoryId,
-        ageGroup:   data.ageGroup || null,
-        tags:       data.tags     || [],
-        features:   data.features || [],
-        isFeatured: data.isFeatured || false,
-        isTrending: data.isTrending || false,
-        isActive:   data.isActive !== false,
-        images:     data.images   || [],
-        slug,
+        ageGroup:         data.ageGroup || null,
+        tags:             data.tags     || [],
+        features:         data.features || [],
+        isFeatured:       data.isFeatured || false,
+        isTrending:       data.isTrending || false,
+        isActive:         data.isActive !== false,
+        images:           data.images   || [],
+        slug:             productSlug,
         sku,
       },
     });
