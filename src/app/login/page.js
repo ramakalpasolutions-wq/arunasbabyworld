@@ -15,6 +15,15 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
 
+  // ✅ Smart back navigation
+  const handleBack = () => {
+    if (window.history.length > 1) {
+      router.back();
+    } else {
+      router.push('/');
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.email || !form.password) {
@@ -45,6 +54,17 @@ function LoginForm() {
       <div className="mesh-bg" />
       <div className="glow glow-1" />
       <div className="glow glow-2" />
+
+      {/* ✅ BACK BUTTON */}
+      <button onClick={handleBack} className="back-btn" aria-label="Go back">
+        <span className="back-arrow">←</span>
+        <span className="back-text">Back</span>
+      </button>
+
+      {/* ✅ HOME BUTTON */}
+      <Link href="/" className="home-btn" aria-label="Go home">
+        <span>🏠</span>
+      </Link>
 
       {/* Card */}
       <div className="login-card">

@@ -38,9 +38,6 @@ export async function PUT(request, { params }) {
     if (body.bgColor    !== undefined) updateData.bgColor    = body.bgColor;
     if (body.isActive   !== undefined) updateData.isActive   = body.isActive;
     if (body.order      !== undefined) updateData.order      = parseInt(body.order) || 0;
-
-
-    
     if (body.type       !== undefined) updateData.type       = body.type;
     if (body.emoji      !== undefined) updateData.emoji      = body.emoji;
     if (body.price      !== undefined) updateData.price      = body.price ? parseFloat(body.price) : null;

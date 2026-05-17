@@ -3,6 +3,13 @@ import prisma from '@/lib/prisma';
 
 export async function GET() {
   try {
+    // ✅ Auto-delete expired coupons first
+    await prisma.coupon.deleteMany({
+      where: {
+        expiryDate: { lt: new Date() },
+      },
+    });
+
     const coupons = await prisma.coupon.findMany({
       where: {
         isActive: true,

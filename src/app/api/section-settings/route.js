@@ -4,10 +4,17 @@ import prisma from '@/lib/prisma';
 // GET — fetch all section settings
 export async function GET() {
   try {
-    const settings = await prisma.sectionSetting.findMany();
+    const settings = await prisma.sectionSetting.findMany({
+      orderBy: { order: 'asc' },
+    });
     const result = {};
     settings.forEach(s => {
-      result[s.key] = { title: s.title, emoji: s.emoji };
+      result[s.key] = {
+        title: s.title,
+        emoji: s.emoji,
+        isVisible: s.isVisible !== false,    // ✅ default true
+        order: s.order || 0,
+      };
     });
     return NextResponse.json({ settings: result });
   } catch (error) {
@@ -24,12 +31,22 @@ export async function POST(req) {
       return NextResponse.json({ error: 'No settings provided' }, { status: 400 });
     }
 
-    // Upsert each section setting
     const promises = Object.entries(settings).map(([key, value]) =>
       prisma.sectionSetting.upsert({
         where:  { key },
-        update: { title: value.title || null, emoji: value.emoji || null },
-        create: { key,   title: value.title || null, emoji: value.emoji || null },
+        update: {
+          title:     value.title     ?? null,
+          emoji:     value.emoji     ?? null,
+          isVisible: value.isVisible !== false,
+          order:     value.order ?? 0,
+        },
+        create: {
+          key,
+          title:     value.title     ?? null,
+          emoji:     value.emoji     ?? null,
+          isVisible: value.isVisible !== false,
+          order:     value.order ?? 0,
+        },
       })
     );
 

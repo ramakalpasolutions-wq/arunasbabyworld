@@ -40,6 +40,7 @@
   display: flex;
   align-items: center;
   gap: 20px;
+  flex-wrap: nowrap;
 }
 
 /* ============================================================
@@ -51,6 +52,7 @@
   gap: 8px;
   flex-shrink: 0;
   text-decoration: none;
+  min-width: 0;
 }
 
 .logoIcon {
@@ -61,6 +63,7 @@
 .logoText {
   display: flex;
   flex-direction: column;
+  min-width: 0;
 }
 
 .logoMain {
@@ -72,6 +75,7 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
   line-height: 1;
+  white-space: nowrap;
 }
 
 .logoSub {
@@ -84,11 +88,12 @@
 }
 
 /* ============================================================
-   SEARCH
+   SEARCH (Desktop)
    ============================================================ */
 .searchForm {
   flex: 1;
   min-width: 0;
+  max-width: 600px;
 }
 
 .searchBox {
@@ -116,6 +121,7 @@
 .searchInput {
   flex: 1;
   min-width: 0;
+  width: 100%;
   border: none;
   background: transparent;
   padding: 10px 0;
@@ -156,6 +162,7 @@
   align-items: center;
   gap: 4px;
   flex-shrink: 0;
+  margin-left: auto;
 }
 
 .actionBtn {
@@ -232,9 +239,6 @@
   flex-shrink: 0;
 }
 
-/* ============================================================
-   CART BOUNCE
-   ============================================================ */
 .cartBounce {
   animation: cartBounceAnim 0.50s ease;
 }
@@ -281,6 +285,7 @@
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
   min-height: 44px;
+  white-space: nowrap;
 }
 
 .navContent::-webkit-scrollbar {
@@ -383,60 +388,20 @@
   box-shadow: 0 0 8px #FF3366;
 }
 
-.navBtnFeatured {
-  border-color: rgba(255,107,53,0.40);
-  background: rgba(255,107,53,0.15);
-}
+.navBtnFeatured { border-color: rgba(255,107,53,0.40); background: rgba(255,107,53,0.15); }
+.navBtnFeatured:hover { background: #FF6B35; box-shadow: 0 6px 20px rgba(255,107,53,0.40); }
+.navBtnFeatured .navBtnDot { background: #FF8C5A; box-shadow: 0 0 6px rgba(255,107,53,0.8); }
 
-.navBtnFeatured:hover {
-  background: #FF6B35;
-  box-shadow: 0 6px 20px rgba(255,107,53,0.40);
-}
+.navBtnNew { border-color: rgba(123,47,190,0.40); background: rgba(123,47,190,0.15); }
+.navBtnNew:hover { background: #7B2FBE; box-shadow: 0 6px 20px rgba(123,47,190,0.40); }
+.navBtnNew .navBtnDot { background: #9B4FDE; box-shadow: 0 0 6px rgba(123,47,190,0.8); }
 
-.navBtnFeatured .navBtnDot {
-  background: #FF8C5A;
-  box-shadow: 0 0 6px rgba(255,107,53,0.8);
-}
+.navBtnTrending { border-color: rgba(255,51,102,0.40); background: rgba(255,51,102,0.12); }
+.navBtnTrending:hover { background: #FF3366; box-shadow: 0 6px 20px rgba(255,51,102,0.40); }
 
-.navBtnNew {
-  border-color: rgba(123,47,190,0.40);
-  background: rgba(123,47,190,0.15);
-}
-
-.navBtnNew:hover {
-  background: #7B2FBE;
-  box-shadow: 0 6px 20px rgba(123,47,190,0.40);
-}
-
-.navBtnNew .navBtnDot {
-  background: #9B4FDE;
-  box-shadow: 0 0 6px rgba(123,47,190,0.8);
-}
-
-.navBtnTrending {
-  border-color: rgba(255,51,102,0.40);
-  background: rgba(255,51,102,0.12);
-}
-
-.navBtnTrending:hover {
-  background: #FF3366;
-  box-shadow: 0 6px 20px rgba(255,51,102,0.40);
-}
-
-.navBtnContact {
-  border-color: rgba(14,165,233,0.40);
-  background: rgba(14,165,233,0.15);
-}
-
-.navBtnContact:hover {
-  background: #0EA5E9;
-  box-shadow: 0 6px 20px rgba(14,165,233,0.40);
-}
-
-.navBtnContact .navBtnDot {
-  background: #0EA5E9;
-  box-shadow: 0 0 6px rgba(14,165,233,0.8);
-}
+.navBtnContact { border-color: rgba(14,165,233,0.40); background: rgba(14,165,233,0.15); }
+.navBtnContact:hover { background: #0EA5E9; box-shadow: 0 6px 20px rgba(14,165,233,0.40); }
+.navBtnContact .navBtnDot { background: #0EA5E9; box-shadow: 0 0 6px rgba(14,165,233,0.8); }
 
 /* ============================================================
    MEGA MENU
@@ -456,9 +421,7 @@
   overflow: hidden;
 }
 
-.megaContent {
-  padding: 16px 20px;
-}
+.megaContent { padding: 16px 20px; }
 
 .megaCategory h3 {
   font-size: 0.95rem;
@@ -481,18 +444,12 @@
   transition: all 0.2s;
 }
 
-.viewAll:hover {
-  color: #7B2FBE;
-  border-color: #DFC5F8;
-}
+.viewAll:hover { color: #7B2FBE; border-color: #DFC5F8; }
 
 /* ============================================================
    PROFILE DROPDOWN
    ============================================================ */
-.profileWrap {
-  position: relative;
-  flex-shrink: 0;
-}
+.profileWrap { position: relative; flex-shrink: 0; }
 
 .profileDropdown {
   position: absolute;
@@ -530,13 +487,7 @@
   flex-shrink: 0;
 }
 
-.profileName {
-  font-weight: 800;
-  font-size: 0.88rem;
-  color: #2D1A4A;
-  margin: 0 0 2px;
-}
-
+.profileName { font-weight: 800; font-size: 0.88rem; color: #2D1A4A; margin: 0 0 2px; }
 .profileEmail {
   font-size: 0.70rem;
   color: #9585B0;
@@ -558,11 +509,7 @@
   font-weight: 800;
 }
 
-.profileDivider {
-  height: 1px;
-  background: #EDD9FF;
-  margin: 4px 0;
-}
+.profileDivider { height: 1px; background: #EDD9FF; margin: 4px 0; }
 
 .profileItem {
   display: flex;
@@ -588,24 +535,10 @@
   padding-left: 20px;
 }
 
-.profileItem span:first-child {
-  font-size: 0.95rem;
-  flex-shrink: 0;
-}
-
-.profileAdmin {
-  color: #7B2FBE;
-  font-weight: 700;
-}
-
-.profileLogout {
-  color: #ef4444;
-}
-
-.profileLogout:hover {
-  background: #fef2f2;
-  color: #dc2626;
-}
+.profileItem span:first-child { font-size: 0.95rem; flex-shrink: 0; }
+.profileAdmin { color: #7B2FBE; font-weight: 700; }
+.profileLogout { color: #ef4444; }
+.profileLogout:hover { background: #fef2f2; color: #dc2626; }
 
 /* ============================================================
    MOBILE MENU
@@ -623,14 +556,8 @@
   scrollbar-color: #EDD9FF transparent;
 }
 
-.mobileMenu::-webkit-scrollbar {
-  width: 3px;
-}
-
-.mobileMenu::-webkit-scrollbar-thumb {
-  background: #EDD9FF;
-  border-radius: 3px;
-}
+.mobileMenu::-webkit-scrollbar { width: 3px; }
+.mobileMenu::-webkit-scrollbar-thumb { background: #EDD9FF; border-radius: 3px; }
 
 .mobileSearch {
   display: none;
@@ -645,12 +572,7 @@
   padding: 8px 0 24px;
 }
 
-/* ============================================================
-   MOBILE CATEGORY SECTION — Clean, no colors
-   ============================================================ */
-.mobileCatSection {
-  padding: 14px 20px 12px;
-}
+.mobileCatSection { padding: 14px 20px 12px; }
 
 .mobileCatTitle {
   font-size: 0.72rem;
@@ -663,11 +585,7 @@
   border-bottom: 1.5px solid #EDD9FF;
 }
 
-.mobileCatList {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-}
+.mobileCatList { display: flex; flex-direction: column; gap: 2px; }
 
 .mobileCatItem {
   display: flex;
@@ -692,12 +610,7 @@
   padding-left: 18px;
 }
 
-.mobileCatItemName {
-  flex: 1;
-  font-size: 0.90rem;
-  font-weight: 700;
-  line-height: 1;
-}
+.mobileCatItemName { flex: 1; font-size: 0.90rem; font-weight: 700; line-height: 1; }
 
 .mobileCatItemArrow {
   font-size: 1.1rem;
@@ -707,37 +620,19 @@
   transition: all 0.18s ease;
 }
 
-.mobileCatItem:hover .mobileCatItemArrow {
-  color: #FF6B35;
-  transform: translateX(3px);
-}
+.mobileCatItem:hover .mobileCatItemArrow { color: #FF6B35; transform: translateX(3px); }
 
 .mobileCatSkeleton {
   height: 40px;
   border-radius: 10px;
-  background: linear-gradient(
-    90deg,
-    #F0E8FA 0%,
-    #F8F2FF 40%,
-    #F0E8FA 80%
-  );
+  background: linear-gradient(90deg, #F0E8FA 0%, #F8F2FF 40%, #F0E8FA 80%);
   background-size: 200% 100%;
   animation: skeletonMove 1.6s ease-in-out infinite;
   margin-bottom: 2px;
 }
 
-/* ============================================================
-   MOBILE DIVIDER
-   ============================================================ */
-.mobileDivider {
-  height: 1px;
-  background: #EDD9FF;
-  margin: 8px 0;
-}
+.mobileDivider { height: 1px; background: #EDD9FF; margin: 8px 0; }
 
-/* ============================================================
-   MOBILE QUICK PILLS
-   ============================================================ */
 .mobileBtnGroup {
   display: flex;
   gap: 8px;
@@ -760,13 +655,8 @@
   transition: all 0.2s ease;
 }
 
-.mobilePill:hover {
-  transform: translateY(-2px);
-}
+.mobilePill:hover { transform: translateY(-2px); }
 
-/* ============================================================
-   MOBILE LINKS
-   ============================================================ */
 .mobileLink {
   padding: 12px 20px;
   font-size: 0.90rem;
@@ -791,9 +681,6 @@
   padding-left: 26px;
 }
 
-/* ============================================================
-   MOBILE USER CARD
-   ============================================================ */
 .mobileUserCard {
   display: flex;
   align-items: center;
@@ -819,10 +706,7 @@
   flex-shrink: 0;
 }
 
-.mobileUserInfo {
-  min-width: 0;
-  flex: 1;
-}
+.mobileUserInfo { min-width: 0; flex: 1; }
 
 .mobileUserName {
   font-weight: 800;
@@ -843,129 +727,184 @@
 }
 
 /* ============================================================
-   ALL KEYFRAMES — defined ONCE only
+   KEYFRAMES
    ============================================================ */
-@keyframes gradientSlide {
-  0%   { background-position: 0% 50%; }
-  100% { background-position: 200% 50%; }
-}
-
-@keyframes cartBounceAnim {
-  0%, 100% { transform: scale(1); }
-  30%       { transform: scale(1.25); }
-  60%       { transform: scale(0.92); }
-}
-
-@keyframes pulseDot {
-  0%, 100% { transform: scale(1); opacity: 1; }
-  50%       { transform: scale(1.5); opacity: 0.7; }
-}
-
-@keyframes megaFadeIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes dropdownIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes mobileMenuIn {
-  from { opacity: 0; transform: translateY(-8px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes catItemFadeIn {
-  from { opacity: 0; transform: translateX(-8px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes skeletonMove {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
-}
+@keyframes gradientSlide { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+@keyframes cartBounceAnim { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.25); } 60% { transform: scale(0.92); } }
+@keyframes pulseDot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.7; } }
+@keyframes megaFadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes dropdownIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes mobileMenuIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes catItemFadeIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
+@keyframes skeletonMove { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
 
 /* ============================================================
-   RESPONSIVE — 1280px
+   ✅ RESPONSIVE — TABLET LANDSCAPE (1280px)
    ============================================================ */
 @media (max-width: 1280px) {
-  .navLink { padding: 11px 10px; font-size: 0.80rem; }
-  .navBtn  { padding: 5px 10px;  font-size: 0.76rem; }
+  .navLink { padding: 10px 10px; font-size: 0.78rem; }
+  .navBtn  { padding: 5px 10px;  font-size: 0.74rem; }
+  .searchBtn { padding: 10px 14px; font-size: 0.80rem; }
 }
 
 /* ============================================================
-   RESPONSIVE — 1024px
+   ✅ RESPONSIVE — TABLET (1024px)
    ============================================================ */
 @media (max-width: 1024px) {
-  .mainContent { gap: 14px; }
-  .searchBtn   { padding: 10px 12px; font-size: 0.80rem; }
-  .navLink     { padding: 10px 9px;  font-size: 0.76rem; }
-  .navBtn      { padding: 5px 9px;   font-size: 0.72rem; gap: 4px; margin: 4px 2px; }
+  .mainContent { gap: 12px; }
+  .logoMain    { font-size: 1.4rem; }
+  .logoSub     { font-size: 0.58rem; }
+  .searchBtn   { padding: 9px 12px; font-size: 0.78rem; }
+  .navLink     { padding: 10px 8px; font-size: 0.74rem; }
+  .navBtn      { padding: 5px 9px;  font-size: 0.70rem; gap: 4px; margin: 4px 2px; }
   .navBtnDot   { width: 5px; height: 5px; }
   .navBtnPulse { width: 5px; height: 5px; }
   .navDivider  { margin: 0 3px; }
+  .actionLabel { font-size: 0.62rem; }
+  .actionBtn   { padding: 6px 8px; }
 }
 
 /* ============================================================
-   RESPONSIVE — 768px
+   ✅ RESPONSIVE — TABLET PORTRAIT / LARGE MOBILE (900px)
+   Hide desktop search → show in mobile menu
+   ============================================================ */
+@media (max-width: 900px) {
+  .searchForm    { display: none; }
+  .mobileMenuBtn { display: flex; }
+  .actionLabel   { display: none; }
+  .actionBtn     { padding: 6px 8px; }
+  .actionIcon    { font-size: 1.35rem; }
+  .categoryNav   { display: none; }
+  .mobileSearch  { display: block; }
+}
+
+/* ============================================================
+   ✅ RESPONSIVE — MOBILE (768px)
    ============================================================ */
 @media (max-width: 768px) {
   .mainContent   { gap: 10px; }
-  .logoSub       { display: none; }
   .logoMain      { font-size: 1.28rem; }
   .logoIcon      { font-size: 1.65rem; }
-  .searchInput   { font-size: 0.84rem; padding: 9px 0; }
-  .searchBtn     { padding: 9px 12px; font-size: 0.78rem; }
-  .searchIcon    { padding: 0 10px; }
-  .actionLabel   { display: none; }
-  .actionBtn     { padding: 6px 7px; }
-  .actionIcon    { font-size: 1.40rem; }
+  .logoSub       { display: none; }
   .avatar        { width: 30px; height: 30px; font-size: 0.80rem; }
-  .mobileMenuBtn { display: flex; }
-  .navLink       { padding: 9px 7px;  font-size: 0.72rem; }
-  .navBtn        { padding: 4px 8px;  font-size: 0.68rem; gap: 3px; margin: 3px 1px; }
-  .navBtnDot     { width: 4px; height: 4px; }
-  .navBtnPulse   { width: 4px; height: 4px; }
-  .navDivider    { margin: 0 2px; height: 18px; }
 }
 
 /* ============================================================
-   RESPONSIVE — 480px
+   ✅ RESPONSIVE — SMALL MOBILE (480px)
    ============================================================ */
 @media (max-width: 480px) {
   .mainHeader      { padding: 8px 0; }
-  .mainContent     { gap: 8px; }
-  .categoryNav     { display: none; }
+  .mainContent     { gap: 6px; }
   .logoMain        { font-size: 1.15rem; }
   .logoIcon        { font-size: 1.5rem; }
-  .searchInput     { font-size: 0.80rem; padding: 8px 0; }
-  .searchBtn       { padding: 8px 10px; font-size: 0.74rem; }
-  .searchIcon      { padding: 0 8px; font-size: 0.9rem; }
-  .actionBtn       { padding: 5px 5px; }
-  .actionIcon      { font-size: 1.32rem; }
+  .actionBtn       { padding: 5px 6px; }
+  .actionIcon      { font-size: 1.30rem; }
   .badge           { min-width: 16px; height: 16px; font-size: 0.56rem; top: 0; right: 1px; }
-  .mobileSearch    { display: block; }
   .profileDropdown { right: -6px; min-width: 200px; }
   .mobileCatSection { padding: 12px 16px 10px; }
   .mobileCatItem   { padding: 10px 12px; font-size: 0.86rem; }
   .mobileBtnGroup  { padding: 10px 16px; gap: 6px; }
   .mobilePill      { padding: 6px 12px; font-size: 0.74rem; }
+  .mobileSearch    { padding: 10px 12px; }
+  .mobileSearch .searchInput { font-size: 0.85rem; padding: 9px 0; }
+  .mobileSearch .searchBtn   { padding: 9px 14px; font-size: 0.78rem; }
 }
 
 /* ============================================================
-   RESPONSIVE — 360px
+   ✅ RESPONSIVE — EXTRA SMALL (380px)
    ============================================================ */
-@media (max-width: 360px) {
+@media (max-width: 380px) {
   .mainContent   { gap: 4px; }
-  .logoText      { display: none; }
-  .logoIcon      { font-size: 1.75rem; }
-  .searchIcon    { display: none; }
-  .searchInput   { font-size: 0.76rem; }
-  .searchBtn     { padding: 8px 8px; font-size: 0.72rem; }
-  .actionIcon    { font-size: 1.22rem; }
-  .actions       { gap: 0; }
-  .actionBtn     { padding: 4px 4px; }
+  .logoMain      { font-size: 1.05rem; }
+  .logoIcon      { font-size: 1.4rem; }
+  .actionIcon    { font-size: 1.20rem; }
+  .actions       { gap: 2px; }
+  .actionBtn     { padding: 4px 5px; }
   .mobileMenuBtn { padding: 6px; }
-  .mobilePill    { padding: 6px 10px; font-size: 0.70rem; }
+}
+
+/* ============================================================
+   ✅ RESPONSIVE — TINY (340px)
+   ============================================================ */
+@media (max-width: 340px) {
+  .logoText      { display: none; }
+  .logoIcon      { font-size: 1.6rem; }
+  .actionIcon    { font-size: 1.15rem; }
+  .actionBtn     { padding: 4px; }
+}
+/* ============================================================
+   ✅ MOBILE MENU TOP BAR (with Back & Close buttons)
+   ============================================================ */
+.mobileMenuTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #FFF3EC, #F3E8FF);
+  border-bottom: 2px solid #EDD9FF;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.mobileBackBtn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: white;
+  border: 1.5px solid #EDD9FF;
+  border-radius: 999px;
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #7B2FBE;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 6px rgba(123,47,190,0.08);
+}
+
+.mobileBackBtn:hover {
+  background: linear-gradient(135deg, #FF6B35, #7B2FBE);
+  color: white;
+  border-color: transparent;
+  transform: translateX(-2px);
+  box-shadow: 0 4px 12px rgba(123,47,190,0.25);
+}
+
+.backArrow {
+  font-size: 1.1rem;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.mobileMenuTitle {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #2D1A4A;
+  font-family: 'Nunito', sans-serif;
+}
+
+.mobileCloseBtn {
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: white;
+  border: 1.5px solid #EDD9FF;
+  color: #6B4E8A;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
+}
+
+.mobileCloseBtn:hover {
+  background: #ef4444;
+  color: white;
+  border-color: #ef4444;
+  transform: rotate(90deg);
 }

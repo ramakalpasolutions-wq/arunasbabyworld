@@ -37,7 +37,7 @@
    ============================================================ */
 .home {
   font-family: var(--font-body);
-  background: var(--bg-page);
+  background: #fff;
   color: var(--text-dark);
   overflow-x: hidden;
   position: relative;
@@ -83,7 +83,7 @@
 .home > *:nth-child(9)  { animation-delay: 0.48s; }
 
 /* ============================================================
-   PRODUCTS GRID — global class
+   PRODUCTS GRID
    ============================================================ */
 :global(.products-grid) {
   display: grid;
@@ -125,4 +125,33 @@
 .home ::selection {
   background: rgba(123,47,190,0.15);
   color: var(--purple-dark);
+}
+/* ============================================================
+   GLOBAL RESPONSIVE SAFETY
+   ============================================================ */
+.home img {
+  max-width: 100%;
+  height: auto;
+}
+
+.home section {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+/* Prevent horizontal scroll on entire page */
+@media (max-width: 768px) {
+  .home {
+    overflow-x: hidden;
+    width: 100%;
+  }
+}
+
+/* Tablet specific fixes */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .home section {
+    padding-left: clamp(16px, 2vw, 24px) !important;
+    padding-right: clamp(16px, 2vw, 24px) !important;
+  }
 }

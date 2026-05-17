@@ -253,3 +253,15 @@ model Contact {
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 }
+// ✅ Section Settings — for editable section names, visibility & order
+model SectionSetting {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  key       String   @unique
+  title     String?
+  emoji     String?
+  isVisible Boolean  @default(true)    // ✅ NEW — show/hide section
+  order     Int      @default(0)       // ✅ NEW — display order
+  updatedAt DateTime @updatedAt
+
+  @@map("section_settings")
+}

@@ -1,12 +1,14 @@
 import MainLayout from '@/components/layout/MainLayout';
 import OrderDetailClient from './OrderDetailClient';
 
-export const metadata = { title: 'Order Details' };
+export const metadata = { title: 'Order Details | BabyBliss' };
 
-export default function OrderDetailPage({ params }) {
+export default async function OrderDetailPage({ params }) {
+  const { id } = await params;
+
   return (
     <MainLayout>
-      <OrderDetailClient id={params.id} />
+      <OrderDetailClient id={id} />
     </MainLayout>
   );
-}
+} 

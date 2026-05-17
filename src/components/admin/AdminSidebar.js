@@ -1,40 +1,37 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import styles from './AdminSidebar.module.css';
 
 const navItems = [
-  { href: '/admin/dashboard',          icon: '📊', label: 'Dashboard'     },
-  { href: '/admin/products',           icon: '📦', label: 'Products'      },
-  { href: '/admin/categories',         icon: '🗂️', label: 'Categories'    },
-  { href: '/admin/banners',            icon: '🖼️', label: 'Banners'       },
-  { href: '/admin/banners/settings',   icon: '🎨', label: 'Section Names' }, // ✅ NEW
-  { href: '/admin/orders',             icon: '🛍️', label: 'Orders'        },
-  { href: '/admin/coupons',            icon: '🎟️', label: 'Coupons'       },
-  { href: '/admin/users',              icon: '👥', label: 'Users'         },
-  { href: '/admin/contacts',           icon: '📩', label: 'Messages'      },
+  { href: '/admin/dashboard',  icon: '📊', label: 'Dashboard'  },
+  { href: '/admin/products',   icon: '📦', label: 'Products'   },
+  { href: '/admin/categories', icon: '🗂️', label: 'Categories' },
+  { href: '/admin/banners',    icon: '🖼️', label: 'Banners'    },
+  { href: '/admin/orders',     icon: '🛍️', label: 'Orders'     },
+  { href: '/admin/coupons',    icon: '🎟️', label: 'Coupons'    },
+  { href: '/admin/users',      icon: '👥', label: 'Users'      },
+  { href: '/admin/contacts',   icon: '📩', label: 'Messages'   },
 ];
 
 export default function AdminSidebar() {
-  const pathname    = usePathname();
+  const pathname = usePathname();
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // ✅ Active check — also matches sub-routes
-  const isActive = (href) => {
-    if (href === '/admin/banners/settings') {
-      return pathname === '/admin/banners/settings';
-    }
-    if (href === '/admin/banners') {
-      return pathname === '/admin/banners';
-    }
-    return pathname === href || pathname.startsWith(href + '/');
-  };
+  useEffect(() => { setMobileOpen(false); }, [pathname]);
+
+  useEffect(() => {
+    document.body.style.overflow = mobileOpen ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [mobileOpen]);
+
+  const isActive = (href) => pathname === href || pathname.startsWith(href + '/');
 
   return (
     <>
-      {/* ✅ Mobile top bar */}
+      {/* Mobile Top Bar */}
       <div className={styles.mobileTopBar}>
         <button
           className={styles.menuToggle}
@@ -47,50 +44,43 @@ export default function AdminSidebar() {
         </button>
         <div className={styles.mobileLogo}>
           <span>🍼</span>
-          <span className={styles.mobileLogoText}>BabyBliss Admin</span>
+          <span className={styles.mobileLogoText}>Baby's World Admin</span>
         </div>
         <Link href="/" className={styles.mobileStoreLink}>🏠</Link>
       </div>
 
-      {/* ✅ Overlay */}
+      {/* Overlay */}
       {mobileOpen && (
-        <div
-          className={styles.overlay}
-          onClick={() => setMobileOpen(false)}
-        />
+        <div className={styles.overlay} onClick={() => setMobileOpen(false)} />
       )}
 
-      {/* ✅ Sidebar */}
+      {/* Sidebar */}
       <aside className={`${styles.sidebar} ${mobileOpen ? styles.sidebarOpen : ''}`}>
 
         {/* Logo */}
         <div className={styles.logo}>
-          <span>🍼</span>
+          <div style={{
+            width: '36px', height: '36px', borderRadius: '10px',
+            background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '1.2rem', flexShrink: 0,
+          }}>🍼</div>
           <div>
-            <div className={styles.logoText}>BabyBliss</div>
+            <div className={styles.logoText}>Baby's World</div>
             <div className={styles.logoSub}>Admin Panel</div>
           </div>
-          <button
-            className={styles.closeBtn}
-            onClick={() => setMobileOpen(false)}
-          >
-            ✕
-          </button>
+          <button className={styles.closeBtn} onClick={() => setMobileOpen(false)}>✕</button>
         </div>
 
         {/* Nav */}
         <nav className={styles.nav}>
           {navItems.map((item) => {
-
-            // ✅ Section Names — shown as sub-item under Banners
-            const isSubItem = item.href === '/admin/banners/settings';
-            const active    = isActive(item.href);
-
+            const active = isActive(item.href);
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className={`${styles.navItem} ${active ? styles.navActive : ''} ${isSubItem ? styles.navSubItem : ''}`}
+                className={`${styles.navItem} ${active ? styles.navActive : ''}`}
                 onClick={() => setMobileOpen(false)}
               >
                 <span className={styles.navIcon}>{item.icon}</span>
@@ -103,17 +93,10 @@ export default function AdminSidebar() {
 
         {/* Bottom */}
         <div className={styles.bottom}>
-          <Link
-            href="/"
-            className={styles.storeLink}
-            onClick={() => setMobileOpen(false)}
-          >
+          <Link href="/" className={styles.storeLink} onClick={() => setMobileOpen(false)}>
             🏠 View Store
           </Link>
-          <button
-            className={styles.logoutBtn}
-            onClick={() => signOut({ callbackUrl: '/' })}
-          >
+          <button className={styles.logoutBtn} onClick={() => signOut({ callbackUrl: '/' })}>
             🚪 Logout
           </button>
         </div>
