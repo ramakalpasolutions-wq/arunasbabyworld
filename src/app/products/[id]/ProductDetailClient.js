@@ -176,9 +176,6 @@ export default function ProductDetailClient({ id }) {
       }
     : null;
 
-  const viewLabels = [];
-  const viewIcons  = [];
-
   return (
     <div className={`container ${styles.page}`}>
 
@@ -202,15 +199,36 @@ export default function ProductDetailClient({ id }) {
       {/* ══ MAIN LAYOUT ══ */}
       <div className={styles.layout}>
 
-        {/* ── IMAGES SECTION ── */}
-        <div className={styles.imagesSection}>
+        {/* ── IMAGES SECTION — FirstCry Style ── */}
+        <div className={`${styles.imagesSection} ${images.length <= 1 ? styles.singleImage : ''}`}>
 
-          {/* ✅ Main Image with Auto Slide */}
+          {/* ✅ Thumbnails LEFT (vertical column) */}
+          {images.length > 1 && (
+            <div className={styles.thumbnails}>
+              {images.map((img, i) => (
+                <button
+                  key={i}
+                  className={`${styles.thumb} ${i === selectedImage ? styles.thumbActive : ''}`}
+                  onClick={() => goToSlide(i)}
+                  aria-label={`View ${i + 1}`}
+                >
+                  <Image
+                    src={img.url}
+                    alt={`${product.name} ${i + 1}`}
+                    width={80}
+                    height={80}
+                    className={styles.thumbImg}
+                  />
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* ✅ Main Image RIGHT (big square) */}
           <div
             className={styles.mainImageWrap}
             onMouseEnter={() => setIsHovered(true)}
             onMouseLeave={() => setIsHovered(false)}
-            style={{ position: 'relative', overflow: 'hidden' }}
           >
             {/* Skeleton */}
             {!imgLoaded && (
@@ -223,251 +241,63 @@ export default function ProductDetailClient({ id }) {
             <Image
               src={images[selectedImage]?.url || images[0]?.url}
               alt={product.name}
-              width={500}
-              height={500}
-              className={`${styles.mainImg} ${
-                imgLoaded ? styles.mainImgVisible : styles.mainImgHidden
-              }`}
-              style={{ objectFit: 'cover', transition: 'opacity 0.4s ease' }}
+              width={600}
+              height={600}
+              className={`${styles.mainImg} ${imgLoaded ? styles.mainImgVisible : styles.mainImgHidden}`}
               onLoad={() => setImgLoaded(true)}
               priority
             />
 
-            {/* Discount Badge */}
-            {discount > 0 && (
-              <span className={styles.discountTag}>{discount}% OFF</span>
-            )}
+            {/* Badges */}
+            {discount > 0 && <span className={styles.discountTag}>{discount}% OFF</span>}
+            {product.isTrending && <span className={styles.trendingTag}>🔥 Trending</span>}
 
-            {/* Trending Badge */}
-            {product.isTrending && (
-              <span className={styles.trendingTag}>🔥 Trending</span>
-            )}
-            {/* ✅ Left Arrow */}
+            {/* Nav Arrows */}
             {images.length > 1 && (
-              <button
-                onClick={() => goPrev(images)}
-                style={{
-                  position:       'absolute',
-                  left:           '10px',
-                  top:            '50%',
-                  transform:      'translateY(-50%)',
-                  background:     'rgba(255,255,255,0.92)',
-                  border:         'none',
-                  borderRadius:   '50%',
-                  width:          '38px',
-                  height:         '38px',
-                  display:        'flex',
-                  alignItems:     'center',
-                  justifyContent: 'center',
-                  cursor:         'pointer',
-                  fontSize:       '1.4rem',
-                  fontWeight:     '800',
-                  color:          '#2D1A4A',
-                  boxShadow:      '0 2px 12px rgba(0,0,0,0.15)',
-                  zIndex:         4,
-                  transition:     'all 0.2s ease',
-                  lineHeight:     1,
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = 'linear-gradient(135deg,#FF6B35,#7B2FBE)';
-                  e.currentTarget.style.color      = 'white';
-                  e.currentTarget.style.transform  = 'translateY(-50%) scale(1.1)';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.92)';
-                  e.currentTarget.style.color      = '#2D1A4A';
-                  e.currentTarget.style.transform  = 'translateY(-50%) scale(1)';
-                }}
-              >
-                ‹
-              </button>
+              <>
+                <button
+                  onClick={() => goPrev(images)}
+                  className={styles.navArrow}
+                  style={{ left: '12px' }}
+                  aria-label="Previous"
+                >‹</button>
+                <button
+                  onClick={() => goNext(images)}
+                  className={styles.navArrow}
+                  style={{ right: '12px' }}
+                  aria-label="Next"
+                >›</button>
+              </>
             )}
 
-            {/* ✅ Right Arrow */}
+            {/* Dot Indicators */}
             {images.length > 1 && (
-              <button
-                onClick={() => goNext(images)}
-                style={{
-                  position:       'absolute',
-                  right:          '10px',
-                  top:            '50%',
-                  transform:      'translateY(-50%)',
-                  background:     'rgba(255,255,255,0.92)',
-                  border:         'none',
-                  borderRadius:   '50%',
-                  width:          '38px',
-                  height:         '38px',
-                  display:        'flex',
-                  alignItems:     'center',
-                  justifyContent: 'center',
-                  cursor:         'pointer',
-                  fontSize:       '1.4rem',
-                  fontWeight:     '800',
-                  color:          '#2D1A4A',
-                  boxShadow:      '0 2px 12px rgba(0,0,0,0.15)',
-                  zIndex:         4,
-                  transition:     'all 0.2s ease',
-                  lineHeight:     1,
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = 'linear-gradient(135deg,#FF6B35,#7B2FBE)';
-                  e.currentTarget.style.color      = 'white';
-                  e.currentTarget.style.transform  = 'translateY(-50%) scale(1.1)';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = 'rgba(255,255,255,0.92)';
-                  e.currentTarget.style.color      = '#2D1A4A';
-                  e.currentTarget.style.transform  = 'translateY(-50%) scale(1)';
-                }}
-              >
-                ›
-              </button>
-            )}
-
-            {/* ✅ Progress Bar */}
-            {images.length > 1 && !isHovered && (
-              <div style={{
-                position:   'absolute',
-                bottom:     0,
-                left:       0,
-                right:      0,
-                height:     '3px',
-                background: 'rgba(255,255,255,0.25)',
-                zIndex:     4,
-              }}>
-                <div style={{
-                  height:           '100%',
-                  width:            `${progress}%`,
-                  background:       'linear-gradient(90deg,#FF6B35,#7B2FBE)',
-                  transition:       'width 0.03s linear',
-                  borderRadius:     '0 2px 2px 0',
-                }} />
-              </div>
-            )}
-
-            {/* ✅ Paused Badge */}
-            {images.length > 1 && isHovered && (
-              <div style={{
-                position:       'absolute',
-                bottom:         '12px',
-                right:          '12px',
-                background:     'rgba(45,26,74,0.75)',
-                color:          'white',
-                padding:        '3px 10px',
-                borderRadius:   '999px',
-                fontSize:       '0.65rem',
-                fontWeight:     '700',
-                backdropFilter: 'blur(4px)',
-                zIndex:         4,
-              }}>
-                ⏸ Paused
-              </div>
-            )}
-
-            {/* ✅ Dot Indicators */}
-            {images.length > 1 && (
-              <div style={{
-                position:       'absolute',
-                bottom:         '12px',
-                left:           '50%',
-                transform:      'translateX(-50%)',
-                display:        'flex',
-                gap:            '6px',
-                zIndex:         4,
-              }}>
+              <div className={styles.dots}>
                 {images.map((_, i) => (
                   <button
                     key={i}
                     onClick={() => goToSlide(i)}
-                    style={{
-                      width:        i === selectedImage ? '20px' : '8px',
-                      height:       '8px',
-                      borderRadius: '999px',
-                      border:       'none',
-                      background:   i === selectedImage
-                        ? 'linear-gradient(135deg,#FF6B35,#7B2FBE)'
-                        : 'rgba(255,255,255,0.6)',
-                      cursor:       'pointer',
-                      padding:      0,
-                      transition:   'all 0.3s ease',
-                      boxShadow:    i === selectedImage
-                        ? '0 2px 8px rgba(255,107,53,0.5)'
-                        : 'none',
-                    }}
+                    className={`${styles.dot} ${i === selectedImage ? styles.dotActive : ''}`}
+                    aria-label={`Go to image ${i + 1}`}
                   />
                 ))}
               </div>
             )}
+
+            {/* Progress Bar */}
+            {images.length > 1 && !isHovered && (
+              <div className={styles.progressBar}>
+                <div className={styles.progressFill} style={{ width: `${progress}%` }} />
+              </div>
+            )}
+
+            {/* Image Counter */}
+            {images.length > 1 && (
+              <div className={styles.imageCounter}>
+                {selectedImage + 1} / {images.length}
+              </div>
+            )}
           </div>
-
-          {/* ✅ Thumbnails with Labels */}
-          {images.length > 1 && (
-            <div className={styles.thumbnails}>
-              {images.map((img, i) => (
-                <button
-                  key={i}
-                  className={`${styles.thumb} ${
-                    i === selectedImage ? styles.thumbActive : ''
-                  }`}
-                  onClick={() => goToSlide(i)}
-                  aria-label={viewLabels[i] || `View ${i + 1}`}
-                  style={{
-                    position:   'relative',
-                    overflow:   'hidden',
-                    border:     i === selectedImage
-                      ? '2px solid #FF6B35'
-                      : '2px solid #EDD9FF',
-                    transition: 'all 0.2s ease',
-                    padding:    0,
-                  }}
-                >
-                  <Image
-                    src={img.url}
-                    alt={`${product.name} ${viewLabels[i] || i + 1}`}
-                    width={80}
-                    height={80}
-                    style={{ objectFit: 'cover', display: 'block' }}
-                  />
-
-                  {/* View Label */}
-                  <span style={{
-                    position:      'absolute',
-                    bottom:        0,
-                    left:          0,
-                    right:         0,
-                    background:    i === selectedImage
-                      ? 'linear-gradient(135deg,#FF6B35,#7B2FBE)'
-                      : 'rgba(0,0,0,0.55)',
-                    color:         'white',
-                    fontSize:      '0.55rem',
-                    fontWeight:    '800',
-                    textAlign:     'center',
-                    padding:       '2px 4px',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.3px',
-                    transition:    'background 0.2s',
-                  }}>
-                    {viewIcons[i] || '🖼️'} {viewLabels[i] || `View ${i + 1}`}
-                  </span>
-
-                  {/* ✅ Progress on active thumb */}
-                  {i === selectedImage && !isHovered && (
-                    <div style={{
-                      position:     'absolute',
-                      bottom:       0,
-                      left:         0,
-                      height:       '2px',
-                      width:        `${progress}%`,
-                      background:   'linear-gradient(90deg,#FF6B35,#7B2FBE)',
-                      transition:   'width 0.03s linear',
-                      zIndex:       2,
-                    }} />
-                  )}
-                </button>
-              ))}
-            </div>
-          )}
-
 
         </div>
 

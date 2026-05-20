@@ -1,22 +1,32 @@
 'use client';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import HeroBanner from '@/components/home/HeroBanner';
 import ProductCard from '@/components/products/ProductCard';
 import useScrollReveal from '@/hooks/useScrollReveal';
 import styles from './HomeClient.module.css';
 
-function useSectionSettings() {
-  const [settings, setSettings] = useState({});
+/* ═══════════════════════════════════════
+   HOOK — fetch section settings from DB
+═══════════════════════════════════════ */
+function useSectionSettings(initialSettings = {}) {
+  const [settings, setSettings] = useState(initialSettings);
+
   useEffect(() => {
     fetch('/api/section-settings')
       .then(r => r.json())
-      .then(data => setSettings(data.settings || {}))
+      .then(data => {
+        if (data.settings) setSettings(data.settings);
+      })
       .catch(() => {});
   }, []);
+
   return settings;
 }
 
+/* ═══════════════════════════════════════
+   DEFAULTS
+═══════════════════════════════════════ */
 const DEFAULT_BRANDS = [
   { id: '1',  name: 'Mothercare',    color: '#FF6B35', link: '/products' },
   { id: '2',  name: 'Babyhug',       color: '#7B2FBE', link: '/products' },
@@ -46,15 +56,58 @@ function getSectionBackgroundUrl(items = []) {
 }
 
 /* ═══════════════════════════════════════
-   2. BRANDS
+   FLIP CARD
 ═══════════════════════════════════════ */
-function BrandsSection({ brands }) {
+function FlipCard({ children, sceneClassName = '', href }) {
+  const [flipped, setFlipped] = useState(false);
+
+  const inner = (
+    <div
+      className={`flipScene ${sceneClassName} ${flipped ? 'isFlipped' : ''}`}
+      onMouseEnter={() => setFlipped(true)}
+      onMouseLeave={() => setFlipped(false)}
+      onPointerDown={() => setFlipped(true)}
+      onPointerUp={() => setFlipped(false)}
+      onPointerLeave={() => setFlipped(false)}
+      onPointerCancel={() => setFlipped(false)}
+    >
+      <div className="flipCard">{children}</div>
+    </div>
+  );
+
+  if (href) {
+    return (
+      <Link href={href} style={{ textDecoration: 'none', display: 'block', height: '100%' }}>
+        {inner}
+      </Link>
+    );
+  }
+  return inner;
+}
+
+/* ═══════════════════════════════════════
+   1. BRANDS SECTION
+═══════════════════════════════════════ */
+function BrandsSection({ brands, sectionSettings = {} }) {
+  const s         = sectionSettings['brands'] || {};
+  const secTitle  = s.title       || 'Top Baby Brands';
+  const secDesc   = s.description || '';
+
   const displayBrands = brands?.length > 0 ? brands : DEFAULT_BRANDS;
   const items = [...displayBrands, ...displayBrands, ...displayBrands];
 
   return (
-    <section style={{ background: 'white', borderTop: '1px solid #F3E8FF', borderBottom: '1px solid #F3E8FF', overflow: 'hidden', padding: '0' }}>
-      <div style={{ height: '3px', background: 'linear-gradient(90deg, #FF6B35, #7B2FBE, #FF8C5A, #9B4FDE, #FF6B35)', backgroundSize: '300% 100%', animation: 'rainbowShift 4s linear infinite' }} />
+    <section style={{ background: 'white', borderTop: '7px solid #F3E8FF', borderBottom: '1px solid #F3E8FF', overflow: 'hidden', padding: '0' }}>
+      <div style={{ height: '4px', background: 'linear-gradient(90deg, #FF6B35, #7B2FBE, #FF8C5A, #9B4FDE, #FF6B35)', backgroundSize: '300% 100%', animation: 'rainbowShift 4s linear infinite' }} />
+      
+      {/* Section title if set */}
+      {(s.title || s.description) && (
+        <div style={{ textAlign: 'center', padding: '10px 16px 0', fontFamily: 'Nunito, sans-serif' }}>
+          {s.title && <p style={{ fontSize: '0.78rem', fontWeight: '800', color: '#7B2FBE', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '1px' }}>{secTitle}</p>}
+          {secDesc && <p style={{ fontSize: '0.72rem', color: '#9585B0', margin: 0, fontWeight: '500' }}>{secDesc}</p>}
+        </div>
+      )}
+
       <div style={{ position: 'relative', overflow: 'hidden', padding: '12px 0' }}>
         <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '60px', background: 'linear-gradient(to right, white, transparent)', zIndex: 2, pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '60px', background: 'linear-gradient(to left, white, transparent)', zIndex: 2, pointerEvents: 'none' }} />
@@ -73,26 +126,14 @@ function BrandsSection({ brands }) {
               onMouseEnter={e => { e.currentTarget.style.background = `${brand.color}18`; e.currentTarget.style.borderColor = brand.color; e.currentTarget.style.transform = 'translateY(-2px)'; }}
               onMouseLeave={e => { e.currentTarget.style.background = `${brand.color}08`; e.currentTarget.style.borderColor = `${brand.color}25`; e.currentTarget.style.transform = 'translateY(0)'; }}
             >
-           {brand.logo?.url ? (
-  <img
-    src={brand.logo.url}
-    alt={brand.name || 'Brand'}
-    style={{
-      width: brand.name ? '24px' : '60px',   // ✅ Bigger if no name
-      height: brand.name ? '24px' : '32px',
-      objectFit: 'contain',
-      borderRadius: '4px',
-      flexShrink: 0,
-    }}
-  />
-) : (
-  <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: brand.color, flexShrink: 0 }} />
-)}
-{brand.name && (
-  <span style={{ fontSize: '0.84rem', fontWeight: '800', color: brand.color, fontFamily: 'Nunito, sans-serif' }}>
-    {brand.name}
-  </span>
-)}
+              {brand.logo?.url ? (
+                <img src={brand.logo.url} alt={brand.name || 'Brand'} style={{ width: brand.name ? '32px' : '80px', height: brand.name ? '49px' : '47px', objectFit: 'contain', borderRadius: '4px', flexShrink: 0 }} />
+              ) : (
+                <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: brand.color, flexShrink: 0 }} />
+              )}
+              {brand.name && (
+                <span style={{ fontSize: '0.84rem', fontWeight: '800', color: brand.color, fontFamily: 'Nunito, sans-serif' }}>{brand.name}</span>
+              )}
             </Link>
           ))}
         </div>
@@ -106,14 +147,16 @@ function BrandsSection({ brands }) {
 }
 
 /* ═══════════════════════════════════════
-   3. SEASON BANNER — ✅ Split Layout
-   Left: text (20%) | Right: full image (80%)
+   2. SEASON BANNER (FESTIVAL)
 ═══════════════════════════════════════ */
-function SeasonBanner({ banners }) {
-  const [current, setCurrent] = useState(0);
-  const [paused, setPaused]   = useState(false);
+function SeasonBanner({ banners, sectionSettings = {} }) {
+  const s        = sectionSettings['festival'] || {};
+  const secTitle = s.title       || '';
+  const secDesc  = s.description || '';
 
-  // ✅ Auto scroll every 5 seconds
+  const [current, setCurrent] = useState(0);
+  const [paused,  setPaused]  = useState(false);
+
   useEffect(() => {
     if (!banners?.length || banners.length <= 1 || paused) return;
     const t = setInterval(() => setCurrent(p => (p + 1) % banners.length), 5000);
@@ -121,293 +164,145 @@ function SeasonBanner({ banners }) {
   }, [banners?.length, paused]);
 
   if (!banners?.length) return null;
-  const banner = banners[current];
 
   return (
-    <section
-      style={{ background: '#eef1f5', padding: '20px 16px' }}
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
+    <section style={{ background: '#eef1f5', padding: '16px' }} onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
       <div style={{ maxWidth: '1300px', margin: '0 auto' }}>
-        <div style={{
-          borderRadius: '16px',
-          overflow: 'hidden',
-          position: 'relative',
-          boxShadow: '0 2px 16px rgba(0,0,0,0.08)',
-          background: '#fff',
-        }}>
-          {/* ✅ All slides stacked — fade transition */}
+
+        {/* Section heading from admin */}
+        {(secTitle || secDesc) && (
+          <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+            {secTitle && <h2 style={{ fontSize: 'clamp(1rem,2vw,1.4rem)', fontWeight: '900', color: '#2D1A4A', margin: '0 0 4px', fontFamily: 'Nunito, sans-serif' }}>{secTitle}</h2>}
+            {secDesc  && <p  style={{ fontSize: '0.84rem', color: '#9585B0', margin: 0, fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>{secDesc}</p>}
+          </div>
+        )}
+
+        <div style={{ borderRadius: '14px', overflow: 'hidden', position: 'relative', boxShadow: '0 4px 16px rgba(0,0,0,0.10)', background: '#fff', height: 'clamp(250px, 24vw, 470px)' }}>
           {banners.map((b, i) => (
-            <div
-              key={b.id || i}
-              style={{
-                position: i === 0 ? 'relative' : 'absolute',
-                inset: 0,
-                opacity: i === current ? 1 : 0,
-                transition: 'opacity 0.6s ease',
-                zIndex: i === current ? 2 : 1,
-              }}
-            >
+            <div key={b.id || i} style={{ position: 'absolute', inset: 0, opacity: i === current ? 1 : 0, transition: 'opacity 0.4s ease', zIndex: i === current ? 2 : 1 }}>
               {b.image?.url ? (
-                <img
-                  src={b.image.url}
-                  alt={b.title}
-                  style={{
-                    width: '100%',
-                    height: 'auto',
-                    maxHeight: '440px',
-                    objectFit: 'cover',
-                    objectPosition: 'center',
-                    display: 'block',
-                  }}
-                />
+                <img src={b.image.url} alt={b.title || 'Festival'} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
               ) : (
-                <div style={{
-                  width: '100%', height: '320px',
-                  background: `linear-gradient(135deg, ${b.bgColor || '#0EA5E9'}, #7B2FBE)`,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  color: '#fff', fontSize: '2rem', fontWeight: '800',
-                  fontFamily: 'Nunito, sans-serif',
-                }}>
-                  {b.title}
-                </div>
+                <div style={{ width: '100%', height: '100%', background: `linear-gradient(135deg, ${b.bgColor || '#0EA5E9'}, #7B2FBE)` }} />
               )}
+              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)', zIndex: 3 }} />
+              <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 'clamp(240px, 55%, 480px)', padding: 'clamp(14px, 2.5vw, 28px)', display: 'flex', flexDirection: 'column', justifyContent: 'center', zIndex: 4 }}>
+                {b.festivalName && (
+                  <span style={{ display: 'inline-block', width: 'fit-content', padding: '4px 12px', background: 'rgba(255,255,255,0.97)', color: '#7B2FBE', borderRadius: '999px', fontSize: 'clamp(0.6rem, 1vw, 0.72rem)', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Nunito, sans-serif', boxShadow: '0 3px 10px rgba(0,0,0,0.2)' }}>
+                    {b.emoji || '🎪'} {b.festivalName}
+                  </span>
+                )}
+                {b.title && (
+                  <h2 style={{ fontSize: 'clamp(1.1rem, 2.4vw, 1.8rem)', fontWeight: '900', color: 'white', margin: '0 0 6px', lineHeight: 1.15, fontFamily: 'Nunito, sans-serif', textShadow: '0 2px 10px rgba(0,0,0,0.6)' }}>
+                    {b.title}
+                  </h2>
+                )}
+                {b.subtitle && (
+                  <p style={{ fontSize: 'clamp(0.75rem, 1.3vw, 0.9rem)', color: 'rgba(255,255,255,0.94)', margin: '0 0 12px', fontWeight: '500', lineHeight: 1.4, fontFamily: 'Nunito, sans-serif', textShadow: '0 1px 6px rgba(0,0,0,0.5)', maxWidth: '380px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+                    {b.subtitle}
+                  </p>
+                )}
+                {b.buttonText && (
+                  <Link href={b.buttonLink || '/products'} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', width: 'fit-content', padding: 'clamp(7px, 1.2vw, 10px) clamp(16px, 2.5vw, 24px)', background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)', color: 'white', borderRadius: '999px', textDecoration: 'none', fontWeight: '800', fontSize: 'clamp(0.75rem, 1.2vw, 0.86rem)', fontFamily: 'Nunito, sans-serif', boxShadow: '0 6px 18px rgba(255,107,53,0.4)', transition: 'transform 0.2s ease' }}>
+                    {b.buttonText} →
+                  </Link>
+                )}
+              </div>
             </div>
           ))}
 
-          {/* Arrows */}
           {banners.length > 1 && (
             <>
-              <button
-                onClick={() => setCurrent(p => (p - 1 + banners.length) % banners.length)}
-                style={{
-                  position: 'absolute', left: '16px', top: '50%',
-                  transform: 'translateY(-50%)',
-                  width: '38px', height: '38px', borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.80)', border: 'none',
-                  fontSize: '1.2rem', cursor: 'pointer', color: '#333',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.15)', zIndex: 5,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}
-              >‹</button>
-              <button
-                onClick={() => setCurrent(p => (p + 1) % banners.length)}
-                style={{
-                  position: 'absolute', right: '16px', top: '50%',
-                  transform: 'translateY(-50%)',
-                  width: '38px', height: '38px', borderRadius: '50%',
-                  background: 'rgba(255,255,255,0.80)', border: 'none',
-                  fontSize: '1.2rem', cursor: 'pointer', color: '#333',
-                  boxShadow: '0 2px 10px rgba(0,0,0,0.15)', zIndex: 5,
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                }}
-              >›</button>
+              <button onClick={() => setCurrent(p => (p - 1 + banners.length) % banners.length)} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '34px', height: '34px', borderRadius: '50%', background: 'rgba(255,255,255,0.95)', border: 'none', fontSize: '1.1rem', cursor: 'pointer', color: '#2D1A4A', boxShadow: '0 3px 10px rgba(0,0,0,0.2)', zIndex: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700' }}>‹</button>
+              <button onClick={() => setCurrent(p => (p + 1) % banners.length)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', width: '34px', height: '34px', borderRadius: '50%', background: 'rgba(255,255,255,0.95)', border: 'none', fontSize: '1.1rem', cursor: 'pointer', color: '#2D1A4A', boxShadow: '0 3px 10px rgba(0,0,0,0.2)', zIndex: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700' }}>›</button>
             </>
           )}
-
-          {/* Progress bar */}
           {banners.length > 1 && !paused && (
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '3px', background: 'rgba(0,0,0,0.10)', zIndex: 5 }}>
-              <div
-                key={current}
-                style={{
-                  height: '100%',
-                  background: 'linear-gradient(90deg, #FF6B35, #7B2FBE)',
-                  animation: 'festivalProgress 5s linear forwards',
-                }}
-              />
+            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '3px', background: 'rgba(0,0,0,0.2)', zIndex: 5 }}>
+              <div key={current} style={{ height: '100%', background: 'linear-gradient(90deg, #FF6B35, #7B2FBE)', animation: 'festivalProgress 5s linear forwards' }} />
             </div>
           )}
-
-          {/* Dots */}
           {banners.length > 1 && (
-            <div style={{
-              position: 'absolute', bottom: '14px', left: '50%',
-              transform: 'translateX(-50%)',
-              display: 'flex', gap: '6px', zIndex: 5,
-            }}>
+            <div style={{ position: 'absolute', bottom: '12px', right: '18px', display: 'flex', gap: '5px', zIndex: 5 }}>
               {banners.map((_, i) => (
-                <button key={i} onClick={() => setCurrent(i)}
-                  style={{
-                    width: i === current ? '22px' : '8px',
-                    height: '8px', borderRadius: '999px',
-                    border: 'none',
-                    background: i === current ? '#fff' : 'rgba(255,255,255,0.50)',
-                    cursor: 'pointer', padding: 0,
-                    transition: 'all 0.3s ease',
-                    boxShadow: '0 1px 4px rgba(0,0,0,0.15)',
-                  }}
-                />
+                <button key={i} onClick={() => setCurrent(i)} style={{ width: i === current ? '20px' : '7px', height: '7px', borderRadius: '999px', border: 'none', background: i === current ? '#fff' : 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: 0, transition: 'all 0.3s ease', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }} />
               ))}
             </div>
           )}
         </div>
       </div>
-
-      <style>{`
-        @keyframes festivalProgress {
-          from { width: 0%; }
-          to { width: 100%; }
-        }
-      `}</style>
+      <style>{`@keyframes festivalProgress { from { width: 0%; } to { width: 100%; } }`}</style>
     </section>
   );
 }
+
 /* ═══════════════════════════════════════
-   4. BUDGET — ✅ DB section name
+   3. BUDGET
 ═══════════════════════════════════════ */
 function BudgetSection({ banners, sectionSettings = {} }) {
-  const secTitle = sectionSettings['budget']?.title || 'Budget Store';
+  const s        = sectionSettings['budget'] || {};
+  const secTitle = s.title       || 'Budget Store';
+  const secEmoji = s.emoji       || '';
+  const secDesc  = s.description || '';
 
   const displayBudget = banners?.length > 0
     ? banners.map((b, i) => ({
         price: b.price || DEFAULT_BUDGET[i]?.price || 499,
         offer: b.offer || 'UNDER',
-        link: b.buttonLink || `/products?maxPrice=${b.price || 499}`,
+        link:  b.buttonLink || `/products?maxPrice=${b.price || 499}`,
       }))
     : DEFAULT_BUDGET.map(b => ({ ...b, offer: 'UNDER' }));
 
   return (
-    <section style={{
-      padding: 'clamp(36px,5vw,60px) clamp(12px,3vw,40px) clamp(48px,6vw,80px)',
-      background: 'linear-gradient(180deg, #f0e0cc 0%, #e0d0be 20%, #c8dce8 50%, #b0d4e8 100%)',
-      textAlign: 'center',
-      position: 'relative',
-      overflow: 'hidden',
-    }}>
-      {/* Ribbon heading */}
-      <div style={{
-        display: 'inline-block',
-        background: '#fff',
-        padding: 'clamp(10px,2vw,14px) clamp(28px,4vw,48px)',
-        borderRadius: '4px',
-        boxShadow: '0 3px 14px rgba(0,0,0,0.10)',
-        marginBottom: 'clamp(28px,4vw,44px)',
-        position: 'relative',
-        zIndex: 2,
-        maxWidth: '90%',
-      }}>
-        <h2 style={{
-          fontSize: 'clamp(1rem,2.5vw,1.9rem)',
-          fontWeight: '900',
-          color: '#1a1a2e',
-          margin: 0,
-          fontFamily: 'Nunito, sans-serif',
-          textTransform: 'uppercase',
-          letterSpacing: 'clamp(1.5px,0.3vw,3px)',
-          whiteSpace: 'nowrap',
-        }}>
-          {secTitle}
+    <section style={{ padding: 'clamp(36px,5vw,60px) clamp(12px,3vw,40px) clamp(48px,6vw,80px)', background: 'linear-gradient(180deg, #f0e0cc 0%, #e0d0be 20%, #c8dce8 50%, #b0d4e8 100%)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
+      
+      <div style={{ display: 'inline-block', background: '#fff', padding: 'clamp(10px,2vw,14px) clamp(28px,4vw,48px)', borderRadius: '4px', boxShadow: '0 3px 14px rgba(0,0,0,0.10)', marginBottom: secDesc ? '8px' : 'clamp(28px,4vw,44px)', position: 'relative', zIndex: 2, maxWidth: '90%' }}>
+        <h2 style={{ fontSize: 'clamp(1rem,2.5vw,1.9rem)', fontWeight: '900', color: '#1a1a2e', margin: 0, fontFamily: 'Nunito, sans-serif', textTransform: 'uppercase', letterSpacing: 'clamp(1.5px,0.3vw,3px)', whiteSpace: 'nowrap' }}>
+          {secEmoji} {secTitle}
         </h2>
-        <div style={{
-          position: 'absolute', left: '-12px', top: '50%',
-          transform: 'translateY(-50%)',
-          width: 0, height: 0,
-          borderTop: '16px solid transparent',
-          borderBottom: '16px solid transparent',
-          borderRight: '12px solid #fff',
-        }} />
-        <div style={{
-          position: 'absolute', right: '-12px', top: '50%',
-          transform: 'translateY(-50%)',
-          width: 0, height: 0,
-          borderTop: '16px solid transparent',
-          borderBottom: '16px solid transparent',
-          borderLeft: '12px solid #fff',
-        }} />
+        <div style={{ position: 'absolute', left: '-12px', top: '50%', transform: 'translateY(-50%)', width: 0, height: 0, borderTop: '16px solid transparent', borderBottom: '16px solid transparent', borderRight: '12px solid #fff' }} />
+        <div style={{ position: 'absolute', right: '-12px', top: '50%', transform: 'translateY(-50%)', width: 0, height: 0, borderTop: '16px solid transparent', borderBottom: '16px solid transparent', borderLeft: '12px solid #fff' }} />
       </div>
 
-      {/* ✅ Grid layout — responsive, no cut-off */}
-      <div
-        className="budgetGrid"
-        style={{
-          display: 'grid',
-          gridTemplateColumns: `repeat(${displayBudget.length}, minmax(0, 1fr))`,
-          gap: 'clamp(8px,2vw,40px)',
-          maxWidth: '1100px',
-          margin: '0 auto',
-          alignItems: 'center',
-          justifyItems: 'center',
-          position: 'relative',
-          zIndex: 2,
-        }}
-      >
+      {secDesc && (
+        <p style={{ fontSize: '0.84rem', color: '#666', margin: '0 auto clamp(20px,3vw,36px)', fontWeight: '500', fontFamily: 'Nunito, sans-serif', maxWidth: '500px', position: 'relative', zIndex: 2 }}>
+          {secDesc}
+        </p>
+      )}
+
+      <div className="budgetGrid" style={{ display: 'grid', gridTemplateColumns: `repeat(${displayBudget.length}, minmax(0, 1fr))`, gap: 'clamp(8px,2vw,40px)', maxWidth: '1100px', margin: '0 auto', alignItems: 'center', justifyItems: 'center', position: 'relative', zIndex: 2 }}>
         {displayBudget.map((item, i) => (
-          <Link
-            key={i}
-            href={item.link}
-            style={{
-              textDecoration: 'none',
-              textAlign: 'center',
-              width: '100%',
-              minWidth: 0,
-            }}
-          >
+          <Link key={i} href={item.link} style={{ textDecoration: 'none', textAlign: 'center', width: '100%', minWidth: 0 }}>
             <div
-              style={{
-                cursor: 'pointer',
-                transition: 'transform 0.3s ease',
-                padding: 'clamp(6px,1.5vw,12px) clamp(4px,1.5vw,24px)',
-              }}
+              style={{ cursor: 'pointer', transition: 'transform 0.3s ease', padding: 'clamp(6px,1.5vw,12px) clamp(4px,1.5vw,24px)' }}
               onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.08)'}
               onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
             >
-              <p style={{
-                fontSize: 'clamp(0.62rem,1.2vw,1rem)',
-                fontWeight: '900',
-                color: '#1a1a8e',
-                margin: '0 0 4px',
-                fontFamily: 'Nunito, sans-serif',
-                textTransform: 'uppercase',
-                letterSpacing: 'clamp(2px,0.5vw,4px)',
-              }}>
+              <p style={{ fontSize: 'clamp(0.62rem,1.2vw,1rem)', fontWeight: '900', color: '#1a1a8e', margin: '0 0 4px', fontFamily: 'Nunito, sans-serif', textTransform: 'uppercase', letterSpacing: 'clamp(2px,0.5vw,4px)' }}>
                 {item.offer}
               </p>
-
-              <p style={{
-                fontSize: 'clamp(1.5rem,6vw,4.5rem)',
-                fontWeight: '900',
-                color: '#1a1a8e',
-                margin: 0,
-                lineHeight: 1.1,
-                fontFamily: 'Nunito, sans-serif',
-                letterSpacing: '-1px',
-                display: 'flex',
-                alignItems: 'flex-end',
-                justifyContent: 'center',
-                gap: '2px',
-                whiteSpace: 'nowrap',
-              }}>
+              <p style={{ fontSize: 'clamp(1.5rem,6vw,4.5rem)', fontWeight: '900', color: '#1a1a8e', margin: 0, lineHeight: 1.1, fontFamily: 'Nunito, sans-serif', letterSpacing: '-1px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: '2px', whiteSpace: 'nowrap' }}>
                 {item.price}
-                <span style={{
-                  fontSize: '0.30em',
-                  marginBottom: 'clamp(4px,1vw,14px)',
-                  color: '#FF6B35',
-                  fontWeight: '900',
-                  animation: 'budgetArrow 1.2s ease-in-out infinite',
-                }}>›</span>
+                <span style={{ fontSize: '0.30em', marginBottom: 'clamp(4px,1vw,14px)', color: '#FF6B35', fontWeight: '900', animation: 'budgetArrow 1.2s ease-in-out infinite' }}>›</span>
               </p>
             </div>
           </Link>
         ))}
       </div>
-
-      <style>{`
-        @keyframes budgetArrow {
-          0%, 100% { opacity: 1; transform: translateX(0); }
-          50% { opacity: 0.3; transform: translateX(4px); }
-        }
-      `}</style>
+      <style>{`@keyframes budgetArrow { 0%, 100% { opacity: 1; transform: translateX(0); } 50% { opacity: 0.3; transform: translateX(4px); } }`}</style>
     </section>
   );
 }
+
 /* ═══════════════════════════════════════
-   5. SUNNY — ✅ DB section name
+   4. SUNNY — Flip
 ═══════════════════════════════════════ */
 function SunnySection({ banners, sectionSettings = {} }) {
-  const secTitle = sectionSettings['sunny']?.title || 'Sunny Play Days';
-  const secEmoji = sectionSettings['sunny']?.emoji || '☀️';
+  const s        = sectionSettings['sunny'] || {};
+  const secTitle = s.title       || 'Sunny Play Days';
+  const secEmoji = s.emoji       || '☀️';
+  const secDesc  = s.description || '';
+  const secBtn   = s.buttonText  || 'View All';
 
   if (!banners?.length) return null;
 
@@ -419,40 +314,131 @@ function SunnySection({ banners, sectionSettings = {} }) {
             <span style={{ display: 'inline-block', padding: '4px 14px', background: 'linear-gradient(135deg, #FFF9EC, #FFF3EC)', border: '1.5px solid #FFD4B8', borderRadius: '999px', fontSize: '0.70rem', fontWeight: '800', color: '#FF6B35', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', fontFamily: 'Nunito, sans-serif' }}>
               {secEmoji} Collections
             </span>
-            <h2 style={{ fontSize: 'clamp(1.3rem,2.5vw,2rem)', fontWeight: '800', color: '#2D1A4A', margin: 0, fontFamily: 'Nunito, sans-serif' }}>
+            <h2 style={{ fontSize: 'clamp(1.3rem,2.5vw,2rem)', fontWeight: '800', color: '#2D1A4A', margin: '0 0 4px', fontFamily: 'Nunito, sans-serif' }}>
               {secEmoji} {secTitle}
             </h2>
+            {secDesc && (
+              <p style={{ fontSize: '0.84rem', color: '#9585B0', margin: 0, fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>
+                {secDesc}
+              </p>
+            )}
           </div>
           <Link href="/products?category=clothing" style={{ padding: '9px 20px', background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)', color: 'white', borderRadius: '999px', textDecoration: 'none', fontSize: '0.82rem', fontWeight: '700', fontFamily: 'Nunito, sans-serif' }}>
-            View All →
+            {secBtn} →
           </Link>
         </div>
 
         <div className="sunnyGrid">
           {banners.map((banner, i) => {
-            const imageUrl = banner.image?.url || null;
+            const frontImg = banner.image?.url || null;
+            const backImg  = banner.mobileImage?.url || frontImg;
             return (
-              <Link key={banner.id || i} href="/products?category=clothing" style={{ textDecoration: 'none' }}>
-                <div
-                  className="sunnyCard"
-                  style={{ borderRadius: '20px', overflow: 'hidden', position: 'relative', border: '2px solid #a8d86c', transition: 'all 0.3s ease', cursor: 'pointer', background: '#E0F2FE', height: '100%' }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 16px 40px rgba(255,107,53,0.18)'; e.currentTarget.style.borderColor = '#FF6B35'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = '#a8d86c'; }}
-                >
-                  <div className="sunnyImgWrap" style={{ position: 'relative', width: '100%' }}>
-                    {imageUrl ? (
-                      <>
-                        <img src={imageUrl} alt={banner.title || 'Collection'} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }} />
-                        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to top, rgba(0,0,0,0.40) 0%, transparent 50%)', zIndex: 1 }} />
-                      </>
+              <FlipCard key={banner.id || i} sceneClassName="sunnyFlipScene" href="/products?category=clothing">
+                <div className="flipFace flipFront sunnyDashedBorder">
+                  <div className="sunnyImgWrap">
+                    {frontImg ? (
+                      <img src={frontImg} alt={banner.title || 'Collection'} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }} />
                     ) : (
-                      <div style={{ width: '100%', height: '100%', background: 'linear-gradient(160deg, #c5e9f8, #8fd2f2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4.5rem' }}>
-                        {banner.emoji || '👕'}
-                      </div>
+                      <div style={{ width: '100%', height: '100%', background: 'linear-gradient(160deg, #c5e9f8, #8fd2f2)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4.5rem' }}>{banner.emoji || '👕'}</div>
                     )}
-                    <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '36px', background: 'rgba(255,255,255,0.92)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 2 }}>
-                      <span style={{ fontSize: '10px', fontWeight: '900', color: '#2D1A4A', writingMode: 'vertical-rl', transform: 'rotate(180deg)', letterSpacing: '1px', textTransform: 'uppercase', fontFamily: 'Nunito, sans-serif' }}>{banner.title}</span>
-                    </div>
+                    <div className="sunnyTitleStrip"><span>{banner.title}</span></div>
+                  </div>
+                </div>
+                <div className="flipFace flipBack sunnyDashedBorder">
+                  <div className="sunnyImgWrap">
+                    {backImg ? (
+                      <img src={backImg} alt={banner.title || 'Back'} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top', display: 'block' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', background: 'linear-gradient(160deg, #FFE8B0, #FFD78A)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4.5rem' }}>☀️</div>
+                    )}
+                    <div className="sunnyTitleStrip"><span>{banner.title}</span></div>
+                  </div>
+                </div>
+              </FlipCard>
+            );
+          })}
+        </div>
+
+        <style>{`
+          .sunnyGrid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
+          .sunnyFlipScene { height: 280px; }
+          .sunnyDashedBorder { border: 3px solid #E03F4F; background: white; box-sizing: border-box; border-radius: 24px; box-shadow: 0 6px 18px rgba(224,63,79,0.18); transition: box-shadow 0.3s ease; }
+          .flipScene.isFlipped .sunnyDashedBorder, .flipScene:hover .sunnyDashedBorder { border-color: #C92A3A; box-shadow: 0 14px 36px rgba(224,63,79,0.35); }
+          .sunnyImgWrap { position: relative; width: 100%; height: 100%; overflow: hidden; border-radius: 16px; }
+          .sunnyTitleStrip { position: absolute; left: 0; bottom: 0; right: 0; background: #1a1a2e; padding: 10px 12px; text-align: center; }
+          .sunnyTitleStrip span { font-size: 11px; font-weight: 900; color: white; letter-spacing: 0.8px; text-transform: uppercase; font-family: 'Nunito', sans-serif; }
+          @media (max-width: 1024px) { .sunnyGrid { grid-template-columns: repeat(3, 1fr); gap: 14px; } .sunnyFlipScene { height: 260px; } }
+          @media (max-width: 700px)  { .sunnyGrid { grid-template-columns: repeat(2, 1fr); gap: 12px; } .sunnyFlipScene { height: 240px; } }
+          @media (max-width: 380px)  { .sunnyGrid { grid-template-columns: 1fr; } .sunnyFlipScene { height: 260px; } }
+        `}</style>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════
+   5. CATEGORY (PROMO)
+═══════════════════════════════════════ */
+function PromoSection({ banners, sectionSettings = {} }) {
+  const s        = sectionSettings['promo'] || sectionSettings['category'] || {};
+  const secTitle = s.title       || 'Shop By Category';
+  const secEmoji = s.emoji       || '🛍️';
+  const secDesc  = s.description || '';
+
+  const DEFAULT_CATEGORIES = [
+    { id: 'd1', title: 'Clothing',        image: { url: 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?w=500&h=600&fit=crop&auto=format' }, buttonLink: '/products?category=clothing',           color: '#FF6B35' },
+    { id: 'd2', title: 'Toys & Games',    image: { url: 'https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=500&h=600&fit=crop&auto=format' },  buttonLink: '/products?category=toys',               color: '#EF4444' },
+    { id: 'd3', title: 'Baby Food',       image: { url: 'https://images.unsplash.com/photo-1607532941433-304659e8198a?w=500&h=600&fit=crop&auto=format' }, buttonLink: '/products?category=food',              color: '#10B981' },
+    { id: 'd4', title: 'Personal Care',   image: { url: 'https://images.unsplash.com/photo-1599735362298-10f9a84d3e89?w=500&h=600&fit=crop&auto=format' }, buttonLink: '/products?category=personal-care',     color: '#7B2FBE' },
+    { id: 'd5', title: 'Skin Care',       image: { url: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=500&h=600&fit=crop&auto=format' },  buttonLink: '/products?category=health-care',       color: '#0EA5E9' },
+    { id: 'd6', title: 'Electric Rides',  image: { url: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=500&h=600&fit=crop&auto=format' }, buttonLink: '/products?category=electric-vehicles', color: '#F59E0B' },
+    { id: 'd7', title: 'Cradles & Cribs', image: { url: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=500&h=600&fit=crop&auto=format' },  buttonLink: '/products?category=cradles-cribs',     color: '#EC4899' },
+  ];
+
+  const categories = banners?.length > 0 ? banners : DEFAULT_CATEGORIES;
+  const count = categories.length;
+  const cols  = count >= 7 ? 7 : count;
+
+  return (
+    <section style={{ padding: 'clamp(36px,5vw,52px) clamp(12px,2vw,16px)', background: 'linear-gradient(180deg, #fff 0%, #f8f9fb 100%)' }}>
+      <div style={{ maxWidth: '1300px', margin: '0 auto' }}>
+        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
+          <h2 style={{ fontSize: 'clamp(1.1rem,2.5vw,1.8rem)', fontWeight: '900', color: '#1a1a2e', margin: '0 0 8px', fontFamily: 'Nunito, sans-serif', textTransform: 'uppercase', letterSpacing: '2px' }}>
+            {secEmoji} {secTitle}
+          </h2>
+          {secDesc && (
+            <p style={{ fontSize: '0.85rem', color: '#9585B0', margin: '0 0 10px', fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>
+              {secDesc}
+            </p>
+          )}
+          <div style={{ width: '60px', height: '3px', background: 'linear-gradient(90deg, #FF6B35, #7B2FBE)', borderRadius: '999px', margin: '0 auto' }} />
+        </div>
+
+        <div className="promoGrid" style={{ '--cols': cols }}>
+          {categories.map((cat, i) => {
+            const imgUrl = cat.image?.url || null;
+            const link   = cat.buttonLink || '/products';
+            const color  = cat.color      || '#FF6B35';
+            const name   = cat.title      || 'Category';
+            return (
+              <Link key={cat.id || i} href={link} style={{ textDecoration: 'none' }}>
+                <div
+                  className="promoCard"
+                  style={{ background: '#fff', borderRadius: '16px', overflow: 'hidden', border: `2px solid ${color}30`, transition: 'all 0.3s ease', cursor: 'pointer', height: '100%' }}
+                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = `0 14px 36px ${color}25`; e.currentTarget.style.borderColor = color; }}
+                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.borderColor = `${color}30`; }}
+                >
+                  <div className="promoImgWrap">
+                    {imgUrl ? (
+                      <img src={imgUrl} alt={name} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block', transition: 'transform 0.4s ease' }} />
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', background: `${color}15`, color: color, fontWeight: '900' }}>{name.charAt(0)}</div>
+                    )}
+                  </div>
+                  <div style={{ padding: '11px 6px', background: '#1a1a2e', textAlign: 'center' }}>
+                    <p style={{ fontSize: 'clamp(0.62rem,1.1vw,0.78rem)', fontWeight: '800', color: '#fff', margin: 0, fontFamily: 'Nunito, sans-serif', textTransform: 'uppercase', letterSpacing: '0.3px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {name}<span style={{ fontSize: '0.85rem', flexShrink: 0 }}>›</span>
+                    </p>
                   </div>
                 </div>
               </Link>
@@ -461,24 +447,12 @@ function SunnySection({ banners, sectionSettings = {} }) {
         </div>
 
         <style>{`
-          .sunnyGrid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 16px;
-          }
-          .sunnyImgWrap { height: clamp(180px, 22vw, 260px); }
-          @media (max-width: 1024px) {
-            .sunnyGrid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
-            .sunnyImgWrap { height: clamp(170px, 26vw, 230px); }
-          }
-          @media (max-width: 700px) {
-            .sunnyGrid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-            .sunnyImgWrap { height: clamp(160px, 40vw, 220px); }
-          }
-          @media (max-width: 380px) {
-            .sunnyGrid { grid-template-columns: 1fr; }
-            .sunnyImgWrap { height: 200px; }
-          }
+          .promoGrid { display: grid; grid-template-columns: repeat(var(--cols, 7), 1fr); gap: 14px; }
+          .promoImgWrap { width: 100%; height: 320px; overflow: hidden; background: #f8f8f8; }
+          @media (max-width: 1200px) { .promoGrid { grid-template-columns: repeat(5, 1fr); gap: 12px; } .promoImgWrap { height: 240px; } }
+          @media (max-width: 900px)  { .promoGrid { grid-template-columns: repeat(4, 1fr); gap: 10px; } .promoImgWrap { height: 220px; } }
+          @media (max-width: 640px)  { .promoGrid { grid-template-columns: repeat(3, 1fr); gap: 10px; } .promoImgWrap { height: 200px; } }
+          @media (max-width: 420px)  { .promoGrid { grid-template-columns: repeat(2, 1fr); gap: 10px; } .promoImgWrap { height: 210px; } }
         `}</style>
       </div>
     </section>
@@ -486,163 +460,11 @@ function SunnySection({ banners, sectionSettings = {} }) {
 }
 
 /* ═══════════════════════════════════════
-   6. PROMO — ✅ DB section name
-═══════════════════════════════════════ */
-function PromoSection({ banners, sectionSettings = {} }) {
-  const secTitle = sectionSettings['promo']?.title || 'Shop By Category';
-
-  const categories = [
-    { name: 'Clothing',        image: 'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?w=500&h=600&fit=crop&auto=format', link: '/products?category=clothing',         color: '#FF6B35' },
-    { name: 'Toys & Games',    image: 'https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=500&h=600&fit=crop&auto=format',  link: '/products?category=toys',             color: '#EF4444' },
-    { name: 'Baby Food',       image: 'https://images.unsplash.com/photo-1607532941433-304659e8198a?w=500&h=600&fit=crop&auto=format', link: '/products?category=food',            color: '#10B981' },
-    { name: 'Personal Care',   image: 'https://images.unsplash.com/photo-1599735362298-10f9a84d3e89?w=500&h=600&fit=crop&auto=format', link: '/products?category=personal-care',   color: '#7B2FBE' },
-    { name: 'Skin Care',       image: 'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=500&h=600&fit=crop&auto=format',  link: '/products?category=health-care',     color: '#0EA5E9' },
-    { name: 'Electric Rides',  image: 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=500&h=600&fit=crop&auto=format', link: '/products?category=electric-vehicles', color: '#F59E0B' },
-    { name: 'Cradles & Cribs', image: 'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=500&h=600&fit=crop&auto=format',  link: '/products?category=cradles-cribs',   color: '#EC4899' },
-  ];
-
-  return (
-    <section style={{
-      padding: 'clamp(36px,5vw,52px) clamp(12px,2vw,16px)',
-      background: 'linear-gradient(180deg, #fff 0%, #f8f9fb 100%)',
-    }}>
-      <div style={{ maxWidth: '1300px', margin: '0 auto' }}>
-        <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-          <h2 style={{
-            fontSize: 'clamp(1.1rem,2.5vw,1.8rem)',
-            fontWeight: '900',
-            color: '#1a1a2e',
-            margin: '0 0 10px',
-            fontFamily: 'Nunito, sans-serif',
-            textTransform: 'uppercase',
-            letterSpacing: '2px',
-          }}>
-            {secTitle}
-          </h2>
-          <div style={{
-            width: '60px', height: '3px',
-            background: 'linear-gradient(90deg, #FF6B35, #7B2FBE)',
-            borderRadius: '999px',
-            margin: '0 auto',
-          }} />
-        </div>
-
-        {/* ✅ Responsive grid via className */}
-        <div className="promoGrid">
-          {categories.map((cat, i) => (
-            <Link key={i} href={cat.link} style={{ textDecoration: 'none' }}>
-              <div
-                className="promoCard"
-                style={{
-                  background: '#fff',
-                  borderRadius: '16px',
-                  overflow: 'hidden',
-                  border: `2px solid ${cat.color}30`,
-                  transition: 'all 0.3s ease',
-                  cursor: 'pointer',
-                  height: '100%',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.transform = 'translateY(-6px)';
-                  e.currentTarget.style.boxShadow = `0 14px 36px ${cat.color}25`;
-                  e.currentTarget.style.borderColor = cat.color;
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = 'none';
-                  e.currentTarget.style.borderColor = `${cat.color}30`;
-                }}
-              >
-                <div className="promoImgWrap">
-                  <img
-                    src={cat.image}
-                    alt={cat.name}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      objectPosition: 'center',
-                      display: 'block',
-                      transition: 'transform 0.4s ease',
-                    }}
-                    onError={e => {
-                      e.currentTarget.style.display = 'none';
-                      e.currentTarget.parentElement.innerHTML =
-                        `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;font-size:3rem;background:#f0f0f0">${cat.name.charAt(0)}</div>`;
-                    }}
-                  />
-                </div>
-
-                <div style={{
-                  padding: '11px 6px',
-                  background: '#1a1a2e',
-                  textAlign: 'center',
-                }}>
-                  <p style={{
-                    fontSize: 'clamp(0.62rem,1.1vw,0.78rem)',
-                    fontWeight: '800',
-                    color: '#fff',
-                    margin: 0,
-                    fontFamily: 'Nunito, sans-serif',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.3px',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    gap: '4px',
-                    lineHeight: 1.3,
-                    whiteSpace: 'nowrap',
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                  }}>
-                    {cat.name}
-                    <span style={{ fontSize: '0.85rem', flexShrink: 0 }}>›</span>
-                  </p>
-                </div>
-              </div>
-            </Link>
-          ))}
-        </div>
-
-        {/* ✅ Proper responsive grid */}
-        <style>{`
-          .promoGrid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 14px;
-          }
-          .promoImgWrap {
-            width: 100%;
-            height: clamp(160px, 22vw, 220px);
-            overflow: hidden;
-            background: #f8f8f8;
-          }
-          @media (max-width: 1200px) {
-            .promoGrid { grid-template-columns: repeat(5, 1fr); gap: 12px; }
-          }
-          @media (max-width: 900px) {
-            .promoGrid { grid-template-columns: repeat(4, 1fr); gap: 10px; }
-            .promoImgWrap { height: clamp(140px, 24vw, 180px); }
-          }
-          @media (max-width: 640px) {
-            .promoGrid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
-            .promoImgWrap { height: clamp(120px, 30vw, 160px); }
-          }
-          @media (max-width: 420px) {
-            .promoGrid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
-            .promoImgWrap { height: clamp(130px, 38vw, 170px); }
-          }
-        `}</style>
-      </div>
-    </section>
-  );
-}
-/* ═══════════════════════════════════════
-   7. GENDER — ✅ DB section name
+   6. GENDER
 ═══════════════════════════════════════ */
 function GenderCard({ banner, isGirl }) {
   const [hovered, setHovered] = useState(false);
-  const color = isGirl ? '#EC4899' : '#0EA5E9';
+  const color      = isGirl ? '#EC4899' : '#0EA5E9';
   const defaultImg = isGirl
     ? 'https://images.unsplash.com/photo-1476703993599-0035a21b17a9?w=600&h=800&fit=crop&auto=format'
     : 'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=600&h=800&fit=crop&auto=format';
@@ -666,9 +488,7 @@ function GenderCard({ banner, isGirl }) {
         <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, padding: 'clamp(20px,3vw,32px)', zIndex: 2 }}>
           <h3 style={{ fontSize: 'clamp(1.2rem,2.5vw,1.9rem)', fontWeight: '800', color: 'white', margin: '0 0 6px', textShadow: '0 2px 10px rgba(0,0,0,0.25)', fontFamily: 'Nunito, sans-serif' }}>{title}</h3>
           <p style={{ fontSize: 'clamp(0.78rem,1.2vw,0.90rem)', color: 'rgba(255,255,255,0.88)', margin: '0 0 16px', fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>{sub}</p>
-          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '9px 22px', background: 'white', color: color, borderRadius: '999px', fontSize: '0.86rem', fontWeight: '800', fontFamily: 'Nunito, sans-serif', boxShadow: '0 4px 14px rgba(0,0,0,0.20)' }}>
-            Shop Now →
-          </span>
+          <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', padding: '9px 22px', background: 'white', color: color, borderRadius: '999px', fontSize: '0.86rem', fontWeight: '800', fontFamily: 'Nunito, sans-serif', boxShadow: '0 4px 14px rgba(0,0,0,0.20)' }}>Shop Now →</span>
         </div>
       </div>
     </Link>
@@ -676,8 +496,10 @@ function GenderCard({ banner, isGirl }) {
 }
 
 function GenderSection({ banners, sectionSettings = {} }) {
-  const secTitle = sectionSettings['gender']?.title || 'Shop by Style';
-  const secEmoji = sectionSettings['gender']?.emoji || '👗';
+  const s        = sectionSettings['gender'] || {};
+  const secTitle = s.title       || 'Shop by Style';
+  const secEmoji = s.emoji       || '👗';
+  const secDesc  = s.description || '';
 
   const girlBanner = banners?.find(b => b.gender === 'girl');
   const boyBanner  = banners?.find(b => b.gender === 'boy');
@@ -689,9 +511,14 @@ function GenderSection({ banners, sectionSettings = {} }) {
           <span style={{ display: 'inline-block', padding: '5px 18px', background: 'linear-gradient(135deg, #FDF2F8, #E0F2FE)', border: '1.5px solid #FCE7F3', borderRadius: '999px', fontSize: '0.72rem', fontWeight: '800', color: '#BE185D', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', fontFamily: 'Nunito, sans-serif' }}>
             {secEmoji} Shop By Style
           </span>
-          <h2 style={{ fontSize: 'clamp(1.6rem,3vw,2.6rem)', fontWeight: '800', color: '#2D1A4A', margin: 0, fontFamily: 'Nunito, sans-serif' }}>
+          <h2 style={{ fontSize: 'clamp(1.6rem,3vw,2.6rem)', fontWeight: '800', color: '#2D1A4A', margin: '0 0 8px', fontFamily: 'Nunito, sans-serif' }}>
             {secEmoji} {secTitle}
           </h2>
+          {secDesc && (
+            <p style={{ fontSize: '0.88rem', color: '#9585B0', margin: 0, fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>
+              {secDesc}
+            </p>
+          )}
         </div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 'clamp(14px,2.5vw,28px)', maxWidth: '900px', margin: '0 auto' }}>
           <GenderCard banner={girlBanner} isGirl={true}  />
@@ -703,11 +530,14 @@ function GenderSection({ banners, sectionSettings = {} }) {
 }
 
 /* ═══════════════════════════════════════
-   8. BABY FOOD — ✅ DB section name
+   7. BABY FOOD — Flip
 ═══════════════════════════════════════ */
 function BabyFoodSection({ banners, sectionSettings = {} }) {
-  const secTitle = sectionSettings['baby-food']?.title || 'Baby Food & Nutrition';
-  const secEmoji = sectionSettings['baby-food']?.emoji || '🍼';
+  const s        = sectionSettings['baby-food'] || {};
+  const secTitle = s.title       || 'Baby Food & Nutrition';
+  const secEmoji = s.emoji       || '🍼';
+  const secDesc  = s.description || '';
+  const secBtn   = s.buttonText  || 'View All Baby Food';
 
   if (!banners?.length) return null;
   const defaultFoodColors = ['#FF6B35', '#10B981', '#EF4444', '#0EA5E9', '#F59E0B', '#7B2FBE'];
@@ -722,433 +552,292 @@ function BabyFoodSection({ banners, sectionSettings = {} }) {
           <h2 style={{ fontSize: 'clamp(1.6rem,3vw,2.6rem)', fontWeight: '800', color: '#2D1A4A', margin: '0 0 8px', fontFamily: 'Nunito, sans-serif' }}>
             {secEmoji} {secTitle}
           </h2>
-          <p style={{ fontSize: '0.95rem', color: '#9585B0', margin: 0, fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>
-            Healthy, tasty & nutritious food for your little one
-          </p>
+          {secDesc && (
+            <p style={{ fontSize: '0.88rem', color: '#9585B0', margin: 0, fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>
+              {secDesc}
+            </p>
+          )}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(150px,18vw,200px), 1fr))', gap: '18px' }}>
+        <div className="bfGrid">
           {banners.map((banner, i) => {
-            const color  = banner.color || defaultFoodColors[i % defaultFoodColors.length];
-            const imgUrl = banner.image?.url || null;
-            const link   = banner.buttonLink || '/products?category=food';
+            const color    = banner.color || defaultFoodColors[i % defaultFoodColors.length];
+            const frontImg = banner.image?.url || null;
+            const backImg  = banner.mobileImage?.url || frontImg;
+            const link     = banner.buttonLink || '/products?category=food';
             return (
-              <Link key={banner.id || i} href={link} style={{ textDecoration: 'none' }}>
-                <div style={{ background: 'white', borderRadius: '22px', overflow: 'hidden', boxShadow: '0 4px 20px rgba(0,0,0,0.07)', border: '2px solid #b8e6f0', transition: 'all 0.3s ease', cursor: 'pointer' }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-8px)'; e.currentTarget.style.boxShadow = `0 20px 48px ${color}25`; e.currentTarget.style.borderColor = color; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 4px 20px rgba(0,0,0,0.07)'; e.currentTarget.style.borderColor = 'transparent'; }}
-                >
-                  <div style={{ height: '4px', background: color }} />
-                  <div style={{ height: 'clamp(120px,16vw,160px)', overflow: 'hidden', background: imgUrl ? '#f8f8f8' : `${color}12`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '4rem' }}>
-                    {imgUrl ? (
-                      <img src={imgUrl} alt={banner.title} style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', display: 'block', padding: '8px', boxSizing: 'border-box' }} />
-                    ) : (
-                      <span>{banner.emoji || '🍼'}</span>
-                    )}
+              <FlipCard key={banner.id || i} sceneClassName="bfFlipScene" href={link}>
+                <div className="flipFace flipFront bfCard" style={{ borderColor: `${color}40` }}>
+                  <div className="bfImgWrap" style={{ background: frontImg ? '#f8f8f8' : `${color}12` }}>
+                    {frontImg
+                      ? <img src={frontImg} alt={banner.title} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '8px', boxSizing: 'border-box' }} />
+                      : <span style={{ fontSize: '4rem' }}>{banner.emoji || '🍼'}</span>}
                   </div>
-                  <div style={{ padding: '14px' }}>
+                  <div className="bfInfo">
                     <h3 style={{ fontSize: '0.92rem', fontWeight: '800', color: '#2D1A4A', margin: '0 0 4px', fontFamily: 'Nunito, sans-serif' }}>{banner.title}</h3>
-                    {banner.subtitle && <p style={{ fontSize: '0.74rem', color: '#9585B0', margin: '0 0 10px', fontWeight: '500', fontFamily: 'Nunito, sans-serif', lineHeight: 1.4 }}>{banner.subtitle}</p>}
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                      <span style={{ fontSize: '0.78rem', fontWeight: '800', color: color, fontFamily: 'Nunito, sans-serif' }}>Shop Now →</span>
-                      <div style={{ width: '30px', height: '30px', borderRadius: '50%', background: color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1rem' }}>{banner.emoji || '🍼'}</div>
-                    </div>
+                    <span style={{ fontSize: '0.78rem', fontWeight: '800', color, fontFamily: 'Nunito, sans-serif' }}>Shop Now →</span>
                   </div>
                 </div>
-              </Link>
+                <div className="flipFace flipBack bfCard" style={{ borderColor: color }}>
+                  <div className="bfImgWrap" style={{ background: backImg ? '#f8f8f8' : `${color}25` }}>
+                    {backImg
+                      ? <img src={backImg} alt={banner.title} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '8px', boxSizing: 'border-box' }} />
+                      : <span style={{ fontSize: '4rem' }}>🍎</span>}
+                  </div>
+                  <div className="bfInfo" style={{ background: color, color: 'white' }}>
+                    <h3 style={{ fontSize: '0.92rem', fontWeight: '800', margin: '0 0 4px', color: 'white', fontFamily: 'Nunito, sans-serif' }}>{banner.title}</h3>
+                    <span style={{ fontSize: '0.78rem', fontWeight: '800', color: 'white', fontFamily: 'Nunito, sans-serif' }}>View Details →</span>
+                  </div>
+                </div>
+              </FlipCard>
             );
           })}
         </div>
 
         <div style={{ textAlign: 'center', marginTop: '32px' }}>
           <Link href="/products?category=food" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '11px 28px', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', borderRadius: '999px', textDecoration: 'none', fontWeight: '800', fontSize: '0.90rem', boxShadow: '0 6px 18px rgba(16,185,129,0.28)', fontFamily: 'Nunito, sans-serif' }}>
-            View All Baby Food 🍎
+            {secBtn} 🍎
           </Link>
         </div>
+
+        <style>{`
+          .bfGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 18px; }
+          .bfFlipScene { height: 280px; }
+          .bfCard { background: white; border: 2px solid transparent; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.07); display: flex; flex-direction: column; }
+          .bfImgWrap { flex: 1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+          .bfInfo { padding: 12px 14px; background: white; }
+          @media (max-width: 700px) { .bfGrid { grid-template-columns: repeat(2, 1fr); gap: 12px; } .bfFlipScene { height: 260px; } }
+        `}</style>
       </div>
     </section>
   );
 }
 
 /* ═══════════════════════════════════════
-   9. TOYS — ✅ DB section name
+   8. TOYS — Flip
 ═══════════════════════════════════════ */
 function ToysSection({ banners, sectionSettings = {} }) {
-  const secTitle = sectionSettings['toys']?.title || 'Toys & Games';
-  const secEmoji = sectionSettings['toys']?.emoji || '🧸';
+  const s        = sectionSettings['toys'] || {};
+  const secTitle = s.title       || 'Toys & Games';
+  const secEmoji = s.emoji       || '🧸';
+  const secDesc  = s.description || '';
+  const secBtn   = s.buttonText  || 'View All Toys';
 
   if (!banners?.length) return null;
   const sectionBg = getSectionBackgroundUrl(banners);
 
   return (
     <section style={{ position: 'relative', padding: 'clamp(36px,5vw,68px) clamp(12px,2vw,20px)', overflow: 'hidden' }}>
-      {sectionBg ? (
-        <img src={sectionBg} alt="Toys background" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', opacity: 0.18, filter: 'blur(1px)', transform: 'scale(1.04)' }} />
-      ) : (
-        <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 50%, #FDF4FF 100%)' }} />
-      )}
+      {sectionBg
+        ? <img src={sectionBg} alt="bg" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover', opacity: 0.18, filter: 'blur(1px)' }} />
+        : <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #FEF2F2 0%, #FFF7ED 50%, #FDF4FF 100%)' }} />
+      }
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(255,255,255,0.58), rgba(255,255,255,0.82))' }} />
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 2 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <span style={{ display: 'inline-block', padding: '4px 14px', background: 'rgba(255,255,255,0.72)', backdropFilter: 'blur(8px)', border: '1.5px solid #FCA5A5', borderRadius: '999px', fontSize: '0.70rem', fontWeight: '800', color: '#DC2626', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', fontFamily: 'Nunito, sans-serif' }}>
+            <span style={{ display: 'inline-block', padding: '4px 14px', background: 'rgba(255,255,255,0.72)', border: '1.5px solid #FCA5A5', borderRadius: '999px', fontSize: '0.70rem', fontWeight: '800', color: '#DC2626', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', fontFamily: 'Nunito, sans-serif' }}>
               🎠 Play Time
             </span>
-            <h2 style={{ fontSize: 'clamp(1.3rem,2.5vw,2rem)', fontWeight: '800', color: '#2D1A4A', margin: 0, fontFamily: 'Nunito, sans-serif' }}>
+            <h2 style={{ fontSize: 'clamp(1.3rem,2.5vw,2rem)', fontWeight: '800', color: '#2D1A4A', margin: '0 0 4px', fontFamily: 'Nunito, sans-serif' }}>
               {secEmoji} {secTitle}
             </h2>
+            {secDesc && (
+              <p style={{ fontSize: '0.84rem', color: '#9585B0', margin: 0, fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>
+                {secDesc}
+              </p>
+            )}
           </div>
           <Link href="/products?category=toys" style={{ padding: '9px 20px', background: 'linear-gradient(135deg,#EF4444,#7B2FBE)', color: 'white', borderRadius: '999px', textDecoration: 'none', fontSize: '0.82rem', fontWeight: '700', fontFamily: 'Nunito, sans-serif' }}>
-            View All Toys →
+            {secBtn} →
           </Link>
         </div>
 
         <div className="toysGrid">
           {banners.map((banner, i) => {
-            const imageUrl = banner.image?.url || null;
-            const link = banner.buttonLink || '/products?category=toys';
-            const color = banner.color || '#EF4444';
+            const frontImg = banner.image?.url || null;
+            const backImg  = banner.mobileImage?.url || frontImg;
+            const link     = banner.buttonLink || '/products?category=toys';
+            const color    = banner.color || '#EF4444';
             return (
-              <Link key={banner.id || i} href={link} style={{ textDecoration: 'none' }}>
-                <div
-                  style={{ background: 'rgba(255,255,255,0.86)', backdropFilter: 'blur(12px)', borderRadius: '22px', overflow: 'hidden', boxShadow: '0 8px 24px rgba(45,26,74,0.08)', border: '2px solid #b8e6f0', transition: 'all 0.3s ease', cursor: 'pointer', height: '100%' }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-6px)'; e.currentTarget.style.boxShadow = '0 18px 44px rgba(239,68,68,0.16)'; e.currentTarget.style.borderColor = `${color}55`; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(45,26,74,0.08)'; e.currentTarget.style.borderColor = '#b8e6f0'; }}
-                >
-                  <div className="toysImgWrap" style={{ overflow: 'hidden', background: imageUrl ? '#fffaf9' : 'linear-gradient(135deg, #FEF2F2, #FFF7ED)', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative' }}>
-                    {imageUrl ? (
-                      <img src={imageUrl} alt={banner.title} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '12px', boxSizing: 'border-box', transition: 'transform 0.35s ease' }} />
-                    ) : (
-                      <span style={{ fontSize: '4rem' }}>{banner.emoji || '🧸'}</span>
-                    )}
-                    <div style={{ position: 'absolute', top: '10px', left: '10px', padding: '4px 10px', borderRadius: '999px', background: color, color: 'white', fontSize: '10px', fontWeight: '800', fontFamily: 'Nunito, sans-serif', boxShadow: `0 6px 14px ${color}40` }}>
-                      Play
-                    </div>
+              <FlipCard key={banner.id || i} sceneClassName="toysFlipScene" href={link}>
+                <div className="flipFace flipFront toysCard">
+                  <div className="toysImgWrap" style={{ background: frontImg ? '#fffaf9' : 'linear-gradient(135deg, #FEF2F2, #FFF7ED)' }}>
+                    {frontImg
+                      ? <img src={frontImg} alt={banner.title} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '12px', boxSizing: 'border-box' }} />
+                      : <span style={{ fontSize: '4rem' }}>{banner.emoji || '🧸'}</span>}
+                    <div style={{ position: 'absolute', top: '10px', left: '10px', padding: '4px 10px', borderRadius: '999px', background: color, color: 'white', fontSize: '10px', fontWeight: '800', fontFamily: 'Nunito, sans-serif' }}>Play</div>
                   </div>
-                  <div style={{ padding: '14px 14px 16px' }}>
+                  <div className="toysInfo">
                     <h3 style={{ fontSize: '0.92rem', fontWeight: '800', color: '#2D1A4A', margin: '0 0 5px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'Nunito, sans-serif' }}>{banner.title}</h3>
-                    {banner.subtitle && <p style={{ fontSize: '0.74rem', color: '#8E7AA8', margin: '0 0 10px', fontWeight: '600', lineHeight: 1.4, overflow: 'hidden', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', fontFamily: 'Nunito, sans-serif' }}>{banner.subtitle}</p>}
-                    <span style={{ fontSize: '0.80rem', fontWeight: '800', color: color, fontFamily: 'Nunito, sans-serif' }}>Shop Now →</span>
+                    <span style={{ fontSize: '0.80rem', fontWeight: '800', color, fontFamily: 'Nunito, sans-serif' }}>Shop Now →</span>
                   </div>
                 </div>
-              </Link>
+                <div className="flipFace flipBack toysCard" style={{ border: `2px solid ${color}` }}>
+                  <div className="toysImgWrap" style={{ background: backImg ? '#fffaf9' : `${color}15` }}>
+                    {backImg
+                      ? <img src={backImg} alt={banner.title} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '12px', boxSizing: 'border-box' }} />
+                      : <span style={{ fontSize: '4rem' }}>🎁</span>}
+                  </div>
+                  <div className="toysInfo" style={{ background: color }}>
+                    <h3 style={{ fontSize: '0.92rem', fontWeight: '800', color: 'white', margin: '0 0 5px', fontFamily: 'Nunito, sans-serif' }}>{banner.title}</h3>
+                    <span style={{ fontSize: '0.80rem', fontWeight: '800', color: 'white', fontFamily: 'Nunito, sans-serif' }}>View Details →</span>
+                  </div>
+                </div>
+              </FlipCard>
             );
           })}
         </div>
 
         <style>{`
-          .toysGrid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 18px;
-          }
-          .toysImgWrap { height: clamp(160px, 20vw, 210px); }
-          @media (max-width: 1024px) {
-            .toysGrid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
-            .toysImgWrap { height: clamp(170px, 24vw, 210px); }
-          }
-          @media (max-width: 700px) {
-            .toysGrid { grid-template-columns: repeat(2, 1fr); gap: 12px; }
-            .toysImgWrap { height: clamp(160px, 38vw, 200px); }
-          }
-          @media (max-width: 380px) {
-            .toysGrid { grid-template-columns: 1fr; gap: 12px; }
-            .toysImgWrap { height: 200px; }
-          }
+          .toysGrid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 18px; }
+          .toysFlipScene { height: 320px; }
+          .toysCard { background: rgba(255,255,255,0.86); backdrop-filter: blur(12px); border: 2px solid #b8e6f0; border-radius: 22px; overflow: hidden; display: flex; flex-direction: column; }
+          .toysImgWrap { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; }
+          .toysInfo { padding: 12px 14px; background: white; }
+          @media (max-width: 1024px) { .toysGrid { grid-template-columns: repeat(3, 1fr); gap: 14px; } .toysFlipScene { height: 270px; } }
+          @media (max-width: 700px)  { .toysGrid { grid-template-columns: repeat(2, 1fr); gap: 12px; } .toysFlipScene { height: 260px; } }
+          @media (max-width: 380px)  { .toysGrid { grid-template-columns: 1fr; } }
         `}</style>
       </div>
     </section>
   );
 }
+
 /* ═══════════════════════════════════════
-   10. CARE — ✅ DB section name
-═══════════════════════════════════════ */
-/* ═══════════════════════════════════════
-   10. CARE — ✅ BENTO + ASYMMETRIC MOSAIC
-   Personal Care = Bento Grid (Option 2)
-   Health Care   = Asymmetric Mosaic (Option 4)
-═══════════════════════════════════════ */
-/* ═══════════════════════════════════════
-   10. CARE — ✅ FINAL: Bento + Mosaic
-   Personal Care = Bento Grid
-   Health Care   = Asymmetric Mosaic
+   9. CARE — Pure Image Flip (No Text on Cards)
 ═══════════════════════════════════════ */
 function CareSection({ personalCareBanners, healthCareBanners, sectionSettings = {} }) {
-  const personalTitle = sectionSettings['personal-care']?.title || 'Personal Baby Care';
-  const personalEmoji = sectionSettings['personal-care']?.emoji || '🧴';
-  const healthTitle   = sectionSettings['health-care']?.title   || 'Health & Safety';
-  const healthEmoji   = sectionSettings['health-care']?.emoji   || '💊';
+  // ===== Editable text from Section Settings =====
+  const ws            = sectionSettings['wellness'] || {};
+  const wellnessBadge = ws.badge       || '🌿 Baby Wellness';
+  const wellnessTitle = ws.title       || 'Wellness & Care Products';
+  const wellnessDesc  = ws.description || "Trusted products for your little one's health & happiness";
 
-  const getItems = (banners, type, fallbackLink) => {
-    return (banners || []).flatMap(b => {
-      if (b.gridImages?.length > 0) {
-        return b.gridImages.map(img => ({
-          url: img.url || '', title: img.title || b.title || '', brand: img.brand || '',
-          price: img.price || '', link: img.link || b.buttonLink || fallbackLink, type,
-        }));
-      }
-      if (b.image?.url) {
-        return [{ url: b.image.url, title: b.title || (type === 'personal' ? 'Personal Care' : 'Health Care'), brand: '', price: '', link: b.buttonLink || fallbackLink, type }];
-      }
-      return [];
-    });
+  const ps            = sectionSettings['personal-care'] || {};
+  const personalSub   = ps.subtitle    || '🧴 Baby Care Essentials';
+  const personalTitle = ps.title       || 'Personal Baby Care';
+  const personalDesc  = ps.description || 'Safe and gentle baby care products';
+  const personalBtn   = ps.buttonText  || 'View All';
+
+  const hs          = sectionSettings['health-care'] || {};
+  const healthSub   = hs.subtitle    || '💊 Stay Safe & Healthy';
+  const healthTitle = hs.title       || 'Health & Safety';
+  const healthDesc  = hs.description || 'Keep your baby safe and healthy';
+  const healthBtn   = hs.buttonText  || 'View All';
+
+  // ===== Extract images from banners (Front + Back) =====
+  const getImageItems = (banners, fallbackLink) => {
+    return (banners || []).map(b => ({
+      front: b.image?.url || '',
+      back:  b.mobileImage?.url || b.image?.url || '',
+      link:  b.buttonLink || fallbackLink,
+    })).filter(item => item.front);
   };
 
-  const personalItems = getItems(personalCareBanners, 'personal', '/products?category=personal-care');
-  const healthItems   = getItems(healthCareBanners,   'health',   '/products?category=health-care');
+  const personalItems = getImageItems(personalCareBanners, '/products?category=personal-care');
+  const healthItems   = getImageItems(healthCareBanners,   '/products?category=health-care');
 
   if (!personalItems.length && !healthItems.length) return null;
 
-  // ✅ Reusable Image Card
-  const ImageCard = ({ item, type, accentColor, badge, badgeIcon = '⭐' }) => (
-    <Link href={item.link} style={{ textDecoration: 'none', display: 'block', height: '100%' }}>
-      <div
-        style={{
-          borderRadius: '20px',
-          overflow: 'hidden',
-          position: 'relative',
-          height: '100%',
-          background: '#fff',
-          border: '2px solid #e5e7eb',
-          transition: 'all 0.35s cubic-bezier(0.22, 1, 0.36, 1)',
-          cursor: 'pointer',
-        }}
-        onMouseEnter={e => {
-          e.currentTarget.style.transform = 'translateY(-6px)';
-          e.currentTarget.style.borderColor = accentColor;
-          e.currentTarget.style.boxShadow = `0 18px 40px ${accentColor}30`;
-        }}
-        onMouseLeave={e => {
-          e.currentTarget.style.transform = 'translateY(0)';
-          e.currentTarget.style.borderColor = '#e5e7eb';
-          e.currentTarget.style.boxShadow = 'none';
-        }}
-      >
-        {item.url ? (
-          <img
-            src={item.url}
-            alt={item.title || type}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              objectPosition: 'center',
-              display: 'block',
-              padding: '8px',
-              boxSizing: 'border-box',
-              background: '#fff',
-              transition: 'transform 0.4s ease',
-            }}
-            onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-            onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-          />
+  // ===== Pure Image Flip Card (NO TEXT) =====
+  const PureImageCard = ({ item, accentColor, fallbackEmoji = '🖼️' }) => (
+    <FlipCard href={item.link} sceneClassName="careFlipScene">
+      {/* FRONT */}
+      <div className="flipFace flipFront" style={{ borderRadius: '20px', background: '#fff', border: `2px solid ${accentColor}30`, overflow: 'hidden' }}>
+        {item.front ? (
+          <img src={item.front} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
         ) : (
-          <div style={{
-            width: '100%', height: '100%',
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '4rem',
-            background: type === 'personal' ? '#F3E8FF' : '#ECFDF5',
-          }}>
-            {type === 'personal' ? '🧴' : '💊'}
-          </div>
-        )}
-
-        {/* Top-left badge */}
-        {badge && (
-          <div style={{
-            position: 'absolute', top: '12px', left: '12px',
-            display: 'inline-flex', alignItems: 'center', gap: '4px',
-            padding: '4px 10px', background: accentColor,
-            borderRadius: '999px', fontSize: '0.62rem', fontWeight: '800',
-            color: 'white',
-            fontFamily: 'Nunito, sans-serif',
-            boxShadow: `0 4px 12px ${accentColor}55`,
-            zIndex: 3,
-          }}>
-            {badgeIcon} {badge}
-          </div>
-        )}
-
-        {/* Bottom info gradient */}
-        {(item.title || item.price) && (
-          <div style={{
-            position: 'absolute', left: 0, right: 0, bottom: 0,
-            padding: '12px 14px 10px',
-            background: 'linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.40) 60%, transparent)',
-            color: 'white',
-            zIndex: 2,
-          }}>
-            {item.brand && (
-              <p style={{
-                fontSize: '0.56rem', fontWeight: '800',
-                color: 'rgba(255,255,255,0.80)',
-                margin: '0 0 2px',
-                textTransform: 'uppercase', letterSpacing: '0.6px',
-                fontFamily: 'Nunito, sans-serif',
-              }}>{item.brand}</p>
-            )}
-            {item.title && (
-              <p style={{
-                fontSize: '0.78rem', fontWeight: '800',
-                color: 'white',
-                margin: 0, lineHeight: 1.25,
-                fontFamily: 'Nunito, sans-serif',
-                overflow: 'hidden',
-                display: '-webkit-box',
-                WebkitLineClamp: 2,
-                WebkitBoxOrient: 'vertical',
-              }}>{item.title}</p>
-            )}
-            {item.price && (
-              <p style={{
-                fontSize: '0.90rem', fontWeight: '900',
-                color: 'white',
-                margin: '3px 0 0',
-                fontFamily: 'Nunito, sans-serif',
-              }}>₹{item.price}</p>
-            )}
-          </div>
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3.5rem', background: `${accentColor}10` }}>{fallbackEmoji}</div>
         )}
       </div>
-    </Link>
+      {/* BACK */}
+      <div className="flipFace flipBack" style={{ borderRadius: '20px', background: '#fff', border: `2px solid ${accentColor}`, overflow: 'hidden' }}>
+        {item.back ? (
+          <img src={item.back} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
+        ) : (
+          <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3.5rem', background: `${accentColor}20` }}>{fallbackEmoji}</div>
+        )}
+      </div>
+    </FlipCard>
   );
 
-  // ✅ Section Header
-  const SectionHeader = ({ title, emoji, subtitle, accentColor, linkAll }) => (
-    <div style={{
-      display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-      marginBottom: '20px', flexWrap: 'wrap', gap: '12px',
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
-        <div style={{
-          width: '5px', height: '38px',
-          borderRadius: '999px', background: accentColor,
-          boxShadow: `0 0 12px ${accentColor}80`,
-        }} />
-        <div>
-          <p style={{
-            fontSize: '0.68rem', fontWeight: '800', color: accentColor,
-            margin: '0 0 4px', textTransform: 'uppercase', letterSpacing: '1.2px',
-            fontFamily: 'Nunito, sans-serif',
-          }}>
-            {emoji} {subtitle}
-          </p>
-          <h3 style={{
-            fontSize: 'clamp(1.15rem, 2.2vw, 1.5rem)', fontWeight: '800',
-            color: '#2D1A4A', margin: 0, fontFamily: 'Nunito, sans-serif',
-          }}>{title}</h3>
+  // ===== Section Header (editable text) =====
+  const SectionHeader = ({ title, subtitle, description, accentColor, linkAll, btnText }) => (
+    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', minWidth: 0, flex: 1 }}>
+        <div style={{ width: '5px', height: '38px', borderRadius: '999px', background: accentColor, boxShadow: `0 0 12px ${accentColor}80`, flexShrink: 0 }} />
+        <div style={{ minWidth: 0 }}>
+          <p style={{ fontSize: '0.68rem', fontWeight: '800', color: accentColor, margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '1.2px', fontFamily: 'Nunito, sans-serif' }}>{subtitle}</p>
+          <h3 style={{ fontSize: 'clamp(1.15rem, 2.2vw, 1.5rem)', fontWeight: '800', color: '#2D1A4A', margin: '0 0 2px', fontFamily: 'Nunito, sans-serif' }}>{title}</h3>
+          {description && <p style={{ fontSize: '0.80rem', color: '#9585B0', margin: 0, fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>{description}</p>}
         </div>
       </div>
-      <Link href={linkAll} style={{
-        padding: '8px 20px',
-        background: `linear-gradient(135deg, ${accentColor}, ${accentColor}DD)`,
-        color: 'white',
-        borderRadius: '999px', textDecoration: 'none',
-        fontSize: '0.78rem', fontWeight: '800',
-        fontFamily: 'Nunito, sans-serif',
-        boxShadow: `0 6px 16px ${accentColor}45`,
-        transition: 'transform 0.2s',
-      }}
-        onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
-        onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
-      >View All →</Link>
+      <Link href={linkAll} style={{ padding: '8px 20px', background: `linear-gradient(135deg, ${accentColor}, ${accentColor}DD)`, color: 'white', borderRadius: '999px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: '800', fontFamily: 'Nunito, sans-serif', boxShadow: `0 6px 16px ${accentColor}45`, whiteSpace: 'nowrap', flexShrink: 0 }}>
+        {btnText} →
+      </Link>
     </div>
   );
 
-  // ✅ BENTO GRID (Personal Care)
+  // ===== Bento Grid — 4 image cards (Personal Care) =====
   const BentoGrid = ({ items, accentColor }) => {
     const filled = [...items];
-    while (filled.length < 5) filled.push(...items);
-    const display = filled.slice(0, 5);
-
+    while (filled.length < 4) filled.push(items[0] || { front: '', back: '', link: '/products' });
+    const display = filled.slice(0, 4);
     return (
       <div className="bentoGrid">
-        <div className="bentoBig">
-          <ImageCard item={display[0]} type="personal" accentColor={accentColor} badge="Featured" badgeIcon="⭐" />
-        </div>
-        <div className="bentoTop1">
-          <ImageCard item={display[1]} type="personal" accentColor={accentColor} badge="Best" badgeIcon="🏆" />
-        </div>
-        <div className="bentoTop2">
-          <ImageCard item={display[2]} type="personal" accentColor={accentColor} badge="New" badgeIcon="✨" />
-        </div>
-        <div className="bentoWide">
-          <ImageCard item={display[3]} type="personal" accentColor={accentColor} badge="Trending" badgeIcon="🔥" />
-        </div>
+        <div className="bentoBig"><PureImageCard item={display[0]} accentColor={accentColor} fallbackEmoji="🧴" /></div>
+        <div className="bentoTop1"><PureImageCard item={display[1]} accentColor={accentColor} fallbackEmoji="🧴" /></div>
+        <div className="bentoTop2"><PureImageCard item={display[2]} accentColor={accentColor} fallbackEmoji="🧴" /></div>
+        <div className="bentoWide"><PureImageCard item={display[3]} accentColor={accentColor} fallbackEmoji="🧴" /></div>
       </div>
     );
   };
 
-  // ✅ ASYMMETRIC MOSAIC (Health Care)
-  const AsymmetricMosaic = ({ items, accentColor }) => {
+  // ===== Mosaic Grid — 5 image cards (Health Care) =====
+  const MosaicGrid = ({ items, accentColor }) => {
     const filled = [...items];
-    while (filled.length < 5) filled.push(...items);
+    while (filled.length < 5) filled.push(items[0] || { front: '', back: '', link: '/products' });
     const display = filled.slice(0, 5);
-
     return (
       <div className="mosaicGrid">
-        <div className="mosaicTL">
-          <ImageCard item={display[0]} type="health" accentColor={accentColor} badge="Safe" badgeIcon="🛡️" />
-        </div>
-        <div className="mosaicTR">
-          <ImageCard item={display[1]} type="health" accentColor={accentColor} badge="Featured" badgeIcon="⭐" />
-        </div>
-        <div className="mosaicBL">
-          <ImageCard item={display[2]} type="health" accentColor={accentColor} badge="Essential" badgeIcon="💎" />
-        </div>
-        <div className="mosaicBC">
-          <ImageCard item={display[3]} type="health" accentColor={accentColor} badge="New" badgeIcon="✨" />
-        </div>
-        <div className="mosaicBR">
-          <ImageCard item={display[4]} type="health" accentColor={accentColor} badge="Top" badgeIcon="🏆" />
-        </div>
+        <div className="mosaicTL"><PureImageCard item={display[0]} accentColor={accentColor} fallbackEmoji="💊" /></div>
+        <div className="mosaicTR"><PureImageCard item={display[1]} accentColor={accentColor} fallbackEmoji="💊" /></div>
+        <div className="mosaicBL"><PureImageCard item={display[2]} accentColor={accentColor} fallbackEmoji="💊" /></div>
+        <div className="mosaicBC"><PureImageCard item={display[3]} accentColor={accentColor} fallbackEmoji="💊" /></div>
+        <div className="mosaicBR"><PureImageCard item={display[4]} accentColor={accentColor} fallbackEmoji="💊" /></div>
       </div>
     );
   };
 
   return (
-    <section style={{
-      padding: 'clamp(42px,6vw,68px) 20px',
-      background: 'linear-gradient(135deg, #FAFAFA 0%, #F8F4FF 50%, #F0FDF4 100%)',
-    }}>
+    <section style={{ padding: 'clamp(42px,6vw,68px) 20px', background: 'linear-gradient(135deg, #FAFAFA 0%, #F8F4FF 50%, #F0FDF4 100%)' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
-        {/* Main Title */}
+
+        {/* Main Heading (editable from settings) */}
         <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-          <span style={{
-            display: 'inline-block', padding: '6px 20px',
-            background: 'linear-gradient(135deg, #F3E8FF, #ECFDF5)',
-            border: '1.5px solid #DFC5F8', borderRadius: '999px',
-            fontSize: '0.72rem', fontWeight: '800', color: '#7B2FBE',
-            textTransform: 'uppercase', letterSpacing: '1.2px',
-            marginBottom: '12px', fontFamily: 'Nunito, sans-serif',
-          }}>
-            🌿 Baby Wellness
+          <span style={{ display: 'inline-block', padding: '6px 20px', background: 'linear-gradient(135deg, #F3E8FF, #ECFDF5)', border: '1.5px solid #DFC5F8', borderRadius: '999px', fontSize: '0.72rem', fontWeight: '800', color: '#7B2FBE', textTransform: 'uppercase', letterSpacing: '1.2px', marginBottom: '12px', fontFamily: 'Nunito, sans-serif' }}>
+            {wellnessBadge}
           </span>
-          <h2 style={{
-            fontSize: 'clamp(1.6rem,3vw,2.4rem)', fontWeight: '800',
-            color: '#2D1A4A', margin: '0 0 8px', fontFamily: 'Nunito, sans-serif',
-          }}>
-            Wellness & Care Products
+          <h2 style={{ fontSize: 'clamp(1.6rem,3vw,2.4rem)', fontWeight: '800', color: '#2D1A4A', margin: '0 0 8px', fontFamily: 'Nunito, sans-serif' }}>
+            {wellnessTitle}
           </h2>
-          <p style={{
-            fontSize: '0.92rem', color: '#9585B0',
-            margin: 0, fontWeight: '500',
-            fontFamily: 'Nunito, sans-serif',
-          }}>
-            Trusted products for your little one's health & happiness
+          <p style={{ fontSize: '0.92rem', color: '#9585B0', margin: 0, fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>
+            {wellnessDesc}
           </p>
         </div>
 
-        {/* PERSONAL CARE — BENTO GRID */}
+        {/* Personal Care */}
         {personalItems.length > 0 && (
           <div style={{ marginBottom: '48px' }}>
             <SectionHeader
               title={personalTitle}
-              emoji={personalEmoji}
-              subtitle="Baby Care Essentials"
+              subtitle={personalSub}
+              description={personalDesc}
               accentColor="#7B2FBE"
               linkAll="/products?category=personal-care"
+              btnText={personalBtn}
             />
             <BentoGrid items={personalItems} accentColor="#7B2FBE" />
           </div>
@@ -1156,183 +845,175 @@ function CareSection({ personalCareBanners, healthCareBanners, sectionSettings =
 
         {/* Divider */}
         {personalItems.length > 0 && healthItems.length > 0 && (
-          <div style={{
-            height: '1px',
-            background: 'linear-gradient(90deg, transparent, #C8E6D0, transparent)',
-            margin: '0 0 48px',
-          }} />
+          <div style={{ height: '1px', background: 'linear-gradient(90deg, transparent, #C8E6D0, transparent)', margin: '0 0 48px' }} />
         )}
 
-        {/* HEALTH CARE — ASYMMETRIC MOSAIC */}
+        {/* Health Care */}
         {healthItems.length > 0 && (
           <div>
             <SectionHeader
               title={healthTitle}
-              emoji={healthEmoji}
-              subtitle="Stay Safe & Healthy"
+              subtitle={healthSub}
+              description={healthDesc}
               accentColor="#10B981"
               linkAll="/products?category=health-care"
+              btnText={healthBtn}
             />
-            <AsymmetricMosaic items={healthItems} accentColor="#10B981" />
+            <MosaicGrid items={healthItems} accentColor="#10B981" />
           </div>
         )}
       </div>
 
       <style>{`
-        /* ═══════════ BENTO GRID (Personal Care) ═══════════ */
-        .bentoGrid {
-          display: grid;
-          grid-template-columns: 1.4fr 1fr 1fr;
-          grid-template-rows: 185px 185px;
-          gap: 12px;
-          height: 382px;
-        }
-        .bentoBig    { grid-column: 1; grid-row: 1 / span 2; }
-        .bentoTop1   { grid-column: 2; grid-row: 1; }
-        .bentoTop2   { grid-column: 3; grid-row: 1; }
-        .bentoWide   { grid-column: 2 / span 2; grid-row: 2; }
+        .careFlipScene { height: 100%; }
+        .bentoGrid { display: grid; grid-template-columns: 1.4fr 1fr 1fr; grid-template-rows: 185px 185px; gap: 12px; height: 382px; }
+        .bentoBig  { grid-column: 1; grid-row: 1 / span 2; }
+        .bentoTop1 { grid-column: 2; grid-row: 1; }
+        .bentoTop2 { grid-column: 3; grid-row: 1; }
+        .bentoWide { grid-column: 2 / span 2; grid-row: 2; }
 
-        /* ═══════════ ASYMMETRIC MOSAIC (Health) ═══════════ */
-        .mosaicGrid {
-          display: grid;
-          grid-template-columns: 1fr 1fr 1fr;
-          grid-template-rows: 1fr 1fr;
-          gap: 12px;
-          height: 380px;
-        }
-        .mosaicTL  { grid-column: 1; grid-row: 1; }
-        .mosaicTR  { grid-column: 2 / span 2; grid-row: 1; }
-        .mosaicBL  { grid-column: 1; grid-row: 2; }
-        .mosaicBC  { grid-column: 2; grid-row: 2; }
-        .mosaicBR  { grid-column: 3; grid-row: 2; }
+        .mosaicGrid { display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 12px; height: 380px; }
+        .mosaicTL { grid-column: 1; grid-row: 1; }
+        .mosaicTR { grid-column: 2 / span 2; grid-row: 1; }
+        .mosaicBL { grid-column: 1; grid-row: 2; }
+        .mosaicBC { grid-column: 2; grid-row: 2; }
+        .mosaicBR { grid-column: 3; grid-row: 2; }
 
-        /* ═══════════ TABLET (900px) ═══════════ */
         @media (max-width: 900px) {
-          .bentoGrid {
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 200px 160px 160px;
-            height: auto;
-          }
-          .bentoBig    { grid-column: 1 / span 2; grid-row: 1; }
-          .bentoTop1   { grid-column: 1; grid-row: 2; }
-          .bentoTop2   { grid-column: 2; grid-row: 2; }
-          .bentoWide   { grid-column: 1 / span 2; grid-row: 3; }
-
-          .mosaicGrid {
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 170px 170px 170px;
-            height: auto;
-          }
-          .mosaicTL  { grid-column: 1; grid-row: 1; }
-          .mosaicTR  { grid-column: 2; grid-row: 1; }
-          .mosaicBL  { grid-column: 1 / span 2; grid-row: 2; }
-          .mosaicBC  { grid-column: 1; grid-row: 3; }
-          .mosaicBR  { grid-column: 2; grid-row: 3; }
+          .bentoGrid { grid-template-columns: 1fr 1fr; grid-template-rows: 200px 160px 160px; height: auto; }
+          .bentoBig  { grid-column: 1 / span 2; grid-row: 1; }
+          .bentoTop1 { grid-column: 1; grid-row: 2; }
+          .bentoTop2 { grid-column: 2; grid-row: 2; }
+          .bentoWide { grid-column: 1 / span 2; grid-row: 3; }
+          .mosaicGrid { grid-template-columns: 1fr 1fr; grid-template-rows: 170px 170px 170px; height: auto; }
+          .mosaicTL { grid-column: 1; grid-row: 1; }
+          .mosaicTR { grid-column: 2; grid-row: 1; }
+          .mosaicBL { grid-column: 1 / span 2; grid-row: 2; }
+          .mosaicBC { grid-column: 1; grid-row: 3; }
+          .mosaicBR { grid-column: 2; grid-row: 3; }
         }
-
-        /* ═══════════ MOBILE (560px) ═══════════ */
         @media (max-width: 560px) {
-          .bentoGrid {
-            grid-template-columns: 1fr;
-            grid-template-rows: 200px 160px 160px 160px;
-          }
-          .bentoBig    { grid-column: 1; grid-row: 1; }
-          .bentoTop1   { grid-column: 1; grid-row: 2; }
-          .bentoTop2   { grid-column: 1; grid-row: 3; }
-          .bentoWide   { grid-column: 1; grid-row: 4; }
-
-          .mosaicGrid {
-            grid-template-columns: 1fr;
-            grid-template-rows: 170px 170px 170px 170px 170px;
-          }
-          .mosaicTL  { grid-column: 1; grid-row: 1; }
-          .mosaicTR  { grid-column: 1; grid-row: 2; }
-          .mosaicBL  { grid-column: 1; grid-row: 3; }
-          .mosaicBC  { grid-column: 1; grid-row: 4; }
-          .mosaicBR  { grid-column: 1; grid-row: 5; }
+          .bentoGrid { grid-template-columns: 1fr; grid-template-rows: 200px 160px 160px 160px; }
+          .bentoBig { grid-column: 1; grid-row: 1; }
+          .bentoTop1 { grid-column: 1; grid-row: 2; }
+          .bentoTop2 { grid-column: 1; grid-row: 3; }
+          .bentoWide { grid-column: 1; grid-row: 4; }
+          .mosaicGrid { grid-template-columns: 1fr; grid-template-rows: 170px 170px 170px 170px 170px; }
+          .mosaicTL { grid-column: 1; grid-row: 1; }
+          .mosaicTR { grid-column: 1; grid-row: 2; }
+          .mosaicBL { grid-column: 1; grid-row: 3; }
+          .mosaicBC { grid-column: 1; grid-row: 4; }
+          .mosaicBR { grid-column: 1; grid-row: 5; }
         }
       `}</style>
     </section>
   );
 }
+
 /* ═══════════════════════════════════════
-   11. ELECTRIC VEHICLES — ✅ DB section name
+   10. ELECTRIC VEHICLES — Flip
 ═══════════════════════════════════════ */
 function EVSection({ banners, sectionSettings = {} }) {
-  const secTitle = sectionSettings['electric']?.title || 'Electric Vehicles for Kids';
-  const secEmoji = sectionSettings['electric']?.emoji || '🚗';
+  const s        = sectionSettings['electric'] || {};
+  const secTitle = s.title       || 'Electric Vehicles for Kids';
+  const secEmoji = s.emoji       || '🚗';
+  const secDesc  = s.description || '';
+  const secBtn   = s.buttonText  || 'View All Electric Vehicles';
 
   if (!banners?.length) return null;
 
   return (
     <section style={{ position: 'relative', padding: 'clamp(40px,6vw,60px) 20px', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(135deg, #E8F4FD 0%, #F0E6FF 30%, #FFF0F5 60%, #E8FFF5 100%)', zIndex: 0 }} />
-      <div style={{ position: 'absolute', top: '-80px', right: '-80px', width: '300px', height: '300px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(14,165,233,0.15) 0%, transparent 70%)', zIndex: 0, pointerEvents: 'none' }} />
-      <div style={{ position: 'absolute', bottom: '-60px', left: '-60px', width: '260px', height: '260px', borderRadius: '50%', background: 'radial-gradient(circle, rgba(123,47,190,0.12) 0%, transparent 70%)', zIndex: 0, pointerEvents: 'none' }} />
 
       <div style={{ maxWidth: '1200px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
         <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-          <span style={{ display: 'inline-block', padding: '5px 18px', background: 'rgba(255,255,255,0.80)', backdropFilter: 'blur(8px)', border: '1.5px solid rgba(14,165,233,0.30)', borderRadius: '999px', fontSize: '0.72rem', fontWeight: '800', color: '#0c4a6e', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', fontFamily: 'Nunito, sans-serif' }}>
+          <span style={{ display: 'inline-block', padding: '5px 18px', background: 'rgba(255,255,255,0.80)', border: '1.5px solid rgba(14,165,233,0.30)', borderRadius: '999px', fontSize: '0.72rem', fontWeight: '800', color: '#0c4a6e', textTransform: 'uppercase', letterSpacing: '1px', marginBottom: '12px', fontFamily: 'Nunito, sans-serif' }}>
             ⚡ Kids Electric Rides
           </span>
           <h2 style={{ fontSize: 'clamp(1.6rem,3vw,2.6rem)', fontWeight: '800', color: '#2D1A4A', margin: '0 0 8px', fontFamily: 'Nunito, sans-serif' }}>
             {secEmoji} {secTitle}
           </h2>
-          <p style={{ fontSize: '0.95rem', color: '#6B7280', margin: 0, fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>
-            Premium battery-powered rides for every little adventurer
-          </p>
+          {secDesc && (
+            <p style={{ fontSize: '0.88rem', color: '#9585B0', margin: 0, fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>
+              {secDesc}
+            </p>
+          )}
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(clamp(180px,22vw,280px), 1fr))', gap: '20px' }}>
-          {banners.slice(0, 4).map((item, i) => (
-            <Link key={i} href={item.buttonLink || '/products?category=electric-vehicles'} style={{ textDecoration: 'none' }}>
-              <div style={{ background: 'rgba(255,255,255,0.82)', backdropFilter: 'blur(12px)', borderRadius: '22px', overflow: 'hidden', boxShadow: '0 6px 24px rgba(0,0,0,0.07)', border: '2px solid #b8e6f0', transition: 'all 0.3s ease', cursor: 'pointer' }}
-                onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-8px) scale(1.02)'; e.currentTarget.style.boxShadow = '0 22px 56px rgba(14,165,233,0.18)'; e.currentTarget.style.borderColor = 'rgba(14,165,233,0.50)'; }}
-                onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0) scale(1)'; e.currentTarget.style.boxShadow = '0 6px 24px rgba(0,0,0,0.07)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.60)'; }}
-              >
-                <div style={{ height: 'clamp(160px,20vw,220px)', overflow: 'hidden', background: item.image?.url ? '#f0f8ff' : 'linear-gradient(135deg, #E0F2FE, #F3E8FF)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '5rem', position: 'relative' }}>
-                  {item.image?.url ? (
-                    <img src={item.image.url} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'contain', objectPosition: 'center', display: 'block', padding: '12px', boxSizing: 'border-box', transition: 'transform 0.3s ease' }}
-                      onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.05)'}
-                      onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
-                    />
-                  ) : (
-                    item.emoji || '🚗'
-                  )}
-                  {item.ageGroup && (
-                    <div style={{ position: 'absolute', top: '10px', right: '10px', padding: '4px 10px', background: 'rgba(0,0,0,0.45)', color: 'white', borderRadius: '999px', fontSize: '10px', fontWeight: '700', fontFamily: 'Nunito, sans-serif', backdropFilter: 'blur(4px)' }}>
-                      👶 {item.ageGroup}
+        <div className="evGrid">
+          {banners.slice(0, 4).map((item, i) => {
+            const frontImg = item.image?.url || null;
+            const backImg  = item.mobileImage?.url || frontImg;
+            return (
+              <FlipCard key={i} sceneClassName="evFlipScene" href={item.buttonLink || '/products?category=electric-vehicles'}>
+                <div className="flipFace flipFront evRedBorder">
+                  <div className="evImgWrap" style={{ background: frontImg ? '#f0f8ff' : 'linear-gradient(135deg, #E0F2FE, #F3E8FF)' }}>
+                    {frontImg
+                      ? <img src={frontImg} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '12px', boxSizing: 'border-box' }} />
+                      : <span style={{ fontSize: '5rem' }}>{item.emoji || '🚗'}</span>}
+                    {item.ageGroup && (
+                      <div style={{ position: 'absolute', top: '10px', right: '10px', padding: '4px 10px', background: 'rgba(0,0,0,0.45)', color: 'white', borderRadius: '999px', fontSize: '10px', fontWeight: '700', fontFamily: 'Nunito, sans-serif', backdropFilter: 'blur(4px)' }}>
+                        👶 {item.ageGroup}
+                      </div>
+                    )}
+                  </div>
+                  <div className="evInfo">
+                    <h3 style={{ fontSize: '0.92rem', fontWeight: '800', color: '#2D1A4A', margin: '0 0 8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'Nunito, sans-serif' }}>{item.title}</h3>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <span style={{ fontSize: '1.1rem', fontWeight: '900', color: '#0EA5E9', fontFamily: 'Nunito, sans-serif' }}>
+                        {item.price ? `₹${Number(item.price).toLocaleString('en-IN')}` : 'View'}
+                      </span>
+                      <span style={{ padding: '6px 14px', background: 'linear-gradient(135deg, #0EA5E9, #7B2FBE)', color: 'white', borderRadius: '999px', fontSize: '0.76rem', fontWeight: '800', fontFamily: 'Nunito, sans-serif' }}>🛒 Shop</span>
                     </div>
-                  )}
-                </div>
-                <div style={{ padding: '14px 16px' }}>
-                  <h3 style={{ fontSize: '0.92rem', fontWeight: '800', color: '#2D1A4A', margin: '0 0 8px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', fontFamily: 'Nunito, sans-serif' }}>{item.title}</h3>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <span style={{ fontSize: '1.1rem', fontWeight: '900', color: '#0EA5E9', fontFamily: 'Nunito, sans-serif' }}>
-                      {item.price ? `₹${Number(item.price).toLocaleString('en-IN')}` : 'View Price'}
-                    </span>
-                    <span style={{ padding: '6px 14px', background: 'linear-gradient(135deg, #0EA5E9, #7B2FBE)', color: 'white', borderRadius: '999px', fontSize: '0.76rem', fontWeight: '800', fontFamily: 'Nunito, sans-serif' }}>🛒 Shop</span>
                   </div>
                 </div>
-              </div>
-            </Link>
-          ))}
+                <div className="flipFace flipBack evRedBorder">
+                  <div className="evImgWrap" style={{ background: backImg ? '#f0f8ff' : 'linear-gradient(135deg, #F0E6FF, #FFE0F0)' }}>
+                    {backImg
+                      ? <img src={backImg} alt={item.title} style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '12px', boxSizing: 'border-box' }} />
+                      : <span style={{ fontSize: '5rem' }}>⚡</span>}
+                  </div>
+                  <div className="evInfo" style={{ background: 'linear-gradient(135deg, #0EA5E9, #7B2FBE)' }}>
+                    <h3 style={{ fontSize: '0.92rem', fontWeight: '800', color: 'white', margin: '0 0 4px', fontFamily: 'Nunito, sans-serif' }}>{item.title}</h3>
+                    <span style={{ fontSize: '0.78rem', fontWeight: '800', color: 'white', fontFamily: 'Nunito, sans-serif' }}>Click to View →</span>
+                  </div>
+                </div>
+              </FlipCard>
+            );
+          })}
         </div>
 
         <div style={{ textAlign: 'center', marginTop: '32px' }}>
           <Link href="/products?category=electric-vehicles" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '12px 30px', background: 'linear-gradient(135deg, #0EA5E9, #7B2FBE)', color: 'white', borderRadius: '999px', textDecoration: 'none', fontWeight: '800', fontSize: '0.92rem', boxShadow: '0 6px 20px rgba(14,165,233,0.28)', fontFamily: 'Nunito, sans-serif' }}>
-            View All Electric Vehicles ⚡
+            {secBtn} ⚡
           </Link>
         </div>
+
+        <style>{`
+          .evGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 20px; }
+          .evFlipScene { height: 350px; }
+          .evRedBorder { border: 3px solid #E03F4F; background: rgba(255,255,255,0.95); backdrop-filter: blur(12px); box-sizing: border-box; display: flex; flex-direction: column; border-radius: 24px; box-shadow: 0 6px 18px rgba(224,63,79,0.18); transition: box-shadow 0.3s ease; }
+          .flipScene.isFlipped .evRedBorder, .flipScene:hover .evRedBorder { border-color: #C92A3A; box-shadow: 0 18px 44px rgba(224,63,79,0.35); }
+          .evImgWrap { flex: 1; display: flex; align-items: center; justify-content: center; position: relative; overflow: hidden; border-radius: 16px; }
+          .evInfo { padding: 14px 16px; background: white; }
+          @media (max-width: 700px) { .evGrid { grid-template-columns: repeat(2, 1fr); gap: 14px; } .evFlipScene { height: 300px; } }
+          @media (max-width: 380px) { .evGrid { grid-template-columns: 1fr; } }
+        `}</style>
       </div>
     </section>
   );
 }
 
 /* ═══════════════════════════════════════
-   12. TRENDING + FEATURED
+   11. TRENDING + FEATURED
 ═══════════════════════════════════════ */
-function TrendingFeaturedSection({ trending, featured }) {
+function TrendingFeaturedSection({ trending, featured, sectionSettings = {} }) {
+  const s        = sectionSettings['trending'] || {};
+  const secTitle = s.title       || 'Trending & Featured Mix';
+  const secEmoji = s.emoji       || '🔥';
+  const secDesc  = s.description || 'This week\'s hottest picks';
+
   const allProducts = [];
   const maxLen = Math.max(trending?.length || 0, featured?.length || 0);
   for (let i = 0; i < maxLen; i++) {
@@ -1347,14 +1028,24 @@ function TrendingFeaturedSection({ trending, featured }) {
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'flex-end', justifyContent: 'space-between', marginBottom: '28px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <span style={{ display: 'block', padding: '4px 14px', background: 'linear-gradient(135deg, #FFF3EC, #F3E8FF)', border: '1.5px solid #FFD4B8', borderRadius: '999px', fontSize: '0.70rem', fontWeight: '800', color: '#FF6B35', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', fontFamily: 'Nunito, sans-serif', width: 'fit-content' }}>This Week</span>
-            <h2 style={{ fontSize: 'clamp(1.3rem,2.5vw,2rem)', fontWeight: '800', color: '#2D1A4A', margin: 0, fontFamily: 'Nunito, sans-serif' }}>🔥 Trending & ⭐ Featured Mix</h2>
+            <span style={{ display: 'block', padding: '4px 14px', background: 'linear-gradient(135deg, #FFF3EC, #F3E8FF)', border: '1.5px solid #FFD4B8', borderRadius: '999px', fontSize: '0.70rem', fontWeight: '800', color: '#FF6B35', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', fontFamily: 'Nunito, sans-serif', width: 'fit-content' }}>
+              This Week
+            </span>
+            <h2 style={{ fontSize: 'clamp(1.3rem,2.5vw,2rem)', fontWeight: '800', color: '#2D1A4A', margin: '0 0 4px', fontFamily: 'Nunito, sans-serif' }}>
+              {secEmoji} {secTitle}
+            </h2>
+            {secDesc && (
+              <p style={{ fontSize: '0.84rem', color: '#9585B0', margin: 0, fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>
+                {secDesc}
+              </p>
+            )}
           </div>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <Link href="/products?trending=true" style={{ padding: '8px 16px', background: 'linear-gradient(135deg,#FF6B35,#FF8C5A)', color: 'white', borderRadius: '999px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: '700', fontFamily: 'Nunito, sans-serif' }}>🔥 Trending →</Link>
             <Link href="/products?featured=true" style={{ padding: '8px 16px', background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)', color: 'white', borderRadius: '999px', textDecoration: 'none', fontSize: '0.78rem', fontWeight: '700', fontFamily: 'Nunito, sans-serif' }}>⭐ Featured →</Link>
           </div>
         </div>
+
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '18px' }}>
           {display.map(p => (
             <div key={`${p._label}-${p.id}`} style={{ position: 'relative' }}>
@@ -1371,9 +1062,14 @@ function TrendingFeaturedSection({ trending, featured }) {
 }
 
 /* ═══════════════════════════════════════
-   13. CTA
+   12. CTA
 ═══════════════════════════════════════ */
-function CTASection() {
+function CTASection({ sectionSettings = {} }) {
+  const s       = sectionSettings['cta'] || {};
+  const secTitle = s.title       || 'Get 10% Off Your First Order!';
+  const secDesc  = s.description || 'Sign up now and unlock exclusive deals, early access to sales, and personalised recommendations.';
+  const secBtn   = s.buttonText  || 'Create Free Account';
+
   return (
     <section style={{ position: 'relative', overflow: 'hidden' }}>
       <div style={{ background: 'linear-gradient(135deg, #FF6B35 0%, #FF8C5A 25%, #7B2FBE 65%, #9B4FDE 100%)', padding: 'clamp(48px,8vw,88px) 20px', position: 'relative' }}>
@@ -1383,15 +1079,18 @@ function CTASection() {
         <div style={{ maxWidth: '1100px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '40px', flexWrap: 'wrap' }}>
             <div style={{ flex: 1, minWidth: '260px' }}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 18px', background: 'rgba(255,255,255,0.18)', border: '2px solid rgba(255,255,255,0.35)', borderRadius: '999px', fontSize: '0.82rem', fontWeight: '800', color: 'white', marginBottom: '16px', fontFamily: 'Nunito, sans-serif' }}>🎁 Special Offer</span>
-              <h2 style={{ fontSize: 'clamp(1.5rem,3.5vw,2.8rem)', fontWeight: '800', color: 'white', margin: '0 0 16px', lineHeight: 1.18, fontFamily: 'Nunito, sans-serif' }}>Get 10% Off Your First Order!</h2>
-              <p style={{ fontSize: 'clamp(0.88rem,1.5vw,1rem)', color: 'rgba(255,255,255,0.92)', margin: '0 0 28px', lineHeight: 1.75, fontWeight: '500', maxWidth: '480px', fontFamily: 'Nunito, sans-serif' }}>Sign up now and unlock exclusive deals, early access to sales, and personalised recommendations.</p>
+              <span style={{ display: 'inline-flex', alignItems: 'center', padding: '6px 18px', background: 'rgba(255,255,255,0.18)', border: '2px solid rgba(255,255,255,0.35)', borderRadius: '999px', fontSize: '0.82rem', fontWeight: '800', color: 'white', marginBottom: '16px', fontFamily: 'Nunito, sans-serif' }}>
+                🎁 Special Offer
+              </span>
+              <h2 style={{ fontSize: 'clamp(1.5rem,3.5vw,2.8rem)', fontWeight: '800', color: 'white', margin: '0 0 16px', lineHeight: 1.18, fontFamily: 'Nunito, sans-serif' }}>
+                {secTitle}
+              </h2>
+              <p style={{ fontSize: 'clamp(0.88rem,1.5vw,1rem)', color: 'rgba(255,255,255,0.92)', margin: '0 0 28px', lineHeight: 1.75, fontWeight: '500', maxWidth: '480px', fontFamily: 'Nunito, sans-serif' }}>
+                {secDesc}
+              </p>
               <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
-                <Link href="/register" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: 'clamp(11px,2vw,14px) clamp(22px,3vw,32px)', background: 'white', color: '#FF6B35', borderRadius: '999px', textDecoration: 'none', fontWeight: '800', fontSize: 'clamp(0.88rem,1.5vw,0.96rem)', boxShadow: '0 10px 32px rgba(0,0,0,0.18)', fontFamily: 'Nunito, sans-serif', transition: 'all 0.3s ease' }}
-                  onMouseEnter={e => { e.currentTarget.style.transform = 'translateY(-4px)'; e.currentTarget.style.color = '#7B2FBE'; }}
-                  onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.color = '#FF6B35'; }}
-                >
-                  Create Free Account →
+                <Link href="/register" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: 'clamp(11px,2vw,14px) clamp(22px,3vw,32px)', background: 'white', color: '#FF6B35', borderRadius: '999px', textDecoration: 'none', fontWeight: '800', fontSize: 'clamp(0.88rem,1.5vw,0.96rem)', boxShadow: '0 10px 32px rgba(0,0,0,0.18)', fontFamily: 'Nunito, sans-serif' }}>
+                  {secBtn} →
                 </Link>
                 <Link href="/products" style={{ color: 'rgba(255,255,255,0.92)', fontWeight: '700', fontSize: '0.92rem', textDecoration: 'none', borderBottom: '2px solid rgba(255,255,255,0.45)', paddingBottom: '2px', fontFamily: 'Nunito, sans-serif' }}>
                   Browse Products ↗
@@ -1428,14 +1127,12 @@ function CTASection() {
 }
 
 /* ═══════════════════════════════════════
-   MAIN HOME CLIENT — ✅ With Show/Hide & Order
-═══════════════════════════════════════ */
-/* ═══════════════════════════════════════
-   MAIN HOME CLIENT — ✅ Custom order
+   MAIN HOME CLIENT
 ═══════════════════════════════════════ */
 export default function HomeClient({
   heroBanners         = [],
   brands              = [],
+  categoryBanners     = [],
   festivalBanners     = [],
   budgetBanners       = [],
   sunnyBanners        = [],
@@ -1453,39 +1150,66 @@ export default function HomeClient({
 }) {
   useScrollReveal();
   const sectionSettings = useSectionSettings(initialSectionSettings);
-
-  // ✅ Check if section is visible (default true)
   const isVisible = (key) => sectionSettings[key]?.isVisible !== false;
 
-  // ✅ YOUR CUSTOM ORDER:
-  // 1. Hero → 2. Brands → 3. Category(Promo) → 4. Budget → 5. Sunny
-  // → 6. Festival → 7. Gender → 8. Baby Food → 9. Toys
-  // → 10. Personal+Health Care → 11. Electric → 12. Trending → 13. CTA
   const allSections = [
     { key: 'hero',          render: <HeroBanner banners={heroBanners} /> },
-    { key: 'brands',        render: <BrandsSection brands={brands} /> },
-    { key: 'promo',         render: <PromoSection banners={promoBanners} sectionSettings={sectionSettings} /> },
+    { key: 'brands',        render: <BrandsSection brands={brands} sectionSettings={sectionSettings} /> },
+    { key: 'promo',         render: <PromoSection banners={categoryBanners} sectionSettings={sectionSettings} /> },
     { key: 'budget',        render: <BudgetSection banners={budgetBanners} sectionSettings={sectionSettings} /> },
     { key: 'sunny',         render: <SunnySection banners={sunnyBanners} sectionSettings={sectionSettings} /> },
-    { key: 'festival',      render: <SeasonBanner banners={festivalBanners} /> },
+    { key: 'festival',      render: <SeasonBanner banners={festivalBanners} sectionSettings={sectionSettings} /> },
     { key: 'gender',        render: <GenderSection banners={genderBanners} sectionSettings={sectionSettings} /> },
     { key: 'baby-food',     render: <BabyFoodSection banners={babyFoodBanners} sectionSettings={sectionSettings} /> },
     { key: 'toys',          render: <ToysSection banners={toysBanners} sectionSettings={sectionSettings} /> },
     { key: 'care',          render: <CareSection personalCareBanners={personalCareBanners} healthCareBanners={healthCareBanners} sectionSettings={sectionSettings} /> },
     { key: 'electric',      render: <EVSection banners={evBanners} sectionSettings={sectionSettings} /> },
-    { key: 'trending',      render: <TrendingFeaturedSection trending={trending} featured={featured} /> },
-    { key: 'cta',           render: <CTASection banners={ctaBanners} /> },
+    { key: 'trending',      render: <TrendingFeaturedSection trending={trending} featured={featured} sectionSettings={sectionSettings} /> },
+    { key: 'cta',           render: <CTASection sectionSettings={sectionSettings} /> },
   ];
 
   return (
-    <div className={styles.home}>
-      {allSections.map(section => (
-        isVisible(section.key) && (
-          <div key={section.key}>
-            {section.render}
-          </div>
-        )
-      ))}
-    </div>
+    <>
+      <style jsx global>{`
+        .flipScene {
+          perspective: 1200px;
+          width: 100%;
+          height: 100%;
+          cursor: pointer;
+          position: relative;
+          -webkit-tap-highlight-color: transparent;
+        }
+        .flipCard {
+          position: relative;
+          width: 100%;
+          height: 100%;
+          transition: transform 0.25s ease-out;
+          transform-style: preserve-3d;
+        }
+        .flipFace {
+          position: absolute;
+          width: 100%;
+          height: 100%;
+          backface-visibility: hidden;
+          -webkit-backface-visibility: hidden;
+          border-radius: 20px;
+          overflow: hidden;
+        }
+        .flipFront { transform: rotateY(0deg); }
+        .flipBack  { transform: rotateY(180deg); }
+        .flipScene:hover .flipCard,
+        .flipScene.isFlipped .flipCard {
+          transform: rotateY(180deg);
+        }
+      `}</style>
+
+      <div className={styles.home}>
+        {allSections.map(section => (
+          isVisible(section.key) && (
+            <div key={section.key}>{section.render}</div>
+          )
+        ))}
+      </div>
+    </>
   );
 }

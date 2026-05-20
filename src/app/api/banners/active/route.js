@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-// ✅ Force dynamic — never cache
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -20,7 +19,6 @@ export async function GET() {
       }),
     ]);
 
-    // Festival with date filtering
     const festivalBanners = banners.filter(b => {
       if (b.type !== 'festival') return false;
       if (b.startDate && new Date(b.startDate) > now) return false;
@@ -32,6 +30,7 @@ export async function GET() {
       banners,
       brands,
       heroBanners:          banners.filter(b => b.type === 'hero' || !b.type),
+      categoryBanners:      banners.filter(b => b.type === 'category'),  // ✅ NEW
       festivalBanners,
       budgetBanners:        banners.filter(b => b.type === 'budget'),
       sunnyBanners:         banners.filter(b => b.type === 'sunny'),
@@ -45,18 +44,13 @@ export async function GET() {
       maternityBanners:     banners.filter(b => b.type === 'maternity'),
     });
 
-    // ✅ No-cache headers — customer always gets latest
     response.headers.set('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
     response.headers.set('Pragma', 'no-cache');
     response.headers.set('Expires', '0');
 
     return response;
-
   } catch (error) {
     console.error('Active banners error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

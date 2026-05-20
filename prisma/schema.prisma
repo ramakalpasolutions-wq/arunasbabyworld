@@ -113,17 +113,17 @@ model Review {
   updatedAt DateTime @updatedAt
 }
 
-// ✅ Brand model — fully editable from admin
+// ✅ Brand model
 model Brand {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
   name      String
-  color     String   @default("#FF6B35")
+  color     String    @default("#FF6B35")
   logo      BrandLogo?
-  link      String   @default("/products")
-  isActive  Boolean  @default(true)
-  order     Int      @default(0)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  link      String    @default("/products")
+  isActive  Boolean   @default(true)
+  order     Int       @default(0)
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
 
   @@map("brands")
 }
@@ -133,7 +133,7 @@ type BrandLogo {
   publicId String?
 }
 
-// ✅ Banner model — ALL fields
+// ✅ Banner model — ALL fields including panels
 model Banner {
   id            String        @id @default(auto()) @map("_id") @db.ObjectId
   title         String
@@ -141,6 +141,7 @@ model Banner {
   image         BannerImage?
   mobileImage   BannerImage?
   gridImages    BannerImage[]
+  panels        BannerPanel[] // ✅ NEW - 3 panel images for hero
   buttonText    String        @default("Shop Now")
   buttonLink    String        @default("/products")
   bgColor       String        @default("#ff6b9d")
@@ -173,6 +174,17 @@ type BannerImage {
   brand    String?
   price    String?
   link     String?
+}
+
+// ✅ NEW TYPE - Panel for hero section
+type BannerPanel {
+  url      String?
+  publicId String?
+  label    String?
+  sublabel String?
+  link     String?
+  bg       String?
+  isBig    Boolean?
 }
 
 model Order {
@@ -253,15 +265,18 @@ model Contact {
   isRead    Boolean  @default(false)
   createdAt DateTime @default(now())
 }
+
 // ✅ Section Settings — for editable section names, visibility & order
 model SectionSetting {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  key       String   @unique
-  title     String?
-  emoji     String?
-  isVisible Boolean  @default(true)    // ✅ NEW — show/hide section
-  order     Int      @default(0)       // ✅ NEW — display order
-  updatedAt DateTime @updatedAt
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  key         String   @unique
+  title       String?
+  emoji       String?
+  description String?
+  buttonText  String?
+  isVisible   Boolean  @default(true)
+  order       Int      @default(0)
+  updatedAt   DateTime @updatedAt
 
   @@map("section_settings")
 }

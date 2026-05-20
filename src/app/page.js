@@ -1,6 +1,7 @@
 import MainLayout from '@/components/layout/MainLayout';
 import HomeClient from './HomeClient';
 import { unstable_noStore as noStore } from 'next/cache';
+
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
@@ -31,7 +32,6 @@ async function getProducts(params = '') {
   } catch { return []; }
 }
 
-// ✅ NEW — Fetch section settings
 async function getSectionSettings() {
   try {
     const res = await fetch(`${BASE_URL}/api/section-settings`, { cache: 'no-store' });
@@ -46,7 +46,7 @@ export default async function HomePage() {
     getBanners(),
     getProducts('trending=true&limit=8'),
     getProducts('featured=true&limit=8'),
-    getSectionSettings(),                    // ✅ NEW
+    getSectionSettings(),
   ]);
 
   return (
@@ -54,6 +54,7 @@ export default async function HomePage() {
       <HomeClient
         heroBanners={bannerData.heroBanners || []}
         brands={bannerData.brands || []}
+        categoryBanners={bannerData.categoryBanners || []}   /* ✅ NEW */
         festivalBanners={bannerData.festivalBanners || []}
         budgetBanners={bannerData.budgetBanners || []}
         sunnyBanners={bannerData.sunnyBanners || []}
@@ -64,10 +65,10 @@ export default async function HomePage() {
         evBanners={bannerData.evBanners || []}
         babyFoodBanners={bannerData.babyFoodBanners || []}
         toysBanners={bannerData.toysBanners || []}
-        ctaBanners={(bannerData.banners || []).filter(b => b.type === 'cta')}  // ✅ NEW
+        ctaBanners={(bannerData.banners || []).filter(b => b.type === 'cta')}
         trending={trending}
         featured={featured}
-        initialSectionSettings={sectionSettings}  // ✅ NEW
+        initialSectionSettings={sectionSettings}
       />
     </MainLayout>
   );
