@@ -25,6 +25,7 @@ export default function CheckoutClient() {
 
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('Razorpay');
   const [address, setAddress] = useState({
     name: '',
     phone: '',
@@ -73,7 +74,53 @@ export default function CheckoutClient() {
     });
   };
 
-  const handlePayment = async () => {
+  // ✅ Handle COD order
+  const handleCODOrder = async () => {
+    setLoading(true);
+    try {
+      const dbOrderRes = await fetch('/api/orders', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderItems: items.map(i => ({
+            productId: i.id || i._id,
+            name: i.name,
+            image: i.images?.[0]?.url || '',
+            price: i.discountPrice || i.price,
+            quantity: i.quantity,
+          })),
+          shippingAddress: address,
+          paymentMethod: 'COD',
+          itemsPrice,
+          shippingPrice,
+          taxPrice,
+          discountAmount,
+          totalPrice,
+          couponCode: coupon?.code || null,
+          isPaid: false,
+          orderStatus: 'Pending',
+        }),
+      });
+
+      const dbOrder = await dbOrderRes.json();
+      if (!dbOrderRes.ok) throw new Error(dbOrder.error);
+
+      const createdOrderId = dbOrder.order?.id || dbOrder.order?._id;
+      if (!createdOrderId) throw new Error('Order ID not found');
+
+      clearCart();
+      toast.success('🎉 Order placed successfully! Pay on delivery.', { duration: 4000 });
+      router.push(`/orders/${createdOrderId}`);
+    } catch (err) {
+      console.error('COD order error:', err);
+      toast.error(err.message || 'Failed to place order');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Handle Razorpay payment
+  const handleRazorpayPayment = async () => {
     setLoading(true);
     try {
       const loaded = await loadRazorpay();
@@ -83,7 +130,6 @@ export default function CheckoutClient() {
         return;
       }
 
-      // ✅ Step 1: Create Razorpay order
       const orderRes = await fetch('/api/payment/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -92,13 +138,11 @@ export default function CheckoutClient() {
       const orderData = await orderRes.json();
       if (!orderRes.ok) throw new Error(orderData.error);
 
-      // ✅ Step 2: Create DB order (pending)
       const dbOrderRes = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           orderItems: items.map(i => ({
-            // ✅ Use i.id not i._id
             productId: i.id || i._id,
             name: i.name,
             image: i.images?.[0]?.url || '',
@@ -118,15 +162,9 @@ export default function CheckoutClient() {
       const dbOrder = await dbOrderRes.json();
       if (!dbOrderRes.ok) throw new Error(dbOrder.error);
 
-      // ✅ Get correct order ID
       const createdOrderId = dbOrder.order?.id || dbOrder.order?._id;
-      console.log('Created order ID:', createdOrderId);
+      if (!createdOrderId) throw new Error('Order ID not found');
 
-      if (!createdOrderId) {
-        throw new Error('Order ID not found');
-      }
-
-      // ✅ Step 3: Open Razorpay
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderData.order.amount,
@@ -136,7 +174,6 @@ export default function CheckoutClient() {
         order_id: orderData.order.id,
         handler: async (response) => {
           try {
-            // ✅ Step 4: Verify payment with correct orderId
             const verifyRes = await fetch('/api/payment/verify', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -144,7 +181,7 @@ export default function CheckoutClient() {
                 razorpayOrderId: response.razorpay_order_id,
                 razorpayPaymentId: response.razorpay_payment_id,
                 razorpaySignature: response.razorpay_signature,
-                orderId: createdOrderId, // ✅ Use correct id
+                orderId: createdOrderId,
               }),
             });
 
@@ -153,7 +190,6 @@ export default function CheckoutClient() {
             if (verifyData.success) {
               clearCart();
               toast.success('🎉 Order placed successfully!');
-              // ✅ Redirect with correct id
               router.push(`/orders/${createdOrderId}`);
             } else {
               toast.error('Payment verification failed');
@@ -184,6 +220,15 @@ export default function CheckoutClient() {
       toast.error(err.message || 'Something went wrong');
     } finally {
       setLoading(false);
+    }
+  };
+
+  // ✅ Master handler
+  const handlePayment = () => {
+    if (paymentMethod === 'COD') {
+      handleCODOrder();
+    } else {
+      handleRazorpayPayment();
     }
   };
 
@@ -316,7 +361,6 @@ export default function CheckoutClient() {
 
               <div className={styles.reviewItems}>
                 {items.map(item => (
-                  // ✅ Fixed: use item.id not item._id
                   <div key={item.id || item._id} className={styles.reviewItem}>
                     <img
                       src={item.images?.[0]?.url || 'https://via.placeholder.com/60'}
@@ -347,33 +391,223 @@ export default function CheckoutClient() {
           {/* ===== STEP 2: PAYMENT ===== */}
           {step === 2 && (
             <div className={styles.card}>
-              <h2 className={styles.cardTitle}>💳 Payment</h2>
+              <h2 className={styles.cardTitle}>💳 Choose Payment Method</h2>
 
-              <div className={styles.paymentMethod}>
-                <div className={styles.paymentOption}>
-                  <input type="radio" id="razorpay" checked readOnly />
-                  <label htmlFor="razorpay">
-                    <span>Razorpay</span>
-                    <small>UPI, Cards, NetBanking, Wallets</small>
-                  </label>
-                </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
+
+                {/* Razorpay Option */}
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '14px',
+                  padding: '18px 20px',
+                  background: paymentMethod === 'Razorpay' ? 'linear-gradient(135deg, #FFF5F7, #F3E8FF)' : 'white',
+                  border: `2.5px solid ${paymentMethod === 'Razorpay' ? '#FF6B9D' : '#E5E7EB'}`,
+                  borderRadius: '14px',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s ease',
+                  boxShadow: paymentMethod === 'Razorpay' ? '0 6px 18px rgba(255,107,157,0.15)' : 'none',
+                }}>
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="Razorpay"
+                    checked={paymentMethod === 'Razorpay'}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      accentColor: '#FF6B9D',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                    }}
+                  />
+                  <div style={{
+                    width: '52px',
+                    height: '52px',
+                    borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #FF6B9D, #7B2FBE)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.8rem',
+                    flexShrink: 0,
+                    boxShadow: '0 4px 12px rgba(255,107,157,0.30)',
+                  }}>
+                    💳
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{
+                      margin: 0,
+                      fontSize: '1rem',
+                      fontWeight: '800',
+                      color: '#1F2937',
+                      fontFamily: 'Nunito, sans-serif',
+                    }}>
+                      Razorpay Online Payment
+                    </p>
+                    <p style={{
+                      margin: '4px 0 0',
+                      fontSize: '0.82rem',
+                      color: '#6B7280',
+                      fontWeight: '600',
+                      fontFamily: 'Nunito, sans-serif',
+                    }}>
+                      UPI, Cards, NetBanking, Wallets
+                    </p>
+                    {paymentMethod === 'Razorpay' && (
+                      <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+                        {['UPI', 'Visa', 'MasterCard', 'Paytm', 'PhonePe'].map(p => (
+                          <span key={p} style={{
+                            padding: '2px 8px',
+                            background: 'white',
+                            border: '1px solid #FCA5A5',
+                            borderRadius: '6px',
+                            fontSize: '0.68rem',
+                            fontWeight: '700',
+                            color: '#7B2FBE',
+                          }}>{p}</span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  <div style={{
+                    padding: '4px 10px',
+                    background: '#10B981',
+                    color: 'white',
+                    borderRadius: '999px',
+                    fontSize: '0.68rem',
+                    fontWeight: '800',
+                    fontFamily: 'Nunito, sans-serif',
+                  }}>
+                    🔒 SECURE
+                  </div>
+                </label>
+
+                {/* COD Option */}
+                <label style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '14px',
+                  padding: '18px 20px',
+                  background: paymentMethod === 'COD' ? 'linear-gradient(135deg, #FFFBEB, #FEF3C7)' : 'white',
+                  border: `2.5px solid ${paymentMethod === 'COD' ? '#F59E0B' : '#E5E7EB'}`,
+                  borderRadius: '14px',
+                  cursor: 'pointer',
+                  transition: 'all 0.25s ease',
+                  boxShadow: paymentMethod === 'COD' ? '0 6px 18px rgba(245,158,11,0.15)' : 'none',
+                }}>
+                  <input
+                    type="radio"
+                    name="payment"
+                    value="COD"
+                    checked={paymentMethod === 'COD'}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    style={{
+                      width: '20px',
+                      height: '20px',
+                      accentColor: '#F59E0B',
+                      cursor: 'pointer',
+                      flexShrink: 0,
+                    }}
+                  />
+                  <div style={{
+                    width: '52px',
+                    height: '52px',
+                    borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '1.8rem',
+                    flexShrink: 0,
+                    boxShadow: '0 4px 12px rgba(245,158,11,0.30)',
+                  }}>
+                    💵
+                  </div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{
+                      margin: 0,
+                      fontSize: '1rem',
+                      fontWeight: '800',
+                      color: '#1F2937',
+                      fontFamily: 'Nunito, sans-serif',
+                    }}>
+                      Cash on Delivery (COD)
+                    </p>
+                    <p style={{
+                      margin: '4px 0 0',
+                      fontSize: '0.82rem',
+                      color: '#6B7280',
+                      fontWeight: '600',
+                      fontFamily: 'Nunito, sans-serif',
+                    }}>
+                      Pay with cash when order arrives
+                    </p>
+                    {paymentMethod === 'COD' && (
+                      <p style={{
+                        margin: '8px 0 0',
+                        fontSize: '0.76rem',
+                        color: '#92400E',
+                        fontWeight: '700',
+                        fontFamily: 'Nunito, sans-serif',
+                      }}>
+                        💡 No advance payment required
+                      </p>
+                    )}
+                  </div>
+                  <div style={{
+                    padding: '4px 10px',
+                    background: '#F59E0B',
+                    color: 'white',
+                    borderRadius: '999px',
+                    fontSize: '0.68rem',
+                    fontWeight: '800',
+                    fontFamily: 'Nunito, sans-serif',
+                  }}>
+                    💵 EASY
+                  </div>
+                </label>
               </div>
 
-              <div className={styles.secureNote}>
-                🔒 Your payment is secured by Razorpay
+              {/* Security note */}
+              <div style={{
+                padding: '12px 14px',
+                background: paymentMethod === 'Razorpay' ? '#F0FDF4' : '#EFF6FF',
+                border: `1.5px solid ${paymentMethod === 'Razorpay' ? '#BBF7D0' : '#BFDBFE'}`,
+                borderRadius: '10px',
+                marginBottom: '20px',
+                fontSize: '0.82rem',
+                color: paymentMethod === 'Razorpay' ? '#166534' : '#1E40AF',
+                fontWeight: '600',
+                fontFamily: 'Nunito, sans-serif',
+              }}>
+                {paymentMethod === 'Razorpay'
+                  ? '🔒 Your payment is secured by Razorpay encryption'
+                  : 'ℹ️ Please keep exact change ready. Pay only after receiving your order.'}
               </div>
 
               <div className={styles.reviewActions}>
-                <button className="btn btn-outline" onClick={() => setStep(1)}>
+                <button className="btn btn-outline" onClick={() => setStep(1)} disabled={loading}>
                   ← Back
                 </button>
                 <button
                   className="btn btn-primary"
                   onClick={handlePayment}
                   disabled={loading}
-                  style={{ minWidth: 180 }}
+                  style={{
+                    minWidth: 200,
+                    background: paymentMethod === 'COD'
+                      ? 'linear-gradient(135deg, #F59E0B, #D97706)'
+                      : 'linear-gradient(135deg, #FF6B9D, #7B2FBE)',
+                  }}
                 >
-                  {loading ? '⏳ Processing...' : `Pay ₹${totalPrice.toLocaleString('en-IN')}`}
+                  {loading
+                    ? '⏳ Processing...'
+                    : paymentMethod === 'COD'
+                      ? `📦 Place Order ₹${totalPrice.toLocaleString('en-IN')}`
+                      : `💳 Pay ₹${totalPrice.toLocaleString('en-IN')}`
+                  }
                 </button>
               </div>
             </div>
@@ -412,6 +646,36 @@ export default function CheckoutClient() {
           {discountAmount > 0 && (
             <div className={styles.savingMsg}>
               🎉 You save ₹{discountAmount.toLocaleString('en-IN')} on this order!
+            </div>
+          )}
+
+          {step === 2 && (
+            <div style={{
+              marginTop: '16px',
+              padding: '12px 14px',
+              background: paymentMethod === 'COD' ? '#FFFBEB' : '#FFF5F7',
+              border: `1.5px solid ${paymentMethod === 'COD' ? '#FDE68A' : '#FCA5A5'}`,
+              borderRadius: '10px',
+              fontFamily: 'Nunito, sans-serif',
+            }}>
+              <p style={{
+                margin: 0,
+                fontSize: '0.74rem',
+                fontWeight: '700',
+                color: '#6B7280',
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+              }}>
+                Payment Method
+              </p>
+              <p style={{
+                margin: '4px 0 0',
+                fontSize: '0.88rem',
+                fontWeight: '800',
+                color: paymentMethod === 'COD' ? '#92400E' : '#BE185D',
+              }}>
+                {paymentMethod === 'COD' ? '💵 Cash on Delivery' : '💳 Razorpay'}
+              </p>
             </div>
           )}
         </div>

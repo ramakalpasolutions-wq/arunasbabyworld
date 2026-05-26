@@ -113,17 +113,16 @@ model Review {
   updatedAt DateTime @updatedAt
 }
 
-// ✅ Brand model
 model Brand {
-  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
   name      String
-  color     String    @default("#FF6B35")
+  color     String     @default("#FF6B35")
   logo      BrandLogo?
-  link      String    @default("/products")
-  isActive  Boolean   @default(true)
-  order     Int       @default(0)
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
+  link      String     @default("/products")
+  isActive  Boolean    @default(true)
+  order     Int        @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
 
   @@map("brands")
 }
@@ -133,7 +132,6 @@ type BrandLogo {
   publicId String?
 }
 
-// ✅ Banner model — ALL fields including panels
 model Banner {
   id            String        @id @default(auto()) @map("_id") @db.ObjectId
   title         String
@@ -141,7 +139,7 @@ model Banner {
   image         BannerImage?
   mobileImage   BannerImage?
   gridImages    BannerImage[]
-  panels        BannerPanel[] // ✅ NEW - 3 panel images for hero
+  panels        BannerPanel[]
   buttonText    String        @default("Shop Now")
   buttonLink    String        @default("/products")
   bgColor       String        @default("#ff6b9d")
@@ -176,7 +174,6 @@ type BannerImage {
   link     String?
 }
 
-// ✅ NEW TYPE - Panel for hero section
 type BannerPanel {
   url      String?
   publicId String?
@@ -187,6 +184,9 @@ type BannerPanel {
   isBig    Boolean?
 }
 
+// ============================================================
+// ✅ ORDER MODEL — with Cancel + Return + Refund fields
+// ============================================================
 model Order {
   id              String      @id @default(auto()) @map("_id") @db.ObjectId
   userId          String      @db.ObjectId
@@ -208,8 +208,22 @@ model Order {
   deliveredAt     DateTime?
   trackingNumber  String?
   notes           String?
-  createdAt       DateTime    @default(now())
-  updatedAt       DateTime    @updatedAt
+
+  // ── Cancel fields ──
+  isCancelled   Boolean   @default(false)
+  cancelledAt   DateTime?
+  cancelReason  String?
+  refundId      String?   @db.ObjectId
+  refundStatus  String?
+  refundAmount  Float?
+  refundedAt    DateTime?
+
+  // ── Return fields ──
+  returnRequest Json?
+  returnStatus  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 type OrderItem {
@@ -266,7 +280,6 @@ model Contact {
   createdAt DateTime @default(now())
 }
 
-// ✅ Section Settings — for editable section names, visibility & order
 model SectionSetting {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   key         String   @unique
@@ -279,4 +292,34 @@ model SectionSetting {
   updatedAt   DateTime @updatedAt
 
   @@map("section_settings")
+}
+
+// ============================================================
+// ✅ REFUND MODEL
+// ============================================================
+model Refund {
+  id                String          @id @default(auto()) @map("_id") @db.ObjectId
+  orderId           String          @db.ObjectId
+  userId            String          @db.ObjectId
+  amount            Float
+  reason            String?
+  refundType        String          @default("razorpay")
+  refundStatus      String          @default("pending")
+  razorpayRefundId  String?
+  razorpayPaymentId String?
+  bankDetails       BankDetailsType?
+  notes             String?
+  processedAt       DateTime?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@map("refunds")
+}
+
+type BankDetailsType {
+  accountHolderName String?
+  accountNumber     String?
+  ifscCode          String?
+  bankName          String?
+  upiId             String?
 }
