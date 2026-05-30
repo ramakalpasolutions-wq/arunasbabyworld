@@ -49,44 +49,21 @@
 .logo {
   display: flex;
   align-items: center;
-  gap: 8px;
   flex-shrink: 0;
   text-decoration: none;
-  min-width: 0;
+  transition: transform 0.3s ease;
 }
 
-.logoIcon {
-  font-size: 2rem;
-  flex-shrink: 0;
+.logo:hover {
+  transform: scale(1.05);
 }
 
-.logoText {
-  display: flex;
-  flex-direction: column;
-  min-width: 0;
+.logoImg {
+  width: auto;
+  height: 100px;
+  object-fit: contain;
+  display: block;
 }
-
-.logoMain {
-  font-family: 'Fredoka One', cursive;
-  font-size: 1.65rem;
-  font-weight: 400;
-  background: linear-gradient(135deg, #FF6B35, #7B2FBE);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  line-height: 1;
-  white-space: nowrap;
-}
-
-.logoSub {
-  font-size: 0.62rem;
-  color: #A892C0;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  font-weight: 700;
-  white-space: nowrap;
-}
-
 /* ============================================================
    SEARCH (Desktop)
    ============================================================ */
@@ -752,8 +729,7 @@
    ============================================================ */
 @media (max-width: 1024px) {
   .mainContent { gap: 12px; }
-  .logoMain    { font-size: 1.4rem; }
-  .logoSub     { font-size: 0.58rem; }
+  .logoImg     { height: 52px; }
   .searchBtn   { padding: 9px 12px; font-size: 0.78rem; }
   .navLink     { padding: 10px 8px; font-size: 0.74rem; }
   .navBtn      { padding: 5px 9px;  font-size: 0.70rem; gap: 4px; margin: 4px 2px; }
@@ -763,7 +739,6 @@
   .actionLabel { font-size: 0.62rem; }
   .actionBtn   { padding: 6px 8px; }
 }
-
 /* ============================================================
    ✅ RESPONSIVE — TABLET PORTRAIT / LARGE MOBILE (900px)
    Hide desktop search → show in mobile menu
@@ -781,11 +756,9 @@
 /* ============================================================
    ✅ RESPONSIVE — MOBILE (768px)
    ============================================================ */
-@media (max-width: 768px) {
+@media (max-width: 800px) {
   .mainContent   { gap: 10px; }
-  .logoMain      { font-size: 1.28rem; }
-  .logoIcon      { font-size: 1.65rem; }
-  .logoSub       { display: none; }
+  .logoImg       { height: 80px; }
   .avatar        { width: 30px; height: 30px; font-size: 0.80rem; }
 }
 
@@ -795,8 +768,7 @@
 @media (max-width: 480px) {
   .mainHeader      { padding: 8px 0; }
   .mainContent     { gap: 6px; }
-  .logoMain        { font-size: 1.15rem; }
-  .logoIcon        { font-size: 1.5rem; }
+  .logoImg         { height: 40px; }
   .actionBtn       { padding: 5px 6px; }
   .actionIcon      { font-size: 1.30rem; }
   .badge           { min-width: 16px; height: 16px; font-size: 0.56rem; top: 0; right: 1px; }
@@ -809,26 +781,22 @@
   .mobileSearch .searchInput { font-size: 0.85rem; padding: 9px 0; }
   .mobileSearch .searchBtn   { padding: 9px 14px; font-size: 0.78rem; }
 }
-
 /* ============================================================
    ✅ RESPONSIVE — EXTRA SMALL (380px)
    ============================================================ */
 @media (max-width: 380px) {
   .mainContent   { gap: 4px; }
-  .logoMain      { font-size: 1.05rem; }
-  .logoIcon      { font-size: 1.4rem; }
+  .logoImg       { height: 36px; }
   .actionIcon    { font-size: 1.20rem; }
   .actions       { gap: 2px; }
   .actionBtn     { padding: 4px 5px; }
   .mobileMenuBtn { padding: 6px; }
 }
-
 /* ============================================================
    ✅ RESPONSIVE — TINY (340px)
    ============================================================ */
 @media (max-width: 340px) {
-  .logoText      { display: none; }
-  .logoIcon      { font-size: 1.6rem; }
+  .logoImg       { height: 32px; }
   .actionIcon    { font-size: 1.15rem; }
   .actionBtn     { padding: 4px; }
 }

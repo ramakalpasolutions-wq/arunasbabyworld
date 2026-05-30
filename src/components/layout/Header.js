@@ -6,6 +6,7 @@ import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import { useRouter } from 'next/navigation';
 import styles from './Header.module.css';
+import Image from 'next/image';
 
 const CATEGORY_ORDER = [
   'clothing', 'personal-care', 'health-care', 'walkers',
@@ -104,13 +105,18 @@ export default function Header() {
         <div className={`container ${styles.mainContent}`}>
 
           {/* Logo */}
-          <Link href="/" className={styles.logo} onClick={closeMobile}>
-            <div className={styles.logoIcon}></div>
-            <div className={styles.logoText}>
-              <span className={styles.logoMain}>Babys World</span>
-              <span className={styles.logoSub}>Everything for little ones</span>
-            </div>
-          </Link>
+          {/* Logo */}
+{/* Logo */}
+<Link href="/" className={styles.logo} onClick={closeMobile}>
+  <Image
+    src="/logo.png"
+    alt="Aruna's Baby World"
+    width={200}
+    height={60}
+    priority
+    className={styles.logoImg}
+  />
+</Link>
 
           {/* Search */}
           <form onSubmit={handleSearch} className={styles.searchForm}>

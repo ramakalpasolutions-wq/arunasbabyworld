@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSession, signOut } from 'next-auth/react';
 import styles from './Footer.module.css';
 
@@ -32,10 +33,17 @@ export default function Footer() {
 
             {/* Brand */}
             <div className={`${styles.brand} ${styles.reveal}`}>
-              <div className={styles.logo}>
-                <span></span>
-                <span className={styles.logoText}>Baby's World</span>
-              </div>
+              {/* ✅ LOGO IMAGE */}
+              <Link href="/" className={styles.logo}>
+                <Image
+                  src="/logo.png"
+                  alt="Aruna's Baby World"
+                  width={220}
+                  height={90}
+                  className={styles.logoImg}
+                />
+              </Link>
+
               <p>Your one-stop destination for premium baby & kids products. Quality, safety, and joy — delivered to your door.</p>
               <div className={styles.socials}>
                 <a href="#" aria-label="Facebook">📘</a>
@@ -52,9 +60,7 @@ export default function Footer() {
               <ul>
                 <li><Link href="/">Home</Link></li>
                 <li><Link href="/products">All Products</Link></li>
-                
                 <li><Link href="/contact">Contact</Link></li>
-                {/* ✅ Track Order REMOVED */}
               </ul>
             </div>
 
@@ -70,8 +76,6 @@ export default function Footer() {
               </ul>
             </div>
 
-           
-
             {/* Account */}
             <div className={`${styles.col} ${styles.reveal}`} style={{ '--delay': '0.4s' }}>
               <h4>My Account</h4>
@@ -81,7 +85,6 @@ export default function Footer() {
                     <li><Link href="/profile">👤 My Profile</Link></li>
                     <li><Link href="/profile?tab=orders">📦 My Orders</Link></li>
                     <li><Link href="/wishlist">❤️ Wishlist</Link></li>
-                    {/* ✅ Track Order REMOVED */}
                     {session.user.role === 'admin' && (
                       <li><Link href="/admin/dashboard">⚙️ Admin Panel</Link></li>
                     )}
@@ -109,7 +112,6 @@ export default function Footer() {
                     <li><Link href="/login">🔑 Login</Link></li>
                     <li><Link href="/register">✨ Create Account</Link></li>
                     <li><Link href="/wishlist">❤️ Wishlist</Link></li>
-                    {/* ✅ Track Order REMOVED */}
                   </>
                 )}
               </ul>

@@ -86,24 +86,33 @@
   max-width: 360px;
 }
 
+/* ============================================================
+   FOOTER LOGO (Image Only)
+   ============================================================ */
 .logo {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  font-size: 1.4rem;
+  text-decoration: none;
+  margin-bottom: 4px;
+  background: white;
+  padding: 10px 18px;
+  border-radius: 16px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.logoText {
-  font-family: 'Fredoka One', cursive;
-  font-size: 1.3rem;
-  font-weight: 400;
-  background: linear-gradient(135deg, #FF6B35, #FFB347, #7B2FBE);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+.logo:hover {
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 8px 24px rgba(255, 107, 53, 0.35);
 }
 
+.logoImg {
+  width: auto;
+  height: 75px;
+  object-fit: contain;
+  display: block;
+}
 /* ============================================================
    SOCIALS
    ============================================================ */
@@ -474,9 +483,12 @@
     gap: 22px;
   }
 
-  .logoText {
-    font-size: 1.2rem;
-  }
+ .logo {
+  padding: 8px 14px;
+}
+.logoImg {
+  height: 55px;
+}
 
   .brand p {
     font-size: 0.78rem;
@@ -569,8 +581,8 @@
     max-width: 420px;
   }
 
-  .logoText {
-    font-size: 1.35rem;
+  .logoimg {
+  height: 65px;
   }
 
   .socials a {
@@ -661,8 +673,8 @@
     margin: 14px auto 18px;
   }
 
-  .logoText {
-    font-size: 1.45rem;
+  .logoImg {
+    height: 75px;
   }
 
   .socials a {
@@ -790,13 +802,14 @@
     margin: 14px 0 18px;
   }
 
-  .logo {
-    justify-content: flex-start;
-  }
+.logo {
+  justify-content: flex-start;
+  align-self: flex-start;
+}
 
-  .logoText {
-    font-size: 1.5rem;
-  }
+.logoImg {
+  height: 80px;
+}
 
   .socials {
     justify-content: flex-start;
@@ -915,15 +928,14 @@
     max-width: none;
   }
 
-  .logo {
-    justify-content: flex-start;
-    font-size: 1.5rem;
-  }
+ .logo {
+  justify-content: flex-start;
+  align-self: flex-start;
+}
 
-  .logoText {
-    font-size: 1.55rem;
-  }
-
+.logoImg {
+  height: 85px;
+}
   .socials {
     justify-content: flex-start;
     gap: 10px;
