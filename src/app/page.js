@@ -1,5 +1,6 @@
 import MainLayout from '@/components/layout/MainLayout';
 import HomeClient from './HomeClient';
+import { unstable_noStore as noStore } from 'next/cache';
 
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
@@ -16,35 +17,36 @@ const BASE_URL =
 
 async function getBanners() {
   try {
-    const res = await fetch(`${BASE_URL}/api/banners/active`, {
-      cache: 'no-store',
-    });
+    const res = await fetch(`${BASE_URL}/api/banners/active`, { cache: 'no-store' });
     if (!res.ok) return {};
     return await res.json();
-  } catch {
-    return {};
-  }
+  } catch { return {}; }
 }
 
 async function getProducts(params = '') {
   try {
-    const res = await fetch(
-      `${BASE_URL}/api/products?${params}`,
-      { cache: 'no-store' }
-    );
+    const res = await fetch(`${BASE_URL}/api/products?${params}`, { cache: 'no-store' });
     if (!res.ok) return [];
     const data = await res.json();
     return data.products || [];
-  } catch {
-    return [];
-  }
+  } catch { return []; }
+}
+
+async function getSectionSettings() {
+  try {
+    const res = await fetch(`${BASE_URL}/api/section-settings`, { cache: 'no-store' });
+    if (!res.ok) return {};
+    const data = await res.json();
+    return data.settings || {};
+  } catch { return {}; }
 }
 
 export default async function HomePage() {
-  const [bannerData, trending, featured] = await Promise.all([
+  const [bannerData, trending, featured, sectionSettings] = await Promise.all([
     getBanners(),
     getProducts('trending=true&limit=8'),
     getProducts('featured=true&limit=8'),
+    getSectionSettings(),
   ]);
 
   return (
@@ -52,6 +54,7 @@ export default async function HomePage() {
       <HomeClient
         heroBanners={bannerData.heroBanners || []}
         brands={bannerData.brands || []}
+        categoryBanners={bannerData.categoryBanners || []}   /* ✅ NEW */
         festivalBanners={bannerData.festivalBanners || []}
         budgetBanners={bannerData.budgetBanners || []}
         sunnyBanners={bannerData.sunnyBanners || []}
@@ -62,8 +65,10 @@ export default async function HomePage() {
         evBanners={bannerData.evBanners || []}
         babyFoodBanners={bannerData.babyFoodBanners || []}
         toysBanners={bannerData.toysBanners || []}
+        ctaBanners={(bannerData.banners || []).filter(b => b.type === 'cta')}
         trending={trending}
         featured={featured}
+        initialSectionSettings={sectionSettings}
       />
     </MainLayout>
   );

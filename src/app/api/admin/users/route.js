@@ -16,6 +16,7 @@ export async function GET() {
         id: true,
         name: true,
         email: true,
+        phone: true,        // ✅ ADD THIS LINE
         role: true,
         isActive: true,
         createdAt: true,

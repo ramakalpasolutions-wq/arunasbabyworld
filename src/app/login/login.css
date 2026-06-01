@@ -515,3 +515,161 @@
   .login-card { animation: none; }
   * { transition-duration: 0.01ms !important; }
 }
+/* ========== ✅ BACK & HOME BUTTONS ========== */
+.back-btn {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 999px;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 0.86rem;
+  font-weight: 700;
+  font-family: 'Inter', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: backBtnIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.2s backwards;
+}
+
+.back-btn:hover {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.20), rgba(139, 92, 246, 0.20));
+  border-color: rgba(139, 92, 246, 0.40);
+  color: #fff;
+  transform: translateX(-4px);
+  box-shadow: 0 0 24px rgba(139, 92, 246, 0.25);
+}
+
+.back-btn:hover .back-arrow {
+  transform: translateX(-3px);
+}
+
+.back-arrow {
+  font-size: 1.15rem;
+  line-height: 1;
+  transition: transform 0.3s;
+}
+
+.back-text {
+  font-weight: 700;
+}
+
+.home-btn {
+  position: fixed;
+  top: 24px;
+  right: 24px;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1.5px solid rgba(255, 255, 255, 0.10);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 50%;
+  text-decoration: none;
+  font-size: 1.15rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+  animation: backBtnIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) 0.3s backwards;
+}
+
+.home-btn:hover {
+  background: linear-gradient(135deg, rgba(236, 72, 153, 0.20), rgba(139, 92, 246, 0.20));
+  border-color: rgba(139, 92, 246, 0.40);
+  transform: scale(1.10) rotate(-8deg);
+  box-shadow: 0 0 24px rgba(139, 92, 246, 0.25);
+}
+
+@keyframes backBtnIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+/* ========== RESPONSIVE ========== */
+@media (max-width: 480px) {
+  .login-card {
+    padding: 36px 24px 24px;
+    border-radius: 20px;
+  }
+
+  .logo-circle {
+    width: 56px;
+    height: 56px;
+    font-size: 1.5rem;
+    border-radius: 16px;
+  }
+
+  .title {
+    font-size: 1.5rem;
+  }
+
+  .input {
+    padding: 12px;
+    font-size: 0.9rem;
+  }
+
+  .submit-btn {
+    padding: 14px;
+  }
+
+  /* ✅ Mobile back/home buttons */
+  .back-btn {
+    top: 16px;
+    left: 16px;
+    padding: 8px 14px;
+    font-size: 0.78rem;
+  }
+
+  .home-btn {
+    top: 16px;
+    right: 16px;
+    width: 38px;
+    height: 38px;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .login-card {
+    padding: 28px 18px 20px;
+  }
+
+  .options-row {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .demo-strip {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .demo-btn {
+    width: 100%;
+  }
+
+  /* ✅ Hide back text on very small screens */
+  .back-text {
+    display: none;
+  }
+
+  .back-btn {
+    padding: 8px 12px;
+  }
+}

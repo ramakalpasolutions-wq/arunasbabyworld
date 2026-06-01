@@ -30,7 +30,7 @@ export async function PUT(request, { params }) {
     const body       = await request.json();
     const updateData = {};
 
-    // ✅ Existing fields
+    // ✅ Basic fields
     if (body.title      !== undefined) updateData.title      = body.title;
     if (body.subtitle   !== undefined) updateData.subtitle   = body.subtitle;
     if (body.buttonText !== undefined) updateData.buttonText = body.buttonText;
@@ -38,9 +38,6 @@ export async function PUT(request, { params }) {
     if (body.bgColor    !== undefined) updateData.bgColor    = body.bgColor;
     if (body.isActive   !== undefined) updateData.isActive   = body.isActive;
     if (body.order      !== undefined) updateData.order      = parseInt(body.order) || 0;
-
-
-    
     if (body.type       !== undefined) updateData.type       = body.type;
     if (body.emoji      !== undefined) updateData.emoji      = body.emoji;
     if (body.price      !== undefined) updateData.price      = body.price ? parseFloat(body.price) : null;
@@ -49,7 +46,7 @@ export async function PUT(request, { params }) {
     if (body.slug       !== undefined) updateData.slug       = body.slug;
     if (body.gender     !== undefined) updateData.gender     = body.gender;
 
-    // ✅ New fields
+    // ✅ Extra fields
     if (body.festivalName  !== undefined) updateData.festivalName  = body.festivalName  || null;
     if (body.startDate     !== undefined) updateData.startDate     = body.startDate ? new Date(body.startDate) : null;
     if (body.endDate       !== undefined) updateData.endDate       = body.endDate   ? new Date(body.endDate)   : null;
@@ -91,7 +88,19 @@ export async function PUT(request, { params }) {
       }));
     }
 
-    // ✅ FIXED — prisma.banner not prisma.brand
+    // ✅ FIXED — Panels now saved in PUT
+    if (body.panels !== undefined) {
+      updateData.panels = (body.panels || []).map(p => ({
+        url:      p.url      || '',
+        publicId: p.publicId || '',
+        label:    p.label    || '',
+        sublabel: p.sublabel || '',
+        link:     p.link     || '/products',
+        bg:       p.bg       || '#FDE8D0',
+        isBig:    p.isBig    || false,
+      }));
+    }
+
     const banner = await prisma.banner.update({
       where: { id },
       data:  updateData,
@@ -116,9 +125,7 @@ export async function DELETE(request, { params }) {
     }
 
     const { id } = await params;
-
     await prisma.banner.delete({ where: { id } });
-
     return NextResponse.json({ message: 'Banner deleted successfully' });
 
   } catch (error) {

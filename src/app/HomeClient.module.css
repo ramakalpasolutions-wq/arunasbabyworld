@@ -37,7 +37,7 @@
    ============================================================ */
 .home {
   font-family: var(--font-body);
-  background: var(--bg-page);
+  background: #fff;
   color: var(--text-dark);
   overflow-x: hidden;
   position: relative;
@@ -83,7 +83,7 @@
 .home > *:nth-child(9)  { animation-delay: 0.48s; }
 
 /* ============================================================
-   PRODUCTS GRID — global class
+   PRODUCTS GRID
    ============================================================ */
 :global(.products-grid) {
   display: grid;
@@ -125,4 +125,73 @@
 .home ::selection {
   background: rgba(123,47,190,0.15);
   color: var(--purple-dark);
+}
+
+/* ============================================================
+   GLOBAL RESPONSIVE SAFETY
+   ============================================================ */
+.home img {
+  max-width: 100%;
+  height: auto;
+}
+
+.home section {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+@media (max-width: 768px) {
+  .home {
+    overflow-x: hidden;
+    width: 100%;
+  }
+}
+
+@media (max-width: 1024px) and (min-width: 769px) {
+  .home section {
+    padding-left: clamp(16px, 2vw, 24px) !important;
+    padding-right: clamp(16px, 2vw, 24px) !important;
+  }
+}
+
+/* ============================================================
+   3D FLIP — INSTANT on hover (desktop) & touch (mobile)
+   ============================================================ */
+:global(.flipScene) {
+  perspective: 1200px;
+  cursor: pointer;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+
+:global(.flipCard) {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transition: transform 0.25s ease-out;
+  transform-style: preserve-3d;
+}
+
+:global(.flipFace) {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  border-radius: 20px;
+  overflow: hidden;
+}
+
+:global(.flipFront) {
+  transform: rotateY(0deg);
+}
+
+:global(.flipBack) {
+  transform: rotateY(180deg);
+}
+
+:global(.flipScene:hover .flipCard),
+:global(.flipScene.isFlipped .flipCard) {
+  transform: rotateY(180deg);
 }

@@ -28,22 +28,26 @@ export async function POST(request) {
 
     const body = await request.json();
 
-    if (!body.name || !body.name.trim()) {
+    // ✅ FIXED — Either NAME or LOGO is required (not both)
+    const hasName = body.name && body.name.trim();
+    const hasLogo = body.logo?.url;
+
+    if (!hasName && !hasLogo) {
       return NextResponse.json(
-        { error: 'Brand name is required' },
+        { error: 'Either brand name OR logo is required' },
         { status: 400 }
       );
     }
 
     const brandData = {
-      name:     body.name.trim(),
+      name:     hasName ? body.name.trim() : '',  // ✅ Allow empty if logo exists
       color:    body.color    || '#FF6B35',
       link:     body.link     || '/products',
       isActive: body.isActive !== false,
       order:    parseInt(body.order) || 0,
     };
 
-    if (body.logo?.url) {
+    if (hasLogo) {
       brandData.logo = {
         url:      body.logo.url,
         publicId: body.logo.publicId || '',

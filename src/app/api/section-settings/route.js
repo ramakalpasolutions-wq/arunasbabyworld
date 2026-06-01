@@ -4,11 +4,22 @@ import prisma from '@/lib/prisma';
 // GET — fetch all section settings
 export async function GET() {
   try {
-    const settings = await prisma.sectionSetting.findMany();
+    const settings = await prisma.sectionSetting.findMany({
+      orderBy: { order: 'asc' },
+    });
+
     const result = {};
     settings.forEach(s => {
-      result[s.key] = { title: s.title, emoji: s.emoji };
+      result[s.key] = {
+        title:       s.title,
+        emoji:       s.emoji,
+        description: s.description,
+        buttonText:  s.buttonText,
+        isVisible:   s.isVisible !== false,
+        order:       s.order || 0,
+      };
     });
+
     return NextResponse.json({ settings: result });
   } catch (error) {
     console.error('Section settings GET error:', error);
@@ -20,23 +31,45 @@ export async function GET() {
 export async function POST(req) {
   try {
     const { settings } = await req.json();
+
     if (!settings) {
-      return NextResponse.json({ error: 'No settings provided' }, { status: 400 });
+      return NextResponse.json(
+        { error: 'No settings provided' },
+        { status: 400 }
+      );
     }
 
-    // Upsert each section setting
     const promises = Object.entries(settings).map(([key, value]) =>
       prisma.sectionSetting.upsert({
         where:  { key },
-        update: { title: value.title || null, emoji: value.emoji || null },
-        create: { key,   title: value.title || null, emoji: value.emoji || null },
+        update: {
+          title:       value.title       ?? null,
+          emoji:       value.emoji       ?? null,
+          description: value.description ?? null,
+          buttonText:  value.buttonText  ?? null,
+          isVisible:   value.isVisible !== false,
+          order:       value.order       ?? 0,
+        },
+        create: {
+          key,
+          title:       value.title       ?? null,
+          emoji:       value.emoji       ?? null,
+          description: value.description ?? null,
+          buttonText:  value.buttonText  ?? null,
+          isVisible:   value.isVisible !== false,
+          order:       value.order       ?? 0,
+        },
       })
     );
 
     await Promise.all(promises);
     return NextResponse.json({ success: true });
+
   } catch (error) {
     console.error('Section settings POST error:', error);
-    return NextResponse.json({ error: 'Failed to save' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Failed to save' },
+      { status: 500 }
+    );
   }
 }

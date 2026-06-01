@@ -1,93 +1,159 @@
-/* src/components/admin/AdminSidebar.module.css */
-
-/* ── Sidebar ── */
+/* ════════════════════════════════════
+   SIDEBAR
+════════════════════════════════════ */
 .sidebar {
   position: fixed;
   top: 0;
   left: 0;
   bottom: 0;
   width: 260px;
-  background: var(--text-primary, #1a1a2e);
+  background: linear-gradient(180deg, #0f0a1e 0%, #1a0d2e 100%);
   display: flex;
   flex-direction: column;
   z-index: 300;
   box-shadow: 4px 0 24px rgba(0,0,0,0.15);
   transition: transform 0.3s cubic-bezier(0.22,1,0.36,1);
+  overflow: hidden;
 }
 
-/* ── Logo ── */
+/* ════════════════════════════════════
+   LOGO / HEADER
+════════════════════════════════════ */
 .logo {
   display: flex;
   align-items: center;
   gap: 12px;
-  padding: 24px 20px;
+  padding: 18px 20px;
   border-bottom: 1px solid rgba(255,255,255,0.08);
   font-size: 1.6rem;
   position: relative;
   flex-shrink: 0;
+  min-height: 70px;
 }
 
 .logoText {
-  font-family: var(--font-display, 'Fredoka One', cursive);
-  font-size: 1.2rem;
-  font-weight: 700;
-  background: linear-gradient(135deg, #ff6b9d, #c44dff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  font-family: 'Nunito', sans-serif;
+  font-size: 1.05rem;
+  font-weight: 800;
+  color: #fff;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .logoSub {
-  font-size: 0.68rem;
+  font-size: 0.66rem;
   color: rgba(255,255,255,0.4);
   text-transform: uppercase;
   letter-spacing: 1.5px;
+  font-weight: 600;
 }
 
-/* ── Close button — only on mobile ── */
+/* ════════════════════════════════════
+   ADMIN PROFILE CARD
+════════════════════════════════════ */
+.adminProfile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 14px;
+  margin: 12px;
+  background: linear-gradient(135deg, rgba(255,107,53,0.15), rgba(123,47,190,0.15));
+  border: 1px solid rgba(255,107,53,0.25);
+  border-radius: 12px;
+  flex-shrink: 0;
+}
+
+.adminAvatar {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FF6B35, #7B2FBE);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.adminInfo {
+  min-width: 0;
+  flex: 1;
+}
+
+.adminName {
+  font-size: 0.85rem;
+  font-weight: 800;
+  color: white;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  font-family: 'Nunito', sans-serif;
+}
+
+.adminRole {
+  font-size: 0.62rem;
+  color: rgba(255,255,255,0.55);
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-weight: 700;
+  margin: 2px 0 0;
+  font-family: 'Nunito', sans-serif;
+}
+
+/* ════════════════════════════════════
+   CLOSE BUTTON
+════════════════════════════════════ */
 .closeBtn {
   display: none;
   position: absolute;
-  right: 16px;
+  right: 12px;
   top: 50%;
   transform: translateY(-50%);
-  background: rgba(255,255,255,0.08);
-  border: none;
-  color: rgba(255,255,255,0.6);
-  width: 30px;
-  height: 30px;
+  background: rgba(255,255,255,0.10);
+  border: 1px solid rgba(255,255,255,0.15);
+  color: rgba(255,255,255,0.90);
+  width: 32px;
+  height: 32px;
   border-radius: 8px;
   cursor: pointer;
-  font-size: 0.85rem;
+  font-size: 0.95rem;
+  line-height: 1;
   transition: all 0.2s;
   align-items: center;
   justify-content: center;
+  z-index: 5;
 }
 
 .closeBtn:hover {
-  background: rgba(255,255,255,0.15);
-  color: white;
+  background: rgba(239,68,68,0.25);
+  border-color: rgba(239,68,68,0.40);
+  color: #fff;
 }
 
-/* ── Nav ── */
+/* ════════════════════════════════════
+   NAV (scrollable)
+════════════════════════════════════ */
 .nav {
   flex: 1;
-  padding: 16px 12px;
+  padding: 8px 12px 16px;
   display: flex;
   flex-direction: column;
   gap: 4px;
   overflow-y: auto;
+  overflow-x: hidden;
   scrollbar-width: thin;
   scrollbar-color: rgba(255,255,255,0.1) transparent;
+  min-height: 0;
 }
 
 .nav::-webkit-scrollbar { width: 4px; }
 .nav::-webkit-scrollbar-track { background: transparent; }
-.nav::-webkit-scrollbar-thumb {
-  background: rgba(255,255,255,0.1);
-  border-radius: 4px;
-}
+.nav::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 4px; }
 
 .navItem {
   display: flex;
@@ -95,29 +161,27 @@
   gap: 12px;
   padding: 11px 14px;
   border-radius: 12px;
-  color: rgba(255,255,255,0.6);
-  font-size: 0.9rem;
+  color: rgba(255,255,255,0.55);
+  font-size: 0.88rem;
   font-weight: 600;
   transition: all 0.2s;
   text-decoration: none;
   position: relative;
   white-space: nowrap;
+  font-family: 'Nunito', sans-serif;
+  flex-shrink: 0;
 }
 
 .navItem:hover {
-  background: rgba(255,255,255,0.08);
-  color: rgba(255,255,255,0.9);
-  padding-left: 18px;
+  background: rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.85);
 }
 
 .navActive {
-  background: linear-gradient(
-    135deg,
-    rgba(255,107,157,0.25),
-    rgba(196,77,255,0.2)
-  ) !important;
+  background: linear-gradient(135deg, rgba(255,107,53,0.22), rgba(123,47,190,0.18)) !important;
   color: white !important;
-  border-left: 3px solid #ff6b9d;
+  font-weight: 800 !important;
+  border: 1px solid rgba(255,107,53,0.25);
 }
 
 .navIcon {
@@ -133,18 +197,24 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #ff6b9d;
-  box-shadow: 0 0 8px #ff6b9d;
+  background: #FF6B35;
+  box-shadow: 0 0 8px #FF6B35;
 }
 
-/* ── Bottom ── */
+/* ════════════════════════════════════
+   BOTTOM (View Store + Logout)
+   ✅ Solid background to block floating "N" avatar
+════════════════════════════════════ */
 .bottom {
-  padding: 16px 12px;
+  padding: 12px 12px 16px;
   border-top: 1px solid rgba(255,255,255,0.08);
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 6px;
   flex-shrink: 0;
+  background: #0f0a1e;
+  position: relative;
+  z-index: 10;
 }
 
 .storeLink {
@@ -153,11 +223,14 @@
   gap: 10px;
   padding: 10px 14px;
   border-radius: 12px;
-  color: rgba(255,255,255,0.5);
+  color: rgba(255,255,255,0.65);
   font-size: 0.88rem;
   font-weight: 600;
   transition: all 0.2s;
   text-decoration: none;
+  font-family: 'Nunito', sans-serif;
+  position: relative;
+  z-index: 2;
 }
 
 .storeLink:hover {
@@ -171,26 +244,28 @@
   gap: 10px;
   padding: 10px 14px;
   border-radius: 12px;
-  color: rgba(255,107,107,0.7);
+  color: #f87171;
   font-size: 0.88rem;
-  font-weight: 600;
-  background: none;
-  border: none;
+  font-weight: 700;
+  background: rgba(239,68,68,0.10);
+  border: 1px solid rgba(239,68,68,0.20);
   cursor: pointer;
-  font-family: var(--font-body, 'Nunito', sans-serif);
+  font-family: 'Nunito', sans-serif;
   transition: all 0.2s;
   width: 100%;
   text-align: left;
+  position: relative;
+  z-index: 2;
 }
 
 .logoutBtn:hover {
-  color: #ff6b6b;
-  background: rgba(255,107,107,0.1);
+  color: #fca5a5;
+  background: rgba(239,68,68,0.18);
 }
 
-/* ============================================================
+/* ════════════════════════════════════
    MOBILE TOP BAR
-   ============================================================ */
+════════════════════════════════════ */
 .mobileTopBar {
   display: none;
   position: fixed;
@@ -198,37 +273,37 @@
   left: 0;
   right: 0;
   height: 56px;
-  background: #1a1a2e;
-  z-index: 200;
+  background: #0f0a1e;
+  z-index: 400;
   align-items: center;
   justify-content: space-between;
-  padding: 0 16px;
+  padding: 0 12px;
   box-shadow: 0 2px 16px rgba(0,0,0,0.20);
   border-bottom: 1px solid rgba(255,255,255,0.06);
 }
 
-/* ── Hamburger ── */
 .menuToggle {
   display: flex;
   flex-direction: column;
   gap: 5px;
-  background: none;
-  border: none;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
   cursor: pointer;
-  padding: 8px;
-  border-radius: 8px;
-  transition: background 0.2s;
+  padding: 9px;
+  border-radius: 10px;
+  transition: all 0.2s;
 }
 
 .menuToggle:hover {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,107,53,0.15);
+  border-color: rgba(255,107,53,0.30);
 }
 
 .menuLine {
   display: block;
-  width: 22px;
+  width: 20px;
   height: 2px;
-  background: rgba(255,255,255,0.75);
+  background: #FF6B35;
   border-radius: 2px;
   transition: all 0.3s ease;
 }
@@ -237,23 +312,22 @@
 .menuLineOpen2 { opacity: 0; transform: scaleX(0); }
 .menuLineOpen3 { transform: translateY(-7px) rotate(-45deg); }
 
-/* ── Mobile logo ── */
 .mobileLogo {
   display: flex;
   align-items: center;
   gap: 8px;
+  flex: 1;
+  justify-content: center;
 }
 
 .mobileLogoText {
-  font-size: 1rem;
+  font-size: 0.95rem;
   font-weight: 800;
-  background: linear-gradient(135deg, #ff6b9d, #c44dff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
+  color: #fff;
+  font-family: 'Nunito', sans-serif;
+  white-space: nowrap;
 }
 
-/* ── Mobile store link ── */
 .mobileStoreLink {
   font-size: 1.3rem;
   text-decoration: none;
@@ -263,17 +337,24 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.10);
+  width: 38px;
+  height: 38px;
 }
 
 .mobileStoreLink:hover {
-  background: rgba(255,255,255,0.08);
+  background: rgba(255,107,53,0.15);
+  border-color: rgba(255,107,53,0.30);
 }
 
-/* ── Overlay ── */
+/* ════════════════════════════════════
+   OVERLAY
+════════════════════════════════════ */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.55);
+  background: rgba(0,0,0,0.60);
   z-index: 250;
   backdrop-filter: blur(3px);
   animation: overlayIn 0.2s ease;
@@ -281,26 +362,21 @@
 
 @keyframes overlayIn {
   from { opacity: 0; }
-  to   { opacity: 1; }
+  to { opacity: 1; }
 }
 
-/* ============================================================
-   RESPONSIVE
-   ============================================================ */
-@media (max-width: 900px) {
-  .mobileTopBar {
-    display: flex;
-  }
-
-  .closeBtn {
-    display: flex;
-  }
+/* ════════════════════════════════════
+   ✅ RESPONSIVE — TABLET + MOBILE (1024px)
+════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .mobileTopBar { display: flex; }
+  .closeBtn { display: flex; }
 
   .sidebar {
     transform: translateX(-100%);
     top: 0;
     z-index: 280;
-    width: 260px;
+    width: 280px;
   }
 
   .sidebarOpen {
@@ -308,57 +384,62 @@
   }
 
   .logo {
-    padding: 20px 16px;
-  }
-
-  .navItem {
-    padding: 12px 14px;
-    font-size: 0.92rem;
-  }
-
-  .navItem:hover {
-    padding-left: 18px;
+    padding-right: 56px;
   }
 }
 
+/* ════════════════════════════════════
+   ✅ MOBILE (480px)
+════════════════════════════════════ */
 @media (max-width: 480px) {
   .sidebar {
-    width: 240px;
+    width: 82%;
+    max-width: 290px;
   }
 
-  .navItem {
-    padding: 11px 12px;
-    font-size: 0.88rem;
-  }
-
-  .logoText {
-    font-size: 1.1rem;
+  .mobileTopBar {
+    padding: 0 10px;
   }
 
   .mobileLogoText {
-    font-size: 0.9rem;
+    font-size: 0.88rem;
   }
-}/* ✅ Sub-item style — indented below Banners */
-.navSubItem {
-  padding-left: 44px !important;
-  font-size: 0.84rem !important;
-  opacity: 0.9;
-  position: relative;
+
+  .adminProfile {
+    margin: 10px;
+    padding: 10px 12px;
+  }
+
+  .adminAvatar {
+    width: 34px;
+    height: 34px;
+    font-size: 0.85rem;
+  }
+
+  .adminName { font-size: 0.82rem; }
+  .adminRole { font-size: 0.58rem; }
 }
 
-/* Left line connecting to parent */
-.navSubItem::before {
-  content: '';
-  position: absolute;
-  left: 28px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 8px;
-  height: 1.5px;
-  background: rgba(255, 255, 255, 0.35);
-  border-radius: 999px;
+/* ════════════════════════════════════
+   ✅ TINY MOBILE (360px)
+════════════════════════════════════ */
+@media (max-width: 360px) {
+  .sidebar {
+    width: 88%;
+  }
+
+  .mobileLogoText {
+    display: none;
+  }
 }
 
-.navSubItem:hover::before {
-  background: rgba(255, 255, 255, 0.8);
+/* ════════════════════════════════════
+   ✅ HIDE NEXT.JS DEV INDICATOR
+   The "N" circle is Next.js dev mode badge
+════════════════════════════════════ */
+:global(#__next-build-watcher),
+:global(nextjs-portal),
+:global([data-nextjs-toast]),
+:global(.__next-dev-overlay-bottom-stack) {
+  display: none !important;
 }

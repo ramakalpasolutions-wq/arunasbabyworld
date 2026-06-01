@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useRef } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useSession, signOut } from 'next-auth/react';
 import styles from './Footer.module.css';
 
@@ -8,7 +9,6 @@ export default function Footer() {
   const { data: session } = useSession();
   const footerRef = useRef(null);
 
-  // ✅ Entrance reveal animation
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
@@ -20,10 +20,8 @@ export default function Footer() {
       },
       { threshold: 0.1 }
     );
-
     const revealEls = footerRef.current?.querySelectorAll(`.${styles.reveal}`);
     revealEls?.forEach(el => observer.observe(el));
-
     return () => observer.disconnect();
   }, []);
 
@@ -35,10 +33,17 @@ export default function Footer() {
 
             {/* Brand */}
             <div className={`${styles.brand} ${styles.reveal}`}>
-              <div className={styles.logo}>
-                <span></span>
-                <span className={styles.logoText}>Baby's World</span>
-              </div>
+              {/* ✅ LOGO IMAGE */}
+              <Link href="/" className={styles.logo}>
+                <Image
+                  src="/logo.png"
+                  alt="Aruna's Baby World"
+                  width={220}
+                  height={90}
+                  className={styles.logoImg}
+                />
+              </Link>
+
               <p>Your one-stop destination for premium baby & kids products. Quality, safety, and joy — delivered to your door.</p>
               <div className={styles.socials}>
                 <a href="#" aria-label="Facebook">📘</a>
@@ -55,9 +60,7 @@ export default function Footer() {
               <ul>
                 <li><Link href="/">Home</Link></li>
                 <li><Link href="/products">All Products</Link></li>
-                <li><Link href="/about">About Us</Link></li>
                 <li><Link href="/contact">Contact</Link></li>
-                <li><Link href="/track-order">Track Order</Link></li>
               </ul>
             </div>
 
@@ -73,18 +76,6 @@ export default function Footer() {
               </ul>
             </div>
 
-            {/* Support */}
-            <div className={`${styles.col} ${styles.reveal}`} style={{ '--delay': '0.3s' }}>
-              <h4>Support</h4>
-              <ul>
-                <li><Link href="/faq">FAQ</Link></li>
-                <li><Link href="/returns">Returns Policy</Link></li>
-                <li><Link href="/shipping">Shipping Info</Link></li>
-                <li><Link href="/privacy">Privacy Policy</Link></li>
-                <li><Link href="/terms">Terms of Service</Link></li>
-              </ul>
-            </div>
-
             {/* Account */}
             <div className={`${styles.col} ${styles.reveal}`} style={{ '--delay': '0.4s' }}>
               <h4>My Account</h4>
@@ -92,9 +83,8 @@ export default function Footer() {
                 {session ? (
                   <>
                     <li><Link href="/profile">👤 My Profile</Link></li>
-                    <li><Link href="/orders">📦 My Orders</Link></li>
+                    <li><Link href="/profile?tab=orders">📦 My Orders</Link></li>
                     <li><Link href="/wishlist">❤️ Wishlist</Link></li>
-                    <li><Link href="/track-order">🔍 Track Order</Link></li>
                     {session.user.role === 'admin' && (
                       <li><Link href="/admin/dashboard">⚙️ Admin Panel</Link></li>
                     )}
@@ -121,13 +111,11 @@ export default function Footer() {
                   <>
                     <li><Link href="/login">🔑 Login</Link></li>
                     <li><Link href="/register">✨ Create Account</Link></li>
-                    <li><Link href="/track-order">🔍 Track Order</Link></li>
                     <li><Link href="/wishlist">❤️ Wishlist</Link></li>
                   </>
                 )}
               </ul>
 
-              {/* ✅ User greeting if logged in */}
               {session && (
                 <div className={styles.footerUserCard}>
                   <div className={styles.footerUserAvatar}>
@@ -152,7 +140,7 @@ export default function Footer() {
       <div className={`${styles.bottom} ${styles.reveal}`}>
         <div className="container">
           <div className={styles.bottomContent}>
-            <p>© {new Date().getFullYear()} Powderd by RAMAKALPA SOLUTIONS.</p>
+            <p>© {new Date().getFullYear()} Powered by RAMAKALPA SOLUTIONS.</p>
             <div className={styles.bottomLinks}>
               <Link href="/privacy">Privacy</Link>
               <Link href="/terms">Terms</Link>

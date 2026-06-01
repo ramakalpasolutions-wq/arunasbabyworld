@@ -52,7 +52,7 @@ export async function POST(request) {
     };
 
     // ✅ Main image
-    if (body.image && body.image.url) {
+    if (body.image?.url) {
       bannerData.image = {
         url:      body.image.url      || '',
         publicId: body.image.publicId || '',
@@ -61,7 +61,7 @@ export async function POST(request) {
     }
 
     // ✅ Mobile image
-    if (body.mobileImage && body.mobileImage.url) {
+    if (body.mobileImage?.url) {
       bannerData.mobileImage = {
         url:      body.mobileImage.url      || '',
         publicId: body.mobileImage.publicId || '',
@@ -69,18 +69,29 @@ export async function POST(request) {
     }
 
     // ✅ Grid images
-    if (body.gridImages && body.gridImages.length > 0) {
-      bannerData.gridImages = body.gridImages.map(img => ({
-        url:      img.url      || '',
-        publicId: img.publicId || '',
-        title:    img.title    || '',
-        brand:    img.brand    || '',
-        price:    img.price    || '',
-        link:     img.link     || '',
-      }));
-    } else {
-      bannerData.gridImages = [];
-    }
+    bannerData.gridImages = body.gridImages?.length > 0
+      ? body.gridImages.map(img => ({
+          url:      img.url      || '',
+          publicId: img.publicId || '',
+          title:    img.title    || '',
+          brand:    img.brand    || '',
+          price:    img.price    || '',
+          link:     img.link     || '',
+        }))
+      : [];
+
+    // ✅ NEW - Panels for hero
+    bannerData.panels = body.panels?.length > 0
+      ? body.panels.map(p => ({
+          url:      p.url      || '',
+          publicId: p.publicId || '',
+          label:    p.label    || '',
+          sublabel: p.sublabel || '',
+          link:     p.link     || '/products',
+          bg:       p.bg       || '#FDE8D0',
+          isBig:    p.isBig    || false,
+        }))
+      : [];
 
     const banner = await prisma.banner.create({ data: bannerData });
     return NextResponse.json({ banner }, { status: 201 });
