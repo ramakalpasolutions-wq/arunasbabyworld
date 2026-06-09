@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import Link from 'next/link';
 import styles from './HeroBanner.module.css';
 
@@ -17,7 +17,7 @@ const marqueeItems = [
 ];
 
 // ============================================================
-// DEFAULT BANNERS (used as fallback)
+// DEFAULT BANNERS (fallback)
 // ============================================================
 const defaultBanners = [
   {
@@ -35,9 +35,7 @@ const defaultBanners = [
       { number: '4.9★', label: 'Rating' },
     ],
     panels: [
-      { label: '👶 Newborn',      sublabel: 'Shop Now →',         link: '/products?category=newborn',  emoji: '🍼', bg: '#FDE8D0', isBig: false, url: '' },
-      { label: '👗 Clothing',     sublabel: 'Shop Now →',         link: '/products?category=clothing', emoji: '👕', bg: '#F9D5F5', isBig: false, url: '' },
-      { label: '🔥 Trending Now', sublabel: '2.4k sold this week', link: '/products',                  emoji: '⭐', bg: '#FFF3E8', isBig: true,  url: '' },
+      { label: '🔥 Trending Now', sublabel: '2.4k sold this week', link: '/products', bg: '#FFF3E8', isBig: true, url: '', emoji: '⭐' },
     ],
     theme: 'orange',
   },
@@ -56,9 +54,7 @@ const defaultBanners = [
       { number: '4.9★', label: 'Rating' },
     ],
     panels: [
-      { label: '👦 Boys',         sublabel: 'Shop Now →',         link: '/products?category=boys',     emoji: '🎽', bg: '#EDD6F9', isBig: false, url: '' },
-      { label: '👧 Girls',        sublabel: 'Shop Now →',         link: '/products?category=girls',    emoji: '👗', bg: '#FFD6E7', isBig: false, url: '' },
-      { label: '🌟 Best Sellers', sublabel: '1.8k sold this week', link: '/products',                  emoji: '💜', bg: '#F7F0FF', isBig: true,  url: '' },
+      { label: '🌟 Best Sellers', sublabel: '1.8k sold this week', link: '/products', bg: '#F7F0FF', isBig: true, url: '', emoji: '💜' },
     ],
     theme: 'purple',
   },
@@ -77,9 +73,7 @@ const defaultBanners = [
       { number: '4.9★', label: 'Rating' },
     ],
     panels: [
-      { label: '🧸 Toys',      sublabel: 'Shop Now →',         link: '/products?category=toys',     emoji: '🧸', bg: '#FAD9C4', isBig: false, url: '' },
-      { label: '📚 Learning',  sublabel: 'Shop Now →',         link: '/products?category=learning', emoji: '📚', bg: '#FAE8C4', isBig: false, url: '' },
-      { label: '🎉 Top Picks', sublabel: '3.1k sold this week', link: '/products',                  emoji: '🌈', bg: '#FFF4EE', isBig: true,  url: '' },
+      { label: '🎉 Top Picks', sublabel: '3.1k sold this week', link: '/products', bg: '#FFF4EE', isBig: true, url: '', emoji: '🌈' },
     ],
     theme: 'peach',
   },
@@ -113,32 +107,107 @@ const themeMap = {
 };
 
 // ============================================================
+// HELPER — Detect video URLs
+// ============================================================
+const isVideoUrl = (url) => {
+  if (!url || typeof url !== 'string') return false;
+  const lower = url.toLowerCase().split('?')[0];
+  return (
+    lower.endsWith('.mp4')  || lower.endsWith('.webm') ||
+    lower.endsWith('.mov')  || lower.endsWith('.m4v')  ||
+    lower.includes('/video/')
+  );
+};
+
+// ============================================================
+// MEDIA COMPONENT (Image or Video)
+// ============================================================
+function HeroMedia({ panel, isActive, muted, onToggleMute }) {
+  const videoRef = useRef(null);
+  const hasMedia = !!(panel?.url && panel.url.trim() !== '');
+  const isVideo  = hasMedia && isVideoUrl(panel.url);
+
+  useEffect(() => {
+    if (!videoRef.current || !isVideo) return;
+    if (isActive) {
+      videoRef.current.currentTime = 0;
+      videoRef.current.muted = muted;
+      videoRef.current.play().catch(() => {});
+    } else {
+      videoRef.current.pause();
+    }
+  }, [isActive, isVideo, muted]);
+
+  if (!hasMedia) {
+    return (
+      <div className={styles.emojiWrap}>
+        <span className={styles.bigEmoji}>{panel?.emoji || '🍼'}</span>
+      </div>
+    );
+  }
+
+  if (isVideo) {
+    return (
+      <>
+        <video
+          ref={videoRef}
+          className={styles.heroMedia}
+          src={panel.url}
+          autoPlay
+          muted={muted}
+          loop
+          playsInline
+          preload="metadata"
+        />
+        <button
+          type="button"
+          className={styles.muteBtn}
+          onClick={(e) => { e.preventDefault(); e.stopPropagation(); onToggleMute(); }}
+          aria-label={muted ? 'Unmute' : 'Mute'}
+        >
+          {muted ? '🔇' : '🔊'}
+        </button>
+        <span className={styles.liveBadge}>
+          <span className={styles.liveDot} />
+          LIVE
+        </span>
+      </>
+    );
+  }
+
+  return (
+    <img
+      src={panel.url}
+      alt={panel.label || ''}
+      className={styles.heroMedia}
+      loading="lazy"
+    />
+  );
+}
+
+// ============================================================
 // MAIN COMPONENT
 // ============================================================
 export default function HeroBanner({ banners = [] }) {
   const rawSlides = banners.length > 0 ? banners : defaultBanners;
 
   const slides = rawSlides.map((b, i) => {
-    const def = defaultBanners[i % defaultBanners.length];
-
-    const panels = b.panels?.length > 0
-      ? b.panels.map((p, pi) => ({
-          ...def.panels[pi % def.panels.length],
-          ...p,
-        }))
-      : def.panels;
+    const def       = defaultBanners[i % defaultBanners.length];
+    const allPanels = b.panels?.length > 0 ? b.panels : def.panels;
+    const bigPanel  = allPanels.find(p => p.isBig) || allPanels[0] || def.panels[0];
 
     return {
       ...def,
       ...b,
-      theme: b.theme || def.theme,
-      panels,
+      theme:    b.theme || def.theme,
+      bigMedia: bigPanel,
     };
   });
 
   const [current,   setCurrent]   = useState(0);
   const [animating, setAnimating] = useState(false);
   const [paused,    setPaused]    = useState(false);
+  const [muted,     setMuted]     = useState(true);
 
   const go = useCallback((idx) => {
     if (animating || idx === current) return;
@@ -157,8 +226,7 @@ export default function HeroBanner({ banners = [] }) {
 
   const slide = slides[current];
   const theme = themeMap[slide.theme] || themeMap.orange;
-
-  const hasImage = (panel) => !!(panel?.url && panel.url.trim() !== '');
+  const media = slide.bigMedia;
 
   return (
     <section
@@ -179,25 +247,51 @@ export default function HeroBanner({ banners = [] }) {
       </div>
 
       {/* ── HERO MAIN ── */}
-      <div className={styles.hero} style={{ background: theme.bg }}>
-        <div className={styles.blob1} style={{ background: theme.accentSoft }} />
-        <div className={styles.blob2} style={{ background: theme.accentSoft }} />
+      <div className={styles.hero}>
 
-        <div className={`container ${styles.layout}`}>
+        {/* ── FULL-SCREEN MEDIA (Background layer) ── */}
+        <div className={`${styles.mediaCol} ${animating ? styles.mediaOut : styles.mediaIn}`}>
+          <Link
+            href={media?.link || '/products'}
+            className={styles.mediaCard}
+            style={{ background: media?.bg || '#FFF3E8' }}
+            aria-label={media?.label || 'Hero'}
+          >
+            <HeroMedia
+              panel={media}
+              isActive={!animating}
+              muted={muted}
+              onToggleMute={() => setMuted(m => !m)}
+            />
 
-          {/* ── LEFT TEXT ── */}
+            {media?.url && <div className={styles.mediaOverlay} />}
+          </Link>
+
+          {/* Trending badge */}
+          {media?.label && (
+            <div className={styles.trendingBadge} style={{ background: theme.btnGrad }}>
+              <span>{media.label}</span>
+            </div>
+          )}
+        </div>
+
+        {/* ── TEXT OVERLAY (On top of media) ── */}
+        <div className={styles.layout}>
           <div className={`${styles.textCol} ${animating ? styles.textOut : styles.textIn}`}>
 
             <div className={styles.tagRow}>
-              <span className={styles.tag} style={{ background: theme.tagBg, color: theme.tagColor, border: `1.5px solid ${theme.tagBorder}` }}>
-                <span className={styles.tagDot} style={{ background: theme.accent }} />
+              <span className={styles.tag}>
+                <span className={styles.tagDot} />
                 {slide.tag}
               </span>
             </div>
 
             <h1 className={styles.headline}>
               {slide.title.split('\n').map((line, i) => (
-                <span key={i} className={i === 1 ? styles.headlineAccent : ''} style={i === 1 ? { color: theme.accent } : {}}>
+                <span
+                  key={i}
+                  className={i === 1 ? styles.headlineAccent : ''}
+                >
                   {line}{i === 0 && <br />}
                 </span>
               ))}
@@ -206,11 +300,18 @@ export default function HeroBanner({ banners = [] }) {
             <p className={styles.subtitle}>{slide.subtitle}</p>
 
             <div className={styles.ctaRow}>
-              <Link href={slide.buttonLink || '/products'} className={styles.btnPrimary} style={{ background: theme.btnGrad, boxShadow: `0 8px 28px ${theme.accentGlow}` }}>
+              <Link
+                href={slide.buttonLink || '/products'}
+                className={styles.btnPrimary}
+                style={{ background: theme.btnGrad, boxShadow: `0 12px 36px ${theme.accentGlow}` }}
+              >
                 <span>{slide.buttonText || 'Shop Now'}</span>
                 <span className={styles.btnArrow}>→</span>
               </Link>
-              <Link href={slide.secondaryLink || '/products'} className={styles.btnSecondary} style={{ color: theme.accent, borderColor: `${theme.accent}40`, background: theme.accentLight }}>
+              <Link
+                href={slide.secondaryLink || '/products'}
+                className={styles.btnSecondary}
+              >
                 {slide.secondaryText || 'View Lookbook'}
               </Link>
             </div>
@@ -218,154 +319,47 @@ export default function HeroBanner({ banners = [] }) {
             <div className={styles.statsRow}>
               {slide.stats?.map((stat, i) => (
                 <div key={i} className={styles.statItem}>
-                  <span className={styles.statNum} style={{ color: theme.accent }}>{stat.number}</span>
-                  <span className={styles.statLabel}>{stat.label}</span>
+                  <div>
+                    <span className={styles.statNum}>{stat.number}</span>
+                    <span className={styles.statLabel}>{stat.label}</span>
+                  </div>
                   {i < slide.stats.length - 1 && <div className={styles.statDivider} />}
                 </div>
               ))}
             </div>
           </div>
+        </div>
 
-          {/* ── RIGHT PANEL GRID ── */}
-          <div className={`${styles.panelGrid} ${animating ? styles.panelOut : styles.panelIn}`}>
-
-            {/* Top 2 small panels */}
-            <div className={styles.topPanels}>
-              {slide.panels?.filter(p => !p.isBig).map((panel, i) => (
-                <Link
-                  key={i}
-                  href={panel.link || '/products'}
-                  className={styles.smallPanel}
-                  style={{ background: panel.bg || '#FDE8D0' }}
-                >
-           {hasImage(panel) ? (
-  <>
-    {/* ✅ FULL IMAGE FILLS PANEL */}
-    <img
-      src={panel.url}
-      alt={panel.label || ''}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        width: '100%',
-        height: '100%',
-        objectFit: 'cover',         // ✅ Fills entire panel
-        objectPosition: 'center',
-        borderRadius: '18px',
-        zIndex: 1,
-      }}
-    />
-
-                      {/* Dark gradient overlay for text readability */}
-                      <div style={{
-                        position: 'absolute', inset: 0,
-                        background: 'linear-gradient(to top, rgba(0,0,0,0.65) 0%, rgba(0,0,0,0.1) 50%, transparent 100%)',
-                        borderRadius: '18px',
-                        zIndex: 2,
-                      }} />
-                    </>
-                  ) : (
-                    <span className={styles.panelEmoji}>{panel.emoji}</span>
-                  )}
-
-                  <div className={styles.panelInfo} style={{ position: 'relative', zIndex: 3 }}>
-                    <span className={styles.panelLabel} style={{
-                      color: hasImage(panel) ? 'white' : '#2D1B4E',
-                      textShadow: hasImage(panel) ? '0 2px 6px rgba(0,0,0,0.8)' : 'none',
-                    }}>
-                      {panel.label}
-                    </span>
-                    <span className={styles.panelSub} style={{
-                      color: hasImage(panel) ? 'rgba(255,255,255,0.92)' : '#7A6080',
-                      textShadow: hasImage(panel) ? '0 1px 4px rgba(0,0,0,0.7)' : 'none',
-                    }}>
-                      {panel.sublabel}
-                    </span>
-                  </div>
-                </Link>
-              ))}
-            </div>
-
-            {/* Bottom big panel */}
-            {slide.panels?.filter(p => p.isBig).map((panel, i) => (
-              <Link
-                key={i}
-                href={panel.link || '/products'}
-                className={styles.bigPanel}
-                style={{ background: panel.bg || '#FFF3E8' }}
-              >
-           {hasImage(panel) ? (
-  <>
-    {/* ✅ FULL IMAGE FILLS PANEL */}
-    <img
-      src={panel.url}
-      alt={panel.label || ''}
-      style={{
-        position: 'absolute',
-        inset: 0,
-        width: '100%',
-        height: '100%',
-        objectFit: 'cover',         // ✅ Fills entire panel
-        objectPosition: 'center',
-        borderRadius: '18px',
-        zIndex: 1,
-      }}
-    />
-
-                    {/* Dark gradient overlay */}
-                    <div style={{
-                      position: 'absolute', inset: 0,
-                      background: 'linear-gradient(to top, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0.15) 50%, transparent 100%)',
-                      borderRadius: '18px',
-                      zIndex: 2,
-                    }} />
-                  </>
-                ) : (
-                  <span className={styles.bigPanelEmoji}>{panel.emoji}</span>
-                )}
-
-                <div className={styles.trendingBadge} style={{ background: theme.btnGrad, position: 'relative', zIndex: 3 }}>
-                  <span>{panel.label}</span>
-                </div>
-
-                <div className={styles.bigPanelInfo} style={{ position: 'relative', zIndex: 3 }}>
-                  <span className={styles.bigPanelSub} style={{
-                    color: hasImage(panel) ? 'rgba(255,255,255,0.95)' : '#5A4570',
-                    textShadow: hasImage(panel) ? '0 1px 4px rgba(0,0,0,0.7)' : 'none',
-                  }}>
-                    {panel.sublabel}
-                  </span>
-                  <span className={styles.bigPanelShop} style={{
-                    color: hasImage(panel) ? 'white' : theme.accent,
-                    textShadow: hasImage(panel) ? '0 2px 6px rgba(0,0,0,0.8)' : 'none',
-                  }}>
-                    Shop Now →
-                  </span>
-                </div>
-              </Link>
-            ))}
-
-            {/* Slide indicators */}
-            <div className={styles.indicators}>
-              {slides.map((_, i) => (
-                <button
-                  key={i}
-                  className={`${styles.dot} ${i === current ? styles.dotActive : ''}`}
-                  onClick={() => go(i)}
-                  aria-label={`Slide ${i + 1}`}
-                  style={i === current ? { background: theme.accent, width: '28px' } : {}}
-                />
-              ))}
-              <div className={styles.progressTrack}>
-                <div className={styles.progressBar} key={current} style={{ background: theme.btnGrad, animationPlayState: paused ? 'paused' : 'running' }} />
-              </div>
-            </div>
+        {/* Slide indicators */}
+        <div className={styles.indicators}>
+          {slides.map((_, i) => (
+            <button
+              key={i}
+              className={`${styles.dot} ${i === current ? styles.dotActive : ''}`}
+              onClick={() => go(i)}
+              aria-label={`Slide ${i + 1}`}
+            />
+          ))}
+          <div className={styles.progressTrack}>
+            <div
+              className={styles.progressBar}
+              key={current}
+              style={{ animationPlayState: paused ? 'paused' : 'running' }}
+            />
           </div>
         </div>
 
         {/* Arrow buttons */}
-        <button className={`${styles.arrow} ${styles.arrowLeft}`}  onClick={goPrev} aria-label="Previous" style={{ '--arrow-accent': theme.accent }}>‹</button>
-        <button className={`${styles.arrow} ${styles.arrowRight}`} onClick={goNext} aria-label="Next"     style={{ '--arrow-accent': theme.accent }}>›</button>
+        <button
+          className={`${styles.arrow} ${styles.arrowLeft}`}
+          onClick={goPrev}
+          aria-label="Previous"
+        >‹</button>
+        <button
+          className={`${styles.arrow} ${styles.arrowRight}`}
+          onClick={goNext}
+          aria-label="Next"
+        >›</button>
       </div>
     </section>
   );

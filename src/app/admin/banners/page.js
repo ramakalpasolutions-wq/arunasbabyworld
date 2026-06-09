@@ -3,12 +3,10 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
 // ============================================================
-// PANEL DEFAULTS
+// PANEL DEFAULTS — Hero uses only ONE media panel now
 // ============================================================
 const PANEL_DEFAULTS = [
-  { label: '👶 Newborn',      sublabel: 'Shop Now →',          link: '/products?category=newborn',  bg: '#FDE8D0', isBig: false, url: '', publicId: '' },
-  { label: '👗 Clothing',     sublabel: 'Shop Now →',          link: '/products?category=clothing', bg: '#F9D5F5', isBig: false, url: '', publicId: '' },
-  { label: '🔥 Trending Now', sublabel: '2.4k sold this week', link: '/products',                   bg: '#FFF3E8', isBig: true,  url: '', publicId: '' },
+  { label: '🔥 Trending Now', sublabel: '2.4k sold this week', link: '/products', bg: '#FFF3E8', isBig: true, url: '', publicId: '' },
 ];
 
 const DEFAULT_SECTIONS = [
@@ -249,7 +247,6 @@ function SectionSettings() {
                   </div>
                 </div>
 
-                {/* Extra fields for Personal Care, Health Care, Wellness */}
                 {showExtra && (
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
                     <div>
@@ -478,7 +475,7 @@ function BrandsTab() {
 }
 
 // ============================================================
-// 🆕 CARE GRID MANAGER — Personal Care & Health Care
+// CARE GRID MANAGER — Personal Care & Health Care
 // ============================================================
 function CareGridManager({ type, title, accentColor, layout }) {
   const SLOTS = layout === 'bento'
@@ -617,7 +614,6 @@ function CareGridManager({ type, title, accentColor, layout }) {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-          {/* FRONT */}
           <div>
             <p style={{ margin: '0 0 4px', fontSize: '10px', fontWeight: '800', color: '#7B2FBE', textAlign: 'center', fontFamily: 'Nunito, sans-serif' }}>🖼️ FRONT</p>
             <label style={{ cursor: 'pointer', display: 'block' }}>
@@ -634,7 +630,6 @@ function CareGridManager({ type, title, accentColor, layout }) {
             )}
           </div>
 
-          {/* BACK */}
           <div>
             <p style={{ margin: '0 0 4px', fontSize: '10px', fontWeight: '800', color: '#10B981', textAlign: 'center', fontFamily: 'Nunito, sans-serif' }}>🔄 BACK</p>
             <label style={{ cursor: 'pointer', display: 'block' }}>
@@ -727,7 +722,7 @@ export default function AdminBanners() {
   const [editing,         setEditing]         = useState(null);
   const [uploading,       setUploading]       = useState(false);
   const [uploadingMobile, setUploadingMobile] = useState(false);
-  const [uploadingPanels, setUploadingPanels] = useState([false, false, false]);
+  const [uploadingHero,   setUploadingHero]   = useState(false); // ✅ NEW: single hero media
   const [saving,          setSaving]          = useState(false);
 
   const emptyForm = {
@@ -858,38 +853,47 @@ export default function AdminBanners() {
     finally { setUploadingMobile(false); }
   };
 
-  const handlePanelImageUpload = async (e, panelIndex) => {
+  // ✅ NEW — Single hero media upload (image OR video)
+  const handleHeroMediaUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    setUploadingPanels(prev => { const u = [...prev]; u[panelIndex] = true; return u; });
+    setUploadingHero(true);
     try {
       const fd = new FormData();
       fd.append('file', file);
-      fd.append('folder', 'firstcry/banners/panels');
+      fd.append('folder', 'firstcry/banners/hero');
       const res  = await fetch('/api/upload', { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       setForm(f => {
-        const updatedPanels = [...(f.panels || PANEL_DEFAULTS)];
-        updatedPanels[panelIndex] = {
-          ...updatedPanels[panelIndex],
+        const panels = [...(f.panels || PANEL_DEFAULTS)];
+        // Always update first (and only) panel - mark as big
+        panels[0] = {
+          ...panels[0],
+          isBig:    true,
           url:      data.url || data.images?.[0]?.url || '',
           publicId: data.publicId || data.images?.[0]?.publicId || '',
         };
-        return { ...f, panels: updatedPanels };
+        return { ...f, panels };
       });
-      toast.success(`✅ Panel ${panelIndex + 1} uploaded!`);
+      toast.success('✅ Hero media uploaded!');
     } catch (err) { toast.error(err.message); }
-    finally {
-      setUploadingPanels(prev => { const u = [...prev]; u[panelIndex] = false; return u; });
-    }
+    finally { setUploadingHero(false); }
   };
 
-  const updatePanel = (panelIndex, field, value) => {
+  const updateHeroPanel = (field, value) => {
     setForm(f => {
-      const updatedPanels = [...(f.panels || PANEL_DEFAULTS)];
-      updatedPanels[panelIndex] = { ...updatedPanels[panelIndex], [field]: value };
-      return { ...f, panels: updatedPanels };
+      const panels = [...(f.panels || PANEL_DEFAULTS)];
+      panels[0] = { ...panels[0], isBig: true, [field]: value };
+      return { ...f, panels };
+    });
+  };
+
+  const removeHeroMedia = () => {
+    setForm(f => {
+      const panels = [...(f.panels || PANEL_DEFAULTS)];
+      panels[0] = { ...panels[0], url: '', publicId: '' };
+      return { ...f, panels };
     });
   };
 
@@ -930,7 +934,7 @@ export default function AdminBanners() {
               sublabel: p.sublabel || '',
               link:     p.link     || '/products',
               bg:       p.bg       || '#FDE8D0',
-              isBig:    p.isBig    || false,
+              isBig:    true,  // ✅ Always mark hero panel as big
             }))
           : [],
       };
@@ -964,33 +968,57 @@ export default function AdminBanners() {
   const pLbl  = { display: 'block', fontSize: '10px', fontWeight: '800', color: '#7B2FBE', marginBottom: '4px', textTransform: 'uppercase' };
   const tabSt = (key) => ({ padding: '9px 15px', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '12.5px', cursor: 'pointer', fontFamily: 'Nunito, sans-serif', background: activeTab === key ? 'linear-gradient(135deg,#FF6B35,#7B2FBE)' : '#f3f4f6', color: activeTab === key ? 'white' : '#555', boxShadow: activeTab === key ? '0 4px 14px rgba(255,107,53,0.25)' : 'none', transition: 'all 0.2s', whiteSpace: 'nowrap' });
 
-  const BannerCard = ({ banner }) => (
-    <div style={{ background: 'white', borderRadius: '16px', border: `2px solid ${banner.isActive ? '#EDD9FF' : '#f0f0f0'}`, overflow: 'hidden', boxShadow: '0 4px 16px rgba(123,47,190,0.08)', opacity: banner.isActive ? 1 : 0.65 }}>
-      <div style={{ height: '150px', background: banner.image?.url ? `url(${banner.image.url}) center/cover` : banner.bgColor || banner.color || 'linear-gradient(135deg,#FF6B35,#7B2FBE)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', position: 'relative' }}>
-        {!banner.image?.url && (banner.emoji || '🖼️')}
-        {banner.type === 'hero' && banner.panels?.some(p => p.url) && (
-          <div style={{ position: 'absolute', bottom: '8px', left: '8px', padding: '3px 9px', borderRadius: '999px', fontSize: '10px', fontWeight: '800', background: 'rgba(244,123,32,0.9)', color: 'white' }}>
-            🖼️ {banner.panels.filter(p => p.url).length} panels
+  // ✅ Helper: detect if URL is video
+  const isVideoUrl = (url) => {
+    if (!url) return false;
+    return /\.(mp4|webm|mov|m4v)(\?|$)/i.test(url);
+  };
+
+  const BannerCard = ({ banner }) => {
+    const heroPanel = banner.panels?.[0];
+    const heroMedia = heroPanel?.url;
+    const heroIsVideo = isVideoUrl(heroMedia);
+
+    return (
+      <div style={{ background: 'white', borderRadius: '16px', border: `2px solid ${banner.isActive ? '#EDD9FF' : '#f0f0f0'}`, overflow: 'hidden', boxShadow: '0 4px 16px rgba(123,47,190,0.08)', opacity: banner.isActive ? 1 : 0.65 }}>
+        <div style={{ height: '150px', background: banner.bgColor || banner.color || 'linear-gradient(135deg,#FF6B35,#7B2FBE)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', position: 'relative', overflow: 'hidden' }}>
+          {/* Show hero media preview */}
+          {banner.type === 'hero' && heroMedia ? (
+            heroIsVideo ? (
+              <video src={heroMedia} autoPlay muted loop playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <img src={heroMedia} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            )
+          ) : banner.image?.url ? (
+            <img src={banner.image.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          ) : (
+            <span>{banner.emoji || '🖼️'}</span>
+          )}
+
+          {banner.type === 'hero' && heroMedia && (
+            <div style={{ position: 'absolute', bottom: '8px', left: '8px', padding: '3px 9px', borderRadius: '999px', fontSize: '10px', fontWeight: '800', background: heroIsVideo ? 'rgba(255,71,87,0.95)' : 'rgba(244,123,32,0.9)', color: 'white' }}>
+              {heroIsVideo ? '🎥 VIDEO' : '🖼️ IMAGE'}
+            </div>
+          )}
+          <div style={{ position: 'absolute', top: '8px', left: '8px', padding: '3px 9px', borderRadius: '999px', fontSize: '10px', fontWeight: '800', background: banner.isActive ? 'rgba(5,150,105,0.9)' : 'rgba(100,100,100,0.7)', color: 'white' }}>{banner.isActive ? '● Active' : '○ Inactive'}</div>
+          <div style={{ position: 'absolute', top: '8px', right: '8px', padding: '3px 9px', borderRadius: '999px', fontSize: '10px', fontWeight: '800', background: 'rgba(0,0,0,0.55)', color: 'white', textTransform: 'capitalize' }}>{banner.type}</div>
+        </div>
+        <div style={{ padding: '12px' }}>
+          <h3 style={{ fontSize: '0.90rem', fontWeight: '800', color: '#2D1A4A', margin: '0 0 4px' }}>{banner.title}</h3>
+          {banner.subtitle && <p style={{ fontSize: '0.78rem', color: '#9585B0', margin: '0 0 6px' }}>{banner.subtitle}</p>}
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '8px' }}>
+            {banner.buttonLink && <span style={{ fontSize: '10px', background: '#F3E8FF', color: '#7B2FBE', padding: '2px 7px', borderRadius: '5px', fontWeight: '600' }}>🔗 {banner.buttonLink}</span>}
+            {banner.price && <span style={{ fontSize: '10px', background: '#FFF3EC', color: '#FF6B35', padding: '2px 7px', borderRadius: '5px', fontWeight: '700' }}>₹{banner.price}</span>}
           </div>
-        )}
-        <div style={{ position: 'absolute', top: '8px', left: '8px', padding: '3px 9px', borderRadius: '999px', fontSize: '10px', fontWeight: '800', background: banner.isActive ? 'rgba(5,150,105,0.9)' : 'rgba(100,100,100,0.7)', color: 'white' }}>{banner.isActive ? '● Active' : '○ Inactive'}</div>
-        <div style={{ position: 'absolute', top: '8px', right: '8px', padding: '3px 9px', borderRadius: '999px', fontSize: '10px', fontWeight: '800', background: 'rgba(0,0,0,0.55)', color: 'white', textTransform: 'capitalize' }}>{banner.type}</div>
-      </div>
-      <div style={{ padding: '12px' }}>
-        <h3 style={{ fontSize: '0.90rem', fontWeight: '800', color: '#2D1A4A', margin: '0 0 4px' }}>{banner.title}</h3>
-        {banner.subtitle && <p style={{ fontSize: '0.78rem', color: '#9585B0', margin: '0 0 6px' }}>{banner.subtitle}</p>}
-        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '8px' }}>
-          {banner.buttonLink && <span style={{ fontSize: '10px', background: '#F3E8FF', color: '#7B2FBE', padding: '2px 7px', borderRadius: '5px', fontWeight: '600' }}>🔗 {banner.buttonLink}</span>}
-          {banner.price && <span style={{ fontSize: '10px', background: '#FFF3EC', color: '#FF6B35', padding: '2px 7px', borderRadius: '5px', fontWeight: '700' }}>₹{banner.price}</span>}
-        </div>
-        <div style={{ display: 'flex', gap: '6px' }}>
-          <button onClick={() => openEdit(banner)} style={{ flex: 1, padding: '8px', background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit' }}>✏️ Edit</button>
-          <button onClick={() => toggleActive(banner)} style={{ padding: '8px 10px', background: banner.isActive ? '#d1fae5' : '#f3f4f6', color: banner.isActive ? '#059669' : '#666', border: `1.5px solid ${banner.isActive ? '#6ee7b7' : '#ddd'}`, borderRadius: '8px', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>{banner.isActive ? '✅' : '⭕'}</button>
-          <button onClick={() => handleDelete(banner.id)} style={{ padding: '8px 10px', background: '#fee2e2', color: '#dc2626', border: '1.5px solid #fca5a5', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>🗑️</button>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            <button onClick={() => openEdit(banner)} style={{ flex: 1, padding: '8px', background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit' }}>✏️ Edit</button>
+            <button onClick={() => toggleActive(banner)} style={{ padding: '8px 10px', background: banner.isActive ? '#d1fae5' : '#f3f4f6', color: banner.isActive ? '#059669' : '#666', border: `1.5px solid ${banner.isActive ? '#6ee7b7' : '#ddd'}`, borderRadius: '8px', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>{banner.isActive ? '✅' : '⭕'}</button>
+            <button onClick={() => handleDelete(banner.id)} style={{ padding: '8px 10px', background: '#fee2e2', color: '#dc2626', border: '1.5px solid #fca5a5', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>🗑️</button>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const ImgUpload = ({ label, value, onChange, uploading: upl, onRemove }) => (
     <div>
@@ -1037,7 +1065,7 @@ export default function AdminBanners() {
   const currentTab = TABS.find(t => t.key === activeTab);
 
   const tabInfo = {
-    hero:               '🖼️ Hero banners — uses 3 panel images on right side',
+    hero:               '🎥 Hero banners — upload ONE image OR video (full-screen auto-play)',
     category:           '📁 Category cards — upload image, name, color & link',
     festival:           '🎪 Festival banners with schedule + text overlay',
     budget:             '🏪 Budget price circles',
@@ -1049,15 +1077,12 @@ export default function AdminBanners() {
     'electric-vehicle': '🚗 Electric vehicles',
   };
 
-  const PANEL_LABELS = [
-    { title: '◼ Panel 1 — Top Left (Small)',   size: '400×300px',  height: '140px' },
-    { title: '◼ Panel 2 — Top Right (Small)',  size: '400×300px',  height: '140px' },
-    { title: '◼ Panel 3 — Bottom Big (Wide)',  size: '800×400px', height: '180px' },
-  ];
-
-  // Check if current tab is care grid
-  const isCareTab = activeTab === 'personal-care' || activeTab === 'health-care';
+  const isCareTab    = activeTab === 'personal-care' || activeTab === 'health-care';
   const isSpecialTab = ['brands', 'section-settings', 'personal-care', 'health-care'].includes(activeTab);
+
+  // ✅ Get current hero panel for preview
+  const heroPanel = form.panels?.[0] || PANEL_DEFAULTS[0];
+  const heroIsVideo = isVideoUrl(heroPanel.url);
 
   return (
     <div style={{ fontFamily: 'Nunito, sans-serif', padding: '4px' }}>
@@ -1078,7 +1103,7 @@ export default function AdminBanners() {
         ))}
       </div>
 
-      {/* 🆕 SPECIAL TABS */}
+      {/* SPECIAL TABS */}
       {activeTab === 'brands'           && <BrandsTab />}
       {activeTab === 'section-settings' && <SectionSettings />}
       {activeTab === 'personal-care'    && <CareGridManager type="personal-care" title="Personal Care" accentColor="#7B2FBE" layout="bento" />}
@@ -1111,7 +1136,7 @@ export default function AdminBanners() {
         </div>
       )}
 
-      {/* FORM MODAL — only for non-care, non-special tabs */}
+      {/* FORM MODAL */}
       {showForm && !isCareTab && (
         <div className="adminModal"
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.60)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px', overflowY: 'auto' }}
@@ -1341,60 +1366,169 @@ export default function AdminBanners() {
                     </>
                   )}
 
+                  {/* ✅ NEW HERO MEDIA UPLOAD (Image or Video) */}
                   {form.type === 'hero' && (
                     <div style={{ border: '2px solid #EDD9FF', borderRadius: '16px', overflow: 'hidden' }}>
                       <div style={{ padding: '12px 16px', background: 'linear-gradient(135deg,#FFF3EC,#F3E8FF)', borderBottom: '1.5px solid #EDD9FF', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '1.2rem' }}>🖼️</span>
+                        <span style={{ fontSize: '1.4rem' }}>🎥</span>
                         <div>
-                          <h4 style={{ margin: 0, fontSize: '0.88rem', fontWeight: '800', color: '#2D1A4A' }}>Hero Panel Images</h4>
-                          <p style={{ margin: 0, fontSize: '11px', color: '#9585B0', fontWeight: '600' }}>3 panels on right side</p>
+                          <h4 style={{ margin: 0, fontSize: '0.92rem', fontWeight: '800', color: '#2D1A4A' }}>Hero Media (Image or Video)</h4>
+                          <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#9585B0', fontWeight: '600' }}>
+                            📸 Image OR 🎥 Video — Auto-plays full-screen on hero
+                          </p>
                         </div>
                       </div>
-                      <div style={{ padding: '14px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                        {(form.panels || PANEL_DEFAULTS).map((panel, panelIndex) => (
-                          <div key={panelIndex} style={{ background: panel.bg || '#FFF3E8', borderRadius: '14px', border: '2px solid rgba(255,255,255,0.9)', overflow: 'hidden', boxShadow: '0 2px 10px rgba(0,0,0,0.06)' }}>
-                            <div style={{ padding: '10px 14px', background: 'rgba(255,255,255,0.7)', borderBottom: '1px solid rgba(255,255,255,0.9)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                              <span style={{ fontSize: '0.82rem', fontWeight: '800', color: '#2D1A4A' }}>{PANEL_LABELS[panelIndex]?.title}</span>
-                              {panel.isBig && <span style={{ padding: '2px 10px', background: '#F47B20', color: 'white', borderRadius: '999px', fontSize: '10px', fontWeight: '800' }}>BIG</span>}
-                            </div>
-                            <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                              <label style={{ cursor: 'pointer', display: 'block' }}>
-                                <input type="file" accept="image/*" onChange={e => handlePanelImageUpload(e, panelIndex)} style={{ display: 'none' }} disabled={uploadingPanels[panelIndex]} />
-                                <div style={{ width: '100%', height: PANEL_LABELS[panelIndex]?.height || '140px', border: '2px dashed #C8B4DC', borderRadius: '12px', background: 'rgba(255,255,255,0.85)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', cursor: 'pointer', position: 'relative' }}>
-                                  {uploadingPanels[panelIndex] ? (
-                                    <div style={{ textAlign: 'center' }}>
-                                      <div style={{ fontSize: '1.5rem', marginBottom: '8px' }}>⏳</div>
-                                      <p style={{ color: '#7B2FBE', fontWeight: '700', fontSize: '12px', margin: 0, fontFamily: 'Nunito, sans-serif' }}>Uploading...</p>
-                                    </div>
-                                  ) : panel.url ? (
-                                    <img src={panel.url} alt={panel.label} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center top' }} />
-                                  ) : (
-                                    <div style={{ textAlign: 'center', padding: '16px' }}>
-                                      <div style={{ fontSize: '2rem', marginBottom: '8px' }}>{panelIndex === 0 ? '📷' : panelIndex === 1 ? '🖼️' : '🌟'}</div>
-                                      <p style={{ color: '#9585B0', fontWeight: '700', fontSize: '12px', margin: '0 0 4px', fontFamily: 'Nunito, sans-serif' }}>Click to upload</p>
-                                      <p style={{ color: '#C4B4D4', fontWeight: '600', fontSize: '10px', margin: 0, fontFamily: 'Nunito, sans-serif' }}>{PANEL_LABELS[panelIndex]?.size}</p>
-                                    </div>
-                                  )}
+
+                      <div style={{ padding: '14px' }}>
+                        <div style={{ background: heroPanel.bg || '#FFF3E8', borderRadius: '14px', padding: '14px', border: '2px solid rgba(255,255,255,0.9)' }}>
+
+                          {/* UPLOAD AREA */}
+                          <label style={{ cursor: 'pointer', display: 'block', marginBottom: '12px' }}>
+                            <input
+                              type="file"
+                              accept="image/*,video/mp4,video/webm,video/quicktime"
+                              onChange={handleHeroMediaUpload}
+                              style={{ display: 'none' }}
+                              disabled={uploadingHero}
+                            />
+                            <div style={{
+                              width: '100%',
+                              height: '240px',
+                              border: '2px dashed #C8B4DC',
+                              borderRadius: '12px',
+                              background: 'rgba(255,255,255,0.85)',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              overflow: 'hidden',
+                              cursor: 'pointer',
+                              position: 'relative',
+                            }}>
+                              {uploadingHero ? (
+                                <div style={{ textAlign: 'center' }}>
+                                  <div style={{ fontSize: '2rem', marginBottom: '8px' }}>⏳</div>
+                                  <p style={{ color: '#7B2FBE', fontWeight: '700', fontSize: '13px', margin: 0, fontFamily: 'Nunito, sans-serif' }}>Uploading...</p>
                                 </div>
-                              </label>
-                              {panel.url && (
-                                <button type="button" onClick={() => updatePanel(panelIndex, 'url', '')} style={{ width: '100%', padding: '6px', background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>🗑️ Remove</button>
+                              ) : heroPanel.url ? (
+                                heroIsVideo ? (
+                                  <>
+                                    <video
+                                      src={heroPanel.url}
+                                      autoPlay
+                                      muted
+                                      loop
+                                      playsInline
+                                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                    />
+                                    <span style={{
+                                      position: 'absolute', top: '10px', right: '10px',
+                                      background: 'rgba(0,0,0,0.65)', color: 'white',
+                                      padding: '4px 10px', borderRadius: '999px',
+                                      fontSize: '10px', fontWeight: '800',
+                                      display: 'inline-flex', alignItems: 'center', gap: '5px',
+                                      fontFamily: 'Nunito, sans-serif',
+                                    }}>
+                                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ff4757' }} />
+                                      VIDEO
+                                    </span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <img src={heroPanel.url} alt={heroPanel.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    <span style={{
+                                      position: 'absolute', top: '10px', right: '10px',
+                                      background: 'rgba(0,0,0,0.65)', color: 'white',
+                                      padding: '4px 10px', borderRadius: '999px',
+                                      fontSize: '10px', fontWeight: '800',
+                                      fontFamily: 'Nunito, sans-serif',
+                                    }}>
+                                      🖼️ IMAGE
+                                    </span>
+                                  </>
+                                )
+                              ) : (
+                                <div style={{ textAlign: 'center', padding: '20px' }}>
+                                  <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🎥</div>
+                                  <p style={{ color: '#7B2FBE', fontWeight: '800', fontSize: '15px', margin: '0 0 6px', fontFamily: 'Nunito, sans-serif' }}>
+                                    Click to Upload Media
+                                  </p>
+                                  <p style={{ color: '#9585B0', fontWeight: '600', fontSize: '11px', margin: 0, fontFamily: 'Nunito, sans-serif', lineHeight: '1.5' }}>
+                                    📸 Image (JPG/PNG/WebP) up to 10 MB<br />
+                                    🎥 Video (MP4/WebM) up to 50 MB
+                                  </p>
+                                </div>
                               )}
-                              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                                <div><label style={pLbl}>Label</label><input type="text" value={panel.label || ''} onChange={e => updatePanel(panelIndex, 'label', e.target.value)} placeholder="e.g. 👶 Newborn" style={pInp} /></div>
-                                <div><label style={pLbl}>Sub Label</label><input type="text" value={panel.sublabel || ''} onChange={e => updatePanel(panelIndex, 'sublabel', e.target.value)} placeholder="Shop Now →" style={pInp} /></div>
-                                <div><label style={pLbl}>Link</label><input type="text" value={panel.link || ''} onChange={e => updatePanel(panelIndex, 'link', e.target.value)} placeholder="/products" style={pInp} /></div>
-                                <div>
-                                  <label style={pLbl}>BG Color</label>
-                                  <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-                                    <input type="color" value={panel.bg || '#FDE8D0'} onChange={e => updatePanel(panelIndex, 'bg', e.target.value)} style={{ width: '36px', height: '34px', border: '2px solid #EDD9FF', borderRadius: '6px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
-                                    <input type="text" value={panel.bg || '#FDE8D0'} onChange={e => updatePanel(panelIndex, 'bg', e.target.value)} style={{ ...pInp, flex: 1 }} />
-                                  </div>
-                                </div>
+                            </div>
+                          </label>
+
+                          {heroPanel.url && (
+                            <button
+                              type="button"
+                              onClick={removeHeroMedia}
+                              style={{ width: '100%', padding: '8px', background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', marginBottom: '12px' }}
+                            >
+                              🗑️ Remove Media
+                            </button>
+                          )}
+
+                          {/* META FIELDS */}
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                            <div>
+                              <label style={pLbl}>Badge Label</label>
+                              <input
+                                type="text"
+                                value={heroPanel.label || ''}
+                                onChange={e => updateHeroPanel('label', e.target.value)}
+                                placeholder="🔥 Trending"
+                                style={pInp}
+                              />
+                            </div>
+                            <div>
+                              <label style={pLbl}>Sub Label</label>
+                              <input
+                                type="text"
+                                value={heroPanel.sublabel || ''}
+                                onChange={e => updateHeroPanel('sublabel', e.target.value)}
+                                placeholder="2.4k sold this week"
+                                style={pInp}
+                              />
+                            </div>
+                            <div>
+                              <label style={pLbl}>Click Link</label>
+                              <input
+                                type="text"
+                                value={heroPanel.link || ''}
+                                onChange={e => updateHeroPanel('link', e.target.value)}
+                                placeholder="/products"
+                                style={pInp}
+                              />
+                            </div>
+                            <div>
+                              <label style={pLbl}>BG Color (fallback)</label>
+                              <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                                <input
+                                  type="color"
+                                  value={heroPanel.bg || '#FDE8D0'}
+                                  onChange={e => updateHeroPanel('bg', e.target.value)}
+                                  style={{ width: '36px', height: '34px', border: '2px solid #EDD9FF', borderRadius: '6px', cursor: 'pointer', padding: '2px', flexShrink: 0 }}
+                                />
+                                <input
+                                  type="text"
+                                  value={heroPanel.bg || '#FDE8D0'}
+                                  onChange={e => updateHeroPanel('bg', e.target.value)}
+                                  style={{ ...pInp, flex: 1 }}
+                                />
                               </div>
                             </div>
                           </div>
-                        ))}
+
+                          {/* Info note */}
+                          <div style={{ marginTop: '12px', padding: '10px 12px', background: '#F0F9FF', borderRadius: '8px', border: '1px solid #BAE6FD' }}>
+                            <p style={{ margin: 0, fontSize: '11px', color: '#0369A1', fontWeight: '600', fontFamily: 'Nunito, sans-serif', lineHeight: '1.5' }}>
+                              💡 <strong>Tip:</strong> Videos auto-play muted on the hero. Users can unmute with the 🔊 button. Keep videos under 30 seconds for best experience.
+                            </p>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -1407,7 +1541,7 @@ export default function AdminBanners() {
                   style={{ padding: '12px 22px', border: '2px solid #EDD9FF', borderRadius: '10px', background: 'white', color: '#6B4E8A', fontWeight: '700', fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}>
                   Cancel
                 </button>
-                <button type="submit" disabled={saving || uploading || uploadingMobile || uploadingPanels.some(Boolean)}
+                <button type="submit" disabled={saving || uploading || uploadingMobile || uploadingHero}
                   style={{ flex: 1, padding: '12px 22px', background: saving ? '#ccc' : 'linear-gradient(135deg,#FF6B35,#7B2FBE)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize: '14px', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit', boxShadow: saving ? 'none' : '0 4px 14px rgba(255,107,53,0.30)' }}>
                   {saving ? '⏳ Saving...' : editing ? '💾 Update Banner' : '✨ Create Banner'}
                 </button>
