@@ -147,7 +147,7 @@ function BrandsSection({ brands, sectionSettings = {} }) {
 }
 
 /* ═══════════════════════════════════════
-   2. SEASON BANNER (FESTIVAL)
+   2. SEASON BANNER (FESTIVAL) — Auto-Play Video with Sound
 ═══════════════════════════════════════ */
 function SeasonBanner({ banners, sectionSettings = {} }) {
   const s        = sectionSettings['festival'] || {};
@@ -156,86 +156,539 @@ function SeasonBanner({ banners, sectionSettings = {} }) {
 
   const [current, setCurrent] = useState(0);
   const [paused,  setPaused]  = useState(false);
+  const [muted,   setMuted]   = useState(true);
+  const [showUnmutePrompt, setShowUnmutePrompt] = useState(false);
 
+  const isVideoUrl = (url) => {
+    if (!url) return false;
+    return /\.(mp4|webm|mov|m4v)(\?|$)/i.test(url);
+  };
+
+  // ✅ Try to unmute after user interaction with page (anywhere)
+  useEffect(() => {
+    const hasVideo = banners?.some(b => isVideoUrl(b?.image?.url));
+    if (!hasVideo) return;
+
+    let attempted = false;
+
+    const tryUnmute = () => {
+      if (attempted) return;
+      attempted = true;
+      setMuted(false);
+      setShowUnmutePrompt(false);
+    };
+
+    // Listen for ANY user interaction on the page
+    const events = ['click', 'touchstart', 'keydown', 'scroll'];
+    events.forEach(ev => window.addEventListener(ev, tryUnmute, { once: true, passive: true }));
+
+    // Show unmute prompt after 2 seconds if still muted
+    const promptTimer = setTimeout(() => {
+      if (muted) setShowUnmutePrompt(true);
+    }, 2000);
+
+    return () => {
+      events.forEach(ev => window.removeEventListener(ev, tryUnmute));
+      clearTimeout(promptTimer);
+    };
+  }, [banners]);
+
+  // Hide prompt when user unmutes
+  useEffect(() => {
+    if (!muted) setShowUnmutePrompt(false);
+  }, [muted]);
+
+  // Auto-rotate
   useEffect(() => {
     if (!banners?.length || banners.length <= 1 || paused) return;
-    const t = setInterval(() => setCurrent(p => (p + 1) % banners.length), 5000);
+    const currentBanner = banners[current];
+    const isVideo = isVideoUrl(currentBanner?.image?.url);
+    const delay = isVideo ? 10000 : 5000;
+    const t = setInterval(() => setCurrent(p => (p + 1) % banners.length), delay);
     return () => clearInterval(t);
-  }, [banners?.length, paused]);
+  }, [banners, paused, current]);
 
   if (!banners?.length) return null;
 
   return (
-    <section style={{ background: '#eef1f5', padding: '16px' }} onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
-      <div style={{ maxWidth: '1300px', margin: '0 auto' }}>
+    <section
+      className="kidFestivalSection"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+    >
+      {/* 🎨 Floating cute decorations */}
+      <div className="kidDeco kidCloud1">☁️</div>
+      <div className="kidDeco kidCloud2">☁️</div>
+      <div className="kidDeco kidStar1">⭐</div>
+      <div className="kidDeco kidStar2">✨</div>
+      <div className="kidDeco kidStar3">🌟</div>
+      <div className="kidDeco kidBalloon1">🎈</div>
+      <div className="kidDeco kidBalloon2">🎈</div>
+      <div className="kidDeco kidHeart1">💕</div>
+      <div className="kidDeco kidRainbow">🌈</div>
+      <div className="kidDeco kidTeddy">🧸</div>
 
-        {/* Section heading from admin */}
+      <div className="kidFestivalInner">
+
         {(secTitle || secDesc) && (
-          <div style={{ textAlign: 'center', marginBottom: '12px' }}>
-            {secTitle && <h2 style={{ fontSize: 'clamp(1rem,2vw,1.4rem)', fontWeight: '900', color: '#2D1A4A', margin: '0 0 4px', fontFamily: 'Nunito, sans-serif' }}>{secTitle}</h2>}
-            {secDesc  && <p  style={{ fontSize: '0.84rem', color: '#9585B0', margin: 0, fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>{secDesc}</p>}
+          <div className="kidFestivalHeader">
+            {secTitle && <h2>{secTitle}</h2>}
+            {secDesc  && <p>{secDesc}</p>}
           </div>
         )}
 
-        <div style={{ borderRadius: '14px', overflow: 'hidden', position: 'relative', boxShadow: '0 4px 16px rgba(0,0,0,0.10)', background: '#fff', height: 'clamp(250px, 24vw, 470px)' }}>
-          {banners.map((b, i) => (
-            <div key={b.id || i} style={{ position: 'absolute', inset: 0, opacity: i === current ? 1 : 0, transition: 'opacity 0.4s ease', zIndex: i === current ? 2 : 1 }}>
-              {b.image?.url ? (
-                <img src={b.image.url} alt={b.title || 'Festival'} style={{ width: '100%', height: '100%', objectFit: 'cover', objectPosition: 'center', display: 'block' }} />
-              ) : (
-                <div style={{ width: '100%', height: '100%', background: `linear-gradient(135deg, ${b.bgColor || '#0EA5E9'}, #7B2FBE)` }} />
-              )}
-              <div style={{ position: 'absolute', inset: 0, background: 'linear-gradient(to right, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.4) 50%, transparent 100%)', zIndex: 3 }} />
-              <div style={{ position: 'absolute', top: 0, left: 0, bottom: 0, width: 'clamp(240px, 55%, 480px)', padding: 'clamp(14px, 2.5vw, 28px)', display: 'flex', flexDirection: 'column', justifyContent: 'center', zIndex: 4 }}>
-                {b.festivalName && (
-                  <span style={{ display: 'inline-block', width: 'fit-content', padding: '4px 12px', background: 'rgba(255,255,255,0.97)', color: '#7B2FBE', borderRadius: '999px', fontSize: 'clamp(0.6rem, 1vw, 0.72rem)', fontWeight: '800', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '1px', fontFamily: 'Nunito, sans-serif', boxShadow: '0 3px 10px rgba(0,0,0,0.2)' }}>
-                    {b.emoji || '🎪'} {b.festivalName}
-                  </span>
+        <div className="kidFestivalCard">
+          {banners.map((b, i) => {
+            const mediaUrl = b.image?.url;
+            const isVideo  = isVideoUrl(mediaUrl);
+            const isActive = i === current;
+
+            return (
+              <div
+                key={b.id || i}
+                className="kidFestivalSlide"
+                style={{
+                  opacity: isActive ? 1 : 0,
+                  zIndex:  isActive ? 2 : 1,
+                  pointerEvents: isActive ? 'auto' : 'none',
+                }}
+              >
+                <div className="kidMediaWrap" style={{ background: b.bgColor || '#FFF3E8' }}>
+                  {mediaUrl ? (
+                    isVideo ? (
+                      <video
+                        key={`${b.id}-${isActive}`}
+                        src={mediaUrl}
+                        autoPlay
+                        loop
+                        muted={muted}
+                        playsInline
+                        className="kidMedia"
+                      />
+                    ) : (
+                      <img
+                        src={mediaUrl}
+                        alt={b.title || 'Festival'}
+                        className="kidMedia"
+                      />
+                    )
+                  ) : (
+                    <div className="kidNoMedia" style={{
+                      background: `linear-gradient(135deg, ${b.bgColor || '#FFD4B8'}, #FFE8B0)`,
+                    }}>
+                      <span>{b.emoji || '🎁'}</span>
+                    </div>
+                  )}
+                </div>
+
+                <div className="kidTextOverlay" />
+                <div className="kidTextContent">
+                  {b.festivalName && (
+                    <span className="kidFestivalBadge">
+                      {b.emoji || '🎪'} {b.festivalName}
+                    </span>
+                  )}
+                  {b.title && <h2>{b.title}</h2>}
+                  {b.subtitle && <p>{b.subtitle}</p>}
+                  {b.buttonText && (
+                    <Link href={b.buttonLink || '/products'} className="kidShopBtn">
+                      {b.buttonText} →
+                    </Link>
+                  )}
+                </div>
+
+                {/* 🔴 LIVE badge */}
+                {isVideo && isActive && (
+                  <div className="kidLiveBadge">
+                    <span className="kidLiveDot" />
+                    LIVE
+                  </div>
                 )}
-                {b.title && (
-                  <h2 style={{ fontSize: 'clamp(1.1rem, 2.4vw, 1.8rem)', fontWeight: '900', color: 'white', margin: '0 0 6px', lineHeight: 1.15, fontFamily: 'Nunito, sans-serif', textShadow: '0 2px 10px rgba(0,0,0,0.6)' }}>
-                    {b.title}
-                  </h2>
+
+                {/* 🔊 Mute/Unmute button */}
+                {isVideo && isActive && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMuted(m => !m);
+                      setShowUnmutePrompt(false);
+                    }}
+                    className={`kidMuteBtn ${muted ? 'kidMutedPulse' : ''}`}
+                    aria-label={muted ? 'Unmute' : 'Mute'}
+                  >
+                    {muted ? '🔇' : '🔊'}
+                  </button>
                 )}
-                {b.subtitle && (
-                  <p style={{ fontSize: 'clamp(0.75rem, 1.3vw, 0.9rem)', color: 'rgba(255,255,255,0.94)', margin: '0 0 12px', fontWeight: '500', lineHeight: 1.4, fontFamily: 'Nunito, sans-serif', textShadow: '0 1px 6px rgba(0,0,0,0.5)', maxWidth: '380px', display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                    {b.subtitle}
-                  </p>
-                )}
-                {b.buttonText && (
-                  <Link href={b.buttonLink || '/products'} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', width: 'fit-content', padding: 'clamp(7px, 1.2vw, 10px) clamp(16px, 2.5vw, 24px)', background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)', color: 'white', borderRadius: '999px', textDecoration: 'none', fontWeight: '800', fontSize: 'clamp(0.75rem, 1.2vw, 0.86rem)', fontFamily: 'Nunito, sans-serif', boxShadow: '0 6px 18px rgba(255,107,53,0.4)', transition: 'transform 0.2s ease' }}>
-                    {b.buttonText} →
-                  </Link>
+
+                {/* ✨ Floating "Tap to unmute" prompt */}
+                {isVideo && isActive && showUnmutePrompt && muted && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setMuted(false);
+                      setShowUnmutePrompt(false);
+                    }}
+                    className="kidUnmutePrompt"
+                  >
+                    🔊 Tap for sound
+                  </button>
                 )}
               </div>
-            </div>
-          ))}
+            );
+          })}
 
           {banners.length > 1 && (
             <>
-              <button onClick={() => setCurrent(p => (p - 1 + banners.length) % banners.length)} style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', width: '34px', height: '34px', borderRadius: '50%', background: 'rgba(255,255,255,0.95)', border: 'none', fontSize: '1.1rem', cursor: 'pointer', color: '#2D1A4A', boxShadow: '0 3px 10px rgba(0,0,0,0.2)', zIndex: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700' }}>‹</button>
-              <button onClick={() => setCurrent(p => (p + 1) % banners.length)} style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', width: '34px', height: '34px', borderRadius: '50%', background: 'rgba(255,255,255,0.95)', border: 'none', fontSize: '1.1rem', cursor: 'pointer', color: '#2D1A4A', boxShadow: '0 3px 10px rgba(0,0,0,0.2)', zIndex: 5, display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '700' }}>›</button>
+              <button
+                onClick={() => setCurrent(p => (p - 1 + banners.length) % banners.length)}
+                className="kidNav kidNavLeft"
+                aria-label="Previous"
+              >‹</button>
+              <button
+                onClick={() => setCurrent(p => (p + 1) % banners.length)}
+                className="kidNav kidNavRight"
+                aria-label="Next"
+              >›</button>
             </>
           )}
-          {banners.length > 1 && !paused && (
-            <div style={{ position: 'absolute', bottom: 0, left: 0, right: 0, height: '3px', background: 'rgba(0,0,0,0.2)', zIndex: 5 }}>
-              <div key={current} style={{ height: '100%', background: 'linear-gradient(90deg, #FF6B35, #7B2FBE)', animation: 'festivalProgress 5s linear forwards' }} />
+
+          {banners.length > 1 && !paused && !isVideoUrl(banners[current]?.image?.url) && (
+            <div className="kidProgressTrack">
+              <div key={current} className="kidProgressFill" />
             </div>
           )}
+
           {banners.length > 1 && (
-            <div style={{ position: 'absolute', bottom: '12px', right: '18px', display: 'flex', gap: '5px', zIndex: 5 }}>
+            <div className="kidDots">
               {banners.map((_, i) => (
-                <button key={i} onClick={() => setCurrent(i)} style={{ width: i === current ? '20px' : '7px', height: '7px', borderRadius: '999px', border: 'none', background: i === current ? '#fff' : 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: 0, transition: 'all 0.3s ease', boxShadow: '0 1px 4px rgba(0,0,0,0.3)' }} />
+                <button
+                  key={i}
+                  onClick={() => setCurrent(i)}
+                  className={`kidDot ${i === current ? 'kidDotActive' : ''}`}
+                  aria-label={`Slide ${i + 1}`}
+                />
               ))}
             </div>
           )}
         </div>
       </div>
-      <style>{`@keyframes festivalProgress { from { width: 0%; } to { width: 100%; } }`}</style>
+
+      <style jsx>{`
+        .kidFestivalSection {
+          position: relative;
+          padding: 32px 16px 36px;
+          overflow: hidden;
+          background:
+            radial-gradient(ellipse at 15% 20%, #FFE5EC 0%, transparent 45%),
+            radial-gradient(ellipse at 85% 30%, #E0F4FF 0%, transparent 50%),
+            radial-gradient(ellipse at 50% 90%, #FFF4D6 0%, transparent 55%),
+            linear-gradient(135deg, #FFF9F0 0%, #FFE8F0 25%, #E8F4FF 50%, #F0E8FF 75%, #FFF0E0 100%);
+        }
+
+        .kidDeco {
+          position: absolute;
+          font-size: 2rem;
+          opacity: 0.55;
+          pointer-events: none;
+          user-select: none;
+          z-index: 1;
+          filter: drop-shadow(0 4px 8px rgba(0,0,0,0.08));
+        }
+        .kidCloud1   { top: 8%;  left: 4%;  font-size: 2.8rem; animation: floatY 6s ease-in-out infinite; }
+        .kidCloud2   { top: 12%; right: 6%; font-size: 2.4rem; animation: floatY 7s ease-in-out infinite 1s; }
+        .kidStar1    { top: 18%; left: 12%; font-size: 1.6rem; animation: spin 8s linear infinite; }
+        .kidStar2    { bottom: 14%; right: 10%; font-size: 1.4rem; animation: spin 10s linear infinite reverse; }
+        .kidStar3    { top: 30%; right: 3%; font-size: 1.8rem; animation: pulse 3s ease-in-out infinite; }
+        .kidBalloon1 { bottom: 18%; left: 5%; font-size: 2.5rem; animation: floatY 5s ease-in-out infinite 0.5s; }
+        .kidBalloon2 { top: 50%; right: 2%; font-size: 2rem; animation: floatY 6.5s ease-in-out infinite 1.5s; }
+        .kidHeart1   { top: 45%; left: 2%; font-size: 1.5rem; animation: pulse 2.5s ease-in-out infinite; }
+        .kidRainbow  { bottom: 8%; left: 18%; font-size: 2rem; animation: floatY 8s ease-in-out infinite; opacity: 0.4; }
+        .kidTeddy    { bottom: 6%; right: 18%; font-size: 2.2rem; animation: wobble 4s ease-in-out infinite; opacity: 0.45; }
+
+        @keyframes floatY { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-15px)} }
+        @keyframes spin   { to { transform: rotate(360deg); } }
+        @keyframes pulse  { 0%,100%{transform:scale(1);opacity:.55} 50%{transform:scale(1.15);opacity:.85} }
+        @keyframes wobble { 0%,100%{transform:rotate(-5deg)} 50%{transform:rotate(5deg)} }
+
+        .kidFestivalInner { max-width: 1300px; margin: 0 auto; position: relative; z-index: 2; }
+
+        .kidFestivalHeader { text-align: center; margin-bottom: 16px; }
+        .kidFestivalHeader h2 {
+          font-size: clamp(1.2rem, 2.4vw, 1.8rem);
+          font-weight: 900; color: #2D1A4A; margin: 0 0 4px;
+          font-family: 'Nunito', sans-serif;
+          text-shadow: 0 2px 6px rgba(255,255,255,0.6);
+        }
+        .kidFestivalHeader p {
+          font-size: 0.92rem; color: #6B4E8A; margin: 0;
+          font-weight: 600; font-family: 'Nunito', sans-serif;
+        }
+
+        .kidFestivalCard {
+          position: relative;
+          border-radius: 28px;
+          overflow: hidden;
+          height: clamp(280px, 28vw, 480px);
+          background: white;
+          box-shadow:
+            0 0 0 5px white,
+            0 0 0 7px rgba(255,107,53,0.30),
+            0 20px 50px rgba(123,47,190,0.25),
+            0 8px 20px rgba(255,107,53,0.15);
+        }
+
+        .kidFestivalSlide {
+          position: absolute; inset: 0;
+          transition: opacity 0.5s ease;
+        }
+
+        .kidMediaWrap {
+          position: absolute; inset: 0;
+          width: 100%; height: 100%;
+          overflow: hidden;
+        }
+        .kidMedia {
+          width: 100%; height: 100%;
+          object-fit: cover;
+          object-position: center;
+          display: block;
+        }
+        .kidNoMedia {
+          width: 100%; height: 100%;
+          display: flex; align-items: center; justify-content: center;
+          font-size: 6rem;
+        }
+
+        .kidTextOverlay {
+          position: absolute; inset: 0;
+          background: linear-gradient(
+            to right,
+            rgba(0,0,0,0.72) 0%,
+            rgba(0,0,0,0.45) 40%,
+            rgba(0,0,0,0.10) 70%,
+            transparent 100%
+          );
+          z-index: 3; pointer-events: none;
+        }
+
+        .kidTextContent {
+          position: absolute;
+          top: 0; left: 0; bottom: 0;
+          width: clamp(240px, 55%, 480px);
+          padding: clamp(16px, 3vw, 32px);
+          display: flex; flex-direction: column; justify-content: center;
+          z-index: 4;
+        }
+
+        .kidFestivalBadge {
+          display: inline-block; width: fit-content;
+          padding: 5px 14px;
+          background: white; color: #FF6B35;
+          border-radius: 999px;
+          font-size: clamp(0.62rem, 1vw, 0.74rem);
+          font-weight: 900; margin-bottom: 10px;
+          text-transform: uppercase; letter-spacing: 1.2px;
+          font-family: 'Nunito', sans-serif;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+          border: 2px solid rgba(255,255,255,0.9);
+        }
+
+        .kidTextContent h2 {
+          font-size: clamp(1.2rem, 2.6vw, 2rem);
+          font-weight: 900; color: white;
+          margin: 0 0 8px; line-height: 1.15;
+          font-family: 'Nunito', sans-serif;
+          text-shadow: 0 2px 12px rgba(0,0,0,0.65), 0 0 3px rgba(0,0,0,0.4);
+        }
+        .kidTextContent p {
+          font-size: clamp(0.78rem, 1.3vw, 0.95rem);
+          color: rgba(255,255,255,0.96);
+          margin: 0 0 14px; font-weight: 600; line-height: 1.45;
+          font-family: 'Nunito', sans-serif;
+          text-shadow: 0 1px 8px rgba(0,0,0,0.55);
+          max-width: 380px;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        .kidShopBtn {
+          display: inline-flex; align-items: center; gap: 6px;
+          width: fit-content;
+          padding: clamp(9px, 1.4vw, 12px) clamp(20px, 3vw, 28px);
+          background: linear-gradient(135deg, #FF6B35, #FF4081, #7B2FBE);
+          color: white; border-radius: 999px;
+          text-decoration: none; font-weight: 800;
+          font-size: clamp(0.80rem, 1.3vw, 0.92rem);
+          font-family: 'Nunito', sans-serif;
+          box-shadow:
+            0 8px 22px rgba(255,107,53,0.50),
+            0 0 0 3px rgba(255,255,255,0.4);
+          transition: transform 0.25s ease, box-shadow 0.25s ease;
+          border: 2px solid rgba(255,255,255,0.85);
+        }
+        .kidShopBtn:hover {
+          transform: translateY(-3px) scale(1.04);
+          box-shadow: 0 12px 28px rgba(255,107,53,0.60), 0 0 0 3px rgba(255,255,255,0.5);
+        }
+
+        .kidLiveBadge {
+          position: absolute; top: 14px; left: 14px;
+          padding: 5px 12px; border-radius: 999px;
+          background: rgba(255,71,87,0.95); color: white;
+          font-size: 11px; font-weight: 900;
+          font-family: 'Nunito', sans-serif;
+          z-index: 5;
+          display: inline-flex; align-items: center; gap: 6px;
+          box-shadow: 0 3px 10px rgba(255,71,87,0.45);
+          border: 1.5px solid rgba(255,255,255,0.6);
+        }
+        .kidLiveDot {
+          width: 7px; height: 7px; border-radius: 50%;
+          background: white; animation: liveDot 1.5s ease-in-out infinite;
+        }
+        @keyframes liveDot { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+        .kidMuteBtn {
+          position: absolute; top: 14px; right: 14px;
+          width: 42px; height: 42px; border-radius: 50%;
+          background: rgba(255,255,255,0.95); color: #2D1A4A;
+          border: 2px solid rgba(255,107,53,0.4);
+          cursor: pointer; font-size: 16px;
+          display: flex; align-items: center; justify-content: center;
+          z-index: 6;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.20);
+          transition: transform 0.2s ease;
+        }
+        .kidMuteBtn:hover { transform: scale(1.12); }
+        .kidMutedPulse {
+          animation: mutedPulse 1.8s ease-in-out infinite;
+          background: linear-gradient(135deg, #FF6B35, #FF4081);
+          color: white;
+          border-color: white;
+        }
+        @keyframes mutedPulse {
+          0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,53,0.7); }
+          50%      { box-shadow: 0 0 0 14px rgba(255,107,53,0); }
+        }
+
+        /* ✨ Floating unmute prompt */
+        .kidUnmutePrompt {
+          position: absolute;
+          top: 65px; right: 14px;
+          padding: 9px 16px;
+          background: linear-gradient(135deg, #FF6B35, #FF4081);
+          color: white;
+          border: 2px solid white;
+          border-radius: 999px;
+          font-size: 13px;
+          font-weight: 800;
+          font-family: 'Nunito', sans-serif;
+          cursor: pointer;
+          z-index: 7;
+          box-shadow: 0 6px 20px rgba(255,107,53,0.50);
+          animation: bouncePrompt 1s ease-in-out infinite;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          white-space: nowrap;
+        }
+        .kidUnmutePrompt::before {
+          content: '';
+          position: absolute;
+          top: -7px; right: 18px;
+          width: 0; height: 0;
+          border-left: 7px solid transparent;
+          border-right: 7px solid transparent;
+          border-bottom: 7px solid white;
+        }
+        @keyframes bouncePrompt {
+          0%, 100% { transform: translateY(0); }
+          50%      { transform: translateY(-5px); }
+        }
+
+        .kidNav {
+          position: absolute; top: 50%;
+          transform: translateY(-50%);
+          width: 40px; height: 40px; border-radius: 50%;
+          background: white;
+          border: 2px solid rgba(255,107,53,0.35);
+          font-size: 1.4rem; cursor: pointer; color: #2D1A4A;
+          box-shadow: 0 4px 14px rgba(0,0,0,0.18);
+          z-index: 5;
+          display: flex; align-items: center; justify-content: center;
+          font-weight: 900;
+          transition: all 0.2s ease;
+          line-height: 1;
+        }
+        .kidNav:hover {
+          background: linear-gradient(135deg, #FF6B35, #7B2FBE);
+          color: white;
+          transform: translateY(-50%) scale(1.12);
+          border-color: white;
+        }
+        .kidNavLeft  { left: 14px; }
+        .kidNavRight { right: 14px; }
+
+        .kidProgressTrack {
+          position: absolute; bottom: 0; left: 0; right: 0;
+          height: 4px; background: rgba(255,255,255,0.3); z-index: 5;
+        }
+        .kidProgressFill {
+          height: 100%;
+          background: linear-gradient(90deg, #FF6B35, #FF4081, #7B2FBE);
+          animation: kidProgress 5s linear forwards;
+        }
+        @keyframes kidProgress { from { width: 0%; } to { width: 100%; } }
+
+        .kidDots {
+          position: absolute; bottom: 14px; right: 20px;
+          display: flex; gap: 6px; z-index: 5;
+        }
+        .kidDot {
+          width: 9px; height: 9px; border-radius: 50%;
+          border: 2px solid rgba(255,255,255,0.7);
+          background: rgba(255,255,255,0.4);
+          cursor: pointer; padding: 0;
+          transition: all 0.3s ease;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.25);
+        }
+        .kidDotActive {
+          width: 26px; border-radius: 999px;
+          background: white; border-color: white;
+        }
+
+        @media (max-width: 768px) {
+          .kidFestivalSection { padding: 22px 12px 26px; }
+          .kidFestivalCard {
+            border-radius: 20px;
+            box-shadow:
+              0 0 0 3px white,
+              0 0 0 5px rgba(255,107,53,0.30),
+              0 12px 32px rgba(123,47,190,0.22);
+          }
+          .kidDeco { font-size: 1.4rem; opacity: 0.45; }
+          .kidCloud1, .kidCloud2 { font-size: 1.8rem; }
+          .kidBalloon1, .kidBalloon2 { font-size: 1.6rem; }
+          .kidTeddy { font-size: 1.5rem; }
+          .kidRainbow { font-size: 1.4rem; }
+          .kidTextContent { width: 65%; padding: 14px; }
+          .kidNav { width: 34px; height: 34px; font-size: 1.2rem; }
+          .kidMuteBtn { width: 36px; height: 36px; font-size: 14px; }
+          .kidUnmutePrompt { font-size: 12px; padding: 7px 12px; top: 56px; }
+        }
+        @media (max-width: 480px) {
+          .kidDeco { font-size: 1.2rem; }
+          .kidTextContent { width: 70%; padding: 12px; }
+          .kidShopBtn { padding: 8px 16px; font-size: 0.78rem; }
+        }
+      `}</style>
     </section>
   );
 }
-
 /* ═══════════════════════════════════════
    3. BUDGET
 ═══════════════════════════════════════ */

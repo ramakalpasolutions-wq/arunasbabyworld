@@ -75,6 +75,12 @@ const SEASON_PRESETS = {
   ],
 };
 
+// ✅ Helper: detect if URL is video (used everywhere)
+const isVideoUrl = (url) => {
+  if (!url) return false;
+  return /\.(mp4|webm|mov|m4v)(\?|$)/i.test(url);
+};
+
 // ============================================================
 // SECTION SETTINGS COMPONENT
 // ============================================================
@@ -722,7 +728,7 @@ export default function AdminBanners() {
   const [editing,         setEditing]         = useState(null);
   const [uploading,       setUploading]       = useState(false);
   const [uploadingMobile, setUploadingMobile] = useState(false);
-  const [uploadingHero,   setUploadingHero]   = useState(false); // ✅ NEW: single hero media
+  const [uploadingHero,   setUploadingHero]   = useState(false);
   const [saving,          setSaving]          = useState(false);
 
   const emptyForm = {
@@ -819,6 +825,7 @@ export default function AdminBanners() {
     setShowForm(true);
   };
 
+  // ✅ UPDATED — Accepts image OR video for festival
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -826,12 +833,19 @@ export default function AdminBanners() {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      fd.append('folder', 'firstcry/banners');
+      fd.append('folder', `firstcry/banners/${form.type}`);
       const res  = await fetch('/api/upload', { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
-      setForm(f => ({ ...f, image: { url: data.url || data.images?.[0]?.url, publicId: data.publicId || data.images?.[0]?.publicId || '' } }));
-      toast.success('✅ Uploaded!');
+      setForm(f => ({
+        ...f,
+        image: {
+          url:      data.url || data.images?.[0]?.url,
+          publicId: data.publicId || data.images?.[0]?.publicId || '',
+          type:     data.type || data.images?.[0]?.type || 'image',
+        },
+      }));
+      toast.success(`✅ ${data.type === 'video' ? 'Video' : 'Image'} uploaded!`);
     } catch (err) { toast.error(err.message); }
     finally { setUploading(false); }
   };
@@ -853,7 +867,6 @@ export default function AdminBanners() {
     finally { setUploadingMobile(false); }
   };
 
-  // ✅ NEW — Single hero media upload (image OR video)
   const handleHeroMediaUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -867,7 +880,6 @@ export default function AdminBanners() {
       if (!res.ok) throw new Error(data.error);
       setForm(f => {
         const panels = [...(f.panels || PANEL_DEFAULTS)];
-        // Always update first (and only) panel - mark as big
         panels[0] = {
           ...panels[0],
           isBig:    true,
@@ -934,7 +946,7 @@ export default function AdminBanners() {
               sublabel: p.sublabel || '',
               link:     p.link     || '/products',
               bg:       p.bg       || '#FDE8D0',
-              isBig:    true,  // ✅ Always mark hero panel as big
+              isBig:    true,
             }))
           : [],
       };
@@ -968,21 +980,15 @@ export default function AdminBanners() {
   const pLbl  = { display: 'block', fontSize: '10px', fontWeight: '800', color: '#7B2FBE', marginBottom: '4px', textTransform: 'uppercase' };
   const tabSt = (key) => ({ padding: '9px 15px', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '12.5px', cursor: 'pointer', fontFamily: 'Nunito, sans-serif', background: activeTab === key ? 'linear-gradient(135deg,#FF6B35,#7B2FBE)' : '#f3f4f6', color: activeTab === key ? 'white' : '#555', boxShadow: activeTab === key ? '0 4px 14px rgba(255,107,53,0.25)' : 'none', transition: 'all 0.2s', whiteSpace: 'nowrap' });
 
-  // ✅ Helper: detect if URL is video
-  const isVideoUrl = (url) => {
-    if (!url) return false;
-    return /\.(mp4|webm|mov|m4v)(\?|$)/i.test(url);
-  };
-
   const BannerCard = ({ banner }) => {
     const heroPanel = banner.panels?.[0];
     const heroMedia = heroPanel?.url;
     const heroIsVideo = isVideoUrl(heroMedia);
+    const bannerImageIsVideo = isVideoUrl(banner.image?.url);
 
     return (
       <div style={{ background: 'white', borderRadius: '16px', border: `2px solid ${banner.isActive ? '#EDD9FF' : '#f0f0f0'}`, overflow: 'hidden', boxShadow: '0 4px 16px rgba(123,47,190,0.08)', opacity: banner.isActive ? 1 : 0.65 }}>
         <div style={{ height: '150px', background: banner.bgColor || banner.color || 'linear-gradient(135deg,#FF6B35,#7B2FBE)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', position: 'relative', overflow: 'hidden' }}>
-          {/* Show hero media preview */}
           {banner.type === 'hero' && heroMedia ? (
             heroIsVideo ? (
               <video src={heroMedia} autoPlay muted loop playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -990,14 +996,23 @@ export default function AdminBanners() {
               <img src={heroMedia} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             )
           ) : banner.image?.url ? (
-            <img src={banner.image.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            bannerImageIsVideo ? (
+              <video src={banner.image.url} autoPlay muted loop playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            ) : (
+              <img src={banner.image.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+            )
           ) : (
             <span>{banner.emoji || '🖼️'}</span>
           )}
 
-          {banner.type === 'hero' && heroMedia && (
+          {(banner.type === 'hero' && heroMedia) && (
             <div style={{ position: 'absolute', bottom: '8px', left: '8px', padding: '3px 9px', borderRadius: '999px', fontSize: '10px', fontWeight: '800', background: heroIsVideo ? 'rgba(255,71,87,0.95)' : 'rgba(244,123,32,0.9)', color: 'white' }}>
               {heroIsVideo ? '🎥 VIDEO' : '🖼️ IMAGE'}
+            </div>
+          )}
+          {(banner.type !== 'hero' && bannerImageIsVideo) && (
+            <div style={{ position: 'absolute', bottom: '8px', left: '8px', padding: '3px 9px', borderRadius: '999px', fontSize: '10px', fontWeight: '800', background: 'rgba(255,71,87,0.95)', color: 'white' }}>
+              🎥 VIDEO
             </div>
           )}
           <div style={{ position: 'absolute', top: '8px', left: '8px', padding: '3px 9px', borderRadius: '999px', fontSize: '10px', fontWeight: '800', background: banner.isActive ? 'rgba(5,150,105,0.9)' : 'rgba(100,100,100,0.7)', color: 'white' }}>{banner.isActive ? '● Active' : '○ Inactive'}</div>
@@ -1020,25 +1035,62 @@ export default function AdminBanners() {
     );
   };
 
-  const ImgUpload = ({ label, value, onChange, uploading: upl, onRemove }) => (
-    <div>
-      <label style={lbl}>{label}</label>
-      <label style={{ cursor: 'pointer', display: 'block' }}>
-        <input type="file" accept="image/*" onChange={onChange} style={{ display: 'none' }} disabled={upl} />
-        <div style={{ width: '100%', height: '130px', border: `2px dashed ${form.color || '#FF6B35'}`, borderRadius: '12px', background: '#fff8fb', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative', cursor: 'pointer' }}>
-          {upl
-            ? <p style={{ color: '#FF6B35', fontWeight: '700', fontSize: '13px' }}>⏳ Uploading...</p>
-            : value?.url
-              ? <img src={value.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '8px', boxSizing: 'border-box' }} />
-              : <div style={{ textAlign: 'center' }}><div style={{ fontSize: '28px' }}>🖼️</div><p style={{ fontSize: '12px', fontWeight: '700', color: form.color || '#FF6B35', margin: '6px 0 0' }}>Click to upload</p></div>
-          }
-        </div>
-      </label>
-      {value?.url && (
-        <button type="button" onClick={onRemove} style={{ marginTop: '6px', width: '100%', background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '8px', padding: '7px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>🗑️ Remove</button>
-      )}
-    </div>
-  );
+  // ✅ NEW unified ImgUpload — supports image OR video
+  const ImgUpload = ({ label, value, onChange, uploading: upl, onRemove, allowVideo = false }) => {
+    const isVideo = value?.url && (isVideoUrl(value.url) || value?.type === 'video');
+    return (
+      <div>
+        <label style={lbl}>{label}</label>
+        <label style={{ cursor: 'pointer', display: 'block' }}>
+          <input
+            type="file"
+            accept={allowVideo ? 'image/*,video/mp4,video/webm,video/quicktime' : 'image/*'}
+            onChange={onChange}
+            style={{ display: 'none' }}
+            disabled={upl}
+          />
+          <div style={{ width: '100%', height: '180px', border: `2px dashed ${form.color || '#FF6B35'}`, borderRadius: '12px', background: '#fff8fb', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative', cursor: 'pointer' }}>
+            {upl ? (
+              <p style={{ color: '#FF6B35', fontWeight: '700', fontSize: '13px' }}>⏳ Uploading...</p>
+            ) : value?.url ? (
+              <>
+                {isVideo ? (
+                  <video src={value.url} autoPlay muted loop playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                ) : (
+                  <img src={value.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '6px', boxSizing: 'border-box' }} />
+                )}
+                <span style={{
+                  position: 'absolute', top: '8px', right: '8px',
+                  background: isVideo ? 'rgba(255,71,87,0.95)' : 'rgba(244,123,32,0.9)',
+                  color: 'white', padding: '3px 9px', borderRadius: '999px',
+                  fontSize: '10px', fontWeight: '800', fontFamily: 'Nunito, sans-serif',
+                }}>
+                  {isVideo ? '🎥 VIDEO' : '🖼️ IMAGE'}
+                </span>
+              </>
+            ) : (
+              <div style={{ textAlign: 'center', padding: '12px' }}>
+                <div style={{ fontSize: '28px' }}>{allowVideo ? '🎥' : '🖼️'}</div>
+                <p style={{ fontSize: '12px', fontWeight: '700', color: form.color || '#FF6B35', margin: '6px 0 2px' }}>
+                  Click to upload {allowVideo ? 'image or video' : 'image'}
+                </p>
+                {allowVideo && (
+                  <p style={{ fontSize: '10px', color: '#9585B0', margin: 0, fontWeight: '600' }}>
+                    📸 JPG/PNG (10MB) · 🎥 MP4/WebM (50MB)
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </label>
+        {value?.url && (
+          <button type="button" onClick={onRemove} style={{ marginTop: '6px', width: '100%', background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '8px', padding: '7px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>
+            🗑️ Remove
+          </button>
+        )}
+      </div>
+    );
+  };
 
   const formTitle = () => {
     const action = editing ? '✏️ Edit' : '➕ Add';
@@ -1067,7 +1119,7 @@ export default function AdminBanners() {
   const tabInfo = {
     hero:               '🎥 Hero banners — upload ONE image OR video (full-screen auto-play)',
     category:           '📁 Category cards — upload image, name, color & link',
-    festival:           '🎪 Festival banners with schedule + text overlay',
+    festival:           '🎥 Festival banners — upload IMAGE or VIDEO + schedule + text overlay',
     budget:             '🏪 Budget price circles',
     sunny:              '☀️ Category cards section',
     promo:              '🏷️ Promo offer cards',
@@ -1080,7 +1132,6 @@ export default function AdminBanners() {
   const isCareTab    = activeTab === 'personal-care' || activeTab === 'health-care';
   const isSpecialTab = ['brands', 'section-settings', 'personal-care', 'health-care'].includes(activeTab);
 
-  // ✅ Get current hero panel for preview
   const heroPanel = form.panels?.[0] || PANEL_DEFAULTS[0];
   const heroIsVideo = isVideoUrl(heroPanel.url);
 
@@ -1103,13 +1154,11 @@ export default function AdminBanners() {
         ))}
       </div>
 
-      {/* SPECIAL TABS */}
       {activeTab === 'brands'           && <BrandsTab />}
       {activeTab === 'section-settings' && <SectionSettings />}
       {activeTab === 'personal-care'    && <CareGridManager type="personal-care" title="Personal Care" accentColor="#7B2FBE" layout="bento" />}
       {activeTab === 'health-care'      && <CareGridManager type="health-care"   title="Health Care"   accentColor="#10B981" layout="mosaic" />}
 
-      {/* NORMAL TABS */}
       {!isSpecialTab && currentTab && (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px', padding: '12px 16px', background: '#FBF7FF', borderRadius: '12px', border: '1.5px solid #EDD9FF' }}>
@@ -1301,13 +1350,14 @@ export default function AdminBanners() {
                     <ImgUpload
                       label={
                         form.type === 'category' ? '📁 Category Image *'
-                        : form.type === 'festival' ? '🖥️ Desktop Image'
+                        : form.type === 'festival' ? '🎥 Festival Media (Image or Video)'
                         : '🖼️ Front Image (Main)'
                       }
                       value={form.image}
                       onChange={handleImageUpload}
                       uploading={uploading}
                       onRemove={() => setForm(f => ({ ...f, image: null }))}
+                      allowVideo={form.type === 'festival'}
                     />
                   )}
 
@@ -1366,7 +1416,6 @@ export default function AdminBanners() {
                     </>
                   )}
 
-                  {/* ✅ NEW HERO MEDIA UPLOAD (Image or Video) */}
                   {form.type === 'hero' && (
                     <div style={{ border: '2px solid #EDD9FF', borderRadius: '16px', overflow: 'hidden' }}>
                       <div style={{ padding: '12px 16px', background: 'linear-gradient(135deg,#FFF3EC,#F3E8FF)', borderBottom: '1.5px solid #EDD9FF', display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -1382,7 +1431,6 @@ export default function AdminBanners() {
                       <div style={{ padding: '14px' }}>
                         <div style={{ background: heroPanel.bg || '#FFF3E8', borderRadius: '14px', padding: '14px', border: '2px solid rgba(255,255,255,0.9)' }}>
 
-                          {/* UPLOAD AREA */}
                           <label style={{ cursor: 'pointer', display: 'block', marginBottom: '12px' }}>
                             <input
                               type="file"
@@ -1412,14 +1460,7 @@ export default function AdminBanners() {
                               ) : heroPanel.url ? (
                                 heroIsVideo ? (
                                   <>
-                                    <video
-                                      src={heroPanel.url}
-                                      autoPlay
-                                      muted
-                                      loop
-                                      playsInline
-                                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                                    />
+                                    <video src={heroPanel.url} autoPlay muted loop playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                                     <span style={{
                                       position: 'absolute', top: '10px', right: '10px',
                                       background: 'rgba(0,0,0,0.65)', color: 'white',
@@ -1462,67 +1503,33 @@ export default function AdminBanners() {
                           </label>
 
                           {heroPanel.url && (
-                            <button
-                              type="button"
-                              onClick={removeHeroMedia}
-                              style={{ width: '100%', padding: '8px', background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', marginBottom: '12px' }}
-                            >
+                            <button type="button" onClick={removeHeroMedia} style={{ width: '100%', padding: '8px', background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', marginBottom: '12px' }}>
                               🗑️ Remove Media
                             </button>
                           )}
 
-                          {/* META FIELDS */}
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                             <div>
                               <label style={pLbl}>Badge Label</label>
-                              <input
-                                type="text"
-                                value={heroPanel.label || ''}
-                                onChange={e => updateHeroPanel('label', e.target.value)}
-                                placeholder="🔥 Trending"
-                                style={pInp}
-                              />
+                              <input type="text" value={heroPanel.label || ''} onChange={e => updateHeroPanel('label', e.target.value)} placeholder="🔥 Trending" style={pInp} />
                             </div>
                             <div>
                               <label style={pLbl}>Sub Label</label>
-                              <input
-                                type="text"
-                                value={heroPanel.sublabel || ''}
-                                onChange={e => updateHeroPanel('sublabel', e.target.value)}
-                                placeholder="2.4k sold this week"
-                                style={pInp}
-                              />
+                              <input type="text" value={heroPanel.sublabel || ''} onChange={e => updateHeroPanel('sublabel', e.target.value)} placeholder="2.4k sold this week" style={pInp} />
                             </div>
                             <div>
                               <label style={pLbl}>Click Link</label>
-                              <input
-                                type="text"
-                                value={heroPanel.link || ''}
-                                onChange={e => updateHeroPanel('link', e.target.value)}
-                                placeholder="/products"
-                                style={pInp}
-                              />
+                              <input type="text" value={heroPanel.link || ''} onChange={e => updateHeroPanel('link', e.target.value)} placeholder="/products" style={pInp} />
                             </div>
                             <div>
                               <label style={pLbl}>BG Color (fallback)</label>
                               <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-                                <input
-                                  type="color"
-                                  value={heroPanel.bg || '#FDE8D0'}
-                                  onChange={e => updateHeroPanel('bg', e.target.value)}
-                                  style={{ width: '36px', height: '34px', border: '2px solid #EDD9FF', borderRadius: '6px', cursor: 'pointer', padding: '2px', flexShrink: 0 }}
-                                />
-                                <input
-                                  type="text"
-                                  value={heroPanel.bg || '#FDE8D0'}
-                                  onChange={e => updateHeroPanel('bg', e.target.value)}
-                                  style={{ ...pInp, flex: 1 }}
-                                />
+                                <input type="color" value={heroPanel.bg || '#FDE8D0'} onChange={e => updateHeroPanel('bg', e.target.value)} style={{ width: '36px', height: '34px', border: '2px solid #EDD9FF', borderRadius: '6px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
+                                <input type="text" value={heroPanel.bg || '#FDE8D0'} onChange={e => updateHeroPanel('bg', e.target.value)} style={{ ...pInp, flex: 1 }} />
                               </div>
                             </div>
                           </div>
 
-                          {/* Info note */}
                           <div style={{ marginTop: '12px', padding: '10px 12px', background: '#F0F9FF', borderRadius: '8px', border: '1px solid #BAE6FD' }}>
                             <p style={{ margin: 0, fontSize: '11px', color: '#0369A1', fontWeight: '600', fontFamily: 'Nunito, sans-serif', lineHeight: '1.5' }}>
                               💡 <strong>Tip:</strong> Videos auto-play muted on the hero. Users can unmute with the 🔊 button. Keep videos under 30 seconds for best experience.
