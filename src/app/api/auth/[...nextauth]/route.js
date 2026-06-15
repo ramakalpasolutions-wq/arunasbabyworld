@@ -18,38 +18,16 @@ export const authOptions = {
           }
 
           const normalizedEmail = credentials.email.toLowerCase().trim();
-          console.log('🔍 Looking for:', normalizedEmail);
-
           const user = await prisma.user.findUnique({
             where: { email: normalizedEmail },
           });
 
-          console.log('👤 User found:', user ? 'YES' : 'NO');
+          if (!user) throw new Error('No user found with this email');
+          if (user.isActive === false) throw new Error('Account is deactivated');
+          if (!user.password) throw new Error('Invalid credentials');
 
-          if (!user) {
-            throw new Error('No user found with this email');
-          }
-
-          if (user.isActive === false) {
-            throw new Error('Account is deactivated');
-          }
-
-          if (!user.password) {
-            throw new Error('Invalid credentials');
-          }
-
-          const isValid = await bcrypt.compare(
-            credentials.password,
-            user.password
-          );
-
-          console.log('🔑 Password valid:', isValid ? 'YES' : 'NO');
-
-          if (!isValid) {
-            throw new Error('Invalid password');
-          }
-
-          console.log('✅ Login success:', normalizedEmail);
+          const isValid = await bcrypt.compare(credentials.password, user.password);
+          if (!isValid) throw new Error('Invalid password');
 
           return {
             id: user.id,
@@ -58,7 +36,6 @@ export const authOptions = {
             role: user.role,
             avatar: user.avatar || null,
           };
-
         } catch (error) {
           console.error('❌ Auth error:', error.message);
           throw error;
@@ -91,7 +68,16 @@ export const authOptions = {
     error: '/login',
   },
 
-  session: { strategy: 'jwt' },
+  session: { 
+    strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+    updateAge: 24 * 60 * 60,    // 1 day
+  },
+
+  jwt: {
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+  },
+
   secret: process.env.NEXTAUTH_SECRET,
 };
 
