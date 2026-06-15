@@ -50,6 +50,21 @@ export async function POST(request) {
           );
         }
 
+        // ✅ Sanitize images - only keep url and publicId (matches ProductImage schema)
+        const cleanImages = Array.isArray(p.images)
+          ? p.images
+              .filter(img => img && (img.url || typeof img === 'string'))
+              .map(img => {
+                if (typeof img === 'string') {
+                  return { url: img, publicId: null };
+                }
+                return {
+                  url: img.url || null,
+                  publicId: img.publicId || null,
+                };
+              })
+          : [];
+
         const product = await prisma.product.create({
           data: {
             name: p.name,
@@ -58,15 +73,15 @@ export async function POST(request) {
             price: parseFloat(p.price),
             discountPrice: p.discountPrice ? parseFloat(p.discountPrice) : null,
             discountPercent,
-            stock: parseInt(p.stock),
+            stock: parseInt(p.stock) || 0,
             brand: p.brand || null,
             categoryId,
             isFeatured: p.isFeatured || false,
             isTrending: p.isTrending || false,
             isActive: p.isActive !== false,
-            images: p.images || [],
-            tags: p.tags || [],
-            features: p.features || [],
+            images: cleanImages,
+            tags: Array.isArray(p.tags) ? p.tags : [],
+            features: Array.isArray(p.features) ? p.features : [],
             slug,
             sku,
           },
