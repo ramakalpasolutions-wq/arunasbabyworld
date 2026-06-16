@@ -3,6 +3,7 @@ import { useState, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
+import Image from 'next/image';
 import toast from 'react-hot-toast';
 import './login.css';
 
@@ -15,7 +16,6 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
 
-  // ✅ Smart back navigation
   const handleBack = () => {
     if (window.history.length > 1) {
       router.back();
@@ -38,7 +38,7 @@ function LoginForm() {
         redirect: false,
       });
       if (result?.error) throw new Error('Invalid email or password');
-      toast.success('Welcome back! 👋');
+      toast.success('Welcome back!');
       router.push(redirect);
       router.refresh();
     } catch (err) {
@@ -50,42 +50,52 @@ function LoginForm() {
 
   return (
     <div className="login-page">
-      {/* Animated mesh background */}
-      <div className="mesh-bg" />
-      <div className="glow glow-1" />
-      <div className="glow glow-2" />
+      {/* Soft pastel background shapes */}
+      <div className="bg-shape bg-shape-1" />
+      <div className="bg-shape bg-shape-2" />
+      <div className="bg-shape bg-shape-3" />
+      <div className="bg-shape bg-shape-4" />
+      <div className="bg-dots" />
 
-      {/* ✅ BACK BUTTON */}
+      {/* BACK BUTTON */}
       <button onClick={handleBack} className="back-btn" aria-label="Go back">
         <span className="back-arrow">←</span>
         <span className="back-text">Back</span>
       </button>
 
-      {/* ✅ HOME BUTTON */}
+      {/* HOME BUTTON */}
       <Link href="/" className="home-btn" aria-label="Go home">
         <span>🏠</span>
       </Link>
 
       {/* Card */}
       <div className="login-card">
-        <div className="card-shine" />
+        <div className="card-top-bar" />
 
         {/* Logo */}
         <div className="logo-area">
           <Link href="/" className="logo-link">
             <div className="logo-circle">
-              <span>🍼</span>
+              <Image
+                src="/logo.png"
+                alt="Aruna's Baby World"
+                width={130}
+                height={130}
+                className="logo-img"
+                priority
+              />
             </div>
           </Link>
+          <h2 className="brand-name">Aruna&apos;s Baby World</h2>
           <h1 className="title">Welcome Back</h1>
-          <p className="subtitle">Sign in to your BabyBliss account</p>
+          <p className="subtitle">Sign in to your Aruna&apos;s Baby World account</p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="form">
           {/* Email */}
           <div className="field">
-            <label className="label">Email</label>
+            <label className="label">Email Address</label>
             <div className={`input-box ${focusedField === 'email' ? 'active' : ''}`}>
               <span className="field-icon">✉️</span>
               <input

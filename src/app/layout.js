@@ -8,7 +8,7 @@ import '@/styles/globals.css';
 
 export const metadata = {
   title: {
-    default: 'BabyBliss - Premium Baby & Kids Store',
+    default: 'Arunas Baby World',
     template: '%s | BabyBliss',
   },
   description: 'Shop the best baby clothing, toys, gear, and more. Premium quality for your little ones.',
