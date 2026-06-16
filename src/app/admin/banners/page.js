@@ -1,6 +1,7 @@
 'use client';
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { uploadFileToR2 } from '@/lib/uploadFile';
 
 // ============================================================
 // PANEL DEFAULTS
@@ -339,21 +340,22 @@ function BrandsTab() {
   };
 
   const handleLogoUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('folder', 'firstcry/brands');
-      const res  = await fetch('/api/upload', { method: 'POST', body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setForm(f => ({ ...f, logo: { url: data.url || data.images?.[0]?.url, publicId: data.publicId || data.images?.[0]?.publicId || '' } }));
-      toast.success('✅ Logo uploaded!');
-    } catch (err) { toast.error(err.message); }
-    finally { setUploading(false); }
-  };
+  const file = e.target.files[0];
+  if (!file) return;
+  setUploading(true);
+  try {
+    const result = await uploadFileToR2(file, 'firstcry/brands');
+    setForm(f => ({
+      ...f,
+      logo: { url: result.url, publicId: result.publicId },
+    }));
+    toast.success('✅ Logo uploaded!');
+  } catch (err) {
+    toast.error(err.message);
+  } finally {
+    setUploading(false);
+  }
+};
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -533,30 +535,25 @@ function CareGridManager({ type, title, accentColor, layout }) {
   useEffect(() => { fetchBanners(); }, [type]);
 
   const uploadImage = async (slotIndex, side, file) => {
-    if (!file) return;
-    const k = `${slotIndex}-${side}`;
-    setUploading(prev => ({ ...prev, [k]: true }));
-    try {
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('folder', `firstcry/banners/${type}`);
-      const res  = await fetch('/api/upload', { method: 'POST', body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      const imgObj = { url: data.url || data.images?.[0]?.url, publicId: data.publicId || data.images?.[0]?.publicId || '' };
-      setBanners(prev => {
-        const u = [...prev];
-        if (side === 'front') u[slotIndex] = { ...u[slotIndex], image: imgObj };
-        else                  u[slotIndex] = { ...u[slotIndex], mobileImage: imgObj };
-        return u;
-      });
-      toast.success(`✅ ${side === 'front' ? 'Front' : 'Back'} uploaded!`);
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setUploading(prev => ({ ...prev, [k]: false }));
-    }
-  };
+  if (!file) return;
+  const k = `${slotIndex}-${side}`;
+  setUploading(prev => ({ ...prev, [k]: true }));
+  try {
+    const result = await uploadFileToR2(file, `firstcry/banners/${type}`);
+    const imgObj = { url: result.url, publicId: result.publicId };
+    setBanners(prev => {
+      const u = [...prev];
+      if (side === 'front') u[slotIndex] = { ...u[slotIndex], image: imgObj };
+      else                  u[slotIndex] = { ...u[slotIndex], mobileImage: imgObj };
+      return u;
+    });
+    toast.success(`✅ ${side === 'front' ? 'Front' : 'Back'} uploaded!`);
+  } catch (err) {
+    toast.error(err.message);
+  } finally {
+    setUploading(prev => ({ ...prev, [k]: false }));
+  }
+};
 
   const removeImage = (slotIndex, side) => {
     setBanners(prev => {
@@ -832,72 +829,69 @@ export default function AdminBanners() {
     setShowForm(true);
   };
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('folder', `firstcry/banners/${form.type}`);
-      const res  = await fetch('/api/upload', { method: 'POST', body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setForm(f => ({
-        ...f,
-        image: {
-          url:      data.url || data.images?.[0]?.url,
-          publicId: data.publicId || data.images?.[0]?.publicId || '',
-          type:     data.type || data.images?.[0]?.type || 'image',
-        },
-      }));
-      toast.success(`✅ ${data.type === 'video' ? 'Video' : 'Image'} uploaded!`);
-    } catch (err) { toast.error(err.message); }
-    finally { setUploading(false); }
-  };
+ const handleImageUpload = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+  setUploading(true);
+  try {
+    const result = await uploadFileToR2(file, `firstcry/banners/${form.type}`);
+    setForm(f => ({
+      ...f,
+      image: {
+        url:      result.url,
+        publicId: result.publicId,
+        type:     result.type,
+      },
+    }));
+    toast.success(`✅ ${result.type === 'video' ? 'Video' : 'Image'} uploaded!`);
+  } catch (err) {
+    toast.error(err.message);
+  } finally {
+    setUploading(false);
+  }
+};
 
   const handleMobileImageUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploadingMobile(true);
-    try {
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('folder', 'firstcry/banners/mobile');
-      const res  = await fetch('/api/upload', { method: 'POST', body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setForm(f => ({ ...f, mobileImage: { url: data.url || data.images?.[0]?.url, publicId: data.publicId || data.images?.[0]?.publicId || '' } }));
-      toast.success('✅ Mobile uploaded!');
-    } catch (err) { toast.error(err.message); }
-    finally { setUploadingMobile(false); }
-  };
+  const file = e.target.files[0];
+  if (!file) return;
+  setUploadingMobile(true);
+  try {
+    const result = await uploadFileToR2(file, 'firstcry/banners/mobile');
+    setForm(f => ({
+      ...f,
+      mobileImage: { url: result.url, publicId: result.publicId },
+    }));
+    toast.success('✅ Mobile uploaded!');
+  } catch (err) {
+    toast.error(err.message);
+  } finally {
+    setUploadingMobile(false);
+  }
+};
 
   const handleHeroMediaUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploadingHero(true);
-    try {
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('folder', 'firstcry/banners/hero');
-      const res  = await fetch('/api/upload', { method: 'POST', body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      setForm(f => {
-        const panels = [...(f.panels || PANEL_DEFAULTS)];
-        panels[0] = {
-          ...panels[0],
-          isBig:    true,
-          url:      data.url || data.images?.[0]?.url || '',
-          publicId: data.publicId || data.images?.[0]?.publicId || '',
-        };
-        return { ...f, panels };
-      });
-      toast.success('✅ Hero media uploaded!');
-    } catch (err) { toast.error(err.message); }
-    finally { setUploadingHero(false); }
-  };
+  const file = e.target.files[0];
+  if (!file) return;
+  setUploadingHero(true);
+  try {
+    const result = await uploadFileToR2(file, 'firstcry/banners/hero');
+    setForm(f => {
+      const panels = [...(f.panels || PANEL_DEFAULTS)];
+      panels[0] = {
+        ...panels[0],
+        isBig:    true,
+        url:      result.url,
+        publicId: result.publicId,
+      };
+      return { ...f, panels };
+    });
+    toast.success('✅ Hero media uploaded!');
+  } catch (err) {
+    toast.error(err.message);
+  } finally {
+    setUploadingHero(false);
+  }
+};
 
   const updateHeroPanel = (field, value) => {
     setForm(f => {

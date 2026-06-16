@@ -19,37 +19,31 @@ export async function POST(request) {
       return NextResponse.json({ error: 'No files provided' }, { status: 400 });
     }
 
-    // ✅ Allowed types — IMAGES + VIDEOS
     const allowedTypes = [
-      // Images
       'image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif',
-      // Videos
       'video/mp4', 'video/webm', 'video/quicktime', 'video/x-m4v',
     ];
 
-    const maxImageSize = 10 * 1024 * 1024;   // 10 MB images
-    const maxVideoSize = 50 * 1024 * 1024;   // 50 MB videos
+    const maxImageSize = 4 * 1024 * 1024;   // ⚠️ 4 MB — Vercel limit (use presigned for larger)
+    const maxVideoSize = 4 * 1024 * 1024;
     const uploaded = [];
 
     for (const file of files) {
       if (!file || typeof file === 'string') continue;
 
-      // ✅ Validate type
       if (!allowedTypes.includes(file.type)) {
         return NextResponse.json(
-          { error: `Invalid type: ${file.type}. Allowed: Images (JPEG/PNG/WebP/GIF) or Videos (MP4/WebM/MOV)` },
+          { error: `Invalid type: ${file.type}` },
           { status: 400 }
         );
       }
 
-      // ✅ Validate size (different for images vs videos)
       const isVideo = file.type.startsWith('video/');
       const maxSize = isVideo ? maxVideoSize : maxImageSize;
       if (file.size > maxSize) {
-        const limitMB = isVideo ? 50 : 10;
         return NextResponse.json(
-          { error: `File "${file.name}" exceeds ${limitMB} MB limit` },
-          { status: 400 }
+          { error: `File "${file.name}" too large (max 4 MB). For larger files, use direct upload.` },
+          { status: 413 }
         );
       }
 
@@ -60,7 +54,7 @@ export async function POST(request) {
       uploaded.push({
         url:      result.url,
         publicId: result.key,
-        type:     isVideo ? 'video' : 'image',  // ✅ extra metadata
+        type:     isVideo ? 'video' : 'image',
       });
     }
 
@@ -70,7 +64,6 @@ export async function POST(request) {
       publicId: uploaded[0]?.publicId,
       type:     uploaded[0]?.type,
     });
-
   } catch (error) {
     console.error('Upload error:', error);
     return NextResponse.json(
