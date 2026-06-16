@@ -1,176 +1,144 @@
+/* C:\Users\user\arunasbabyworld\src\app\HomeClient.module.css */
+
 @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Fredoka+One&display=swap');
 
 /* ============================================================
    ROOT TOKENS
-   ============================================================ */
+============================================================ */
 :root {
   --orange:        #FF6B35;
   --orange-dark:   #E8551F;
   --orange-light:  #FFD4B8;
   --orange-soft:   #FFF3EC;
-  --orange-glow:   rgba(255,107,53,0.25);
+  --orange-glow:   rgba(255, 107, 53, 0.25);
   --purple:        #7B2FBE;
   --purple-dark:   #5E1F9A;
   --purple-light:  #DFC5F8;
   --purple-soft:   #F3E8FF;
-  --purple-glow:   rgba(123,47,190,0.25);
+  --purple-glow:   rgba(123, 47, 190, 0.25);
+  --pink:          #EC4899;
+  --blue:          #0EA5E9;
+  --green:         #10B981;
+  --red:           #EF4444;
+  --yellow:        #F59E0B;
   --text-dark:     #2D1A4A;
   --text-mid:      #6B4E8A;
-  --text-muted:    #A892C0;
+  --text-muted:    #9585B0;
   --bg-page:       #FFFBFE;
+  --bg-soft:       #FBF7FF;
   --border:        #EDD9FF;
   --white:         #FFFFFF;
   --font-display:  'Fredoka One', cursive;
   --font-body:     'Nunito', sans-serif;
-  --spring:        all 0.35s cubic-bezier(0.34,1.56,0.64,1);
-  --smooth:        all 0.40s cubic-bezier(0.22,1,0.36,1);
-  --shadow-sm:     0 4px 16px rgba(123,47,190,0.08);
-  --shadow-md:     0 8px 32px rgba(123,47,190,0.14);
-  --shadow-lg:     0 20px 60px rgba(123,47,190,0.20);
-  --shadow-orange: 0 8px 32px rgba(255,107,53,0.28);
-  --shadow-purple: 0 8px 32px rgba(123,47,190,0.28);
-  --shadow-3d:     0 25px 50px -12px rgba(45,26,74,0.25);
+  --spring:        all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+  --smooth:        all 0.40s cubic-bezier(0.22, 1, 0.36, 1);
+  --bounce:        all 0.45s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+  --shadow-sm:     0 4px 16px rgba(123, 47, 190, 0.08);
+  --shadow-md:     0 8px 32px rgba(123, 47, 190, 0.14);
+  --shadow-lg:     0 20px 60px rgba(123, 47, 190, 0.20);
+  --shadow-orange: 0 8px 32px rgba(255, 107, 53, 0.28);
+  --shadow-purple: 0 8px 32px rgba(123, 47, 190, 0.28);
+  --shadow-3d:     0 25px 50px -12px rgba(45, 26, 74, 0.25);
+  --grad-warm:     linear-gradient(135deg, #FF6B35 0%, #FF4081 50%, #7B2FBE 100%);
+  --grad-cool:     linear-gradient(135deg, #0EA5E9 0%, #7B2FBE 100%);
+  --grad-rainbow:  linear-gradient(90deg, #FF6B35, #7B2FBE, #FF8C5A, #9B4FDE, #FF6B35);
 }
 
 /* ============================================================
-   BASE
-   ============================================================ */
+   HOME WRAPPER
+============================================================ */
 .home {
   font-family: var(--font-body);
-  background: #fff;
+  background: var(--white);
   color: var(--text-dark);
   overflow-x: hidden;
   position: relative;
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+.home > div {
+  position: relative;
+  isolation: isolate;
 }
 
 /* ============================================================
-   SCROLL REVEAL
-   ============================================================ */
+   SCROLL REVEAL — global classes
+============================================================ */
 :global(.reveal) {
   opacity: 0;
-  transform: translateY(40px) rotateX(8deg);
+  transform: translateY(40px) rotateX(6deg);
   transform-origin: center bottom;
   transition:
-    opacity 0.70s cubic-bezier(0.22,1,0.36,1),
-    transform 0.70s cubic-bezier(0.22,1,0.36,1);
+    opacity   0.7s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
 }
 
 :global(.reveal.visible) {
   opacity: 1;
-  transform: translateY(0) rotateX(0deg);
+  transform: translateY(0) rotateX(0);
 }
 
 /* ============================================================
-   PAGE LOAD ANIMATION
-   ============================================================ */
+   SECTION WRAPPER — used by SectionWrapper component
+============================================================ */
+.sectionWrapper {
+  opacity: 0;
+  transform: translateY(32px);
+  transition:
+    opacity   0.65s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+
+.sectionVisible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* ============================================================
+   PAGE LOAD STAGGER
+============================================================ */
 @keyframes pageLoad {
-  0%   { opacity: 0; transform: translateY(20px); }
-  100% { opacity: 1; transform: translateY(0); }
+  0%   { opacity: 0; transform: translateY(24px) scale(0.99); }
+  100% { opacity: 1; transform: translateY(0)    scale(1);    }
 }
 
-.home > * {
-  animation: pageLoad 0.5s cubic-bezier(0.22,1,0.36,1) backwards;
-}
-
-.home > *:nth-child(1)  { animation-delay: 0.00s; }
-.home > *:nth-child(2)  { animation-delay: 0.06s; }
-.home > *:nth-child(3)  { animation-delay: 0.12s; }
-.home > *:nth-child(4)  { animation-delay: 0.18s; }
-.home > *:nth-child(5)  { animation-delay: 0.24s; }
-.home > *:nth-child(6)  { animation-delay: 0.30s; }
-.home > *:nth-child(7)  { animation-delay: 0.36s; }
-.home > *:nth-child(8)  { animation-delay: 0.42s; }
-.home > *:nth-child(9)  { animation-delay: 0.48s; }
+.home > * { animation: pageLoad 0.55s cubic-bezier(0.22, 1, 0.36, 1) backwards; }
+.home > *:nth-child(1)    { animation-delay: 0.00s; }
+.home > *:nth-child(2)    { animation-delay: 0.07s; }
+.home > *:nth-child(3)    { animation-delay: 0.14s; }
+.home > *:nth-child(4)    { animation-delay: 0.21s; }
+.home > *:nth-child(5)    { animation-delay: 0.28s; }
+.home > *:nth-child(6)    { animation-delay: 0.35s; }
+.home > *:nth-child(7)    { animation-delay: 0.42s; }
+.home > *:nth-child(8)    { animation-delay: 0.49s; }
+.home > *:nth-child(9)    { animation-delay: 0.56s; }
+.home > *:nth-child(10)   { animation-delay: 0.63s; }
+.home > *:nth-child(n+11) { animation-delay: 0.70s; }
 
 /* ============================================================
-   PRODUCTS GRID
-   ============================================================ */
-:global(.products-grid) {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
-}
-
-@media (max-width: 768px) {
-  :global(.products-grid) {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px;
-  }
-}
-
-@media (max-width: 480px) {
-  :global(.products-grid) {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 12px;
-  }
-}
-
-/* ============================================================
-   REDUCED MOTION
-   ============================================================ */
-@media (prefers-reduced-motion: reduce) {
-  .home > * {
-    animation: none;
-  }
-
-  :global(.reveal) {
-    opacity: 1;
-    transform: none;
-  }
-}
-
-/* ============================================================
-   SELECTION
-   ============================================================ */
-.home ::selection {
-  background: rgba(123,47,190,0.15);
-  color: var(--purple-dark);
-}
-
-/* ============================================================
-   GLOBAL RESPONSIVE SAFETY
-   ============================================================ */
-.home img {
-  max-width: 100%;
-  height: auto;
-}
-
-.home section {
-  width: 100%;
-  max-width: 100%;
-  overflow-x: hidden;
-}
-
-@media (max-width: 768px) {
-  .home {
-    overflow-x: hidden;
-    width: 100%;
-  }
-}
-
-@media (max-width: 1024px) and (min-width: 769px) {
-  .home section {
-    padding-left: clamp(16px, 2vw, 24px) !important;
-    padding-right: clamp(16px, 2vw, 24px) !important;
-  }
-}
-
-/* ============================================================
-   3D FLIP — INSTANT on hover (desktop) & touch (mobile)
-   ============================================================ */
+   FLIP CARD
+============================================================ */
 :global(.flipScene) {
-  perspective: 1200px;
+  perspective: 1400px;
   cursor: pointer;
   position: relative;
   -webkit-tap-highlight-color: transparent;
+  width: 100%;
+  height: 100%;
 }
 
 :global(.flipCard) {
   position: relative;
   width: 100%;
   height: 100%;
-  transition: transform 0.25s ease-out;
+  transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1);
   transform-style: preserve-3d;
+  will-change: transform;
 }
 
 :global(.flipFace) {
@@ -183,15 +151,634 @@
   overflow: hidden;
 }
 
-:global(.flipFront) {
-  transform: rotateY(0deg);
-}
-
-:global(.flipBack) {
-  transform: rotateY(180deg);
-}
+:global(.flipFront) { transform: rotateY(0deg);   }
+:global(.flipBack)  { transform: rotateY(180deg);  }
 
 :global(.flipScene:hover .flipCard),
 :global(.flipScene.isFlipped .flipCard) {
   transform: rotateY(180deg);
+}
+
+/* ============================================================
+   PRODUCTS GRID
+============================================================ */
+:global(.products-grid) {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 20px;
+}
+
+@media (max-width: 768px) {
+  :global(.products-grid) {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px;
+  }
+}
+
+@media (max-width: 380px) {
+  :global(.products-grid) {
+    grid-template-columns: 1fr;
+    gap: 16px;
+  }
+}
+
+/* ============================================================
+   IMAGES
+============================================================ */
+.home img,
+.home video {
+  max-width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ============================================================
+   SECTIONS
+============================================================ */
+.home section {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  position: relative;
+}
+
+/* ============================================================
+   FOCUS
+============================================================ */
+.home a:focus-visible,
+.home button:focus-visible {
+  outline: 3px solid var(--purple);
+  outline-offset: 3px;
+  border-radius: 12px;
+}
+
+.home a,
+.home button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* ============================================================
+   SELECTION
+============================================================ */
+.home ::selection     { background: rgba(123, 47, 190, 0.20); color: var(--purple-dark); }
+.home ::-moz-selection{ background: rgba(123, 47, 190, 0.20); color: var(--purple-dark); }
+
+/* ============================================================
+   GLOBAL KEYFRAMES
+============================================================ */
+@keyframes float {
+  0%, 100% { transform: translateY(0);  }
+  50%      { transform: translateY(-8px); }
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1);    opacity: 1;    }
+  50%      { transform: scale(1.05); opacity: 0.85; }
+}
+
+@keyframes shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position:  200% 0; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0);    }
+}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .home section {
+    padding-left:  clamp(16px, 2vw, 24px);
+    padding-right: clamp(16px, 2vw, 24px);
+  }
+}
+
+@media (max-width: 768px) {
+  .home { overflow-x: hidden; width: 100%; }
+  :global(.flipCard) { transition: transform 0.45s cubic-bezier(0.4, 0, 0.2, 1); }
+}
+
+/* ============================================================
+   REDUCED MOTION
+============================================================ */
+@media (prefers-reduced-motion: reduce) {
+  .home > *,
+  :global(.flipCard),
+  :global(.reveal) {
+    animation:  none !important;
+    transition: opacity 0.3s ease !important;
+  }
+
+  :global(.reveal) { opacity: 1 !important; transform: none !important; }
+
+  :global(.flipScene:hover .flipCard),
+  :global(.flipScene.isFlipped .flipCard) {
+    transform: none !important;
+  }
+
+  .sectionWrapper { opacity: 1 !important; transform: none !important; transition: none !important; }
+}
+
+/* ============================================================
+   HIGH CONTRAST
+============================================================ */
+@media (prefers-contrast: more) {
+  .home {
+    --shadow-sm: 0 4px 16px rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 8px 32px rgba(0, 0, 0, 0.5);
+    --text-muted: #555;
+  }
+}
+
+/* ============================================================
+   PRINT
+============================================================ */
+@media print {
+  .home > div > section { page-break-inside: avoid; box-shadow: none !important; }
+  .home video, .home button { display: none !important; }
+}
+
+/* ============================================================
+   PROMO SECTION — CSS Module classes
+============================================================ */
+/* ============================================================
+   PROMO SECTION — FirstCry-style (3-row right panel) — FIXED
+============================================================ */
+/* ============================================================
+   PROMO SECTION — FirstCry-style — FULL IMAGE + RESPONSIVE
+============================================================ */
+.promoSection {
+  padding: clamp(28px, 4vw, 56px) clamp(12px, 2.5vw, 28px) clamp(56px, 5vw, 80px);
+  background: linear-gradient(135deg, #FFF7F0 0%, #F8F0FF 50%, #F0F8FF 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.promoContainer {
+  max-width: 1280px;
+  margin: 0 auto;
+  position: relative;
+}
+
+/* ── Header ── */
+.promoHead {
+  text-align: center;
+  margin-bottom: clamp(18px, 3vw, 32px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.promoBadge {
+  display: inline-block;
+  padding: 6px 18px;
+  background: linear-gradient(135deg, #FFF5F0, #F5F0FF);
+  border: 1.5px solid #FFD4B8;
+  border-radius: 999px;
+  font-size: clamp(0.62rem, 1vw, 0.74rem);
+  font-weight: 800;
+  color: #FF6B35;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  font-family: 'Nunito', sans-serif;
+}
+
+.promoTitle {
+  font-size: clamp(1.4rem, 3vw, 2.2rem);
+  font-weight: 900;
+  color: #2D1A4A;
+  margin: 0;
+  font-family: 'Nunito', sans-serif;
+}
+
+.promoDesc {
+  font-size: clamp(0.82rem, 1.2vw, 0.92rem);
+  color: #9585B0;
+  margin: 0;
+  font-weight: 500;
+  font-family: 'Nunito', sans-serif;
+}
+
+/* ── Carousel (DESKTOP) ── */
+.promoCarousel {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: clamp(340px, 36vw, 460px);
+}
+
+.promoSlide {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  z-index: 1;
+  pointer-events: none;
+  transition: opacity 0.6s ease;
+}
+
+.promoSlideActive {
+  opacity: 1;
+  z-index: 2;
+  pointer-events: auto;
+}
+
+/* ── Card (Desktop: 50/50 split) ── */
+.promoCard {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  height: 100%;
+  border-radius: clamp(16px, 2vw, 24px);
+  overflow: hidden;
+  text-decoration: none;
+  background: #fff;
+  box-shadow:
+    0 12px 36px rgba(0, 0, 0, 0.12),
+    0 3px 10px  rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.4s ease, transform 0.4s ease;
+}
+
+.promoCard:hover {
+  box-shadow: 0 22px 54px rgba(0, 0, 0, 0.18);
+  transform: translateY(-4px);
+}
+
+/* ✅ LEFT — FULL IMAGE (contain, no crop) */
+.promoLeft {
+  position: relative;
+  overflow: hidden;
+  background: #f5f5f5;
+  min-height: 0;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.promoMedia {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;          /* DESKTOP: cover for hero look */
+  object-position: center;
+  display: block;
+  transition: transform 0.55s ease;
+}
+
+.promoCard:hover .promoMedia {
+  transform: scale(1.05);
+}
+
+.promoNoMedia {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4rem;
+  color: rgba(0, 0, 0, 0.14);
+  background: linear-gradient(135deg, #f0f0f0, #e0e0e0);
+}
+
+/* RIGHT — 3 rows */
+.promoRight {
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* ROW 1: Title */
+.promoCardTitle {
+  padding: clamp(16px, 2.5vw, 28px) clamp(14px, 2vw, 24px) clamp(8px, 1.2vw, 14px);
+  font-size: clamp(1rem, 1.8vw, 1.6rem);
+  font-weight: 600;
+  color: #2D1A4A;
+  font-family: 'Nunito', sans-serif;
+  text-align: center;
+  letter-spacing: 0.3px;
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ROW 2: Logo strip */
+.promoStrip {
+  width: 100%;
+  max-width: 100%;
+  padding: clamp(10px, 1.8vw, 18px) clamp(12px, 2vw, 22px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1.5vw, 18px);
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+  overflow: hidden;
+  box-sizing: border-box;
+  min-height: 50px;
+}
+
+.promoLogo {
+  height: clamp(22px, 3.5vw, 42px);
+  max-height: 42px;
+  width: auto;
+  max-width: clamp(60px, 12vw, 110px);
+  object-fit: contain;
+  flex-shrink: 1;
+  min-width: 0;
+  filter: brightness(0) invert(1);
+}
+
+.promoDivider {
+  width: 1.5px;
+  height: clamp(22px, 3vw, 36px);
+  background: rgba(255, 255, 255, 0.45);
+  flex-shrink: 0;
+  display: block;
+}
+
+.promoBrandText {
+  color: white;
+  font-size: clamp(0.70rem, 1.05vw, 0.92rem);
+  font-weight: 600;
+  font-family: 'Nunito', sans-serif;
+  text-align: center;
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  display: -webkit-box;
+  -webkit-line-clamp: 1;
+  -webkit-box-orient: vertical;
+  text-overflow: ellipsis;
+  word-break: break-word;
+  max-width: 100%;
+  padding: 0 4px;
+}
+
+/* ROW 3: Offer + Button */
+.promoBottom {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(16px, 2.5vw, 30px) clamp(14px, 2vw, 24px);
+  gap: clamp(12px, 1.8vw, 20px);
+  text-align: center;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.promoOffer {
+  font-size: clamp(1.2rem, 3.2vw, 2.4rem);
+  font-weight: 900;
+  color: #1a1a2e;
+  font-family: 'Nunito', sans-serif;
+  letter-spacing: 0.5px;
+  line-height: 1.1;
+  text-transform: uppercase;
+  max-width: 100%;
+  word-break: break-word;
+}
+
+.promoBtn {
+  padding: clamp(9px, 1.3vw, 13px) clamp(24px, 3vw, 38px);
+  background: #1a1a2e;
+  color: white;
+  border: none;
+  border-radius: 999px;
+  font-weight: 800;
+  font-size: clamp(0.74rem, 1.1vw, 0.88rem);
+  font-family: 'Nunito', sans-serif;
+  cursor: pointer;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  box-shadow: 0 6px 16px rgba(26, 26, 46, 0.25);
+  transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
+  white-space: nowrap;
+}
+
+.promoBtn:hover {
+  background: #2D1A4A;
+  transform: scale(1.05) translateY(-2px);
+  box-shadow: 0 10px 24px rgba(26, 26, 46, 0.35);
+}
+
+/* Dots */
+.promoDots {
+  position: absolute;
+  bottom: -34px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 5;
+}
+
+.promoDot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  border: 2px solid rgba(45, 26, 74, 0.30);
+  background: rgba(45, 26, 74, 0.12);
+  cursor: pointer;
+  padding: 0;
+  transition: all 0.3s ease;
+}
+
+.promoDot:hover {
+  background: rgba(45, 26, 74, 0.35);
+  transform: scale(1.2);
+}
+
+.promoDotActive {
+  width: 32px;
+  border-radius: 999px;
+  background: linear-gradient(90deg, #FF6B35, #7B2FBE);
+  border-color: transparent;
+}
+
+/* ============================================================
+   RESPONSIVE
+============================================================ */
+
+/* ── Tablet (1024px) ── */
+@media (max-width: 1024px) {
+  .promoCarousel { height: clamp(320px, 38vw, 420px); }
+  .promoLogo { max-width: 95px; height: 36px; }
+}
+
+/* ── Small tablet (768px) ── */
+@media (max-width: 768px) {
+  .promoCarousel { height: clamp(300px, 44vw, 380px); }
+  .promoCardTitle {
+    padding: 14px 14px 8px;
+    font-size: clamp(0.95rem, 2vw, 1.2rem);
+  }
+  .promoStrip {
+    padding: 10px 14px;
+    gap: 10px;
+    min-height: 46px;
+  }
+  .promoLogo { height: 28px; max-width: 80px; }
+  .promoDivider { height: 24px; }
+  .promoBrandText { font-size: 0.78rem; }
+  .promoOffer { font-size: clamp(1.2rem, 4vw, 1.8rem); }
+  .promoBtn {
+    padding: 10px 24px;
+    font-size: 0.78rem;
+    letter-spacing: 1.2px;
+  }
+}
+
+/* ────────────────────────────────────────────────────────────
+   ✅ MOBILE — Stack vertical with FULL image (contain)
+──────────────────────────────────────────────────────────── */
+@media (max-width: 640px) {
+  .promoSection {
+    padding: 20px 12px 56px;
+  }
+
+  .promoCarousel {
+    height: auto;
+    min-height: 580px;
+  }
+
+  .promoSlide {
+    position: absolute;
+    inset: 0;
+  }
+
+  /* Stack: image on TOP, content below */
+  .promoCard {
+    display: grid;
+    grid-template-columns: 1fr;
+    grid-template-rows: 280px auto;     /* Bigger image area */
+    min-height: 580px;
+    height: auto;
+  }
+
+  /* ✅ LEFT — FULL IMAGE VISIBLE (contain) */
+  .promoLeft {
+    width: 100%;
+    height: 280px;
+    min-height: 280px;
+    background: #fff;                    /* white BG for product photos */
+    padding: 12px;
+    box-sizing: border-box;
+  }
+
+  .promoMedia {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;                 /* ✅ FULL image, no crop */
+    object-position: center;
+  }
+
+  .promoRight {
+    width: 100%;
+    min-height: 300px;
+    grid-template-rows: auto auto 1fr;
+  }
+
+  .promoCardTitle {
+    padding: 16px 14px 8px;
+    font-size: 1.1rem;
+    font-weight: 700;
+  }
+
+  .promoStrip {
+    padding: 12px 14px;
+    gap: 10px;
+    min-height: 56px;
+  }
+
+  .promoLogo {
+    height: 28px;
+    max-width: 90px;
+  }
+
+  .promoDivider { height: 24px; }
+
+  .promoBrandText {
+    font-size: 0.8rem;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+  }
+
+  .promoBottom {
+    padding: 22px 14px 26px;
+    gap: 14px;
+  }
+
+  .promoOffer {
+    font-size: 1.6rem;
+    line-height: 1.2;
+  }
+
+  .promoBtn {
+    padding: 12px 32px;
+    font-size: 0.82rem;
+    letter-spacing: 1.3px;
+  }
+
+  .promoDots {
+    bottom: -28px;
+    gap: 6px;
+  }
+  .promoDot { width: 8px; height: 8px; }
+  .promoDotActive { width: 24px; }
+}
+
+/* ── Small mobile (480px) ── */
+@media (max-width: 480px) {
+  .promoCarousel { min-height: 540px; }
+
+  .promoCard {
+    grid-template-rows: 250px auto;
+    min-height: 540px;
+  }
+
+  .promoLeft {
+    height: 250px;
+    min-height: 250px;
+  }
+
+  .promoCardTitle { font-size: 1rem; padding: 14px 12px 6px; }
+  .promoStrip { padding: 10px 12px; gap: 8px; min-height: 50px; }
+  .promoLogo { height: 24px; max-width: 75px; }
+  .promoBrandText { font-size: 0.74rem; }
+  .promoOffer { font-size: 1.4rem; }
+  .promoBtn { padding: 11px 28px; font-size: 0.78rem; }
+}
+
+/* ── Extra small (380px / iPhone SE) ── */
+@media (max-width: 380px) {
+  .promoCarousel { min-height: 500px; }
+
+  .promoCard {
+    grid-template-rows: 220px auto;
+    min-height: 500px;
+  }
+
+  .promoLeft {
+    height: 220px;
+    min-height: 220px;
+    padding: 10px;
+  }
+
+  .promoCardTitle { font-size: 0.95rem; padding: 12px 12px 6px; }
+  .promoStrip { padding: 9px 10px; gap: 7px; min-height: 46px; }
+  .promoLogo { height: 22px; max-width: 65px; }
+  .promoBrandText { font-size: 0.7rem; }
+  .promoBottom { padding: 18px 12px 22px; gap: 12px; }
+  .promoOffer { font-size: 1.3rem; }
+  .promoBtn { padding: 10px 26px; font-size: 0.74rem; }
 }

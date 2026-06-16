@@ -3,7 +3,7 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
 // ============================================================
-// PANEL DEFAULTS — Hero uses only ONE media panel now
+// PANEL DEFAULTS
 // ============================================================
 const PANEL_DEFAULTS = [
   { label: '🔥 Trending Now', sublabel: '2.4k sold this week', link: '/products', bg: '#FFF3E8', isBig: true, url: '', publicId: '' },
@@ -16,6 +16,7 @@ const DEFAULT_SECTIONS = [
   { key: 'sunny',         defaultTitle: 'Sunny Play Days',   defaultEmoji: '☀️', hint: 'Category cards section',   color: '#0EA5E9' },
   { key: 'promo',         defaultTitle: 'Special Offers',    defaultEmoji: '🏷️', hint: 'Sliding offer cards',      color: '#EF4444' },
   { key: 'gender',        defaultTitle: 'Shop by Style',     defaultEmoji: '👗', hint: 'Girl & Boy cards',         color: '#EC4899' },
+  { key: 'festival',      defaultTitle: 'Festival Special',  defaultEmoji: '🎪', hint: 'Festival video/image banners', color: '#FF4081' },
   { key: 'baby-food',     defaultTitle: 'Baby Food',         defaultEmoji: '🍼', hint: 'Baby food section',        color: '#10B981' },
   { key: 'toys',          defaultTitle: 'Toys & Games',      defaultEmoji: '🧸', hint: 'Toys & games section',     color: '#EF4444' },
   { key: 'electric',      defaultTitle: 'Electric Rides',    defaultEmoji: '🚗', hint: 'Electric vehicle section', color: '#0EA5E9' },
@@ -57,6 +58,11 @@ const SEASON_PRESETS = {
     { label: '👗 Default', emoji: '👗', title: 'Shop by Style' },
     { label: '☀️ Summer',  emoji: '☀️', title: 'Summer Style' },
   ],
+  festival: [
+    { label: '🎪 Default', emoji: '🎪', title: 'Festival Special' },
+    { label: '🪔 Diwali',  emoji: '🪔', title: 'Diwali Special' },
+    { label: '🎄 Christmas', emoji: '🎄', title: 'Christmas Special' },
+  ],
   toys: [
     { label: '🧸 Default', emoji: '🧸', title: 'Toys & Games' },
     { label: '🎄 Christmas', emoji: '🎄', title: 'Christmas Toys' },
@@ -75,14 +81,13 @@ const SEASON_PRESETS = {
   ],
 };
 
-// ✅ Helper: detect if URL is video (used everywhere)
 const isVideoUrl = (url) => {
   if (!url) return false;
   return /\.(mp4|webm|mov|m4v)(\?|$)/i.test(url);
 };
 
 // ============================================================
-// SECTION SETTINGS COMPONENT
+// SECTION SETTINGS COMPONENT (unchanged)
 // ============================================================
 function SectionSettings() {
   const [settings,  setSettings]  = useState({});
@@ -300,7 +305,7 @@ function SectionSettings() {
 }
 
 // ============================================================
-// BRANDS TAB COMPONENT
+// BRANDS TAB (unchanged)
 // ============================================================
 function BrandsTab() {
   const [brands,    setBrands]    = useState([]);
@@ -481,7 +486,7 @@ function BrandsTab() {
 }
 
 // ============================================================
-// CARE GRID MANAGER — Personal Care & Health Care
+// CARE GRID MANAGER (unchanged)
 // ============================================================
 function CareGridManager({ type, title, accentColor, layout }) {
   const SLOTS = layout === 'bento'
@@ -774,11 +779,13 @@ export default function AdminBanners() {
     setForm({
       ...emptyForm,
       type,
+      // ✅ For budget — set sensible defaults
+      title: type === 'budget' ? 'Budget Card' : '',  // auto-fill so user doesn't need to enter
       panels: PANEL_DEFAULTS,
       buttonLink:
         type === 'festival'          ? '/products'
         : type === 'category'        ? '/products?category=clothing'
-        : type === 'budget'          ? '/products?maxPrice=299'
+        : type === 'budget'          ? '/products?maxPrice=499'
         : type === 'sunny'           ? '/products?category=clothing'
         : type === 'promo'           ? '/products'
         : type === 'gender'          ? '/products?search=girl'
@@ -786,10 +793,10 @@ export default function AdminBanners() {
         : type === 'toys'            ? '/products?category=toys'
         : type === 'electric-vehicle'? '/products?category=electric-vehicles'
         : '/products',
-      offer:    type === 'budget' ? 'Under' : type === 'promo' ? '20%' : '',
+      offer:    type === 'budget' ? 'UNDER' : type === 'promo' ? '20%' : '',
       gender:   type === 'gender' ? 'girl' : null,
       evGender: type === 'electric-vehicle' ? 'boy' : '',
-      color:    type === 'category' ? '#FF6B35' : '#ff6b9d',
+      color:    type === 'budget' ? '#1a1a8e' : type === 'category' ? '#FF6B35' : '#ff6b9d',
     });
     setShowForm(true);
   };
@@ -825,7 +832,6 @@ export default function AdminBanners() {
     setShowForm(true);
   };
 
-  // ✅ UPDATED — Accepts image OR video for festival
   const handleImageUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -911,14 +917,28 @@ export default function AdminBanners() {
 
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!form.title) { toast.error('Title required'); return; }
+
+    // ✅ For budget, title is auto-generated from price (no need to type)
+    if (form.type === 'budget') {
+      if (!form.price) {
+        toast.error('Please enter a price');
+        return;
+      }
+    } else if (!form.title) {
+      toast.error('Title required');
+      return;
+    }
+
     setSaving(true);
     try {
       const payload = {
-        title:         form.title,
+        // ✅ For budget, use price as title for admin display
+        title:         form.type === 'budget' ? `Under ₹${form.price}` : form.title,
         subtitle:      form.subtitle      || null,
         buttonText:    form.buttonText    || 'Shop Now',
-        buttonLink:    form.buttonLink    || '/products',
+        buttonLink:    form.type === 'budget'
+          ? `/products?maxPrice=${form.price}`
+          : (form.buttonLink || '/products'),
         bgColor:       form.bgColor       || '#ff6b9d',
         isActive:      form.isActive,
         order:         parseInt(form.order) || 0,
@@ -1001,6 +1021,11 @@ export default function AdminBanners() {
             ) : (
               <img src={banner.image.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             )
+          ) : banner.type === 'budget' ? (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+              <div style={{ fontSize: '0.75rem', fontWeight: '800', letterSpacing: '2px', opacity: 0.9 }}>{banner.offer || 'UNDER'}</div>
+              <div style={{ fontSize: '2.5rem', fontWeight: '900', lineHeight: 1 }}>{banner.price ? `₹${banner.price}` : '₹—'}</div>
+            </div>
           ) : (
             <span>{banner.emoji || '🖼️'}</span>
           )}
@@ -1035,7 +1060,6 @@ export default function AdminBanners() {
     );
   };
 
-  // ✅ NEW unified ImgUpload — supports image OR video
   const ImgUpload = ({ label, value, onChange, uploading: upl, onRemove, allowVideo = false }) => {
     const isVideo = value?.url && (isVideoUrl(value.url) || value?.type === 'video');
     return (
@@ -1119,8 +1143,8 @@ export default function AdminBanners() {
   const tabInfo = {
     hero:               '🎥 Hero banners — upload ONE image OR video (full-screen auto-play)',
     category:           '📁 Category cards — upload image, name, color & link',
-    festival:           '🎥 Festival banners — upload IMAGE or VIDEO + schedule + text overlay',
-    budget:             '🏪 Budget price circles',
+    festival:           '🎥 Festival banners — upload IMAGE or VIDEO + (optional) schedule + text overlay',
+    budget:             '🏪 Budget price circles — just enter price & color',
     sunny:              '☀️ Category cards section',
     promo:              '🏷️ Promo offer cards',
     gender:             '👧👦 Girl & Boy cards',
@@ -1134,6 +1158,9 @@ export default function AdminBanners() {
 
   const heroPanel = form.panels?.[0] || PANEL_DEFAULTS[0];
   const heroIsVideo = isVideoUrl(heroPanel.url);
+
+  // ✅ Determine if budget needs simplified form (no image, no title, no emoji)
+  const isBudgetForm = form.type === 'budget';
 
   return (
     <div style={{ fontFamily: 'Nunito, sans-serif', padding: '4px' }}>
@@ -1192,7 +1219,7 @@ export default function AdminBanners() {
           onClick={e => { if (e.target === e.currentTarget) { setShowForm(false); setEditing(null); } }}>
 
           <div className="adminModalCard"
-            style={{ background: 'white', borderRadius: '20px', width: '100%', maxWidth: '960px', maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 24px 60px rgba(0,0,0,0.28)' }}
+            style={{ background: 'white', borderRadius: '20px', width: '100%', maxWidth: isBudgetForm ? '520px' : '960px', maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 24px 60px rgba(0,0,0,0.28)' }}
             onClick={e => e.stopPropagation()}>
 
             <div className="adminModalHeader"
@@ -1206,342 +1233,571 @@ export default function AdminBanners() {
             </div>
 
             <form onSubmit={handleSave} className="adminModalBody" style={{ padding: '18px 22px 22px' }}>
-              <div className="adminFormGrid" style={{ display: 'grid', gap: '20px', alignItems: 'start' }}>
 
-                {/* LEFT COLUMN */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', minWidth: 0 }}>
-
-                  <div>
-                    <label style={lbl}>
-                      {form.type === 'category' ? 'Category Name *'
-                        : form.type === 'budget' ? 'Card Name *'
-                        : form.type === 'sunny' ? 'Card Label *'
-                        : form.type === 'promo' ? 'Offer Title *'
-                        : form.type === 'festival' ? 'Festival Title *'
-                        : form.type === 'baby-food' ? 'Food Name *'
-                        : form.type === 'toys' ? 'Toy Name *'
-                        : form.type === 'electric-vehicle' ? 'Vehicle Name *'
-                        : 'Banner Title *'}
-                    </label>
-                    <input type="text" value={form.title} onChange={e => set('title', e.target.value)} placeholder="Enter title..." required style={inp} />
+              {/* ✅ BUDGET — SIMPLIFIED FORM (No card name, image, emoji) */}
+              {isBudgetForm ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                  <div style={{ padding: '14px', background: 'linear-gradient(135deg, #FFF3EC, #F3E8FF)', borderRadius: '12px', border: '1.5px solid #FFD4B8' }}>
+                    <p style={{ margin: 0, fontSize: '12px', color: '#7B2FBE', fontWeight: '700', lineHeight: '1.5' }}>
+                      💡 Budget cards show as <strong>"UNDER ₹{form.price || '499'}"</strong> circles on the home page. Just enter the price and pick a color!
+                    </p>
                   </div>
 
-                  {!['budget', 'sunny', 'category'].includes(form.type) && (
+                  <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                     <div>
-                      <label style={lbl}>Subtitle / Description</label>
-                      <input type="text" value={form.subtitle} onChange={e => set('subtitle', e.target.value)} placeholder="Optional description" style={inp} />
+                      <label style={lbl}>Price (₹) *</label>
+                      <input
+                        type="number"
+                        value={form.price}
+                        onChange={e => set('price', e.target.value)}
+                        placeholder="499"
+                        min="0"
+                        required
+                        style={inp}
+                        autoFocus
+                      />
                     </div>
-                  )}
-
-                  {form.type === 'category' && (
-                    <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                      <div style={{ gridColumn: '1 / -1' }}>
-                        <label style={lbl}>Button Link *</label>
-                        <input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products?category=clothing" style={inp} />
-                      </div>
-                      <div>
-                        <label style={lbl}>Card Color</label>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <input type="color" value={form.color || '#FF6B35'} onChange={e => set('color', e.target.value)} style={{ width: '44px', height: '40px', border: '2px solid #EDD9FF', borderRadius: '8px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
-                          <input type="text" value={form.color || '#FF6B35'} onChange={e => set('color', e.target.value)} style={{ ...inp, flex: 1 }} />
-                        </div>
-                      </div>
-                      <div>
-                        <label style={lbl}>Order (0 = first)</label>
-                        <input type="number" value={form.order} onChange={e => set('order', parseInt(e.target.value) || 0)} min="0" style={inp} />
-                      </div>
+                    <div>
+                      <label style={lbl}>Offer Label</label>
+                      <input
+                        type="text"
+                        value={form.offer}
+                        onChange={e => set('offer', e.target.value)}
+                        placeholder="UNDER"
+                        style={inp}
+                      />
                     </div>
-                  )}
+                  </div>
 
-                  {form.type === 'hero' && (
-                    <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                      <div><label style={lbl}>Button Text</label><input type="text" value={form.buttonText} onChange={e => set('buttonText', e.target.value)} placeholder="Shop Now" style={inp} /></div>
-                      <div><label style={lbl}>Button Link</label><input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products" style={inp} /></div>
-                      <div>
-                        <label style={lbl}>BG Color</label>
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <input type="color" value={form.bgColor} onChange={e => set('bgColor', e.target.value)} style={{ width: '44px', height: '40px', border: '2px solid #EDD9FF', borderRadius: '8px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
-                          <input type="text" value={form.bgColor} onChange={e => set('bgColor', e.target.value)} style={{ ...inp, flex: 1 }} />
-                        </div>
-                      </div>
-                      <div><label style={lbl}>Order</label><input type="number" value={form.order} onChange={e => set('order', parseInt(e.target.value) || 0)} min="0" style={inp} /></div>
+                  <div>
+                    <label style={lbl}>Color (Card Background)</label>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                      <input type="color" value={form.color || '#1a1a8e'} onChange={e => set('color', e.target.value)} style={{ width: '52px', height: '44px', border: '2px solid #EDD9FF', borderRadius: '10px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
+                      <input type="text" value={form.color || '#1a1a8e'} onChange={e => set('color', e.target.value)} style={{ ...inp, flex: 1 }} />
                     </div>
-                  )}
+                  </div>
 
-                  {form.type === 'festival' && (
-                    <>
-                      <div><label style={lbl}>Festival Name</label><input type="text" value={form.festivalName} onChange={e => set('festivalName', e.target.value)} placeholder="e.g. Diwali" style={inp} /></div>
-                      <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        <div><label style={lbl}>📅 Start Date</label><input type="datetime-local" value={form.startDate} onChange={e => set('startDate', e.target.value)} style={inp} /></div>
-                        <div><label style={lbl}>📅 End Date</label><input type="datetime-local" value={form.endDate} onChange={e => set('endDate', e.target.value)} style={inp} /></div>
-                        <div><label style={lbl}>Button Text</label><input type="text" value={form.buttonText} onChange={e => set('buttonText', e.target.value)} placeholder="Shop Now" style={inp} /></div>
-                        <div><label style={lbl}>Button Link</label><input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products" style={inp} /></div>
-                      </div>
-                      <div><label style={lbl}>Emoji</label><input type="text" value={form.emoji} onChange={e => set('emoji', e.target.value)} placeholder="🪔" style={inp} /></div>
-                    </>
-                  )}
+                  <div>
+                    <label style={lbl}>Order (0 = first)</label>
+                    <input type="number" value={form.order} onChange={e => set('order', parseInt(e.target.value) || 0)} min="0" style={inp} />
+                  </div>
 
-                  {form.type === 'budget' && (
-                    <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                      <div><label style={lbl}>Price (₹)</label><input type="number" value={form.price} onChange={e => set('price', e.target.value)} placeholder="499" min="0" style={inp} /></div>
-                      <div><label style={lbl}>Offer Label</label><input type="text" value={form.offer} onChange={e => set('offer', e.target.value)} placeholder="Under" style={inp} /></div>
-                      <div><label style={lbl}>Emoji</label><input type="text" value={form.emoji} onChange={e => set('emoji', e.target.value)} placeholder="🎀" style={inp} /></div>
-                      <div><label style={lbl}>Color</label><div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}><input type="color" value={form.color} onChange={e => set('color', e.target.value)} style={{ width: '44px', height: '40px', border: '2px solid #EDD9FF', borderRadius: '8px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} /><input type="text" value={form.color} onChange={e => set('color', e.target.value)} style={{ ...inp, flex: 1 }} /></div></div>
-                    </div>
-                  )}
-
-                  {form.type === 'sunny' && (
-                    <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                      <div><label style={lbl}>Category Slug</label><input type="text" value={form.slug} onChange={e => set('slug', e.target.value)} placeholder="clothing" style={inp} /></div>
-                      <div><label style={lbl}>Emoji</label><input type="text" value={form.emoji} onChange={e => set('emoji', e.target.value)} placeholder="👕" style={inp} /></div>
-                    </div>
-                  )}
-
-                  {form.type === 'promo' && (
-                    <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                      <div><label style={lbl}>Offer Badge</label><input type="text" value={form.offer} onChange={e => set('offer', e.target.value)} placeholder="20%" style={inp} /></div>
-                      <div><label style={lbl}>Color</label><div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}><input type="color" value={form.color || '#ff6b9d'} onChange={e => set('color', e.target.value)} style={{ width: '44px', height: '40px', border: '2px solid #EDD9FF', borderRadius: '8px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} /><input type="text" value={form.color} onChange={e => set('color', e.target.value)} style={{ ...inp, flex: 1 }} /></div></div>
-                      <div><label style={lbl}>Emoji</label><input type="text" value={form.emoji} onChange={e => set('emoji', e.target.value)} placeholder="🎁" style={inp} /></div>
-                      <div><label style={lbl}>Button Link</label><input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products" style={inp} /></div>
-                    </div>
-                  )}
-
-                  {form.type === 'gender' && (
-                    <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                      <div><label style={lbl}>For</label><select value={form.gender || 'girl'} onChange={e => set('gender', e.target.value)} style={{ ...inp, cursor: 'pointer' }}><option value="girl">👧 Girl</option><option value="boy">👦 Boy</option></select></div>
-                      <div><label style={lbl}>Button Link</label><input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products" style={inp} /></div>
-                    </div>
-                  )}
-
-                  {form.type === 'baby-food' && (
-                    <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                      <div><label style={lbl}>Emoji</label><input type="text" value={form.emoji} onChange={e => set('emoji', e.target.value)} placeholder="🥣" style={inp} /></div>
-                      <div><label style={lbl}>Button Link</label><input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products" style={inp} /></div>
-                    </div>
-                  )}
-
-                  {form.type === 'toys' && (
-                    <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                      <div><label style={lbl}>Emoji</label><input type="text" value={form.emoji} onChange={e => set('emoji', e.target.value)} placeholder="🧸" style={inp} /></div>
-                      <div><label style={lbl}>Button Link</label><input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products" style={inp} /></div>
-                    </div>
-                  )}
-
-                  {form.type === 'electric-vehicle' && (
-                    <>
-                      <div><label style={lbl}>For Gender *</label><select value={form.evGender || 'boy'} onChange={e => set('evGender', e.target.value)} style={{ ...inp, cursor: 'pointer' }}><option value="boy">👦 Boys</option><option value="girl">👧 Girls</option></select></div>
-                      <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        <div><label style={lbl}>Price (₹)</label><input type="number" value={form.price} onChange={e => set('price', e.target.value)} placeholder="4999" min="0" style={inp} /></div>
-                        <div><label style={lbl}>Age Group</label><input type="text" value={form.ageGroup} onChange={e => set('ageGroup', e.target.value)} placeholder="2-5 Years" style={inp} /></div>
-                      </div>
-                    </>
-                  )}
+                  {/* Live Preview */}
+                  <div style={{ padding: '20px', background: 'linear-gradient(180deg, #f0e0cc 0%, #c8dce8 100%)', borderRadius: '14px', textAlign: 'center' }}>
+                    <p style={{ fontSize: '10px', fontWeight: '800', color: '#666', margin: '0 0 10px', letterSpacing: '1.5px' }}>LIVE PREVIEW</p>
+                    <p style={{ fontSize: '0.85rem', fontWeight: '900', color: '#1a1a8e', margin: '0 0 4px', letterSpacing: '3px' }}>
+                      {(form.offer || 'UNDER').toUpperCase()}
+                    </p>
+                    <p style={{ fontSize: '3rem', fontWeight: '900', color: '#1a1a8e', margin: 0, lineHeight: 1 }}>
+                      {form.price || '—'}
+                      <span style={{ fontSize: '1rem', color: '#FF6B35', marginLeft: '4px' }}>›</span>
+                    </p>
+                  </div>
 
                   <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '700', color: '#2D1A4A', padding: '10px 14px', background: '#F3E8FF', borderRadius: '10px' }}>
                     <input type="checkbox" checked={form.isActive} onChange={e => set('isActive', e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#FF6B35', cursor: 'pointer' }} />
                     ✅ Active — show on home page
                   </label>
                 </div>
+              ) : (
+                // ✅ REGULAR FORM (all other banner types)
+                <div className="adminFormGrid" style={{ display: 'grid', gap: '20px', alignItems: 'start' }}>
 
-                {/* RIGHT COLUMN */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', minWidth: 0 }}>
+                  {/* LEFT COLUMN */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', minWidth: 0 }}>
 
-                  {form.type !== 'hero' && (
-                    <ImgUpload
-                      label={
-                        form.type === 'category' ? '📁 Category Image *'
-                        : form.type === 'festival' ? '🎥 Festival Media (Image or Video)'
-                        : '🖼️ Front Image (Main)'
-                      }
-                      value={form.image}
-                      onChange={handleImageUpload}
-                      uploading={uploading}
-                      onRemove={() => setForm(f => ({ ...f, image: null }))}
-                      allowVideo={form.type === 'festival'}
-                    />
-                  )}
+                    <div>
+                      <label style={lbl}>
+                        {form.type === 'category' ? 'Category Name *'
+                          : form.type === 'sunny' ? 'Card Label *'
+                          : form.type === 'promo' ? 'Offer Title *'
+                          : form.type === 'festival' ? 'Festival Title *'
+                          : form.type === 'baby-food' ? 'Food Name *'
+                          : form.type === 'toys' ? 'Toy Name *'
+                          : form.type === 'electric-vehicle' ? 'Vehicle Name *'
+                          : 'Banner Title *'}
+                      </label>
+                      <input type="text" value={form.title} onChange={e => set('title', e.target.value)} placeholder="Enter title..." required style={inp} />
+                    </div>
 
-                  {['sunny', 'baby-food', 'toys', 'electric-vehicle'].includes(form.type) && (
-                    <>
+                    {!['sunny', 'category'].includes(form.type) && (
                       <div>
-                        <ImgUpload
-                          label="🔄 Back Image (3D Flip on Hover)"
-                          value={form.mobileImage}
-                          onChange={handleMobileImageUpload}
-                          uploading={uploadingMobile}
-                          onRemove={() => setForm(f => ({ ...f, mobileImage: null }))}
-                        />
-                        <p style={{ fontSize: '11px', color: '#7B2FBE', marginTop: '6px', fontWeight: '700', fontFamily: 'Nunito, sans-serif' }}>
-                          💡 This image shows on hover (3D flip)
-                        </p>
+                        <label style={lbl}>Subtitle / Description</label>
+                        <input type="text" value={form.subtitle} onChange={e => set('subtitle', e.target.value)} placeholder="Optional description" style={inp} />
                       </div>
+                    )}
 
-                      {(form.image?.url || form.mobileImage?.url) && (
-                        <div style={{ border: '2px solid #E03F4F', borderRadius: '16px', overflow: 'hidden', background: 'linear-gradient(135deg, #FFF5F5, #FFE8EB)', padding: '14px' }}>
-                          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-                            <div>
-                              <h4 style={{ margin: 0, fontSize: '0.92rem', fontWeight: '800', color: '#2D1A4A', fontFamily: 'Nunito, sans-serif' }}>🎲 Live 3D Flip Preview</h4>
-                              <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#9585B0', fontWeight: '600', fontFamily: 'Nunito, sans-serif' }}>Hover to flip</p>
-                            </div>
-                            <span style={{ padding: '4px 10px', background: '#E03F4F', color: 'white', borderRadius: '999px', fontSize: '10px', fontWeight: '800', fontFamily: 'Nunito, sans-serif' }}>HOVER ME</span>
-                          </div>
-                          <div className="adminFlipScene">
-                            <div className="adminFlipCard">
-                              <div className="adminFlipFace adminFlipFront">
-                                {form.image?.url
-                                  ? <img src={form.image.url} alt="Front" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                  : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', background: 'linear-gradient(135deg, #F3E8FF, #FFE8EB)', color: '#9585B0' }}><span style={{ fontSize: '2.5rem' }}>🖼️</span><p style={{ fontSize: '12px', fontWeight: '700', margin: '8px 0 0', fontFamily: 'Nunito, sans-serif' }}>Upload Front</p></div>
-                                }
-                                <div style={{ position: 'absolute', top: '10px', left: '10px', padding: '4px 10px', background: 'rgba(0,0,0,0.7)', color: 'white', borderRadius: '999px', fontSize: '10px', fontWeight: '800', fontFamily: 'Nunito, sans-serif' }}>FRONT</div>
-                              </div>
-                              <div className="adminFlipFace adminFlipBack">
-                                {form.mobileImage?.url
-                                  ? <img src={form.mobileImage.url} alt="Back" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                  : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', background: 'linear-gradient(135deg, #FFE8B0, #FFD78A)', color: '#9585B0' }}><span style={{ fontSize: '2.5rem' }}>🔄</span><p style={{ fontSize: '12px', fontWeight: '700', margin: '8px 0 0', fontFamily: 'Nunito, sans-serif' }}>Upload Back</p></div>
-                                }
-                                <div style={{ position: 'absolute', top: '10px', left: '10px', padding: '4px 10px', background: 'rgba(224,63,79,0.9)', color: 'white', borderRadius: '999px', fontSize: '10px', fontWeight: '800', fontFamily: 'Nunito, sans-serif' }}>BACK</div>
-                              </div>
-                            </div>
-                          </div>
-                          <style>{`
-                            .adminFlipScene { perspective: 1200px; width: 100%; height: 280px; cursor: pointer; margin-top: 4px; }
-                            .adminFlipCard { position: relative; width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; border-radius: 16px; }
-                            .adminFlipScene:hover .adminFlipCard { transform: rotateY(180deg); }
-                            .adminFlipFace { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 16px; overflow: hidden; background: white; border: 3px solid #E03F4F; box-sizing: border-box; box-shadow: 0 6px 20px rgba(224,63,79,0.20); }
-                            .adminFlipFront { transform: rotateY(0deg); }
-                            .adminFlipBack  { transform: rotateY(180deg); }
-                          `}</style>
+                    {form.type === 'category' && (
+                      <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div style={{ gridColumn: '1 / -1' }}>
+                          <label style={lbl}>Button Link *</label>
+                          <input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products?category=clothing" style={inp} />
                         </div>
-                      )}
-                    </>
-                  )}
-
-                  {form.type === 'hero' && (
-                    <div style={{ border: '2px solid #EDD9FF', borderRadius: '16px', overflow: 'hidden' }}>
-                      <div style={{ padding: '12px 16px', background: 'linear-gradient(135deg,#FFF3EC,#F3E8FF)', borderBottom: '1.5px solid #EDD9FF', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                        <span style={{ fontSize: '1.4rem' }}>🎥</span>
                         <div>
-                          <h4 style={{ margin: 0, fontSize: '0.92rem', fontWeight: '800', color: '#2D1A4A' }}>Hero Media (Image or Video)</h4>
-                          <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#9585B0', fontWeight: '600' }}>
-                            📸 Image OR 🎥 Video — Auto-plays full-screen on hero
+                          <label style={lbl}>Card Color</label>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <input type="color" value={form.color || '#FF6B35'} onChange={e => set('color', e.target.value)} style={{ width: '44px', height: '40px', border: '2px solid #EDD9FF', borderRadius: '8px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
+                            <input type="text" value={form.color || '#FF6B35'} onChange={e => set('color', e.target.value)} style={{ ...inp, flex: 1 }} />
+                          </div>
+                        </div>
+                        <div>
+                          <label style={lbl}>Order (0 = first)</label>
+                          <input type="number" value={form.order} onChange={e => set('order', parseInt(e.target.value) || 0)} min="0" style={inp} />
+                        </div>
+                      </div>
+                    )}
+
+                    {form.type === 'hero' && (
+                      <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div><label style={lbl}>Button Text</label><input type="text" value={form.buttonText} onChange={e => set('buttonText', e.target.value)} placeholder="Shop Now" style={inp} /></div>
+                        <div><label style={lbl}>Button Link</label><input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products" style={inp} /></div>
+                        <div>
+                          <label style={lbl}>BG Color</label>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                            <input type="color" value={form.bgColor} onChange={e => set('bgColor', e.target.value)} style={{ width: '44px', height: '40px', border: '2px solid #EDD9FF', borderRadius: '8px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
+                            <input type="text" value={form.bgColor} onChange={e => set('bgColor', e.target.value)} style={{ ...inp, flex: 1 }} />
+                          </div>
+                        </div>
+                        <div><label style={lbl}>Order</label><input type="number" value={form.order} onChange={e => set('order', parseInt(e.target.value) || 0)} min="0" style={inp} /></div>
+                      </div>
+                    )}
+
+                    {form.type === 'festival' && (
+                      <>
+                        <div><label style={lbl}>Festival Name</label><input type="text" value={form.festivalName} onChange={e => set('festivalName', e.target.value)} placeholder="e.g. Diwali" style={inp} /></div>
+
+                        <div style={{ padding: '12px 14px', background: '#FEF3C7', borderRadius: '10px', border: '1.5px solid #FDE68A' }}>
+                          <p style={{ margin: 0, fontSize: '11px', color: '#92400E', fontWeight: '700', lineHeight: '1.5' }}>
+                            💡 <strong>Dates are optional!</strong> Leave empty to show forever. Set dates only if you want to limit when this banner appears.
                           </p>
                         </div>
+
+                        <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                          <div><label style={lbl}>📅 Start Date (optional)</label><input type="datetime-local" value={form.startDate} onChange={e => set('startDate', e.target.value)} style={inp} /></div>
+                          <div><label style={lbl}>📅 End Date (optional)</label><input type="datetime-local" value={form.endDate} onChange={e => set('endDate', e.target.value)} style={inp} /></div>
+                          <div><label style={lbl}>Button Text</label><input type="text" value={form.buttonText} onChange={e => set('buttonText', e.target.value)} placeholder="Shop Now" style={inp} /></div>
+                          <div><label style={lbl}>Button Link</label><input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products" style={inp} /></div>
+                        </div>
+                        <div><label style={lbl}>Emoji</label><input type="text" value={form.emoji} onChange={e => set('emoji', e.target.value)} placeholder="🪔" style={inp} /></div>
+                      </>
+                    )}
+
+                    {form.type === 'sunny' && (
+                      <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div><label style={lbl}>Category Slug</label><input type="text" value={form.slug} onChange={e => set('slug', e.target.value)} placeholder="clothing" style={inp} /></div>
+                        <div><label style={lbl}>Emoji</label><input type="text" value={form.emoji} onChange={e => set('emoji', e.target.value)} placeholder="👕" style={inp} /></div>
                       </div>
+                    )}
 
-                      <div style={{ padding: '14px' }}>
-                        <div style={{ background: heroPanel.bg || '#FFF3E8', borderRadius: '14px', padding: '14px', border: '2px solid rgba(255,255,255,0.9)' }}>
+             {form.type === 'promo' && (
+  <>
+    <div style={{ padding: '12px 14px', background: '#FEF3C7', borderRadius: '10px', border: '1.5px solid #FDE68A' }}>
+      <p style={{ margin: 0, fontSize: '11px', color: '#92400E', fontWeight: '700', lineHeight: '1.5' }}>
+        💡 <strong>FirstCry-style banner layout:</strong><br />
+        🖼️ LEFT = Product image/video<br />
+        📝 RIGHT TOP = Section title (e.g. "Tops & Tees")<br />
+        🏷️ RIGHT MIDDLE = Dark strip with brand logos<br />
+        🏷️ RIGHT BOTTOM = Big offer text + Shop Now button
+      </p>
+    </div>
 
-                          <label style={{ cursor: 'pointer', display: 'block', marginBottom: '12px' }}>
-                            <input
-                              type="file"
-                              accept="image/*,video/mp4,video/webm,video/quicktime"
-                              onChange={handleHeroMediaUpload}
-                              style={{ display: 'none' }}
-                              disabled={uploadingHero}
-                            />
-                            <div style={{
-                              width: '100%',
-                              height: '240px',
-                              border: '2px dashed #C8B4DC',
-                              borderRadius: '12px',
-                              background: 'rgba(255,255,255,0.85)',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              overflow: 'hidden',
-                              cursor: 'pointer',
-                              position: 'relative',
-                            }}>
-                              {uploadingHero ? (
-                                <div style={{ textAlign: 'center' }}>
-                                  <div style={{ fontSize: '2rem', marginBottom: '8px' }}>⏳</div>
-                                  <p style={{ color: '#7B2FBE', fontWeight: '700', fontSize: '13px', margin: 0, fontFamily: 'Nunito, sans-serif' }}>Uploading...</p>
+    {/* SECTION TITLE (top of right panel) */}
+    <div>
+      <label style={lbl}>📝 Section Title (Top) *</label>
+      <input
+        type="text"
+        value={form.title}
+        onChange={e => set('title', e.target.value)}
+        placeholder="Tops & Tees"
+        required
+        style={inp}
+      />
+      <p style={{ fontSize: '10px', color: '#9585B0', marginTop: '4px', fontWeight: '600' }}>
+        Shows above the dark logo strip (e.g. "Tops & Tees", "Shoes & Sneakers")
+      </p>
+    </div>
+
+    {/* OFFER */}
+    <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+      <div>
+        <label style={lbl}>💰 Offer Headline *</label>
+        <input
+          type="text"
+          value={form.offer}
+          onChange={e => set('offer', e.target.value)}
+          placeholder="UNDER ₹299*"
+          required
+          style={inp}
+        />
+      </div>
+      <div>
+        <label style={lbl}>🛒 Button Text</label>
+        <input
+          type="text"
+          value={form.buttonText}
+          onChange={e => set('buttonText', e.target.value)}
+          placeholder="SHOP NOW"
+          style={inp}
+        />
+      </div>
+    </div>
+
+    {/* COLORS */}
+    <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+      <div>
+        <label style={lbl}>🎨 Right Panel BG (light)</label>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <input type="color" value={form.color || '#E8E8E8'} onChange={e => set('color', e.target.value)} style={{ width: '44px', height: '40px', border: '2px solid #EDD9FF', borderRadius: '8px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
+          <input type="text" value={form.color || '#E8E8E8'} onChange={e => set('color', e.target.value)} style={{ ...inp, flex: 1 }} />
+        </div>
+      </div>
+      <div>
+        <label style={lbl}>🎨 Logo Strip BG (dark)</label>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <input type="color" value={form.bgColor || '#1f2937'} onChange={e => set('bgColor', e.target.value)} style={{ width: '44px', height: '40px', border: '2px solid #EDD9FF', borderRadius: '8px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
+          <input type="text" value={form.bgColor || '#1f2937'} onChange={e => set('bgColor', e.target.value)} style={{ ...inp, flex: 1 }} />
+        </div>
+      </div>
+    </div>
+
+    {/* BRAND LOGOS */}
+    <div style={{ padding: '14px', background: '#FBF7FF', borderRadius: '12px', border: '1.5px solid #EDD9FF' }}>
+      <p style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: '800', color: '#7B2FBE', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+        🏷️ Brand Logos (Dark Strip)
+      </p>
+
+      {/* Brand Logo 1 */}
+      <div style={{ marginBottom: '12px' }}>
+        <label style={{ ...lbl, marginBottom: '6px' }}>Brand Logo 1 URL</label>
+        <input
+          type="text"
+          value={form.slug || ''}
+          onChange={e => set('slug', e.target.value)}
+          placeholder="https://example.com/logo1.png (e.g. DNMX)"
+          style={inp}
+        />
+        {form.slug && (
+          <div style={{ marginTop: '8px', padding: '10px', background: form.bgColor || '#1f2937', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src={form.slug} alt="Logo 1" style={{ height: '36px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+          </div>
+        )}
+      </div>
+
+      {/* Brand Logo 2 */}
+      <div style={{ marginBottom: '12px' }}>
+        <label style={{ ...lbl, marginBottom: '6px' }}>Brand Logo 2 URL</label>
+        <input
+          type="text"
+          value={form.foodCategory || ''}
+          onChange={e => set('foodCategory', e.target.value)}
+          placeholder="https://example.com/logo2.png (e.g. TeamSpirit)"
+          style={inp}
+        />
+        {form.foodCategory && (
+          <div style={{ marginTop: '8px', padding: '10px', background: form.bgColor || '#1f2937', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <img src={form.foodCategory} alt="Logo 2" style={{ height: '36px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
+          </div>
+        )}
+      </div>
+
+      {/* Extra Brand Text */}
+      <div>
+        <label style={{ ...lbl, marginBottom: '6px' }}>Extra Brand Text (after logos)</label>
+        <input
+          type="text"
+          value={form.subtitle}
+          onChange={e => set('subtitle', e.target.value)}
+          placeholder="more"
+          style={inp}
+        />
+        <p style={{ fontSize: '10px', color: '#9585B0', marginTop: '4px', fontWeight: '600' }}>
+          Shows as "& more" next to logos
+        </p>
+      </div>
+    </div>
+
+    {/* LINK + ORDER */}
+    <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+      <div>
+        <label style={lbl}>🔗 Button Link</label>
+        <input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products" style={inp} />
+      </div>
+      <div>
+        <label style={lbl}>📌 Order (0 = first)</label>
+        <input type="number" value={form.order} onChange={e => set('order', parseInt(e.target.value) || 0)} min="0" style={inp} />
+      </div>
+    </div>
+
+    {/* LIVE PREVIEW */}
+    {(form.title || form.offer || form.slug || form.foodCategory) && (
+      <div style={{ marginTop: '8px', padding: '16px', background: '#FBF7FF', borderRadius: '14px', border: '2px solid #EDD9FF' }}>
+        <p style={{ fontSize: '10px', fontWeight: '800', color: '#9585B0', margin: '0 0 12px', letterSpacing: '1.5px', textAlign: 'center' }}>
+          📱 LIVE PREVIEW
+        </p>
+        <div style={{ background: form.color || '#E8E8E8', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
+          {/* Title */}
+          {form.title && (
+            <div style={{ padding: '14px 16px 6px', textAlign: 'center' }}>
+              <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: '#2D1A4A', fontFamily: 'Nunito, sans-serif' }}>
+                {form.title}
+              </p>
+            </div>
+          )}
+          {/* Dark Logo Strip */}
+          {(form.slug || form.foodCategory || form.subtitle) && (
+            <div style={{ background: form.bgColor || '#1f2937', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
+              {form.slug && <img src={form.slug} alt="L1" style={{ height: '28px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />}
+              {form.slug && form.foodCategory && <span style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.4)' }} />}
+              {form.foodCategory && <img src={form.foodCategory} alt="L2" style={{ height: '28px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />}
+              {form.subtitle && <span style={{ color: 'white', fontSize: '13px', fontWeight: '600', fontFamily: 'Nunito, sans-serif' }}>& {form.subtitle}</span>}
+            </div>
+          )}
+          {/* Offer + Button */}
+          <div style={{ padding: '20px 16px', textAlign: 'center' }}>
+            <p style={{ margin: '0 0 12px', fontSize: '1.6rem', fontWeight: '900', color: '#1a1a2e', fontFamily: 'Nunito, sans-serif', letterSpacing: '0.5px' }}>
+              {form.offer || 'UNDER ₹299*'}
+            </p>
+            <button type="button" style={{ padding: '8px 28px', background: '#1a1a2e', color: 'white', border: 'none', borderRadius: '999px', fontSize: '12px', fontWeight: '800', letterSpacing: '1.5px', fontFamily: 'Nunito, sans-serif', cursor: 'default' }}>
+              {form.buttonText || 'SHOP NOW'}
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
+  </>
+)}
+                    {form.type === 'gender' && (
+                      <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div><label style={lbl}>For</label><select value={form.gender || 'girl'} onChange={e => set('gender', e.target.value)} style={{ ...inp, cursor: 'pointer' }}><option value="girl">👧 Girl</option><option value="boy">👦 Boy</option></select></div>
+                        <div><label style={lbl}>Button Link</label><input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products" style={inp} /></div>
+                      </div>
+                    )}
+
+                    {form.type === 'baby-food' && (
+                      <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div><label style={lbl}>Emoji</label><input type="text" value={form.emoji} onChange={e => set('emoji', e.target.value)} placeholder="🥣" style={inp} /></div>
+                        <div><label style={lbl}>Button Link</label><input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products" style={inp} /></div>
+                      </div>
+                    )}
+
+                    {form.type === 'toys' && (
+                      <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div><label style={lbl}>Emoji</label><input type="text" value={form.emoji} onChange={e => set('emoji', e.target.value)} placeholder="🧸" style={inp} /></div>
+                        <div><label style={lbl}>Button Link</label><input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products" style={inp} /></div>
+                      </div>
+                    )}
+
+                    {form.type === 'electric-vehicle' && (
+                      <>
+                        <div><label style={lbl}>For Gender *</label><select value={form.evGender || 'boy'} onChange={e => set('evGender', e.target.value)} style={{ ...inp, cursor: 'pointer' }}><option value="boy">👦 Boys</option><option value="girl">👧 Girls</option></select></div>
+                        <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                          <div><label style={lbl}>Price (₹)</label><input type="number" value={form.price} onChange={e => set('price', e.target.value)} placeholder="4999" min="0" style={inp} /></div>
+                          <div><label style={lbl}>Age Group</label><input type="text" value={form.ageGroup} onChange={e => set('ageGroup', e.target.value)} placeholder="2-5 Years" style={inp} /></div>
+                        </div>
+                      </>
+                    )}
+
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '700', color: '#2D1A4A', padding: '10px 14px', background: '#F3E8FF', borderRadius: '10px' }}>
+                      <input type="checkbox" checked={form.isActive} onChange={e => set('isActive', e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#FF6B35', cursor: 'pointer' }} />
+                      ✅ Active — show on home page
+                    </label>
+                  </div>
+
+                  {/* RIGHT COLUMN */}
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', minWidth: 0 }}>
+
+                    {form.type !== 'hero' && (
+                      <ImgUpload
+                       label={
+  form.type === 'category' ? '📁 Category Image *'
+  : form.type === 'festival' ? '🎥 Festival Media (Image or Video)'
+  : form.type === 'promo' ? '🎥 Product Media (Image or Video — Left Side)'
+  : '🖼️ Front Image (Main)'
+}
+                        value={form.image}
+                        onChange={handleImageUpload}
+                        uploading={uploading}
+                        onRemove={() => setForm(f => ({ ...f, image: null }))}
+                      allowVideo={form.type === 'festival' || form.type === 'promo'}
+                      />
+                    )}
+
+                    {['sunny', 'baby-food', 'toys', 'electric-vehicle'].includes(form.type) && (
+                      <>
+                        <div>
+                          <ImgUpload
+                            label="🔄 Back Image (3D Flip on Hover)"
+                            value={form.mobileImage}
+                            onChange={handleMobileImageUpload}
+                            uploading={uploadingMobile}
+                            onRemove={() => setForm(f => ({ ...f, mobileImage: null }))}
+                          />
+                          <p style={{ fontSize: '11px', color: '#7B2FBE', marginTop: '6px', fontWeight: '700', fontFamily: 'Nunito, sans-serif' }}>
+                            💡 This image shows on hover (3D flip)
+                          </p>
+                        </div>
+
+                        {(form.image?.url || form.mobileImage?.url) && (
+                          <div style={{ border: '2px solid #E03F4F', borderRadius: '16px', overflow: 'hidden', background: 'linear-gradient(135deg, #FFF5F5, #FFE8EB)', padding: '14px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                              <div>
+                                <h4 style={{ margin: 0, fontSize: '0.92rem', fontWeight: '800', color: '#2D1A4A', fontFamily: 'Nunito, sans-serif' }}>🎲 Live 3D Flip Preview</h4>
+                                <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#9585B0', fontWeight: '600', fontFamily: 'Nunito, sans-serif' }}>Hover to flip</p>
+                              </div>
+                              <span style={{ padding: '4px 10px', background: '#E03F4F', color: 'white', borderRadius: '999px', fontSize: '10px', fontWeight: '800', fontFamily: 'Nunito, sans-serif' }}>HOVER ME</span>
+                            </div>
+                            <div className="adminFlipScene">
+                              <div className="adminFlipCard">
+                                <div className="adminFlipFace adminFlipFront">
+                                  {form.image?.url
+                                    ? <img src={form.image.url} alt="Front" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', background: 'linear-gradient(135deg, #F3E8FF, #FFE8EB)', color: '#9585B0' }}><span style={{ fontSize: '2.5rem' }}>🖼️</span><p style={{ fontSize: '12px', fontWeight: '700', margin: '8px 0 0', fontFamily: 'Nunito, sans-serif' }}>Upload Front</p></div>
+                                  }
+                                  <div style={{ position: 'absolute', top: '10px', left: '10px', padding: '4px 10px', background: 'rgba(0,0,0,0.7)', color: 'white', borderRadius: '999px', fontSize: '10px', fontWeight: '800', fontFamily: 'Nunito, sans-serif' }}>FRONT</div>
                                 </div>
-                              ) : heroPanel.url ? (
-                                heroIsVideo ? (
-                                  <>
-                                    <video src={heroPanel.url} autoPlay muted loop playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    <span style={{
-                                      position: 'absolute', top: '10px', right: '10px',
-                                      background: 'rgba(0,0,0,0.65)', color: 'white',
-                                      padding: '4px 10px', borderRadius: '999px',
-                                      fontSize: '10px', fontWeight: '800',
-                                      display: 'inline-flex', alignItems: 'center', gap: '5px',
-                                      fontFamily: 'Nunito, sans-serif',
-                                    }}>
-                                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ff4757' }} />
-                                      VIDEO
-                                    </span>
-                                  </>
-                                ) : (
-                                  <>
-                                    <img src={heroPanel.url} alt={heroPanel.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    <span style={{
-                                      position: 'absolute', top: '10px', right: '10px',
-                                      background: 'rgba(0,0,0,0.65)', color: 'white',
-                                      padding: '4px 10px', borderRadius: '999px',
-                                      fontSize: '10px', fontWeight: '800',
-                                      fontFamily: 'Nunito, sans-serif',
-                                    }}>
-                                      🖼️ IMAGE
-                                    </span>
-                                  </>
-                                )
-                              ) : (
-                                <div style={{ textAlign: 'center', padding: '20px' }}>
-                                  <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🎥</div>
-                                  <p style={{ color: '#7B2FBE', fontWeight: '800', fontSize: '15px', margin: '0 0 6px', fontFamily: 'Nunito, sans-serif' }}>
-                                    Click to Upload Media
-                                  </p>
-                                  <p style={{ color: '#9585B0', fontWeight: '600', fontSize: '11px', margin: 0, fontFamily: 'Nunito, sans-serif', lineHeight: '1.5' }}>
-                                    📸 Image (JPG/PNG/WebP) up to 10 MB<br />
-                                    🎥 Video (MP4/WebM) up to 50 MB
-                                  </p>
+                                <div className="adminFlipFace adminFlipBack">
+                                  {form.mobileImage?.url
+                                    ? <img src={form.mobileImage.url} alt="Back" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                    : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', background: 'linear-gradient(135deg, #FFE8B0, #FFD78A)', color: '#9585B0' }}><span style={{ fontSize: '2.5rem' }}>🔄</span><p style={{ fontSize: '12px', fontWeight: '700', margin: '8px 0 0', fontFamily: 'Nunito, sans-serif' }}>Upload Back</p></div>
+                                  }
+                                  <div style={{ position: 'absolute', top: '10px', left: '10px', padding: '4px 10px', background: 'rgba(224,63,79,0.9)', color: 'white', borderRadius: '999px', fontSize: '10px', fontWeight: '800', fontFamily: 'Nunito, sans-serif' }}>BACK</div>
                                 </div>
-                              )}
-                            </div>
-                          </label>
-
-                          {heroPanel.url && (
-                            <button type="button" onClick={removeHeroMedia} style={{ width: '100%', padding: '8px', background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', marginBottom: '12px' }}>
-                              🗑️ Remove Media
-                            </button>
-                          )}
-
-                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                            <div>
-                              <label style={pLbl}>Badge Label</label>
-                              <input type="text" value={heroPanel.label || ''} onChange={e => updateHeroPanel('label', e.target.value)} placeholder="🔥 Trending" style={pInp} />
-                            </div>
-                            <div>
-                              <label style={pLbl}>Sub Label</label>
-                              <input type="text" value={heroPanel.sublabel || ''} onChange={e => updateHeroPanel('sublabel', e.target.value)} placeholder="2.4k sold this week" style={pInp} />
-                            </div>
-                            <div>
-                              <label style={pLbl}>Click Link</label>
-                              <input type="text" value={heroPanel.link || ''} onChange={e => updateHeroPanel('link', e.target.value)} placeholder="/products" style={pInp} />
-                            </div>
-                            <div>
-                              <label style={pLbl}>BG Color (fallback)</label>
-                              <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-                                <input type="color" value={heroPanel.bg || '#FDE8D0'} onChange={e => updateHeroPanel('bg', e.target.value)} style={{ width: '36px', height: '34px', border: '2px solid #EDD9FF', borderRadius: '6px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
-                                <input type="text" value={heroPanel.bg || '#FDE8D0'} onChange={e => updateHeroPanel('bg', e.target.value)} style={{ ...pInp, flex: 1 }} />
                               </div>
                             </div>
+                            <style>{`
+                              .adminFlipScene { perspective: 1200px; width: 100%; height: 280px; cursor: pointer; margin-top: 4px; }
+                              .adminFlipCard { position: relative; width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; border-radius: 16px; }
+                              .adminFlipScene:hover .adminFlipCard { transform: rotateY(180deg); }
+                              .adminFlipFace { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 16px; overflow: hidden; background: white; border: 3px solid #E03F4F; box-sizing: border-box; box-shadow: 0 6px 20px rgba(224,63,79,0.20); }
+                              .adminFlipFront { transform: rotateY(0deg); }
+                              .adminFlipBack  { transform: rotateY(180deg); }
+                            `}</style>
                           </div>
+                        )}
+                      </>
+                    )}
 
-                          <div style={{ marginTop: '12px', padding: '10px 12px', background: '#F0F9FF', borderRadius: '8px', border: '1px solid #BAE6FD' }}>
-                            <p style={{ margin: 0, fontSize: '11px', color: '#0369A1', fontWeight: '600', fontFamily: 'Nunito, sans-serif', lineHeight: '1.5' }}>
-                              💡 <strong>Tip:</strong> Videos auto-play muted on the hero. Users can unmute with the 🔊 button. Keep videos under 30 seconds for best experience.
+                    {form.type === 'hero' && (
+                      <div style={{ border: '2px solid #EDD9FF', borderRadius: '16px', overflow: 'hidden' }}>
+                        <div style={{ padding: '12px 16px', background: 'linear-gradient(135deg,#FFF3EC,#F3E8FF)', borderBottom: '1.5px solid #EDD9FF', display: 'flex', alignItems: 'center', gap: '10px' }}>
+                          <span style={{ fontSize: '1.4rem' }}>🎥</span>
+                          <div>
+                            <h4 style={{ margin: 0, fontSize: '0.92rem', fontWeight: '800', color: '#2D1A4A' }}>Hero Media (Image or Video)</h4>
+                            <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#9585B0', fontWeight: '600' }}>
+                              📸 Image OR 🎥 Video — Auto-plays full-screen on hero
                             </p>
                           </div>
                         </div>
-                      </div>
-                    </div>
-                  )}
 
+                        <div style={{ padding: '14px' }}>
+                          <div style={{ background: heroPanel.bg || '#FFF3E8', borderRadius: '14px', padding: '14px', border: '2px solid rgba(255,255,255,0.9)' }}>
+
+                            <label style={{ cursor: 'pointer', display: 'block', marginBottom: '12px' }}>
+                              <input
+                                type="file"
+                                accept="image/*,video/mp4,video/webm,video/quicktime"
+                                onChange={handleHeroMediaUpload}
+                                style={{ display: 'none' }}
+                                disabled={uploadingHero}
+                              />
+                              <div style={{
+                                width: '100%',
+                                height: '240px',
+                                border: '2px dashed #C8B4DC',
+                                borderRadius: '12px',
+                                background: 'rgba(255,255,255,0.85)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                overflow: 'hidden',
+                                cursor: 'pointer',
+                                position: 'relative',
+                              }}>
+                                {uploadingHero ? (
+                                  <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '2rem', marginBottom: '8px' }}>⏳</div>
+                                    <p style={{ color: '#7B2FBE', fontWeight: '700', fontSize: '13px', margin: 0, fontFamily: 'Nunito, sans-serif' }}>Uploading...</p>
+                                  </div>
+                                ) : heroPanel.url ? (
+                                  heroIsVideo ? (
+                                    <>
+                                      <video src={heroPanel.url} autoPlay muted loop playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                      <span style={{
+                                        position: 'absolute', top: '10px', right: '10px',
+                                        background: 'rgba(0,0,0,0.65)', color: 'white',
+                                        padding: '4px 10px', borderRadius: '999px',
+                                        fontSize: '10px', fontWeight: '800',
+                                        display: 'inline-flex', alignItems: 'center', gap: '5px',
+                                        fontFamily: 'Nunito, sans-serif',
+                                      }}>
+                                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ff4757' }} />
+                                        VIDEO
+                                      </span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <img src={heroPanel.url} alt={heroPanel.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                                      <span style={{
+                                        position: 'absolute', top: '10px', right: '10px',
+                                        background: 'rgba(0,0,0,0.65)', color: 'white',
+                                        padding: '4px 10px', borderRadius: '999px',
+                                        fontSize: '10px', fontWeight: '800',
+                                        fontFamily: 'Nunito, sans-serif',
+                                      }}>
+                                        🖼️ IMAGE
+                                      </span>
+                                    </>
+                                  )
+                                ) : (
+                                  <div style={{ textAlign: 'center', padding: '20px' }}>
+                                    <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🎥</div>
+                                    <p style={{ color: '#7B2FBE', fontWeight: '800', fontSize: '15px', margin: '0 0 6px', fontFamily: 'Nunito, sans-serif' }}>
+                                      Click to Upload Media
+                                    </p>
+                                    <p style={{ color: '#9585B0', fontWeight: '600', fontSize: '11px', margin: 0, fontFamily: 'Nunito, sans-serif', lineHeight: '1.5' }}>
+                                      📸 Image (JPG/PNG/WebP) up to 10 MB<br />
+                                      🎥 Video (MP4/WebM) up to 50 MB
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </label>
+
+                            {heroPanel.url && (
+                              <button type="button" onClick={removeHeroMedia} style={{ width: '100%', padding: '8px', background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', marginBottom: '12px' }}>
+                                🗑️ Remove Media
+                              </button>
+                            )}
+
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                              <div>
+                                <label style={pLbl}>Badge Label</label>
+                                <input type="text" value={heroPanel.label || ''} onChange={e => updateHeroPanel('label', e.target.value)} placeholder="🔥 Trending" style={pInp} />
+                              </div>
+                              <div>
+                                <label style={pLbl}>Sub Label</label>
+                                <input type="text" value={heroPanel.sublabel || ''} onChange={e => updateHeroPanel('sublabel', e.target.value)} placeholder="2.4k sold this week" style={pInp} />
+                              </div>
+                              <div>
+                                <label style={pLbl}>Click Link</label>
+                                <input type="text" value={heroPanel.link || ''} onChange={e => updateHeroPanel('link', e.target.value)} placeholder="/products" style={pInp} />
+                              </div>
+                              <div>
+                                <label style={pLbl}>BG Color (fallback)</label>
+                                <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
+                                  <input type="color" value={heroPanel.bg || '#FDE8D0'} onChange={e => updateHeroPanel('bg', e.target.value)} style={{ width: '36px', height: '34px', border: '2px solid #EDD9FF', borderRadius: '6px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
+                                  <input type="text" value={heroPanel.bg || '#FDE8D0'} onChange={e => updateHeroPanel('bg', e.target.value)} style={{ ...pInp, flex: 1 }} />
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                  </div>
                 </div>
-              </div>
+              )}
 
               <div className="adminFormFooter" style={{ display: 'flex', gap: '10px', marginTop: '20px', paddingTop: '16px', borderTop: '1.5px solid #EDD9FF' }}>
                 <button type="button" onClick={() => { setShowForm(false); setEditing(null); }}
@@ -1550,7 +1806,7 @@ export default function AdminBanners() {
                 </button>
                 <button type="submit" disabled={saving || uploading || uploadingMobile || uploadingHero}
                   style={{ flex: 1, padding: '12px 22px', background: saving ? '#ccc' : 'linear-gradient(135deg,#FF6B35,#7B2FBE)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize: '14px', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit', boxShadow: saving ? 'none' : '0 4px 14px rgba(255,107,53,0.30)' }}>
-                  {saving ? '⏳ Saving...' : editing ? '💾 Update Banner' : '✨ Create Banner'}
+                  {saving ? '⏳ Saving...' : editing ? '💾 Update' : '✨ Create'}
                 </button>
               </div>
             </form>

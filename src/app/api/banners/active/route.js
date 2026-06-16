@@ -1,3 +1,4 @@
+// src/app/api/banners/active/route.js
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
@@ -19,18 +20,54 @@ export async function GET() {
       }),
     ]);
 
-    const festivalBanners = banners.filter(b => {
-      if (b.type !== 'festival') return false;
-      if (b.startDate && new Date(b.startDate) > now) return false;
-      if (b.endDate && new Date(b.endDate) < now) return false;
-      return true;
+    // ✅ SMART festival filter — no dates means ALWAYS SHOW
+    const allFestivals = banners.filter(b => b.type === 'festival');
+    
+    const festivalBanners = allFestivals.filter(b => {
+      const hasStart = b.startDate != null;
+      const hasEnd   = b.endDate   != null;
+      
+      // No dates → ALWAYS SHOW
+      if (!hasStart && !hasEnd) return true;
+      
+      // Only start date → show if started
+      if (hasStart && !hasEnd) return new Date(b.startDate) <= now;
+      
+      // Only end date → show if not yet ended
+      if (!hasStart && hasEnd) return new Date(b.endDate) >= now;
+      
+      // Both dates → must be in range
+      return new Date(b.startDate) <= now && new Date(b.endDate) >= now;
     });
+
+    // ✅ DEBUG LOG — Check your terminal!
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+    console.log('🎪 FESTIVAL BANNER DEBUG');
+    console.log(`📊 Total festival in DB: ${allFestivals.length}`);
+    console.log(`✅ After filter (showing): ${festivalBanners.length}`);
+    console.log(`⏰ Server time: ${now.toISOString()}`);
+    
+    allFestivals.forEach((f, i) => {
+      console.log(`\n   [${i + 1}] "${f.title}"`);
+      console.log(`       isActive:  ${f.isActive}`);
+      console.log(`       startDate: ${f.startDate || '❌ not set'}`);
+      console.log(`       endDate:   ${f.endDate   || '❌ not set'}`);
+      console.log(`       hasImage:  ${!!f.image?.url}`);
+      
+      if (f.startDate && new Date(f.startDate) > now) {
+        console.log(`       ⚠️  EXCLUDED: starts in FUTURE`);
+      }
+      if (f.endDate && new Date(f.endDate) < now) {
+        console.log(`       ⚠️  EXCLUDED: already ENDED`);
+      }
+    });
+    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 
     const response = NextResponse.json({
       banners,
       brands,
       heroBanners:          banners.filter(b => b.type === 'hero' || !b.type),
-      categoryBanners:      banners.filter(b => b.type === 'category'),  // ✅ NEW
+      categoryBanners:      banners.filter(b => b.type === 'category'),
       festivalBanners,
       budgetBanners:        banners.filter(b => b.type === 'budget'),
       sunnyBanners:         banners.filter(b => b.type === 'sunny'),
@@ -50,7 +87,7 @@ export async function GET() {
 
     return response;
   } catch (error) {
-    console.error('Active banners error:', error);
+    console.error('❌ Active banners error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }

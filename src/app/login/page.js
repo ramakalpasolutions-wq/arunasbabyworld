@@ -15,6 +15,7 @@ function LoginForm() {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
+  const [rememberMe, setRememberMe] = useState(false);
 
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -33,12 +34,12 @@ function LoginForm() {
     setLoading(true);
     try {
       const result = await signIn('credentials', {
-        email: form.email,
+        email: form.email.toLowerCase().trim(),
         password: form.password,
         redirect: false,
       });
       if (result?.error) throw new Error('Invalid email or password');
-      toast.success('Welcome back!');
+      toast.success('Welcome back! 🎉');
       router.push(redirect);
       router.refresh();
     } catch (err) {
@@ -50,12 +51,13 @@ function LoginForm() {
 
   return (
     <div className="login-page">
-      {/* Soft pastel background shapes */}
+      {/* Animated background shapes */}
       <div className="bg-shape bg-shape-1" />
       <div className="bg-shape bg-shape-2" />
       <div className="bg-shape bg-shape-3" />
       <div className="bg-shape bg-shape-4" />
-      <div className="bg-dots" />
+      <div className="bg-shape bg-shape-5" />
+      <div className="bg-shape bg-shape-6" />
 
       {/* BACK BUTTON */}
       <button onClick={handleBack} className="back-btn" aria-label="Go back">
@@ -75,12 +77,12 @@ function LoginForm() {
         {/* Logo */}
         <div className="logo-area">
           <Link href="/" className="logo-link">
-            <div className="logo-circle">
+            <div className="logo-wrap">
               <Image
                 src="/logo.png"
                 alt="Aruna's Baby World"
-                width={130}
-                height={130}
+                width={180}
+                height={180}
                 className="logo-img"
                 priority
               />
@@ -88,22 +90,24 @@ function LoginForm() {
           </Link>
           <h2 className="brand-name">Aruna&apos;s Baby World</h2>
           <h1 className="title">Welcome Back</h1>
-          <p className="subtitle">Sign in to your Aruna&apos;s Baby World account</p>
+          <p className="subtitle">Sign in to continue shopping</p>
         </div>
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="form">
           {/* Email */}
           <div className="field">
-            <label className="label">Email Address</label>
+            <label className="label" htmlFor="email">Email Address</label>
             <div className={`input-box ${focusedField === 'email' ? 'active' : ''}`}>
               <span className="field-icon">✉️</span>
               <input
+                id="email"
                 type="email"
                 value={form.email}
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                 placeholder="you@example.com"
                 required
+                autoComplete="email"
                 className="input"
                 onFocus={() => setFocusedField('email')}
                 onBlur={() => setFocusedField(null)}
@@ -113,15 +117,17 @@ function LoginForm() {
 
           {/* Password */}
           <div className="field">
-            <label className="label">Password</label>
+            <label className="label" htmlFor="password">Password</label>
             <div className={`input-box ${focusedField === 'password' ? 'active' : ''}`}>
               <span className="field-icon">🔒</span>
               <input
+                id="password"
                 type={showPassword ? 'text' : 'password'}
                 value={form.password}
                 onChange={e => setForm(f => ({ ...f, password: e.target.value }))}
                 placeholder="••••••••"
                 required
+                autoComplete="current-password"
                 className="input"
                 onFocus={() => setFocusedField('password')}
                 onBlur={() => setFocusedField(null)}
@@ -130,6 +136,7 @@ function LoginForm() {
                 type="button"
                 className="eye-btn"
                 onClick={() => setShowPassword(!showPassword)}
+                aria-label={showPassword ? 'Hide password' : 'Show password'}
               >
                 {showPassword ? '🙈' : '👁️'}
               </button>
@@ -139,15 +146,23 @@ function LoginForm() {
           {/* Options */}
           <div className="options-row">
             <label className="remember">
-              <input type="checkbox" />
+              <input
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+              />
               <span className="custom-check" />
-              Remember me
+              <span>Remember me</span>
             </label>
             <Link href="/forgot-password" className="forgot">Forgot?</Link>
           </div>
 
           {/* Submit */}
-          <button type="submit" disabled={loading} className={`submit-btn ${loading ? 'is-loading' : ''}`}>
+          <button
+            type="submit"
+            disabled={loading}
+            className={`submit-btn ${loading ? 'is-loading' : ''}`}
+          >
             {loading ? (
               <>
                 <span className="btn-spinner" />
@@ -167,13 +182,19 @@ function LoginForm() {
 
         {/* Demo */}
         <div className="demo-strip">
-          <span>🔑 Demo: admin@firstcry.com / admin123</span>
+          <div className="demo-info">
+            <span className="demo-icon">🔑</span>
+            <div className="demo-text">
+              <span className="demo-label">Demo Admin</span>
+              <span className="demo-creds">arunasbabyworld@gmail.com / admin123</span>
+            </div>
+          </div>
           <button
             type="button"
             className="demo-btn"
             onClick={() => {
-              setForm({ email: 'admin@firstcry.com', password: 'admin123' });
-              toast.success('Credentials filled!');
+              setForm({ email: 'arunasbabyworld@gmail.com', password: 'admin123' });
+              toast.success('Credentials filled! 🎉');
             }}
           >
             Fill

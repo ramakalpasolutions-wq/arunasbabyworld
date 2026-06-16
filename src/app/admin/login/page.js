@@ -438,7 +438,7 @@ export default function AdminLoginPage() {
             <button
               type="button"
               onClick={() => {
-                setForm({ email: 'admin@firstcry.com', password: 'admin123' });
+                setForm({ email: 'Arunasbabyworld@gmail.com', password: 'admin123' });
                 toast.success('Credentials filled! 🎉');
               }}
               style={{

@@ -1,14 +1,23 @@
+// src/app/api/auth/[...nextauth]/route.js
+
 import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+
+// ✅ Fail loud if secret missing
+if (!process.env.NEXTAUTH_SECRET) {
+  console.error('❌ CRITICAL: NEXTAUTH_SECRET is not set in .env file!');
+  console.error('   Run: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'base64\'))"');
+  console.error('   Add output to .env.local as NEXTAUTH_SECRET="..."');
+}
 
 export const authOptions = {
   providers: [
     CredentialsProvider({
       name: 'credentials',
       credentials: {
-        email: { label: 'Email', type: 'email' },
+        email:    { label: 'Email',    type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
@@ -30,10 +39,10 @@ export const authOptions = {
           if (!isValid) throw new Error('Invalid password');
 
           return {
-            id: user.id,
-            name: user.name,
-            email: user.email,
-            role: user.role,
+            id:     user.id,
+            name:   user.name,
+            email:  user.email,
+            role:   user.role,
             avatar: user.avatar || null,
           };
         } catch (error) {
@@ -45,19 +54,31 @@ export const authOptions = {
   ],
 
   callbacks: {
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
       if (user) {
-        token.id = user.id;
-        token.role = user.role;
+        token.id     = user.id;
+        token.role   = user.role;
         token.avatar = user.avatar;
+        token.name   = user.name;
+        token.email  = user.email;
       }
+
+      if (trigger === 'update' && session) {
+        if (session.name)   token.name   = session.name;
+        if (session.email)  token.email  = session.email;
+        if (session.avatar) token.avatar = session.avatar;
+      }
+
       return token;
     },
+
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id;
-        session.user.role = token.role;
+      if (token && session.user) {
+        session.user.id     = token.id;
+        session.user.role   = token.role;
         session.user.avatar = token.avatar;
+        session.user.name   = token.name;
+        session.user.email  = token.email;
       }
       return session;
     },
@@ -65,20 +86,24 @@ export const authOptions = {
 
   pages: {
     signIn: '/login',
-    error: '/login',
+    error:  '/login',
   },
 
-  session: { 
-    strategy: 'jwt',
-    maxAge: 30 * 24 * 60 * 60, // 30 days
-    updateAge: 24 * 60 * 60,    // 1 day
+  session: {
+    strategy:  'jwt',
+    maxAge:    30 * 24 * 60 * 60, // 30 days
+    updateAge: 24 * 60 * 60,      // 1 day
   },
 
   jwt: {
-    maxAge: 30 * 24 * 60 * 60, // 30 days
+    maxAge: 30 * 24 * 60 * 60,
   },
 
+  // ✅ CRITICAL — must match the secret used to encrypt cookies
   secret: process.env.NEXTAUTH_SECRET,
+
+  // ✅ Removed debug to reduce noise
+  debug: false,
 };
 
 const handler = NextAuth(authOptions);

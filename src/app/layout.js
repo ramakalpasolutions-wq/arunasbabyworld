@@ -4,6 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import SessionWrapper from '@/components/layout/SessionWrapper';
 import { CartProvider } from '@/context/CartContext';
 import { WishlistProvider } from '@/context/WishlistContext';
+import Providers from './providers';
 import '@/styles/globals.css';
 
 export const metadata = {
@@ -29,6 +30,7 @@ export default async function RootLayout({ children }) {
         />
       </head>
       <body suppressHydrationWarning={true}>
+         <Providers>
         <SessionWrapper session={session}>
           <CartProvider>
             <WishlistProvider>
@@ -49,6 +51,7 @@ export default async function RootLayout({ children }) {
             </WishlistProvider>
           </CartProvider>
         </SessionWrapper>
+        </Providers>
       </body>
     </html>
   );
