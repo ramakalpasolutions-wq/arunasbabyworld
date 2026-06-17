@@ -171,22 +171,49 @@ export default function OrderDetailClient({ id }) {
             </button>
           )}
 
-          {canReturn && (
-            <button
-              onClick={() => setShowRefundModal(true)}
-              style={{
-                padding: '10px 18px', background: 'white',
-                color: '#7B2FBE', border: '2px solid #EDD9FF',
-                borderRadius: '12px', fontWeight: '800', fontSize: '0.88rem',
-                fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#F5EDFF'; e.currentTarget.style.borderColor = '#7B2FBE'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#EDD9FF'; }}
-            >
-              💰 Refund
-            </button>
-          )}
+         {canReturn && (
+  <Link
+    href={`/orders/${order.id}/refund`}
+    style={{
+      padding: '10px 18px', background: 'white',
+      color: '#7B2FBE', border: '2px solid #EDD9FF',
+      borderRadius: '12px', fontWeight: '800', fontSize: '0.88rem',
+      fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
+      textDecoration: 'none', display: 'inline-block',
+    }}
+    onMouseEnter={e => { e.currentTarget.style.background = '#F5EDFF'; e.currentTarget.style.borderColor = '#7B2FBE'; }}
+    onMouseLeave={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#EDD9FF'; }}
+  >
+    💰 Refund
+  </Link>
+)}
 
+{/* ✅ NEW: Exchange button — 3-day window check */}
+{canReturn && (() => {
+  const deliveredAt = order.deliveredAt ? new Date(order.deliveredAt) : new Date(order.updatedAt);
+  const daysSince   = Math.floor((new Date() - deliveredAt) / (1000 * 60 * 60 * 24));
+  const within3Days = daysSince <= 3;
+  const noActiveExchange = !order.exchangeId || ['rejected', 'completed', 'cancelled'].includes(order.exchangeStatus);
+
+  if (!within3Days || !noActiveExchange) return null;
+
+  return (
+    <Link
+      href={`/orders/${order.id}/exchange`}
+      style={{
+        padding: '10px 18px', background: 'white',
+        color: '#FF6B35', border: '2px solid #FFD4B8',
+        borderRadius: '12px', fontWeight: '800', fontSize: '0.88rem',
+        fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
+        textDecoration: 'none', display: 'inline-block',
+      }}
+      onMouseEnter={e => { e.currentTarget.style.background = '#FFF3E8'; e.currentTarget.style.borderColor = '#FF6B35'; }}
+      onMouseLeave={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#FFD4B8'; }}
+    >
+      🔄 Exchange
+    </Link>
+  );
+})()}
           {isReturnRequested && (
             <span style={{
               display: 'inline-flex', alignItems: 'center', gap: '6px',
@@ -586,18 +613,39 @@ export default function OrderDetailClient({ id }) {
                 >
                   🔄 Return Item
                 </button>
-                <button
-                  onClick={() => setShowRefundModal(true)}
-                  style={{
-                    flex: 1, padding: '9px 10px',
-                    background: 'white', color: '#7B2FBE',
-                    border: '1.5px solid #EDD9FF',
-                    borderRadius: '10px', fontWeight: '800', fontSize: '0.82rem',
-                    fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
-                  }}
-                >
-                  💰 Refund
-                </button>
+               <Link
+  href={`/orders/${order.id}/refund`}
+  style={{
+    flex: 1, padding: '9px 10px',
+    background: 'white', color: '#7B2FBE',
+    border: '1.5px solid #EDD9FF',
+    borderRadius: '10px', fontWeight: '800', fontSize: '0.82rem',
+    fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
+    textDecoration: 'none', textAlign: 'center',
+  }}
+>
+  💰 Refund
+</Link>
+{(() => {
+  const deliveredAt = order.deliveredAt ? new Date(order.deliveredAt) : new Date(order.updatedAt);
+  const daysSince   = Math.floor((new Date() - deliveredAt) / (1000 * 60 * 60 * 24));
+  if (daysSince > 3) return null;
+  return (
+    <Link
+      href={`/orders/${order.id}/exchange`}
+      style={{
+        flex: 1, padding: '9px 10px',
+        background: 'white', color: '#FF6B35',
+        border: '1.5px solid #FFD4B8',
+        borderRadius: '10px', fontWeight: '800', fontSize: '0.82rem',
+        fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
+        textDecoration: 'none', textAlign: 'center',
+      }}
+    >
+      🔄 Exchange
+    </Link>
+  );
+})()}
               </div>
             </div>
           )}

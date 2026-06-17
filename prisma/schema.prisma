@@ -295,25 +295,73 @@ model SectionSetting {
 }
 
 // ============================================================
-// ✅ REFUND MODEL
+// ✅ EXCHANGE MODEL
 // ============================================================
-model Refund {
-  id                String          @id @default(auto()) @map("_id") @db.ObjectId
-  orderId           String          @db.ObjectId
-  userId            String          @db.ObjectId
-  amount            Float
-  reason            String?
-  refundType        String          @default("razorpay")
-  refundStatus      String          @default("pending")
-  razorpayRefundId  String?
-  razorpayPaymentId String?
-  bankDetails       BankDetailsType?
-  notes             String?
-  processedAt       DateTime?
-  createdAt         DateTime        @default(now())
-  updatedAt         DateTime        @updatedAt
+model Exchange {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId           String   @db.ObjectId
+  userId            String   @db.ObjectId
 
-  @@map("refunds")
+  // OLD product (what customer is returning)
+  oldProductId      String   @db.ObjectId
+  oldProductName    String
+  oldProductImage   String?
+  oldPrice          Float
+  oldQuantity       Int      @default(1)
+
+  // NEW product (what customer wants)
+  newProductId      String   @db.ObjectId
+  newProductName    String
+  newProductImage   String?
+  newPrice          Float
+  newQuantity       Int      @default(1)
+
+  // Price difference
+  priceDifference   Float    @default(0)
+  // positive = customer pays extra | negative = we refund difference | 0 = same price
+
+  // Reason
+  reason            String
+  description       String?
+  images            String[] // optional damage proof photos
+
+  // Status flow:
+  // pending → approved → picked_up → received → 
+  // verified → awaiting_payment → ready_to_ship → shipped → delivered → completed
+  // OR: rejected
+  status            String   @default("pending")
+
+  // Payment link (if customer needs to pay extra)
+  paymentLinkId     String?
+  paymentLinkUrl    String?
+  paymentStatus     String?  // pending, paid, failed
+  paymentPaidAt     DateTime?
+
+  // Refund (if new product cheaper — auto-refund difference)
+  razorpayRefundId  String?
+  refundAmount      Float?
+  refundedAt        DateTime?
+
+  // Tracking
+  pickupTracking    String?  // courier pickup tracking
+  shipmentTracking  String?  // new product shipment tracking
+
+  // Admin
+  adminNotes        String?
+  rejectionReason   String?
+
+  // Timestamps
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  approvedAt        DateTime?
+  pickedUpAt        DateTime?
+  receivedAt        DateTime?
+  verifiedAt        DateTime?
+  shippedAt         DateTime?
+  completedAt       DateTime?
+  rejectedAt        DateTime?
+
+  @@map("exchanges")
 }
 
 type BankDetailsType {
