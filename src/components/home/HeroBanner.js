@@ -17,11 +17,7 @@ const defaultBanners = [
     buttonLink: '/products',
     secondaryText: 'View Lookbook',
     secondaryLink: '/products',
-    stats: [
-      { number: '12k+', label: 'Happy Families' },
-      { number: '500+', label: 'Products' },
-      { number: '4.9★', label: 'Rating' },
-    ],
+    
     panels: [
       {
         label: '🔥 Trending Now',
@@ -45,11 +41,7 @@ const defaultBanners = [
     buttonLink: '/products?category=kids',
     secondaryText: 'View Lookbook',
     secondaryLink: '/products',
-    stats: [
-      { number: '12k+', label: 'Happy Families' },
-      { number: '500+', label: 'Products' },
-      { number: '4.9★', label: 'Rating' },
-    ],
+   
     panels: [
       {
         label: '🌟 Best Sellers',
