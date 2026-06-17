@@ -57,24 +57,20 @@
 }
 
 @keyframes marqueeScroll {
-  from {
-    transform: translateX(0);
-  }
-  to {
-    transform: translateX(-50%);
-  }
+  from { transform: translateX(0); }
+  to   { transform: translateX(-50%); }
 }
 
 .heroShell {
   position: relative;
   width: min(calc(100% - 32px), var(--container));
   margin: 14px auto 0;
-  min-height: 680px;
+  min-height: 740px;
   display: grid;
-  grid-template-columns: minmax(0, 1.05fr) minmax(1190px, 0.95fr);
+ grid-template-columns: minmax(0, 1.0fr) minmax(0, 1.2fr); 
   align-items: center;
   gap: 30px;
-  padding: 15px;
+  padding: 24px;
   overflow: hidden;
   border-radius: var(--radius-xl);
   background:
@@ -97,69 +93,32 @@
   z-index: 2;
 }
 
-.textIn {
-  animation: textFadeIn 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-.textOut {
-  animation: textFadeOut 0.25s ease forwards;
-}
-
-.mediaIn {
-  animation: mediaFadeIn 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards;
-}
-
-.mediaOut {
-  animation: mediaFadeOut 0.25s ease forwards;
-}
+.textIn  { animation: textFadeIn 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.textOut { animation: textFadeOut 0.25s ease forwards; }
+.mediaIn  { animation: mediaFadeIn 0.75s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+.mediaOut { animation: mediaFadeOut 0.25s ease forwards; }
 
 @keyframes textFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(18px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes textFadeOut {
-  from {
-    opacity: 1;
-    transform: translateY(0);
-  }
-  to {
-    opacity: 0;
-    transform: translateY(-12px);
-  }
+  from { opacity: 1; transform: translateY(0); }
+  to   { opacity: 0; transform: translateY(-12px); }
 }
 
 @keyframes mediaFadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(16px) scale(0.985);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(16px) scale(0.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes mediaFadeOut {
-  from {
-    opacity: 1;
-    transform: scale(1);
-  }
-  to {
-    opacity: 0;
-    transform: scale(0.985);
-  }
+  from { opacity: 1; transform: scale(1); }
+  to   { opacity: 0; transform: scale(0.985); }
 }
 
-.tagRow {
-  margin-bottom: 18px;
-}
+.tagRow { margin-bottom: 18px; }
 
 .tag {
   display: inline-flex;
@@ -188,15 +147,8 @@
 }
 
 @keyframes pulse {
-  0%,
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
-  50% {
-    opacity: 0.58;
-    transform: scale(0.74);
-  }
+  0%, 100% { opacity: 1;    transform: scale(1); }
+  50%      { opacity: 0.58; transform: scale(0.74); }
 }
 
 .headline {
@@ -210,10 +162,7 @@
   text-shadow: 0 8px 26px rgba(0, 0, 0, 0.22);
 }
 
-.headlineAccent {
-  display: block;
-  color: #fff;
-}
+.headlineAccent { display: block; color: #fff; }
 
 .subtitle {
   margin: 0 0 30px;
@@ -248,10 +197,7 @@
   box-shadow: var(--shadow-md);
 }
 
-.btnPrimary:hover {
-  transform: translateY(-2px);
-  filter: brightness(1.05);
-}
+.btnPrimary:hover { transform: translateY(-2px); filter: brightness(1.05); }
 
 .btnArrow {
   font-size: 1.1rem;
@@ -259,9 +205,7 @@
   display: inline-block;
 }
 
-.btnPrimary:hover .btnArrow {
-  transform: translateX(4px);
-}
+.btnPrimary:hover .btnArrow { transform: translateX(4px); }
 
 .btnSecondary {
   display: inline-flex;
@@ -322,31 +266,51 @@
   white-space: nowrap;
 }
 
+/* ============================================================
+   ✅ PRO MEDIA CARD — Perfect adaptive image display
+   ============================================================ */
 .mediaCard {
   position: relative;
   display: block;
-  min-height: 560px;
   width: 100%;
+  aspect-ratio: 4 / 3;
+  max-height: 640px;
   border-radius: 28px;
   overflow: hidden;
   text-decoration: none;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.14), rgba(255, 255, 255, 0.04)),
-    #102f2f;
+  background: #f5f1ec;
   border: 1px solid var(--line);
   box-shadow: var(--shadow-md);
+  isolation: isolate;
+}
+
+.mediaCard::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    transparent 40%,
+    transparent 60%,
+    rgba(0, 0, 0, 0.08) 100%
+  );
+  z-index: 3;
+  pointer-events: none;
+  border-radius: inherit;
 }
 
 .mediaBackdrop {
   position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
+  inset: -8%;
+  width: 116%;
+  height: 116%;
   object-fit: cover;
   object-position: center;
-  filter: blur(24px) brightness(0.72);
-  transform: scale(1.08);
+  filter: blur(50px) brightness(0.9) saturate(1.2);
   z-index: 1;
+  opacity: 0.85;
+  pointer-events: none;
 }
 
 .heroMedia {
@@ -358,7 +322,17 @@
   object-fit: contain;
   object-position: center;
   z-index: 2;
-  padding: 18px;
+  padding: 0;
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.mediaCard:hover .heroMedia {
+  transform: scale(1.02);
+}
+
+video.heroMedia {
+  object-fit: contain;
+  background: transparent;
 }
 
 .emojiWrap {
@@ -378,13 +352,8 @@
 }
 
 @keyframes emojiFloat {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-12px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-12px); }
 }
 
 .mediaBadge {
@@ -461,13 +430,8 @@
   background: rgba(255, 255, 255, 0.18);
 }
 
-.arrowLeft {
-  left: 14px;
-}
-
-.arrowRight {
-  right: 14px;
-}
+.arrowLeft  { left: 14px; }
+.arrowRight { right: 14px; }
 
 .controls {
   width: min(calc(100% - 32px), var(--container));
@@ -500,9 +464,7 @@
   padding: 0;
 }
 
-.dot:hover {
-  background: rgba(255, 255, 255, 0.72);
-}
+.dot:hover { background: rgba(255, 255, 255, 0.72); }
 
 .dotActive {
   width: 28px;
@@ -527,12 +489,8 @@
 }
 
 @keyframes progressFill {
-  from {
-    width: 0%;
-  }
-  to {
-    width: 100%;
-  }
+  from { width: 0%; }
+  to   { width: 100%; }
 }
 
 .autoBtn {
@@ -557,17 +515,16 @@
 @media (max-width: 1200px) {
   .heroShell {
     min-height: 620px;
-    grid-template-columns: minmax(0, 1fr) minmax(300px, 0.92fr);
+    grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr);
     padding: 24px;
     gap: 22px;
   }
 
-  .headline {
-    font-size: clamp(2.4rem, 4.4vw, 4.2rem);
-  }
-
-  .mediaCard {
-    min-height: 500px;
+  .headline { font-size: clamp(2.4rem, 4.4vw, 4.2rem); }
+  
+  .mediaCard { 
+    aspect-ratio: 4 / 3;
+    max-height: 560px;
   }
 }
 
@@ -587,47 +544,28 @@
     padding: 0 4px 4px;
   }
 
-  .mediaPane {
-    order: 1;
-  }
-
-  .tagRow {
-    display: flex;
-    justify-content: center;
-  }
-
-  .subtitle {
-    margin-inline: auto;
-  }
-
-  .ctaRow {
-    justify-content: center;
-  }
+  .mediaPane { order: 1; }
+  .tagRow { display: flex; justify-content: center; }
+  .subtitle { margin-inline: auto; }
+  .ctaRow { justify-content: center; }
 
   .statsRow {
     justify-content: center;
     grid-template-columns: repeat(3, minmax(120px, 1fr));
   }
 
-  .mediaCard {
-    min-height: 420px;
+  .mediaCard { 
+    aspect-ratio: 16 / 10;
+    max-height: 480px;
   }
-
-  .arrow {
-    display: none;
-  }
+  
+  .arrow { display: none; }
 }
 
 @media (max-width: 768px) {
-  .heroWrap {
-    padding-bottom: 16px;
-  }
+  .heroWrap { padding-bottom: 16px; }
 
-  .marqueeBar,
-  .heroShell,
-  .controls {
-    width: calc(100% - 24px);
-  }
+  .marqueeBar, .heroShell, .controls { width: calc(100% - 24px); }
 
   .marqueeBar {
     margin-top: 12px;
@@ -635,9 +573,7 @@
     border-radius: 12px;
   }
 
-  .marqueeItem {
-    font-size: 0.74rem;
-  }
+  .marqueeItem { font-size: 0.74rem; }
 
   .heroShell {
     margin-top: 12px;
@@ -668,8 +604,7 @@
     margin-bottom: 22px;
   }
 
-  .btnPrimary,
-  .btnSecondary {
+  .btnPrimary, .btnSecondary {
     width: 100%;
     min-height: 48px;
     padding: 13px 20px;
@@ -688,23 +623,16 @@
     border-radius: 14px;
   }
 
-  .statNum {
-    font-size: 1.18rem;
-  }
-
-  .statLabel {
-    font-size: 0.66rem;
-    white-space: normal;
-  }
+  .statNum { font-size: 1.18rem; }
+  .statLabel { font-size: 0.66rem; white-space: normal; }
 
   .mediaCard {
-    min-height: 300px;
+    aspect-ratio: 4 / 3;
+    max-height: 400px;
     border-radius: 20px;
   }
 
-  .heroMedia {
-    padding: 10px;
-  }
+  .heroMedia { padding: 0; }
 
   .mediaBadge {
     left: 12px;
@@ -715,9 +643,7 @@
     border-radius: 12px;
   }
 
-  .mediaSubbadge {
-    font-size: 0.62rem;
-  }
+  .mediaSubbadge { font-size: 0.62rem; }
 
   .muteBtn {
     top: 12px;
@@ -728,18 +654,9 @@
     font-size: 0.88rem;
   }
 
-  .controls {
-    gap: 8px;
-  }
-
-  .indicators {
-    padding: 7px 12px;
-    gap: 8px;
-  }
-
-  .progressTrack {
-    width: 64px;
-  }
+  .controls { gap: 8px; }
+  .indicators { padding: 7px 12px; gap: 8px; }
+  .progressTrack { width: 64px; }
 
   .autoBtn {
     min-height: 38px;
@@ -749,25 +666,11 @@
 }
 
 @media (max-width: 480px) {
-  .marqueeBar,
-  .heroShell,
-  .controls {
-    width: calc(100% - 16px);
-  }
+  .marqueeBar, .heroShell, .controls { width: calc(100% - 16px); }
 
-  .marqueeBar {
-    margin-top: 8px;
-    border-radius: 10px;
-  }
-
-  .heroShell {
-    padding: 14px;
-    border-radius: 18px;
-  }
-
-  .headline {
-    font-size: clamp(1.68rem, 8.4vw, 2.2rem);
-  }
+  .marqueeBar { margin-top: 8px; border-radius: 10px; }
+  .heroShell { padding: 14px; border-radius: 18px; }
+  .headline { font-size: clamp(1.68rem, 8.4vw, 2.2rem); }
 
   .subtitle {
     max-width: 30ch;
@@ -775,47 +678,26 @@
     margin-bottom: 20px;
   }
 
-  .statsRow {
-    grid-template-columns: 1fr;
-  }
-
-  .statItem {
-    text-align: center;
-  }
+  .statsRow { grid-template-columns: 1fr; }
+  .statItem { text-align: center; }
 
   .mediaCard {
-    min-height: 240px;
+    aspect-ratio: 1 / 1;
+    max-height: 340px;
     border-radius: 18px;
   }
 
-  .bigEmoji {
-    font-size: 5rem;
-  }
-
-  .indicators {
-    padding: 6px 10px;
-    gap: 7px;
-  }
-
-  .progressTrack {
-    width: 52px;
-  }
+  .bigEmoji { font-size: 5rem; }
+  .indicators { padding: 6px 10px; gap: 7px; }
+  .progressTrack { width: 52px; }
 }
 
 @media (max-width: 360px) {
-  .heroShell {
-    padding: 12px;
+  .heroShell { padding: 12px; }
+  .headline { font-size: 1.54rem; }
+  .mediaCard { 
+    aspect-ratio: 1 / 1;
+    max-height: 280px;
   }
-
-  .headline {
-    font-size: 1.54rem;
-  }
-
-  .mediaCard {
-    min-height: 210px;
-  }
-
-  .subtitle {
-    max-width: 28ch;
-  }
+  .subtitle { max-width: 28ch; }
 }

@@ -4,8 +4,6 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Link from 'next/link';
 import styles from './HeroBanner.module.css';
 
-
-
 const defaultBanners = [
   {
     id: '1',
@@ -17,7 +15,6 @@ const defaultBanners = [
     buttonLink: '/products',
     secondaryText: 'View Lookbook',
     secondaryLink: '/products',
-    
     panels: [
       {
         label: '🔥 Trending Now',
@@ -41,7 +38,6 @@ const defaultBanners = [
     buttonLink: '/products?category=kids',
     secondaryText: 'View Lookbook',
     secondaryLink: '/products',
-   
     panels: [
       {
         label: '🌟 Best Sellers',
@@ -65,11 +61,7 @@ const defaultBanners = [
     buttonLink: '/products?category=toys',
     secondaryText: 'View Lookbook',
     secondaryLink: '/products',
-    stats: [
-      { number: '12k+', label: 'Happy Families' },
-      { number: '500+', label: 'Products' },
-      { number: '4.9★', label: 'Rating' },
-    ],
+   
     panels: [
       {
         label: '🎉 Top Picks',
@@ -122,7 +114,6 @@ function HeroMedia({ panel, isActive, muted, onToggleMute }) {
 
   useEffect(() => {
     if (!videoRef.current || !isVideo) return;
-
     if (isActive) {
       videoRef.current.currentTime = 0;
       videoRef.current.muted = muted;
@@ -136,7 +127,10 @@ function HeroMedia({ panel, isActive, muted, onToggleMute }) {
     return (
       <div
         className={styles.emojiWrap}
-        style={{ background: panel?.bg || 'linear-gradient(135deg, #FFF5EE 0%, #FEF0FF 100%)' }}
+        style={{
+          background:
+            panel?.bg || 'linear-gradient(135deg, #FFF5EE 0%, #FEF0FF 100%)',
+        }}
       >
         <span className={styles.bigEmoji}>{panel?.emoji || '🍼'}</span>
       </div>
@@ -205,16 +199,21 @@ function HeroMedia({ panel, isActive, muted, onToggleMute }) {
 export default function HeroBanner({ banners = [] }) {
   const rawSlides = banners.length > 0 ? banners : defaultBanners;
 
+  // ✅ THE ONLY FIX - removed .slice(0, 3) so ALL banners show
   const slides = useMemo(() => {
-    return rawSlides.slice(0, 3).map((b, i) => {
+    const themeKeys = Object.keys(themeMap); // ['orange', 'purple', 'peach']
+
+    return rawSlides.map((b, i) => {
       const def = defaultBanners[i % defaultBanners.length];
       const allPanels = b.panels?.length > 0 ? b.panels : def.panels;
-      const bigPanel = allPanels.find((p) => p.isBig) || allPanels[0] || def.panels[0];
+      const bigPanel =
+        allPanels.find((p) => p.isBig) || allPanels[0] || def.panels[0];
 
       return {
         ...def,
         ...b,
-        theme: b.theme || def.theme,
+        // ✅ Cycle through themes if more than 3 banners
+        theme: b.theme || themeKeys[i % themeKeys.length],
         bigMedia: bigPanel,
       };
     });
@@ -269,14 +268,22 @@ export default function HeroBanner({ banners = [] }) {
     return () => clearInterval(timer);
   }, [goNext, paused, autoplay, slides.length]);
 
+  // ✅ Reset to slide 0 if current index is out of range
+  useEffect(() => {
+    if (current >= slides.length) {
+      setCurrent(0);
+    }
+  }, [slides.length, current]);
+
   const slide = slides[current];
-  const theme = themeMap[slide.theme] || themeMap.orange;
-  const media = slide.bigMedia;
+  const theme = themeMap[slide?.theme] || themeMap.orange;
+  const media = slide?.bigMedia;
+
+  // ✅ Safety check
+  if (!slide) return null;
 
   return (
     <section className={styles.heroWrap} aria-label="Featured promotions">
-    
-
       <div
         className={styles.heroShell}
         onMouseEnter={() => setPaused(true)}
@@ -286,9 +293,16 @@ export default function HeroBanner({ banners = [] }) {
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <div className={`${styles.contentPane} ${animating ? styles.textOut : styles.textIn}`}>
+        <div
+          className={`${styles.contentPane} ${
+            animating ? styles.textOut : styles.textIn
+          }`}
+        >
           <div className={styles.tagRow}>
-            <span className={styles.tag} style={{ background: theme.chipBg }}>
+            <span
+              className={styles.tag}
+              style={{ background: theme.chipBg }}
+            >
               <span className={styles.tagDot} />
               {slide.tag}
             </span>
@@ -336,7 +350,11 @@ export default function HeroBanner({ banners = [] }) {
           </div>
         </div>
 
-        <div className={`${styles.mediaPane} ${animating ? styles.mediaOut : styles.mediaIn}`}>
+        <div
+          className={`${styles.mediaPane} ${
+            animating ? styles.mediaOut : styles.mediaIn
+          }`}
+        >
           <Link
             href={media?.link || '/products'}
             className={styles.mediaCard}
@@ -356,7 +374,9 @@ export default function HeroBanner({ banners = [] }) {
               >
                 <span>{media.label}</span>
                 {media?.sublabel && (
-                  <small className={styles.mediaSubbadge}>{media.sublabel}</small>
+                  <small className={styles.mediaSubbadge}>
+                    {media.sublabel}
+                  </small>
                 )}
               </div>
             )}
@@ -388,7 +408,11 @@ export default function HeroBanner({ banners = [] }) {
 
       {slides.length > 1 && (
         <div className={styles.controls} aria-label="Hero slider controls">
-          <div className={styles.indicators} role="tablist" aria-label="Select slide">
+          <div
+            className={styles.indicators}
+            role="tablist"
+            aria-label="Select slide"
+          >
             {slides.map((item, i) => (
               <button
                 key={item.id || i}
@@ -396,7 +420,9 @@ export default function HeroBanner({ banners = [] }) {
                 role="tab"
                 aria-selected={i === current}
                 aria-label={`Go to slide ${i + 1}`}
-                className={`${styles.dot} ${i === current ? styles.dotActive : ''}`}
+                className={`${styles.dot} ${
+                  i === current ? styles.dotActive : ''
+                }`}
                 onClick={() => go(i)}
               />
             ))}
@@ -406,7 +432,8 @@ export default function HeroBanner({ banners = [] }) {
                 className={styles.progressBar}
                 key={`${current}-${autoplay}`}
                 style={{
-                  animationPlayState: paused || !autoplay ? 'paused' : 'running',
+                  animationPlayState:
+                    paused || !autoplay ? 'paused' : 'running',
                 }}
               />
             </div>
