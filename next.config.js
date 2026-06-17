@@ -2,13 +2,20 @@
 const nextConfig = {
   images: {
     remotePatterns: [
-      // ✅ ADD - Cloudflare R2
+      // ✅ Cloudflare R2 — ALL buckets (wildcard covers any R2 domain)
       {
         protocol: 'https',
-        hostname: 'pub-5ca724d37858415daca5c5362ec47065.r2.dev',
+        hostname: '**.r2.dev',
         port: '',
         pathname: '/**',
       },
+      {
+        protocol: 'https',
+        hostname: '**.r2.cloudflarestorage.com',
+        port: '',
+        pathname: '/**',
+      },
+
       // ⚠️ KEEP - Until all old Cloudinary images are replaced
       {
         protocol: 'https',
@@ -16,6 +23,7 @@ const nextConfig = {
         port: '',
         pathname: '/**',
       },
+
       // ✅ Existing ones kept
       {
         protocol: 'https',

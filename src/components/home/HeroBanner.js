@@ -8,90 +8,61 @@ const defaultBanners = [
   {
     id: '1',
     tag: '✨ New Arrivals 2025',
-    title: 'Soft & Safe for\nEvery Little One',
+    title: 'Soft & Stylish\nBaby Essentials',
     subtitle:
-      'Gentle fabrics, safe certified materials, and adorable designs that let your baby explore the world with comfort and joy.',
+      'Discover premium organic cotton outfits designed for comfort, warmth, and everyday adventures.',
     buttonText: 'Shop Now',
     buttonLink: '/products',
-    secondaryText: 'View Lookbook',
+    secondaryText: 'Explore Collection',
     secondaryLink: '/products',
     panels: [
       {
-        label: '🔥 Trending Now',
-        sublabel: '2.4k sold this week',
+        label: '',
+        sublabel: '',
         link: '/products',
-        bg: '#FFF3E8',
+        bg: '#F5EFE4',
         isBig: true,
         url: '',
         emoji: '🍼',
       },
     ],
-    theme: 'orange',
-  },
-  {
-    id: '2',
-    tag: "💜 Mom's Special",
-    title: 'Comfort & Style\nfor Growing Kids',
-    subtitle:
-      'Premium quality pieces crafted for every stage of childhood — comfort meets style through every beautiful moment.',
-    buttonText: 'Shop Kids',
-    buttonLink: '/products?category=kids',
-    secondaryText: 'View Lookbook',
-    secondaryLink: '/products',
-    panels: [
-      {
-        label: '🌟 Best Sellers',
-        sublabel: '1.8k sold this week',
-        link: '/products',
-        bg: '#F7F0FF',
-        isBig: true,
-        url: '',
-        emoji: '💜',
-      },
-    ],
-    theme: 'purple',
-  },
-  {
-    id: '3',
-    tag: '🎉 Best Sellers',
-    title: 'Toys & Essentials\nKids Will Love',
-    subtitle:
-      'Educational and fun toys for every explorer — safe, colourful, and designed to grow with your child every step.',
-    buttonText: 'Shop Toys',
-    buttonLink: '/products?category=toys',
-    secondaryText: 'View Lookbook',
-    secondaryLink: '/products',
-   
-    panels: [
-      {
-        label: '🎉 Top Picks',
-        sublabel: '3.1k sold this week',
-        link: '/products',
-        bg: '#FFF4EE',
-        isBig: true,
-        url: '',
-        emoji: '🌈',
-      },
-    ],
-    theme: 'peach',
+    theme: 'cream',
   },
 ];
 
 const themeMap = {
+  cream: {
+    panelBg: 'linear-gradient(135deg, #FBF3E4 0%, #F5E6D3 50%, #EDD9C0 100%)',
+    btnPrimary: '#FFFFFF',
+    btnPrimaryText: '#1A1A1A',
+    btnSecondary: 'rgba(255, 255, 255, 0.55)',
+    btnSecondaryText: '#1A1A1A',
+    titleColor: '#1A1A1A',
+    subtitleColor: '#5A4A3A',
+    cloudColor: '#FFFFFF',
+    accentDot: '#F5B5C5',
+  },
   orange: {
-    accentGlow: 'rgba(244,123,32,0.22)',
-    btnGrad: 'linear-gradient(135deg, #F47B20 0%, #E8650A 100%)',
-    chipBg: 'rgba(244,123,32,0.16)',
+    panelBg: 'linear-gradient(135deg, #FFF3E8 0%, #FFE4CC 100%)',
+    btnPrimary: '#FFFFFF',
+    btnPrimaryText: '#E8650A',
+    btnSecondary: 'rgba(255, 255, 255, 0.55)',
+    btnSecondaryText: '#E8650A',
+    titleColor: '#2A1810',
+    subtitleColor: '#5A4030',
+    cloudColor: '#FFFFFF',
+    accentDot: '#F47B20',
   },
   purple: {
-    accentGlow: 'rgba(155,89,182,0.22)',
-    btnGrad: 'linear-gradient(135deg, #9B59B6 0%, #7D3C98 100%)',
-    chipBg: 'rgba(155,89,182,0.16)',
-  },
-  peach: {
-    accentGlow: 'rgba(232,119,58,0.22)',
-    btnGrad: 'linear-gradient(135deg, #E8773A 0%, #D45F20 100%)',
-    chipBg: 'rgba(232,119,58,0.16)',
+    panelBg: 'linear-gradient(135deg, #F7F0FF 0%, #EBE0FA 100%)',
+    btnPrimary: '#FFFFFF',
+    btnPrimaryText: '#7D3C98',
+    btnSecondary: 'rgba(255, 255, 255, 0.55)',
+    btnSecondaryText: '#7D3C98',
+    titleColor: '#2D1A4A',
+    subtitleColor: '#5A4570',
+    cloudColor: '#FFFFFF',
+    accentDot: '#9B59B6',
   },
 };
 
@@ -141,16 +112,6 @@ function HeroMedia({ panel, isActive, muted, onToggleMute }) {
     return (
       <>
         <video
-          className={styles.mediaBackdrop}
-          src={panel.url}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="metadata"
-          aria-hidden="true"
-        />
-        <video
           ref={videoRef}
           className={styles.heroMedia}
           src={panel.url}
@@ -176,35 +137,33 @@ function HeroMedia({ panel, isActive, muted, onToggleMute }) {
     );
   }
 
-  return (
-    <>
-      <img
-        src={panel.url}
-        alt=""
-        aria-hidden="true"
-        className={styles.mediaBackdrop}
-      />
-      <img
-        src={panel.url}
-        alt={panel.label || 'Hero banner'}
-        className={styles.heroMedia}
-        loading="eager"
-        fetchPriority="high"
-        decoding="async"
-      />
-    </>
-  );
+ return (
+  <>
+    <img
+      src={panel.url}
+      alt=""
+      aria-hidden="true"
+      className={styles.mediaBackdrop}
+    />
+    <img
+      src={panel.url}
+      alt={panel.label || 'Hero banner'}
+      className={styles.heroMedia}
+      loading="eager"
+      fetchPriority="high"
+      decoding="async"
+    />
+  </>
+);
 }
 
 export default function HeroBanner({ banners = [] }) {
   const rawSlides = banners.length > 0 ? banners : defaultBanners;
 
-  // ✅ THE ONLY FIX - removed .slice(0, 3) so ALL banners show
   const slides = useMemo(() => {
-    const themeKeys = Object.keys(themeMap); // ['orange', 'purple', 'peach']
-
+    const themeKeys = Object.keys(themeMap);
     return rawSlides.map((b, i) => {
-      const def = defaultBanners[i % defaultBanners.length];
+      const def = defaultBanners[0];
       const allPanels = b.panels?.length > 0 ? b.panels : def.panels;
       const bigPanel =
         allPanels.find((p) => p.isBig) || allPanels[0] || def.panels[0];
@@ -212,7 +171,6 @@ export default function HeroBanner({ banners = [] }) {
       return {
         ...def,
         ...b,
-        // ✅ Cycle through themes if more than 3 banners
         theme: b.theme || themeKeys[i % themeKeys.length],
         bigMedia: bigPanel,
       };
@@ -268,18 +226,14 @@ export default function HeroBanner({ banners = [] }) {
     return () => clearInterval(timer);
   }, [goNext, paused, autoplay, slides.length]);
 
-  // ✅ Reset to slide 0 if current index is out of range
   useEffect(() => {
-    if (current >= slides.length) {
-      setCurrent(0);
-    }
+    if (current >= slides.length) setCurrent(0);
   }, [slides.length, current]);
 
   const slide = slides[current];
-  const theme = themeMap[slide?.theme] || themeMap.orange;
+  const theme = themeMap[slide?.theme] || themeMap.cream;
   const media = slide?.bigMedia;
 
-  // ✅ Safety check
   if (!slide) return null;
 
   return (
@@ -293,63 +247,7 @@ export default function HeroBanner({ banners = [] }) {
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
-        <div
-          className={`${styles.contentPane} ${
-            animating ? styles.textOut : styles.textIn
-          }`}
-        >
-          <div className={styles.tagRow}>
-            <span
-              className={styles.tag}
-              style={{ background: theme.chipBg }}
-            >
-              <span className={styles.tagDot} />
-              {slide.tag}
-            </span>
-          </div>
-
-          <h1 className={styles.headline}>
-            {slide.title.split('\n').map((line, i) => (
-              <span key={i} className={i === 1 ? styles.headlineAccent : ''}>
-                {line}
-                {i === 0 && <br />}
-              </span>
-            ))}
-          </h1>
-
-          <p className={styles.subtitle}>{slide.subtitle}</p>
-
-          <div className={styles.ctaRow}>
-            <Link
-              href={slide.buttonLink || '/products'}
-              className={styles.btnPrimary}
-              style={{
-                background: theme.btnGrad,
-                boxShadow: `0 16px 40px ${theme.accentGlow}`,
-              }}
-            >
-              <span>{slide.buttonText || 'Shop Now'}</span>
-              <span className={styles.btnArrow}>→</span>
-            </Link>
-
-            <Link
-              href={slide.secondaryLink || '/products'}
-              className={styles.btnSecondary}
-            >
-              {slide.secondaryText || 'View Lookbook'}
-            </Link>
-          </div>
-
-          <div className={styles.statsRow}>
-            {slide.stats?.map((stat, i) => (
-              <div key={i} className={styles.statItem}>
-                <span className={styles.statNum}>{stat.number}</span>
-                <span className={styles.statLabel}>{stat.label}</span>
-              </div>
-            ))}
-          </div>
-        </div>
-
+        {/* LEFT — IMAGE/VIDEO (full bleed, no badges) */}
         <div
           className={`${styles.mediaPane} ${
             animating ? styles.mediaOut : styles.mediaIn
@@ -366,21 +264,89 @@ export default function HeroBanner({ banners = [] }) {
               muted={muted}
               onToggleMute={() => setMuted((m) => !m)}
             />
+          </Link>
+        </div>
 
-            {media?.label && (
-              <div
-                className={styles.mediaBadge}
-                style={{ background: theme.btnGrad }}
-              >
-                <span>{media.label}</span>
-                {media?.sublabel && (
-                  <small className={styles.mediaSubbadge}>
-                    {media.sublabel}
-                  </small>
-                )}
+        {/* RIGHT — TEXT CONTENT (cream panel with floating clouds) */}
+        <div
+          className={`${styles.contentPane} ${
+            animating ? styles.textOut : styles.textIn
+          }`}
+          style={{ background: theme.panelBg }}
+        >
+          {/* Floating decorative clouds + shapes */}
+          {/* Floating decorative clouds + shapes */}
+{/* ☁️ Clouds — exact positions from reference image */}
+<span className={`${styles.cloud} ${styles.cloud1}`} aria-hidden="true" />
+<span className={`${styles.cloud} ${styles.cloud2}`} aria-hidden="true" />
+<span className={`${styles.cloud} ${styles.cloud3}`} aria-hidden="true" />
+
+{/* 🌸 Pink/Peach decorative shapes — exact positions from reference */}
+<span className={`${styles.shape} ${styles.shape1}`} aria-hidden="true" />
+<span className={`${styles.shape} ${styles.shape2}`} aria-hidden="true" />
+<span className={`${styles.shape} ${styles.shape3}`} aria-hidden="true" />
+<span className={`${styles.shape} ${styles.shape4}`} aria-hidden="true" />
+<span className={`${styles.shape} ${styles.shape5}`} aria-hidden="true" />
+
+          <div className={styles.contentInner}>
+            {slide.tag && (
+              <div className={styles.tagRow}>
+                <span
+                  className={styles.tag}
+                  style={{ color: theme.titleColor }}
+                >
+                  <span
+                    className={styles.tagDot}
+                    style={{ background: theme.accentDot }}
+                  />
+                  {slide.tag}
+                </span>
               </div>
             )}
-          </Link>
+
+            <h1
+              className={styles.headline}
+              style={{ color: theme.titleColor }}
+            >
+              {slide.title.split('\n').map((line, i) => (
+                <span key={i} className={styles.headlineLine}>
+                  {line}
+                  {i === 0 && <br />}
+                </span>
+              ))}
+            </h1>
+
+            <p
+              className={styles.subtitle}
+              style={{ color: theme.subtitleColor }}
+            >
+              {slide.subtitle}
+            </p>
+
+            <div className={styles.ctaRow}>
+              <Link
+                href={slide.buttonLink || '/products'}
+                className={styles.btnPrimary}
+                style={{
+                  background: theme.btnPrimary,
+                  color: theme.btnPrimaryText,
+                }}
+              >
+                {slide.buttonText || 'Shop Now'}
+              </Link>
+
+              <Link
+                href={slide.secondaryLink || '/products'}
+                className={styles.btnSecondary}
+                style={{
+                  background: theme.btnSecondary,
+                  color: theme.btnSecondaryText,
+                }}
+              >
+                {slide.secondaryText || 'Explore Collection'}
+              </Link>
+            </div>
+          </div>
         </div>
 
         {slides.length > 1 && (
@@ -408,11 +374,7 @@ export default function HeroBanner({ banners = [] }) {
 
       {slides.length > 1 && (
         <div className={styles.controls} aria-label="Hero slider controls">
-          <div
-            className={styles.indicators}
-            role="tablist"
-            aria-label="Select slide"
-          >
+          <div className={styles.indicators} role="tablist">
             {slides.map((item, i) => (
               <button
                 key={item.id || i}
