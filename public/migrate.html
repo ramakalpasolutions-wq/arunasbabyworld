@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Migrate Refunds</title>
+  <meta charset="utf-8">
+</head>
+<body style="font-family: Arial; padding: 40px; max-width: 800px; margin: 0 auto; background: #f0f0f0;">
+  
+  <h1 style="color: #7B2FBE;">🔄 Migrate Old Refunds</h1>
+  <p style="color: #666;">Click button below to convert old return requests into Refund records.</p>
+  
+  <button 
+    onclick="runMigration()" 
+    style="padding: 16px 32px; background: linear-gradient(135deg, #FF6B35, #7B2FBE); color: white; border: none; border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer; box-shadow: 0 4px 12px rgba(123,47,190,0.3);">
+    🚀 Run Migration Now
+  </button>
+  
+  <div id="result" style="margin-top: 30px;"></div>
+  
+  <script>
+    async function runMigration() {
+      const resultDiv = document.getElementById('result');
+      resultDiv.innerHTML = '<div style="padding: 20px; background: #FEF3C7; border-radius: 8px; color: #92400E;">⏳ Running migration... please wait...</div>';
+      
+      try {
+        const res = await fetch('/api/migrate-refunds', { 
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' }
+        });
+        const data = await res.json();
+        
+        if (data.success) {
+          resultDiv.innerHTML = `
+            <div style="padding: 20px; background: #D1FAE5; border-radius: 8px; border: 2px solid #10B981;">
+              <h2 style="color: #065F46; margin: 0 0 12px;">✅ Migration Successful!</h2>
+              <p style="margin: 8px 0;"><strong>Total Scanned:</strong> ${data.totalScanned}</p>
+              <p style="margin: 8px 0;"><strong>Created:</strong> ${data.created}</p>
+              <p style="margin: 8px 0;"><strong>Failed:</strong> ${data.failed}</p>
+            </div>
+            <h3 style="margin-top: 20px; color: #333;">📋 Full Response:</h3>
+            <pre style="padding: 20px; background: white; border-radius: 8px; overflow: auto; font-size: 12px;">${JSON.stringify(data, null, 2)}</pre>
+            <div style="margin-top: 20px; padding: 16px; background: #DBEAFE; border-radius: 8px;">
+              <p style="margin: 0; color: #1E40AF; font-weight: bold;">
+                🎉 Now go to <a href="/admin/refunds" style="color: #7B2FBE;">/admin/refunds</a> to see all refunds!
+              </p>
+            </div>
+          `;
+        } else {
+          resultDiv.innerHTML = `
+            <div style="padding: 20px; background: #FEE2E2; border-radius: 8px; border: 2px solid #EF4444;">
+              <h2 style="color: #991B1B; margin: 0 0 12px;">❌ Migration Failed</h2>
+              <pre style="background: white; padding: 12px; border-radius: 6px;">${JSON.stringify(data, null, 2)}</pre>
+            </div>
+          `;
+        }
+      } catch (err) {
+        resultDiv.innerHTML = `
+          <div style="padding: 20px; background: #FEE2E2; border-radius: 8px; border: 2px solid #EF4444;">
+            <h2 style="color: #991B1B; margin: 0 0 12px;">❌ Error</h2>
+            <p>${err.message}</p>
+          </div>
+        `;
+      }
+    }
+  </script>
+</body>
+</html>
