@@ -5,11 +5,8 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 
-// ✅ Fail loud if secret missing
 if (!process.env.NEXTAUTH_SECRET) {
-  console.error('❌ CRITICAL: NEXTAUTH_SECRET is not set in .env file!');
-  console.error('   Run: node -e "console.log(require(\'crypto\').randomBytes(32).toString(\'base64\'))"');
-  console.error('   Add output to .env.local as NEXTAUTH_SECRET="..."');
+  console.error('❌ CRITICAL: NEXTAUTH_SECRET is not set!');
 }
 
 export const authOptions = {
@@ -38,6 +35,8 @@ export const authOptions = {
           const isValid = await bcrypt.compare(credentials.password, user.password);
           if (!isValid) throw new Error('Invalid password');
 
+          console.log('✅ Login successful for:', user.email);
+
           return {
             id:     user.id,
             name:   user.name,
@@ -61,6 +60,7 @@ export const authOptions = {
         token.avatar = user.avatar;
         token.name   = user.name;
         token.email  = user.email;
+        console.log('🔑 JWT created for:', user.email);
       }
 
       if (trigger === 'update' && session) {
@@ -91,19 +91,14 @@ export const authOptions = {
 
   session: {
     strategy:  'jwt',
-    maxAge:    30 * 24 * 60 * 60, // 30 days
-    updateAge: 24 * 60 * 60,      // 1 day
+    maxAge:    30 * 24 * 60 * 60,
+    updateAge: 24 * 60 * 60,
   },
 
-  jwt: {
-    maxAge: 30 * 24 * 60 * 60,
-  },
-
-  // ✅ CRITICAL — must match the secret used to encrypt cookies
   secret: process.env.NEXTAUTH_SECRET,
-
-  // ✅ Removed debug to reduce noise
-  debug: false,
+  
+  // ✅ Enable debug to see what's happening
+ debug: process.env.NODE_ENV === 'development',
 };
 
 const handler = NextAuth(authOptions);

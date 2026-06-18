@@ -12,7 +12,7 @@ const REASONS = [
   { label: 'Product damaged / defective', emoji: '💔' },
   { label: 'Quality issue — not as expected', emoji: '⚠️' },
   { label: 'Want different variant', emoji: '🔄' },
-  { label: 'Changed my mind', emoji: '💭' },
+  // { label: 'Changed my mind', emoji: '💭' },
   { label: 'Other', emoji: '✏️' },
 ];
 

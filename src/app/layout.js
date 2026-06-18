@@ -1,7 +1,6 @@
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { Toaster } from 'react-hot-toast';
-import SessionWrapper from '@/components/layout/SessionWrapper';
 import { CartProvider } from '@/context/CartContext';
 import { WishlistProvider } from '@/context/WishlistContext';
 import Providers from './providers';
@@ -10,13 +9,14 @@ import '@/styles/globals.css';
 export const metadata = {
   title: {
     default: 'Arunas Baby World',
-    template: '%s | BabyBliss',
+    template: '%s | Arunas Baby World',
   },
   description: 'Shop the best baby clothing, toys, gear, and more. Premium quality for your little ones.',
   keywords: ['baby products', 'kids clothing', 'toys', 'baby gear'],
 };
 
 export default async function RootLayout({ children }) {
+  // ✅ Get session on server side
   const session = await getServerSession(authOptions);
 
   return (
@@ -30,8 +30,8 @@ export default async function RootLayout({ children }) {
         />
       </head>
       <body suppressHydrationWarning={true}>
-         <Providers>
-        <SessionWrapper session={session}>
+        {/* ✅ Single Providers wrapper with session passed in */}
+        <Providers session={session}>
           <CartProvider>
             <WishlistProvider>
               {children}
@@ -50,7 +50,6 @@ export default async function RootLayout({ children }) {
               />
             </WishlistProvider>
           </CartProvider>
-        </SessionWrapper>
         </Providers>
       </body>
     </html>

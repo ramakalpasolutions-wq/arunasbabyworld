@@ -1196,7 +1196,7 @@ function ReturnModal({ order, onClose, onSuccess }) {
     { label: 'Product damaged / defective', emoji: '💔' },
     { label: 'Poor quality / not as described', emoji: '⭐' },
     { label: 'Missing parts / accessories', emoji: '🔧' },
-    { label: 'Changed my mind', emoji: '💭' },
+    // { label: 'Changed my mind', emoji: '💭' },
     { label: 'Other', emoji: '✏️' },
   ];
 

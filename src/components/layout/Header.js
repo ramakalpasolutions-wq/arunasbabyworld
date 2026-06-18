@@ -14,9 +14,9 @@ const CATEGORY_ORDER = [
 ];
 
 export default function Header() {
-  const { data: session }        = useSession();
-  const { totalItems }           = useCart();
-  const { items: wishlistItems } = useWishlist();
+  const { data: session, status } = useSession();
+  const { totalItems }            = useCart();
+  const { items: wishlistItems }  = useWishlist();
   const router = useRouter();
 
   const [scrolled,      setScrolled]      = useState(false);
@@ -32,6 +32,7 @@ export default function Header() {
   const profileRef = useRef(null);
   const searchRef  = useRef(null);
 
+  // ✅ Fetch categories
   useEffect(() => {
     setCatLoading(true);
     fetch('/api/categories?all=true')
@@ -46,12 +47,14 @@ export default function Header() {
       .finally(() => setCatLoading(false));
   }, []);
 
+  // ✅ Scroll listener
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  // ✅ Cart bounce animation
   useEffect(() => {
     if (totalItems > prevItems.current) {
       setCartBounce(true);
@@ -60,6 +63,7 @@ export default function Header() {
     prevItems.current = totalItems;
   }, [totalItems]);
 
+  // ✅ Close profile dropdown on outside click
   useEffect(() => {
     const handle = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
@@ -70,8 +74,10 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handle);
   }, []);
 
+  // ✅ Close mobile menu on route change
   useEffect(() => { setMobileOpen(false); }, [router]);
 
+  // ✅ Lock body scroll when mobile menu open
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
@@ -97,6 +103,17 @@ export default function Header() {
 
   const closeMobile = () => setMobileOpen(false);
 
+  // ✅ Session loading state
+// ✅ Smarter session detection
+const isLoadingSession = status === 'loading';
+const isLoggedIn = status === 'authenticated' && session && session.user;
+
+// ✅ DEBUG - Remove later
+useEffect(() => {
+  console.log('🔐 Session Status:', status);
+  console.log('👤 Session Data:', session);
+}, [status, session]);
+
   return (
     <header className={`${styles.header} ${scrolled ? styles.scrolled : ''}`}>
 
@@ -105,18 +122,16 @@ export default function Header() {
         <div className={`container ${styles.mainContent}`}>
 
           {/* Logo */}
-          {/* Logo */}
-{/* Logo */}
-<Link href="/" className={styles.logo} onClick={closeMobile}>
-  <Image
-    src="/logo.png"
-    alt="Aruna's Baby World"
-    width={200}
-    height={60}
-    priority
-    className={styles.logoImg}
-  />
-</Link>
+          <Link href="/" className={styles.logo} onClick={closeMobile}>
+            <Image
+              src="/logo.png"
+              alt="Aruna's Baby World"
+              width={200}
+              height={60}
+              priority
+              className={styles.logoImg}
+            />
+          </Link>
 
           {/* Search */}
           <form onSubmit={handleSearch} className={styles.searchForm}>
@@ -136,6 +151,7 @@ export default function Header() {
           {/* Actions */}
           <div className={styles.actions}>
 
+            {/* Wishlist */}
             <Link href="/wishlist" className={styles.actionBtn}>
               <span className={styles.actionIcon}>❤️</span>
               {wishlistItems.length > 0 && (
@@ -144,6 +160,7 @@ export default function Header() {
               <span className={styles.actionLabel}>Wishlist</span>
             </Link>
 
+            {/* Cart */}
             <Link
               href="/cart"
               className={`${styles.actionBtn} ${cartBounce ? styles.cartBounce : ''}`}
@@ -157,7 +174,20 @@ export default function Header() {
               <span className={styles.actionLabel}>Cart</span>
             </Link>
 
-            {session ? (
+            {/* ✅ Profile / Login / Loading */}
+            {isLoadingSession ? (
+              // ✅ Loading skeleton (prevents flicker on refresh)
+              <div className={styles.actionBtn} style={{ opacity: 0.6 }}>
+                <div
+                  className={styles.avatar}
+                  style={{
+                    background: 'linear-gradient(135deg, #E5E7EB, #D1D5DB)',
+                    animation: 'pulse 1.5s ease-in-out infinite',
+                  }}
+                />
+                <span className={styles.actionLabel}>Loading...</span>
+              </div>
+            ) : isLoggedIn ? (
               <div className={styles.profileWrap} ref={profileRef}>
                 <button
                   className={styles.actionBtn}
@@ -186,19 +216,35 @@ export default function Header() {
                       </div>
                     </div>
                     <div className={styles.profileDivider} />
-                    <Link href="/profile" className={styles.profileItem} onClick={() => setProfileOpen(false)}>
+                    <Link
+                      href="/profile"
+                      className={styles.profileItem}
+                      onClick={() => setProfileOpen(false)}
+                    >
                       <span>👤</span> My Profile
                     </Link>
-                    <Link href="/profile?tab=orders" className={styles.profileItem} onClick={() => setProfileOpen(false)}>
+                    <Link
+                      href="/profile?tab=orders"
+                      className={styles.profileItem}
+                      onClick={() => setProfileOpen(false)}
+                    >
                       <span>📦</span> My Orders
                     </Link>
-                    <Link href="/wishlist" className={styles.profileItem} onClick={() => setProfileOpen(false)}>
+                    <Link
+                      href="/wishlist"
+                      className={styles.profileItem}
+                      onClick={() => setProfileOpen(false)}
+                    >
                       <span>❤️</span> Wishlist
                     </Link>
                     {session.user.role === 'admin' && (
                       <>
                         <div className={styles.profileDivider} />
-                        <Link href="/admin/dashboard" className={`${styles.profileItem} ${styles.profileAdmin}`} onClick={() => setProfileOpen(false)}>
+                        <Link
+                          href="/admin/dashboard"
+                          className={`${styles.profileItem} ${styles.profileAdmin}`}
+                          onClick={() => setProfileOpen(false)}
+                        >
                           <span>⚙️</span> Admin Dashboard
                         </Link>
                       </>
@@ -206,7 +252,10 @@ export default function Header() {
                     <div className={styles.profileDivider} />
                     <button
                       className={`${styles.profileItem} ${styles.profileLogout}`}
-                      onClick={() => { setProfileOpen(false); signOut({ callbackUrl: '/' }); }}
+                      onClick={() => {
+                        setProfileOpen(false);
+                        signOut({ callbackUrl: '/' });
+                      }}
                     >
                       <span>🚪</span> Logout
                     </button>
@@ -295,7 +344,7 @@ export default function Header() {
       {mobileOpen && (
         <div className={styles.mobileMenu}>
 
-          {/* ✅ MOBILE MENU TOP BAR WITH BACK BUTTON */}
+          {/* Top Bar with Back Button */}
           <div className={styles.mobileMenuTop}>
             <button
               className={styles.mobileBackBtn}
@@ -315,6 +364,7 @@ export default function Header() {
             </button>
           </div>
 
+          {/* Mobile Search */}
           <div className={styles.mobileSearch}>
             <form onSubmit={handleSearch}>
               <div className={styles.searchBox}>
@@ -334,6 +384,7 @@ export default function Header() {
 
           <div className={styles.mobileLinks}>
 
+            {/* Categories */}
             <div className={styles.mobileCatSection}>
               <p className={styles.mobileCatTitle}>Shop by Category</p>
               {catLoading ? (
@@ -362,23 +413,45 @@ export default function Header() {
 
             <div className={styles.mobileDivider} />
 
+            {/* Quick Filters */}
             <div className={styles.mobileBtnGroup}>
-              <Link href="/products?featured=true" className={styles.mobilePill}
+              <Link
+                href="/products?featured=true"
+                className={styles.mobilePill}
                 style={{ background: 'linear-gradient(135deg,#FF6B35,#FF8C5A)' }}
-                onClick={closeMobile}>⭐ Featured</Link>
-              <Link href="/products?sort=createdAt&order=desc" className={styles.mobilePill}
+                onClick={closeMobile}
+              >
+                ⭐ Featured
+              </Link>
+              <Link
+                href="/products?sort=createdAt&order=desc"
+                className={styles.mobilePill}
                 style={{ background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)' }}
-                onClick={closeMobile}>✨ New</Link>
-              <Link href="/products?trending=true" className={styles.mobilePill}
+                onClick={closeMobile}
+              >
+                ✨ New
+              </Link>
+              <Link
+                href="/products?trending=true"
+                className={styles.mobilePill}
                 style={{ background: 'linear-gradient(135deg,#FF3366,#FF6B35)' }}
-                onClick={closeMobile}>🔥 Trending</Link>
-              <Link href="/contact" className={styles.mobilePill}
+                onClick={closeMobile}
+              >
+                🔥 Trending
+              </Link>
+              <Link
+                href="/contact"
+                className={styles.mobilePill}
                 style={{ background: 'linear-gradient(135deg,#0EA5E9,#7B2FBE)' }}
-                onClick={closeMobile}>📞 Contact</Link>
+                onClick={closeMobile}
+              >
+                📞 Contact
+              </Link>
             </div>
 
             <div className={styles.mobileDivider} />
 
+            {/* Cart & Wishlist */}
             <Link href="/cart" className={styles.mobileLink} onClick={closeMobile}>
               🛒 Cart {totalItems > 0 && `(${totalItems})`}
             </Link>
@@ -388,7 +461,29 @@ export default function Header() {
 
             <div className={styles.mobileDivider} />
 
-            {session ? (
+            {/* ✅ Profile / Login Section (Mobile) */}
+            {isLoadingSession ? (
+              <div
+                className={styles.mobileLink}
+                style={{
+                  opacity: 0.6,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                }}
+              >
+                <div
+                  style={{
+                    width: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: 'linear-gradient(135deg, #E5E7EB, #D1D5DB)',
+                    animation: 'pulse 1.5s ease-in-out infinite',
+                  }}
+                />
+                ⏳ Loading session...
+              </div>
+            ) : isLoggedIn ? (
               <>
                 <div className={styles.mobileUserCard}>
                   <div className={styles.mobileUserAvatar}>
@@ -408,8 +503,12 @@ export default function Header() {
                 </Link>
 
                 {session.user.role === 'admin' && (
-                  <Link href="/admin/dashboard" className={styles.mobileLink} onClick={closeMobile}
-                    style={{ color: '#7B2FBE', fontWeight: '800' }}>
+                  <Link
+                    href="/admin/dashboard"
+                    className={styles.mobileLink}
+                    onClick={closeMobile}
+                    style={{ color: '#7B2FBE', fontWeight: '800' }}
+                  >
                     ⚙️ Admin Dashboard
                   </Link>
                 )}
@@ -417,7 +516,10 @@ export default function Header() {
                 <button
                   className={styles.mobileLink}
                   style={{ color: '#ef4444' }}
-                  onClick={() => { signOut({ callbackUrl: '/' }); closeMobile(); }}
+                  onClick={() => {
+                    signOut({ callbackUrl: '/' });
+                    closeMobile();
+                  }}
                 >
                   🚪 Logout
                 </button>
@@ -435,6 +537,14 @@ export default function Header() {
           </div>
         </div>
       )}
+
+      {/* ✅ Pulse animation for loading skeleton */}
+      <style jsx>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 1; }
+          50% { opacity: 0.5; }
+        }
+      `}</style>
     </header>
   );
 }
