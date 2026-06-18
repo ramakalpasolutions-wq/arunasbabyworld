@@ -364,6 +364,38 @@ model Exchange {
   @@map("exchanges")
 }
 
+// ============================================================
+// ✅ REFUND MODEL — with 2-minute delay system
+// ============================================================
+model Refund {
+  id                String          @id @default(auto()) @map("_id") @db.ObjectId
+  orderId           String          @db.ObjectId
+  userId            String          @db.ObjectId
+  amount            Float
+  reason            String?
+  refundType        String          @default("razorpay")
+  // razorpay | upi_transfer | bank_transfer | not_required
+  
+  refundStatus      String          @default("pending")
+  // pending | scheduled | processing | completed | failed | cancelled
+  
+  razorpayRefundId  String?
+  razorpayPaymentId String?
+  bankDetails       BankDetailsType?
+  notes             String?
+  processedAt       DateTime?
+
+  // ✅ NEW: 2-minute delay fields
+  scheduledAt          DateTime?  // When refund will auto-trigger
+  scheduledCancelledAt DateTime?  // If admin cancelled before timer ran out
+  scheduledByAdmin     String?    // Which admin clicked the refund button
+
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@map("refunds")
+}
+
 type BankDetailsType {
   accountHolderName String?
   accountNumber     String?

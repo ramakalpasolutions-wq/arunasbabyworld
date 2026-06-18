@@ -444,56 +444,258 @@ export default function AdminRefundDetail({ params }) {
                 marginBottom: '14px',
               }}
             />
+{/* Action buttons */}
+{needsAction && (
+  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+    
+    {/* ✅ NEW: Transaction Reference Input */}
+    <div style={{
+      padding: '14px',
+      background: '#FFFBEB',
+      border: '1.5px solid #FDE68A',
+      borderRadius: '10px',
+      marginBottom: '8px',
+    }}>
+      <label style={{
+        display: 'block', fontSize: '0.74rem', fontWeight: '800',
+        color: '#92400E', marginBottom: '6px', textTransform: 'uppercase',
+        letterSpacing: '0.6px',
+      }}>
+        🔐 Transaction Reference (Required for Completion)
+      </label>
+      <input
+        type="text"
+        id="transactionRef"
+        placeholder={
+          isUPI ? 'UPI Reference (e.g. 123456789012)' :
+          isBank ? 'NEFT/IMPS Ref (e.g. N123456789)' :
+          'Razorpay Auto-Refund ID'
+        }
+        defaultValue={refund.razorpayRefundId || ''}
+        style={{
+          width: '100%',
+          padding: '10px 12px',
+          border: '1.5px solid #FDE68A',
+          borderRadius: '8px',
+          fontFamily: 'monospace',
+          fontSize: '0.86rem',
+          outline: 'none',
+          boxSizing: 'border-box',
+          color: '#78350F',
+          background: 'white',
+          fontWeight: '700',
+        }}
+      />
+      <p style={{ margin: '6px 0 0', fontSize: '0.74rem', color: '#92400E', fontWeight: '600' }}>
+        💡 {isUPI ? 'Get this from your UPI app after sending money' :
+             isBank ? 'Get this from your bank app after NEFT/IMPS' :
+             'Auto-filled from Razorpay'}
+      </p>
+    </div>
 
-            {/* Action buttons */}
-            {needsAction && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {refund.refundStatus === 'pending' && (
-                  <button
-                    onClick={() => handleStatusUpdate('processing')}
-                    disabled={updating}
-                    style={{
-                      width: '100%', padding: '12px',
-                      background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
-                      color: 'white', border: 'none', borderRadius: '10px',
-                      fontWeight: '800', fontSize: '0.9rem',
-                      cursor: 'pointer', fontFamily: 'inherit',
-                    }}
-                  >
-                    {updating ? '⏳ Updating...' : '⚙️ Mark as Processing'}
-                  </button>
-                )}
+    {refund.refundStatus === 'pending' && (
+      <button
+        onClick={() => handleStatusUpdate('processing')}
+        disabled={updating}
+        style={{
+          width: '100%', padding: '12px',
+          background: 'linear-gradient(135deg, #3B82F6, #2563EB)',
+          color: 'white', border: 'none', borderRadius: '10px',
+          fontWeight: '800', fontSize: '0.9rem',
+          cursor: 'pointer', fontFamily: 'inherit',
+        }}
+      >
+        {updating ? '⏳ Updating...' : '⚙️ Mark as Processing (Money Sent)'}
+      </button>
+    )}
 
-                <button
-                  onClick={() => handleStatusUpdate('completed')}
-                  disabled={updating}
-                  style={{
-                    width: '100%', padding: '12px',
-                    background: 'linear-gradient(135deg, #10B981, #059669)',
-                    color: 'white', border: 'none', borderRadius: '10px',
-                    fontWeight: '800', fontSize: '0.9rem',
-                    cursor: 'pointer', fontFamily: 'inherit',
-                  }}
-                >
-                  {updating ? '⏳ Updating...' : '✅ Mark as Completed'}
-                </button>
+    <button
+      onClick={() => {
+        const ref = document.getElementById('transactionRef').value;
+        if (!ref?.trim()) {
+          toast.error('Please enter transaction reference!');
+          return;
+        }
+        // Add transaction ref to notes
+        const fullNotes = `✅ Transaction Ref: ${ref}\n${notes || ''}`;
+        setNotes(fullNotes);
+        setTimeout(() => handleStatusUpdate('completed'), 100);
+      }}
+      disabled={updating}
+      style={{
+        width: '100%', padding: '12px',
+        background: 'linear-gradient(135deg, #10B981, #059669)',
+        color: 'white', border: 'none', borderRadius: '10px',
+        fontWeight: '800', fontSize: '0.9rem',
+        cursor: 'pointer', fontFamily: 'inherit',
+      }}
+    >
+      {updating ? '⏳ Updating...' : '✅ Confirm Money Sent & Mark Completed'}
+    </button>
 
-                <button
-                  onClick={() => handleStatusUpdate('failed')}
-                  disabled={updating}
-                  style={{
-                    width: '100%', padding: '12px',
-                    background: 'white', color: '#EF4444',
-                    border: '1.5px solid #FCA5A5', borderRadius: '10px',
-                    fontWeight: '800', fontSize: '0.9rem',
-                    cursor: 'pointer', fontFamily: 'inherit',
-                  }}
-                >
-                  ❌ Mark as Failed
-                </button>
-              </div>
-            )}
+    <button
+      onClick={() => handleStatusUpdate('failed')}
+      disabled={updating}
+      style={{
+        width: '100%', padding: '12px',
+        background: 'white', color: '#EF4444',
+        border: '1.5px solid #FCA5A5', borderRadius: '10px',
+        fontWeight: '800', fontSize: '0.9rem',
+        cursor: 'pointer', fontFamily: 'inherit',
+      }}
+    >
+      ❌ Mark as Failed
+    </button>
 
+    {/* ✅ NEW: Razorpay Dashboard Link */}
+    {isRazorpay && refund.razorpayRefundId && (
+      <a
+        href={`https://dashboard.razorpay.com/app/refunds/${refund.razorpayRefundId}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          width: '100%', padding: '12px',
+          background: '#F0F9FF', color: '#0369A1',
+          border: '1.5px solid #BAE6FD', borderRadius: '10px',
+          fontWeight: '800', fontSize: '0.86rem',
+          textDecoration: 'none', textAlign: 'center',
+          display: 'block', fontFamily: 'inherit',
+          boxSizing: 'border-box',
+        }}
+      >
+        🔗 View in Razorpay Dashboard →
+      </a>
+    )}
+  </div>
+)}
+
+{refund.refundStatus === 'completed' && (
+  <div>
+    <div style={{
+      padding: '20px',
+      background: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)',
+      border: '2px solid #10B981',
+      borderRadius: '12px', textAlign: 'center',
+      marginBottom: '14px',
+    }}>
+      <div style={{ fontSize: '3rem', marginBottom: '8px' }}>✅</div>
+      <p style={{ margin: 0, fontSize: '1.2rem', color: '#065F46', fontWeight: '900' }}>
+        Money Sent Successfully!
+      </p>
+      <p style={{ margin: '6px 0 0', fontSize: '0.82rem', color: '#047857', fontWeight: '700' }}>
+        Amount: ₹{refund.amount?.toLocaleString('en-IN')}
+      </p>
+      {refund.processedAt && (
+        <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: '#047857', fontWeight: '600' }}>
+          On {new Date(refund.processedAt).toLocaleDateString('en-IN', {
+            day: 'numeric', month: 'long', year: 'numeric',
+            hour: '2-digit', minute: '2-digit',
+          })}
+        </p>
+      )}
+    </div>
+
+    {/* ✅ NEW: Show transaction reference */}
+    {refund.notes && (
+      <div style={{
+        padding: '14px',
+        background: '#F0F9FF',
+        border: '1.5px solid #BAE6FD',
+        borderRadius: '10px',
+        marginBottom: '10px',
+      }}>
+        <p style={{ margin: '0 0 6px', fontSize: '0.72rem', fontWeight: '800', color: '#0369A1', textTransform: 'uppercase' }}>
+          🔐 Transaction Reference
+        </p>
+        <p style={{ margin: 0, fontSize: '0.84rem', color: '#075985', fontWeight: '700', whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
+          {refund.notes}
+        </p>
+      </div>
+    )}
+
+    {/* Verification checklist */}
+    <div style={{
+      padding: '14px',
+      background: '#FBF7FF',
+      border: '1.5px solid #EDD9FF',
+      borderRadius: '10px',
+    }}>
+      <p style={{ margin: '0 0 8px', fontSize: '0.84rem', fontWeight: '800', color: '#7B2FBE' }}>
+        📋 How to Verify Refund:
+      </p>
+      <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '0.78rem', color: '#6B4E8A', fontWeight: '600', lineHeight: 1.8 }}>
+        {isUPI && (
+          <>
+            <li>Check your <strong>UPI app</strong> for sent transaction</li>
+            <li>Check your <strong>bank statement</strong></li>
+            <li>Customer should receive money instantly</li>
+          </>
+        )}
+        {isBank && (
+          <>
+            <li>Check your <strong>bank app</strong> for NEFT/IMPS confirmation</li>
+            <li>Customer's bank will credit in 5-7 working days</li>
+            <li>Save reference number for records</li>
+          </>
+        )}
+        {isRazorpay && (
+          <>
+            <li>Check <strong>Razorpay Dashboard</strong></li>
+            <li>Refund will reflect in customer's account in 2-3 hours</li>
+            <li>Razorpay sends webhook updates automatically</li>
+          </>
+        )}
+      </ul>
+    </div>
+
+    {/* Razorpay Dashboard Link */}
+    {isRazorpay && refund.razorpayRefundId && (
+      <a
+        href={`https://dashboard.razorpay.com/app/refunds/${refund.razorpayRefundId}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        style={{
+          marginTop: '10px',
+          width: '100%', padding: '12px',
+          background: '#F0F9FF', color: '#0369A1',
+          border: '1.5px solid #BAE6FD', borderRadius: '10px',
+          fontWeight: '800', fontSize: '0.86rem',
+          textDecoration: 'none', textAlign: 'center',
+          display: 'block', fontFamily: 'inherit',
+          boxSizing: 'border-box',
+        }}
+      >
+        🔗 Verify in Razorpay Dashboard →
+      </a>
+    )}
+  </div>
+)}
+
+{refund.refundStatus === 'failed' && (
+  <div style={{
+    padding: '14px 16px',
+    background: '#FEE2E2', border: '1.5px solid #FCA5A5',
+    borderRadius: '10px', textAlign: 'center',
+  }}>
+    <p style={{ margin: 0, fontSize: '0.92rem', color: '#991B1B', fontWeight: '800' }}>
+      ❌ Refund Failed
+    </p>
+    <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: '#7F1D1D', fontWeight: '600' }}>
+      Money was NOT sent. Try again or contact customer.
+    </p>
+    <button
+      onClick={() => handleStatusUpdate('processing')}
+      style={{
+        marginTop: '10px',
+        padding: '8px 16px', background: '#3B82F6', color: 'white',
+        border: 'none', borderRadius: '8px', fontSize: '0.78rem',
+        fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit',
+      }}
+    >
+      🔄 Retry
+    </button>
+  </div>
+)}
             {refund.refundStatus === 'completed' && (
               <div style={{
                 padding: '14px 16px',
