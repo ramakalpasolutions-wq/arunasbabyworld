@@ -13,7 +13,7 @@ const STATUS_COLOR = {
   Shipped:          '#06b6d4',
   Delivered:        '#10b981',
   Cancelled:        '#ef4444',
-  Refunded:         '#6b7280',
+  Refunded:         '#10b981',
   Return_Requested: '#f97316',
 };
 
@@ -24,7 +24,7 @@ const STATUS_EMOJI = {
   Shipped:          '🚚',
   Delivered:        '🎉',
   Cancelled:        '❌',
-  Refunded:         '↩️',
+  Refunded:         '💰',
   Return_Requested: '🔄',
 };
 
@@ -38,25 +38,25 @@ export default function OrderDetailClient({ id }) {
 
   useEffect(() => { fetchOrder(); }, [id]);
 
-// ✅ NEW: Auto-refresh every 10 seconds to show live refund status
-useEffect(() => {
-  if (!order) return;
-  
-  // Only auto-refresh if refund is in progress
-  const needsRefresh = 
-    order.refundStatus === 'pending' ||
-    order.refundStatus === 'processing' ||
-    order.refundStatus === 'scheduled' ||
-    order.returnStatus === 'Pending';
-  
-  if (!needsRefresh) return;
-  
-  const interval = setInterval(() => {
-    fetchOrder();
-  }, 10000); // 10 seconds
-  
-  return () => clearInterval(interval);
-}, [order?.refundStatus, order?.returnStatus]);
+  // ✅ Auto-refresh every 10 seconds to show live refund/exchange status
+  useEffect(() => {
+    if (!order) return;
+    
+    const needsRefresh = 
+      order.refundStatus === 'pending' ||
+      order.refundStatus === 'processing' ||
+      order.refundStatus === 'scheduled' ||
+      order.returnStatus === 'Pending' ||
+      (order.exchangeId && !['completed', 'rejected', 'cancelled'].includes(order.exchangeStatus));
+    
+    if (!needsRefresh) return;
+    
+    const interval = setInterval(() => {
+      fetchOrder();
+    }, 10000);
+    
+    return () => clearInterval(interval);
+  }, [order?.refundStatus, order?.returnStatus, order?.exchangeStatus]);
 
   const fetchOrder = () => {
     fetch(`/api/orders/${id}`)
@@ -104,6 +104,7 @@ useEffect(() => {
   const currentStep = STATUS_STEPS.indexOf(order.orderStatus);
   const isCancelled = order.orderStatus === 'Cancelled' || order.orderStatus === 'Refunded';
   const isReturnRequested = order.orderStatus === 'Return_Requested' || !!order.returnRequest;
+  const hasExchange = !!order.exchangeId;
   const canCancel = !isCancelled && !isReturnRequested;
   const canReturn = (order.orderStatus === 'Delivered' || order.isDelivered) && !isReturnRequested && !isCancelled;
   const statusColor = STATUS_COLOR[order.orderStatus] || '#6b7280';
@@ -191,49 +192,49 @@ useEffect(() => {
             </button>
           )}
 
-         {canReturn && (
-  <Link
-    href={`/orders/${order.id}/refund`}
-    style={{
-      padding: '10px 18px', background: 'white',
-      color: '#7B2FBE', border: '2px solid #EDD9FF',
-      borderRadius: '12px', fontWeight: '800', fontSize: '0.88rem',
-      fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
-      textDecoration: 'none', display: 'inline-block',
-    }}
-    onMouseEnter={e => { e.currentTarget.style.background = '#F5EDFF'; e.currentTarget.style.borderColor = '#7B2FBE'; }}
-    onMouseLeave={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#EDD9FF'; }}
-  >
-    💰 Refund
-  </Link>
-)}
+          {canReturn && (
+            <Link
+              href={`/orders/${order.id}/refund`}
+              style={{
+                padding: '10px 18px', background: 'white',
+                color: '#7B2FBE', border: '2px solid #EDD9FF',
+                borderRadius: '12px', fontWeight: '800', fontSize: '0.88rem',
+                fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
+                textDecoration: 'none', display: 'inline-block',
+              }}
+              onMouseEnter={e => { e.currentTarget.style.background = '#F5EDFF'; e.currentTarget.style.borderColor = '#7B2FBE'; }}
+              onMouseLeave={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#EDD9FF'; }}
+            >
+              💰 Refund
+            </Link>
+          )}
 
-{/* ✅ NEW: Exchange button — 3-day window check */}
-{canReturn && (() => {
-  const deliveredAt = order.deliveredAt ? new Date(order.deliveredAt) : new Date(order.updatedAt);
-  const daysSince   = Math.floor((new Date() - deliveredAt) / (1000 * 60 * 60 * 24));
-  const within3Days = daysSince <= 3;
-  const noActiveExchange = !order.exchangeId || ['rejected', 'completed', 'cancelled'].includes(order.exchangeStatus);
+          {canReturn && (() => {
+            const deliveredAt = order.deliveredAt ? new Date(order.deliveredAt) : new Date(order.updatedAt);
+            const daysSince   = Math.floor((new Date() - deliveredAt) / (1000 * 60 * 60 * 24));
+            const within3Days = daysSince <= 3;
+            const noActiveExchange = !order.exchangeId || ['rejected', 'completed', 'cancelled'].includes(order.exchangeStatus);
 
-  if (!within3Days || !noActiveExchange) return null;
+            if (!within3Days || !noActiveExchange) return null;
 
-  return (
-    <Link
-      href={`/orders/${order.id}/exchange`}
-      style={{
-        padding: '10px 18px', background: 'white',
-        color: '#FF6B35', border: '2px solid #FFD4B8',
-        borderRadius: '12px', fontWeight: '800', fontSize: '0.88rem',
-        fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
-        textDecoration: 'none', display: 'inline-block',
-      }}
-      onMouseEnter={e => { e.currentTarget.style.background = '#FFF3E8'; e.currentTarget.style.borderColor = '#FF6B35'; }}
-      onMouseLeave={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#FFD4B8'; }}
-    >
-      🔄 Exchange
-    </Link>
-  );
-})()}
+            return (
+              <Link
+                href={`/orders/${order.id}/exchange`}
+                style={{
+                  padding: '10px 18px', background: 'white',
+                  color: '#FF6B35', border: '2px solid #FFD4B8',
+                  borderRadius: '12px', fontWeight: '800', fontSize: '0.88rem',
+                  fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
+                  textDecoration: 'none', display: 'inline-block',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.background = '#FFF3E8'; e.currentTarget.style.borderColor = '#FF6B35'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#FFD4B8'; }}
+              >
+                🔄 Exchange
+              </Link>
+            );
+          })()}
+
           {isReturnRequested && (
             <span style={{
               display: 'inline-flex', alignItems: 'center', gap: '6px',
@@ -271,103 +272,108 @@ useEffect(() => {
         </div>
       </div>
 
-     {isReturnRequested && order.returnRequest && (
-  <div style={{
-    background: order.refundStatus === 'completed' ? '#ECFDF5' : '#fff7ed',
-    border: `1.5px solid ${order.refundStatus === 'completed' ? '#10B981' : '#fed7aa'}`,
-    borderRadius: '20px',
-    padding: '20px 24px',
-    display: 'flex',
-    gap: '16px',
-    alignItems: 'flex-start',
-    marginBottom: '24px',
-  }}>
-    <span style={{ fontSize: '2rem' }}>
-      {order.refundStatus === 'completed' ? '✅' : '🔄'}
-    </span>
-    <div style={{ flex: 1 }}>
-      <strong style={{
-        color: order.refundStatus === 'completed' ? '#065F46' : '#f97316',
-        fontSize: '1rem',
-        display: 'block',
-        marginBottom: '4px',
-      }}>
-        {order.refundStatus === 'completed'
-          ? '✅ Refund Completed Successfully!'
-          : 'Return Request Submitted'}
-      </strong>
-
-      <p style={{
-        margin: 0,
-        fontSize: '0.85rem',
-        color: order.refundStatus === 'completed' ? '#047857' : '#9a3412',
-        lineHeight: 1.7,
-        fontWeight: '600',
-      }}>
-        Reason: {order.returnRequest.reason}
-        <br />
-        Refund via:{' '}
-        {order.returnRequest.refundMethod === 'upi'
-          ? `UPI — ${order.returnRequest.upiId}`
-          : `Bank Transfer — ${order.returnRequest.bankName || 'Bank Account'}`}
-        <br />
-
-        {/* ✅ Dynamic status based on actual refund status */}
-        {order.refundStatus === 'completed' && (
-          <span style={{ color: '#10B981', fontWeight: '800' }}>
-            ✅ Refund Completed — ₹
-            {order.refundAmount?.toLocaleString('en-IN') ||
-              order.totalPrice?.toLocaleString('en-IN')}{' '}
-            credited to your account
-          </span>
-        )}
-
-        {order.refundStatus === 'processing' && (
-          <span style={{ color: '#3B82F6', fontWeight: '800' }}>
-            ⚙️ Refund Processing — Money will reach you in 2-3 hours
-          </span>
-        )}
-
-        {order.refundStatus === 'scheduled' && (
-          <span style={{ color: '#F97316', fontWeight: '800' }}>
-            ⏱️ Refund Scheduled — Auto-processing soon
-          </span>
-        )}
-
-        {(!order.refundStatus || order.refundStatus === 'pending') && (
-          <span style={{ color: '#f97316', fontWeight: '700' }}>
-            Status: {order.returnRequest.status || 'Under Review'} — Refund within 5–7 business days after pickup.
-          </span>
-        )}
-
-        {order.refundStatus === 'failed' && (
-          <span style={{ color: '#EF4444', fontWeight: '800' }}>
-            ❌ Refund Failed — Please contact support
-          </span>
-        )}
-      </p>
-
-      {/* Show refund completion date if completed */}
-      {order.refundStatus === 'completed' && order.refundedAt && (
-        <p style={{
-          margin: '8px 0 0',
-          fontSize: '0.78rem',
-          color: '#047857',
-          fontWeight: '700',
-        }}>
-          🕒 Refunded on{' '}
-          {new Date(order.refundedAt).toLocaleDateString('en-IN', {
-            day: 'numeric',
-            month: 'long',
-            year: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-          })}
-        </p>
+      {/* ✅ EXCHANGE BANNER - Shows when order has an exchange */}
+      {hasExchange && (
+        <ExchangeStatusBanner orderId={order.id} exchangeId={order.exchangeId} />
       )}
-    </div>
-  </div>
-)}
+
+      {/* RETURN REQUEST BANNER */}
+      {isReturnRequested && order.returnRequest && (
+        <div style={{
+          background: order.refundStatus === 'completed' ? '#ECFDF5' : '#fff7ed',
+          border: `1.5px solid ${order.refundStatus === 'completed' ? '#10B981' : '#fed7aa'}`,
+          borderRadius: '20px',
+          padding: '20px 24px',
+          display: 'flex',
+          gap: '16px',
+          alignItems: 'flex-start',
+          marginBottom: '24px',
+        }}>
+          <span style={{ fontSize: '2rem' }}>
+            {order.refundStatus === 'completed' ? '✅' : '🔄'}
+          </span>
+          <div style={{ flex: 1 }}>
+            <strong style={{
+              color: order.refundStatus === 'completed' ? '#065F46' : '#f97316',
+              fontSize: '1rem',
+              display: 'block',
+              marginBottom: '4px',
+            }}>
+              {order.refundStatus === 'completed'
+                ? '✅ Refund Completed Successfully!'
+                : 'Return Request Submitted'}
+            </strong>
+
+            <p style={{
+              margin: 0,
+              fontSize: '0.85rem',
+              color: order.refundStatus === 'completed' ? '#047857' : '#9a3412',
+              lineHeight: 1.7,
+              fontWeight: '600',
+            }}>
+              Reason: {order.returnRequest.reason}
+              <br />
+              Refund via:{' '}
+              {order.returnRequest.refundMethod === 'upi'
+                ? `UPI — ${order.returnRequest.upiId}`
+                : `Bank Transfer — ${order.returnRequest.bankName || 'Bank Account'}`}
+              <br />
+
+              {order.refundStatus === 'completed' && (
+                <span style={{ color: '#10B981', fontWeight: '800' }}>
+                  ✅ Refund Completed — ₹
+                  {order.refundAmount?.toLocaleString('en-IN') ||
+                    order.totalPrice?.toLocaleString('en-IN')}{' '}
+                  credited to your account
+                </span>
+              )}
+
+              {order.refundStatus === 'processing' && (
+                <span style={{ color: '#3B82F6', fontWeight: '800' }}>
+                  ⚙️ Refund Processing — Money will reach you in 2-3 hours
+                </span>
+              )}
+
+              {order.refundStatus === 'scheduled' && (
+                <span style={{ color: '#F97316', fontWeight: '800' }}>
+                  ⏱️ Refund Scheduled — Auto-processing soon
+                </span>
+              )}
+
+              {(!order.refundStatus || order.refundStatus === 'pending') && (
+                <span style={{ color: '#f97316', fontWeight: '700' }}>
+                  Status: {order.returnRequest.status || 'Under Review'} — Refund within 5–7 business days after pickup.
+                </span>
+              )}
+
+              {order.refundStatus === 'failed' && (
+                <span style={{ color: '#EF4444', fontWeight: '800' }}>
+                  ❌ Refund Failed — Please contact support
+                </span>
+              )}
+            </p>
+
+            {order.refundStatus === 'completed' && order.refundedAt && (
+              <p style={{
+                margin: '8px 0 0',
+                fontSize: '0.78rem',
+                color: '#047857',
+                fontWeight: '700',
+              }}>
+                🕒 Refunded on{' '}
+                {new Date(order.refundedAt).toLocaleDateString('en-IN', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                  hour: '2-digit',
+                  minute: '2-digit',
+                })}
+              </p>
+            )}
+          </div>
+        </div>
+      )}
+
       {!isCancelled && !isReturnRequested && (
         <div style={{
           background: 'white', borderRadius: '24px',
@@ -462,15 +468,21 @@ useEffect(() => {
 
       {isCancelled && (
         <div style={{
-          background: '#FEF2F2', border: '1.5px solid #FCA5A5',
+          background: order.orderStatus === 'Refunded' ? '#ECFDF5' : '#FEF2F2',
+          border: `1.5px solid ${order.orderStatus === 'Refunded' ? '#10B981' : '#FCA5A5'}`,
           borderRadius: '20px', padding: '20px 24px',
           display: 'flex', gap: '14px', alignItems: 'flex-start',
           marginBottom: '24px',
         }}>
-          <span style={{ fontSize: '2rem' }}>❌</span>
+          <span style={{ fontSize: '2rem' }}>
+            {order.orderStatus === 'Refunded' ? '💰' : '❌'}
+          </span>
           <div style={{ flex: 1 }}>
-            <strong style={{ color: '#DC2626', fontSize: '1rem' }}>
-              Order {order.orderStatus}
+            <strong style={{
+              color: order.orderStatus === 'Refunded' ? '#065F46' : '#DC2626',
+              fontSize: '1rem',
+            }}>
+              {order.orderStatus === 'Refunded' ? '✅ Order Refunded' : `Order ${order.orderStatus}`}
             </strong>
             <p style={{ margin: '6px 0 0', fontSize: '0.88rem', color: '#6B7280' }}>
               {order.cancelReason && (
@@ -480,10 +492,10 @@ useEffect(() => {
                 <><span>Cancelled on: {new Date(order.cancelledAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span><br /></>
               )}
               {order.refundStatus === 'processing' && (
-                <span style={{ color: '#F59E0B', fontWeight: '700' }}>💰 Refund being processed — 5–7 business days</span>
+                <span style={{ color: '#3B82F6', fontWeight: '700' }}>⚙️ Refund Processing — Money will reach you in 2-3 hours</span>
               )}
               {order.refundStatus === 'completed' && (
-                <span style={{ color: '#10B981', fontWeight: '700' }}>✅ Refund completed — ₹{order.refundAmount?.toLocaleString('en-IN')}</span>
+                <span style={{ color: '#10B981', fontWeight: '800' }}>✅ Refund completed — ₹{order.refundAmount?.toLocaleString('en-IN')} credited to your account</span>
               )}
               {order.refundStatus === 'not_required' && (
                 <span style={{ color: '#6B7280', fontWeight: '600' }}>ℹ️ No refund needed (COD order)</span>
@@ -702,39 +714,39 @@ useEffect(() => {
                 >
                   🔄 Return Item
                 </button>
-               <Link
-  href={`/orders/${order.id}/refund`}
-  style={{
-    flex: 1, padding: '9px 10px',
-    background: 'white', color: '#7B2FBE',
-    border: '1.5px solid #EDD9FF',
-    borderRadius: '10px', fontWeight: '800', fontSize: '0.82rem',
-    fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
-    textDecoration: 'none', textAlign: 'center',
-  }}
->
-  💰 Refund
-</Link>
-{(() => {
-  const deliveredAt = order.deliveredAt ? new Date(order.deliveredAt) : new Date(order.updatedAt);
-  const daysSince   = Math.floor((new Date() - deliveredAt) / (1000 * 60 * 60 * 24));
-  if (daysSince > 3) return null;
-  return (
-    <Link
-      href={`/orders/${order.id}/exchange`}
-      style={{
-        flex: 1, padding: '9px 10px',
-        background: 'white', color: '#FF6B35',
-        border: '1.5px solid #FFD4B8',
-        borderRadius: '10px', fontWeight: '800', fontSize: '0.82rem',
-        fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
-        textDecoration: 'none', textAlign: 'center',
-      }}
-    >
-      🔄 Exchange
-    </Link>
-  );
-})()}
+                <Link
+                  href={`/orders/${order.id}/refund`}
+                  style={{
+                    flex: 1, padding: '9px 10px',
+                    background: 'white', color: '#7B2FBE',
+                    border: '1.5px solid #EDD9FF',
+                    borderRadius: '10px', fontWeight: '800', fontSize: '0.82rem',
+                    fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
+                    textDecoration: 'none', textAlign: 'center',
+                  }}
+                >
+                  💰 Refund
+                </Link>
+                {(() => {
+                  const deliveredAt = order.deliveredAt ? new Date(order.deliveredAt) : new Date(order.updatedAt);
+                  const daysSince   = Math.floor((new Date() - deliveredAt) / (1000 * 60 * 60 * 24));
+                  if (daysSince > 3) return null;
+                  return (
+                    <Link
+                      href={`/orders/${order.id}/exchange`}
+                      style={{
+                        flex: 1, padding: '9px 10px',
+                        background: 'white', color: '#FF6B35',
+                        border: '1.5px solid #FFD4B8',
+                        borderRadius: '10px', fontWeight: '800', fontSize: '0.82rem',
+                        fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
+                        textDecoration: 'none', textAlign: 'center',
+                      }}
+                    >
+                      🔄 Exchange
+                    </Link>
+                  );
+                })()}
               </div>
             </div>
           )}
@@ -774,6 +786,353 @@ useEffect(() => {
           }
         }
       `}</style>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════
+   ✅ EXCHANGE STATUS BANNER - Customer view
+══════════════════════════════════════════ */
+function ExchangeStatusBanner({ orderId, exchangeId }) {
+  const [exchange, setExchange] = useState(null);
+  const [loading, setLoading]   = useState(true);
+
+  useEffect(() => {
+    fetchExchange();
+    const interval = setInterval(fetchExchange, 10000);
+    return () => clearInterval(interval);
+  }, [exchangeId]);
+
+  const fetchExchange = async () => {
+    try {
+      const res  = await fetch(`/api/exchanges?limit=100`);
+      const data = await res.json();
+      const found = (data.exchanges || []).find(e => e.id === exchangeId);
+      if (found) setExchange(found);
+    } catch (err) {
+      console.error('Failed to fetch exchange:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (loading || !exchange) return null;
+
+  const STATUS_CONFIG = {
+    pending:          { label: 'Pending Approval',  color: '#F59E0B', bg: '#FEF3C7', icon: '🟡', desc: 'Waiting for admin approval' },
+    approved:         { label: 'Approved',          color: '#3B82F6', bg: '#DBEAFE', icon: '✅', desc: 'Pickup will be arranged soon' },
+    picked_up:        { label: 'Picked Up',         color: '#8B5CF6', bg: '#EDE9FE', icon: '📦', desc: 'On the way to our warehouse' },
+    received:         { label: 'Received',          color: '#6366F1', bg: '#E0E7FF', icon: '📬', desc: 'Item received, verifying...' },
+    verified:         { label: 'Verified',          color: '#10B981', bg: '#D1FAE5', icon: '🔍', desc: 'Quality check passed!' },
+    awaiting_payment: { label: 'Awaiting Payment',  color: '#F97316', bg: '#FFEDD5', icon: '💳', desc: 'Complete payment to continue' },
+    ready_to_ship:    { label: 'Ready to Ship',     color: '#10B981', bg: '#D1FAE5', icon: '🎁', desc: 'New product being packed' },
+    shipped:          { label: 'Shipped',           color: '#06B6D4', bg: '#CFFAFE', icon: '🚚', desc: 'New product on the way!' },
+    completed:        { label: 'Exchange Completed', color: '#10B981', bg: '#D1FAE5', icon: '🎉', desc: 'Exchange completed successfully!' },
+    rejected:         { label: 'Rejected',          color: '#EF4444', bg: '#FEE2E2', icon: '❌', desc: 'Exchange request rejected' },
+  };
+
+  const cfg = STATUS_CONFIG[exchange.status] || STATUS_CONFIG.pending;
+  const isCompleted = exchange.status === 'completed';
+  const isRejected  = exchange.status === 'rejected';
+
+  return (
+    <div style={{
+      background: isCompleted
+        ? 'linear-gradient(135deg, #ECFDF5, #D1FAE5)'
+        : isRejected
+          ? 'linear-gradient(135deg, #FEF2F2, #FEE2E2)'
+          : 'linear-gradient(135deg, #FFF3E8, #FFE4CC)',
+      border: `2px solid ${cfg.color}`,
+      borderRadius: '20px',
+      padding: '20px 24px',
+      marginBottom: '24px',
+      fontFamily: 'Nunito, sans-serif',
+    }}>
+      {/* Header */}
+      <div style={{
+        display: 'flex', alignItems: 'center', gap: '14px',
+        marginBottom: '16px', flexWrap: 'wrap',
+      }}>
+        <div style={{
+          width: '50px', height: '50px', borderRadius: '12px',
+          background: cfg.color,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          fontSize: '1.6rem', flexShrink: 0,
+        }}>
+          {cfg.icon}
+        </div>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <h3 style={{
+            margin: 0, fontSize: '1.1rem', fontWeight: '900',
+            color: cfg.color,
+          }}>
+            🔄 Exchange Request — {cfg.label}
+          </h3>
+          <p style={{ margin: '4px 0 0', fontSize: '0.86rem', color: '#6B4E8A', fontWeight: '600' }}>
+            {cfg.desc}
+          </p>
+        </div>
+        <span style={{
+          padding: '6px 14px',
+          background: 'white',
+          color: cfg.color,
+          border: `2px solid ${cfg.color}40`,
+          borderRadius: '999px',
+          fontSize: '0.78rem', fontWeight: '800',
+        }}>
+          #{exchange.id?.slice(-8).toUpperCase()}
+        </span>
+      </div>
+
+      {/* Product Comparison */}
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: '1fr auto 1fr',
+        gap: '12px',
+        alignItems: 'center',
+        marginBottom: '14px',
+      }}>
+        {/* OLD */}
+        <div style={{
+          padding: '12px',
+          background: 'white',
+          border: '1.5px solid #FCA5A5',
+          borderRadius: '12px',
+          textAlign: 'center',
+        }}>
+          <span style={{
+            display: 'inline-block', fontSize: '0.66rem', fontWeight: '800',
+            background: '#EF4444', color: 'white',
+            padding: '3px 10px', borderRadius: '999px', marginBottom: '8px',
+            textTransform: 'uppercase',
+          }}>
+            ↩️ Returned
+          </span>
+          <img
+            src={exchange.oldProductImage || 'https://via.placeholder.com/60'}
+            alt={exchange.oldProductName}
+            style={{
+              width: '60px', height: '60px',
+              objectFit: 'cover', borderRadius: '8px',
+              margin: '0 auto 6px', display: 'block',
+            }}
+          />
+          <p style={{
+            margin: '0 0 4px', fontSize: '0.78rem',
+            fontWeight: '700', color: '#7F1D1D',
+            overflow: 'hidden', textOverflow: 'ellipsis',
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+          }}>
+            {exchange.oldProductName}
+          </p>
+          <strong style={{ color: '#DC2626', fontSize: '0.92rem' }}>
+            ₹{exchange.oldPrice?.toLocaleString('en-IN')}
+          </strong>
+        </div>
+
+        <div style={{ fontSize: '2rem', color: cfg.color, fontWeight: '900' }}>→</div>
+
+        {/* NEW */}
+        <div style={{
+          padding: '12px',
+          background: 'white',
+          border: '1.5px solid #A7F3D0',
+          borderRadius: '12px',
+          textAlign: 'center',
+        }}>
+          <span style={{
+            display: 'inline-block', fontSize: '0.66rem', fontWeight: '800',
+            background: '#10B981', color: 'white',
+            padding: '3px 10px', borderRadius: '999px', marginBottom: '8px',
+            textTransform: 'uppercase',
+          }}>
+            📦 Replacing
+          </span>
+          <img
+            src={exchange.newProductImage || 'https://via.placeholder.com/60'}
+            alt={exchange.newProductName}
+            style={{
+              width: '60px', height: '60px',
+              objectFit: 'cover', borderRadius: '8px',
+              margin: '0 auto 6px', display: 'block',
+            }}
+          />
+          <p style={{
+            margin: '0 0 4px', fontSize: '0.78rem',
+            fontWeight: '700', color: '#065F46',
+            overflow: 'hidden', textOverflow: 'ellipsis',
+            display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+          }}>
+            {exchange.newProductName}
+          </p>
+          <strong style={{ color: '#10B981', fontSize: '0.92rem' }}>
+            ₹{exchange.newPrice?.toLocaleString('en-IN')}
+          </strong>
+        </div>
+      </div>
+
+      {/* Price Difference */}
+      {exchange.priceDifference !== 0 && (
+        <div style={{
+          padding: '10px 14px',
+          background: 'white',
+          border: `1.5px solid ${exchange.priceDifference > 0 ? '#FDE68A' : '#BFDBFE'}`,
+          borderRadius: '10px',
+          marginBottom: '12px',
+          display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+          flexWrap: 'wrap', gap: '8px',
+        }}>
+          <div>
+            <p style={{ margin: 0, fontSize: '0.78rem', fontWeight: '800', color: exchange.priceDifference > 0 ? '#92400E' : '#1E40AF' }}>
+              💰 Price Difference
+            </p>
+            <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: '#6B7280', fontWeight: '600' }}>
+              {exchange.priceDifference > 0
+                ? 'You paid extra for this exchange'
+                : 'Refunded to your original payment method'}
+            </p>
+          </div>
+          <strong style={{
+            fontSize: '1.1rem',
+            color: exchange.priceDifference > 0 ? '#F59E0B' : '#3B82F6',
+          }}>
+            {exchange.priceDifference > 0
+              ? `+ ₹${exchange.priceDifference.toLocaleString('en-IN')}`
+              : `− ₹${Math.abs(exchange.priceDifference).toLocaleString('en-IN')}`}
+          </strong>
+        </div>
+      )}
+
+      {/* Razorpay refund info */}
+      {exchange.razorpayRefundId && (
+        <div style={{
+          padding: '10px 14px',
+          background: '#ECFDF5',
+          border: '1.5px solid #A7F3D0',
+          borderRadius: '10px',
+          marginBottom: '12px',
+        }}>
+          <p style={{ margin: 0, fontSize: '0.82rem', color: '#065F46', fontWeight: '800' }}>
+            ✅ ₹{Math.abs(exchange.priceDifference)} refunded to your Razorpay account
+          </p>
+          <p style={{ margin: '4px 0 0', fontSize: '0.74rem', color: '#047857', fontWeight: '600', fontFamily: 'monospace' }}>
+            Ref: {exchange.razorpayRefundId}
+          </p>
+        </div>
+      )}
+
+      {/* Payment link */}
+      {exchange.status === 'awaiting_payment' && exchange.paymentLinkUrl && (
+        <a
+          href={exchange.paymentLinkUrl}
+          target="_blank" rel="noopener noreferrer"
+          style={{
+            display: 'block',
+            padding: '12px 20px',
+            background: 'linear-gradient(135deg, #F97316, #EA580C)',
+            color: 'white',
+            borderRadius: '10px',
+            textDecoration: 'none',
+            textAlign: 'center',
+            fontWeight: '800',
+            fontSize: '0.92rem',
+            marginBottom: '12px',
+          }}
+        >
+          💳 Pay ₹{exchange.priceDifference} Now to Continue →
+        </a>
+      )}
+
+      {/* Tracking */}
+      {(exchange.pickupTracking || exchange.shipmentTracking) && (
+        <div style={{ display: 'grid', gap: '8px', marginBottom: '12px' }}>
+          {exchange.pickupTracking && (
+            <div style={{
+              padding: '10px 14px', background: 'white',
+              border: '1px solid #DDD6FE', borderRadius: '10px',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              flexWrap: 'wrap', gap: '8px',
+            }}>
+              <span style={{ fontSize: '0.76rem', fontWeight: '700', color: '#6D28D9' }}>
+                📦 Pickup Tracking:
+              </span>
+              <code style={{ fontSize: '0.82rem', color: '#5B21B6', fontWeight: '800', fontFamily: 'monospace' }}>
+                {exchange.pickupTracking}
+              </code>
+            </div>
+          )}
+          {exchange.shipmentTracking && (
+            <div style={{
+              padding: '10px 14px', background: 'white',
+              border: '1px solid #A5F3FC', borderRadius: '10px',
+              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+              flexWrap: 'wrap', gap: '8px',
+            }}>
+              <span style={{ fontSize: '0.76rem', fontWeight: '700', color: '#0E7490' }}>
+                🚚 New Product Tracking:
+              </span>
+              <code style={{ fontSize: '0.82rem', color: '#155E75', fontWeight: '800', fontFamily: 'monospace' }}>
+                {exchange.shipmentTracking}
+              </code>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Rejection reason */}
+      {isRejected && exchange.rejectionReason && (
+        <div style={{
+          padding: '12px 14px',
+          background: '#FEE2E2',
+          border: '1.5px solid #FCA5A5',
+          borderRadius: '10px',
+          marginBottom: '12px',
+        }}>
+          <p style={{ margin: 0, fontSize: '0.86rem', fontWeight: '800', color: '#991B1B' }}>
+            ❌ Reason: {exchange.rejectionReason}
+          </p>
+        </div>
+      )}
+
+      {/* Completed celebration */}
+      {isCompleted && (
+        <div style={{
+          padding: '14px',
+          background: 'white',
+          border: '2px solid #10B981',
+          borderRadius: '10px',
+          textAlign: 'center',
+          marginBottom: '12px',
+        }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '6px' }}>🎉</div>
+          <p style={{ margin: 0, fontSize: '1rem', color: '#065F46', fontWeight: '900' }}>
+            Exchange Completed Successfully!
+          </p>
+          {exchange.completedAt && (
+            <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: '#047857', fontWeight: '700' }}>
+              Completed on {new Date(exchange.completedAt).toLocaleDateString('en-IN', {
+                day: 'numeric', month: 'long', year: 'numeric',
+              })}
+            </p>
+          )}
+        </div>
+      )}
+
+      {/* View full exchange link */}
+      <Link href="/orders/exchanges" style={{
+        display: 'block',
+        padding: '10px',
+        background: 'white',
+        color: cfg.color,
+        border: `1.5px solid ${cfg.color}40`,
+        borderRadius: '10px',
+        textDecoration: 'none',
+        textAlign: 'center',
+        fontWeight: '800',
+        fontSize: '0.86rem',
+      }}>
+        👁️ View Full Exchange Details →
+      </Link>
     </div>
   );
 }

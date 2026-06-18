@@ -73,12 +73,13 @@ function getExpectedDelivery(createdAt) {
 function OrderTrackingCard({ order }) {
   const [expanded, setExpanded] = useState(false);
 
-  const currentStep = STATUS_STEPS.indexOf(order.orderStatus);
-  const isCancelled = order.orderStatus === 'Cancelled' || order.orderStatus === 'Refunded';
-  const isDelivered = order.orderStatus === 'Delivered';
-  const color       = STATUS_COLOR[order.orderStatus] || '#888';
+ const currentStep = STATUS_STEPS.indexOf(order.orderStatus);
+const isCancelled = order.orderStatus === 'Cancelled' || order.orderStatus === 'Refunded';
+const isDelivered = order.orderStatus === 'Delivered';
+const color       = STATUS_COLOR[order.orderStatus] || '#888';
+const hasExchange = !!order.exchangeId; // ✅ NEW
 
-  const expected = getExpectedDelivery(order.createdAt);
+const expected = getExpectedDelivery(order.createdAt);
 
   return (
     <div style={{
@@ -183,7 +184,62 @@ function OrderTrackingCard({ order }) {
           </button>
         </div>
       </div>
-
+{/* ✅ NEW: Exchange Status Badge */}
+{hasExchange && (
+  <div style={{
+    margin: '0 20px',
+    marginTop: '14px',
+    padding: '10px 14px',
+    background: order.exchangeStatus === 'completed' 
+      ? 'linear-gradient(135deg, #ECFDF5, #D1FAE5)' 
+      : 'linear-gradient(135deg, #FFF3E8, #FFE4CC)',
+    border: `1.5px solid ${order.exchangeStatus === 'completed' ? '#10B981' : '#FF6B35'}`,
+    borderRadius: '10px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '10px',
+    flexWrap: 'wrap',
+  }}>
+    <span style={{ fontSize: '1.3rem' }}>
+      {order.exchangeStatus === 'completed' ? '🎉' : '🔄'}
+    </span>
+    <div style={{ flex: 1, minWidth: 0 }}>
+      <p style={{ 
+        margin: 0, 
+        fontSize: '0.84rem', 
+        fontWeight: '800', 
+        color: order.exchangeStatus === 'completed' ? '#065F46' : '#9A3412',
+      }}>
+        {order.exchangeStatus === 'completed' 
+          ? '✅ Exchange Completed!' 
+          : `🔄 Exchange in Progress — ${order.exchangeStatus?.replace(/_/g, ' ')}`}
+      </p>
+      <p style={{ 
+        margin: '2px 0 0', 
+        fontSize: '0.74rem', 
+        color: order.exchangeStatus === 'completed' ? '#047857' : '#7C2D12', 
+        fontWeight: '600',
+      }}>
+        {order.exchangeStatus === 'completed' 
+          ? 'New product delivered to you' 
+          : 'Click "View Details" to track exchange'}
+      </p>
+    </div>
+    <Link href="/orders/exchanges" style={{
+      padding: '6px 14px',
+      background: 'white',
+      color: order.exchangeStatus === 'completed' ? '#10B981' : '#FF6B35',
+      border: `1.5px solid ${order.exchangeStatus === 'completed' ? '#10B981' : '#FF6B35'}`,
+      borderRadius: '8px',
+      textDecoration: 'none',
+      fontWeight: '800',
+      fontSize: '0.76rem',
+      whiteSpace: 'nowrap',
+    }}>
+      🔄 View Exchange
+    </Link>
+  </div>
+)}
       {/* ── Items Preview ── */}
       <div style={{ padding: '14px 20px', borderBottom: `1px solid ${color}12`, display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: '6px' }}>
