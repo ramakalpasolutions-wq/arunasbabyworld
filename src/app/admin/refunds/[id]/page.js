@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect, use, useCallback } from 'react';
+import { useState, useEffect, use, useCallback, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 const STATUS_CONFIG = {
   pending:      { label: 'Pending',      color: '#F59E0B', bg: '#FEF3C7', icon: '🟡', desc: 'Waiting for action' },
-  scheduled:    { label: 'Scheduled',    color: '#F97316', bg: '#FFEDD5', icon: '⏱️', desc: 'Auto-refund scheduled' },
+  scheduled:    { label: 'Scheduled',    color: '#F97316', bg: '#FFEDD5', icon: '⏱️', desc: 'Auto-refund scheduled in 2 minutes' },
   processing:   { label: 'Processing',   color: '#3B82F6', bg: '#DBEAFE', icon: '⚙️', desc: 'Refund being processed' },
   completed:    { label: 'Completed',    color: '#10B981', bg: '#D1FAE5', icon: '✅', desc: 'Refund successfully sent' },
   failed:       { label: 'Failed',       color: '#EF4444', bg: '#FEE2E2', icon: '❌', desc: 'Refund failed' },
@@ -24,6 +24,7 @@ export default function AdminRefundDetail({ params }) {
   const [notes, setNotes]         = useState('');
   const [timeLeft, setTimeLeft]   = useState(null);
   const [autoProcessing, setAutoProcessing] = useState(false);
+  const processedRef = useRef(false);
 
   /* ── Fetch refund ── */
   const fetchRefund = useCallback(async () => {
@@ -50,6 +51,7 @@ export default function AdminRefundDetail({ params }) {
   useEffect(() => {
     if (!refund || refund.refundStatus !== 'scheduled' || !refund.scheduledAt) {
       setTimeLeft(null);
+      processedRef.current = false;
       return;
     }
 
@@ -57,10 +59,7 @@ export default function AdminRefundDetail({ params }) {
       const scheduledTime = new Date(refund.scheduledAt).getTime();
       const now = Date.now();
       const diff = scheduledTime - now;
-
-      if (diff <= 0) {
-        return 0;
-      }
+      if (diff <= 0) return 0;
       return Math.ceil(diff / 1000);
     };
 
@@ -70,8 +69,9 @@ export default function AdminRefundDetail({ params }) {
       const remaining = calculateTimeLeft();
       setTimeLeft(remaining);
 
-      // ✅ When timer hits 0 → trigger auto-process
-      if (remaining === 0 && !autoProcessing) {
+      // ✅ When timer hits 0 → trigger auto-process (only once!)
+      if (remaining === 0 && !autoProcessing && !processedRef.current) {
+        processedRef.current = true;
         setAutoProcessing(true);
         triggerAutoRefund();
       }
@@ -98,16 +98,18 @@ export default function AdminRefundDetail({ params }) {
       toast.dismiss('auto-refund');
 
       if (data.success) {
-        toast.success('✅ Refund processed!', { duration: 5000 });
-        if (data.razorpayResult?.success) {
-          setTimeout(() => {
-            toast.success(`💰 ₹${refund.amount} sent via Razorpay!`, { duration: 5000 });
-          }, 800);
+        if (data.isAlreadyRefunded) {
+          toast.success('✅ Money already refunded by Razorpay!', { duration: 5000 });
+        } else if (data.razorpayResult?.success) {
+          toast.success(`💰 ₹${refund.amount} sent via Razorpay!`, { duration: 5000 });
+        } else {
+          toast.success('✅ Refund processed!', { duration: 5000 });
         }
       } else {
         toast.error(data.message || 'Auto-refund failed');
       }
-      fetchRefund();
+      // Refresh data to show new status
+      setTimeout(() => fetchRefund(), 800);
     } catch (err) {
       toast.dismiss('auto-refund');
       toast.error('Error: ' + err.message);
@@ -133,6 +135,7 @@ export default function AdminRefundDetail({ params }) {
       if (!res.ok) throw new Error(data.error);
 
       toast.success('⏱️ Refund scheduled! Will auto-process in 2 minutes.', { duration: 5000 });
+      processedRef.current = false;
       fetchRefund();
     } catch (err) {
       toast.error(err.message);
@@ -158,6 +161,7 @@ export default function AdminRefundDetail({ params }) {
       if (!res.ok) throw new Error(data.error);
 
       toast.success('🛑 Schedule cancelled. Refund back to pending.');
+      processedRef.current = false;
       fetchRefund();
     } catch (err) {
       toast.error(err.message);
@@ -220,14 +224,14 @@ export default function AdminRefundDetail({ params }) {
     );
   }
 
-  const statusCfg     = STATUS_CONFIG[refund.refundStatus] || STATUS_CONFIG.pending;
-  const isUPI         = refund.refundType === 'upi_transfer';
-  const isBank        = refund.refundType === 'bank_transfer';
-  const isRazorpay    = refund.refundType === 'razorpay';
-  const isPending     = refund.refundStatus === 'pending';
-  const isScheduled   = refund.refundStatus === 'scheduled';
-  const isCompleted   = refund.refundStatus === 'completed';
-  const isFailed      = refund.refundStatus === 'failed';
+  const statusCfg   = STATUS_CONFIG[refund.refundStatus] || STATUS_CONFIG.pending;
+  const isUPI       = refund.refundType === 'upi_transfer';
+  const isBank      = refund.refundType === 'bank_transfer';
+  const isRazorpay  = refund.refundType === 'razorpay';
+  const isPending   = refund.refundStatus === 'pending';
+  const isScheduled = refund.refundStatus === 'scheduled';
+  const isCompleted = refund.refundStatus === 'completed';
+  const isFailed    = refund.refundStatus === 'failed';
 
   // Format timer
   const minutes = Math.floor((timeLeft || 0) / 60);
@@ -280,7 +284,7 @@ export default function AdminRefundDetail({ params }) {
           background: 'linear-gradient(135deg, #FFEDD5, #FED7AA)',
           border: '3px solid #F97316',
           borderRadius: '20px',
-          padding: '24px 28px',
+          padding: '28px',
           marginBottom: '24px',
           boxShadow: '0 10px 30px rgba(249,115,22,0.20)',
           animation: 'pulse 2s ease-in-out infinite',
@@ -297,17 +301,17 @@ export default function AdminRefundDetail({ params }) {
                 ⏱️ Auto-Refund Scheduled
               </p>
               <p style={{
-                margin: 0, fontSize: '3.5rem', fontWeight: '900',
+                margin: 0, fontSize: '4rem', fontWeight: '900',
                 color: '#EA580C', lineHeight: 1, fontFamily: 'monospace',
                 letterSpacing: '2px',
               }}>
                 {formattedTime}
               </p>
               <p style={{
-                margin: '8px 0 0', fontSize: '0.86rem',
+                margin: '10px 0 0', fontSize: '0.92rem',
                 color: '#7C2D12', fontWeight: '700',
               }}>
-                Razorpay will auto-refund ₹{refund.amount?.toLocaleString('en-IN')} in {minutes > 0 ? `${minutes} min ${seconds} sec` : `${seconds} seconds`}
+                ⚡ Razorpay will auto-refund <strong>₹{refund.amount?.toLocaleString('en-IN')}</strong> in {minutes > 0 ? `${minutes} min ${seconds} sec` : `${seconds} seconds`}
               </p>
             </div>
 
@@ -315,14 +319,14 @@ export default function AdminRefundDetail({ params }) {
               onClick={handleCancelSchedule}
               disabled={updating}
               style={{
-                padding: '16px 28px',
+                padding: '18px 30px',
                 background: 'white',
                 color: '#DC2626',
                 border: '2px solid #EF4444',
-                borderRadius: '12px',
-                fontWeight: '800', fontSize: '0.96rem',
+                borderRadius: '14px',
+                fontWeight: '800', fontSize: '1.05rem',
                 cursor: 'pointer', fontFamily: 'inherit',
-                boxShadow: '0 4px 12px rgba(239,68,68,0.2)',
+                boxShadow: '0 6px 18px rgba(239,68,68,0.25)',
               }}
             >
               🛑 Cancel Refund
@@ -331,8 +335,8 @@ export default function AdminRefundDetail({ params }) {
 
           {/* Progress bar */}
           <div style={{
-            marginTop: '20px',
-            height: '8px',
+            marginTop: '24px',
+            height: '10px',
             background: 'rgba(154,52,18,0.15)',
             borderRadius: '999px',
             overflow: 'hidden',
@@ -343,14 +347,15 @@ export default function AdminRefundDetail({ params }) {
               background: 'linear-gradient(90deg, #F97316, #EA580C)',
               borderRadius: '999px',
               transition: 'width 1s linear',
+              boxShadow: '0 0 10px rgba(249,115,22,0.5)',
             }} />
           </div>
 
           <p style={{
-            margin: '12px 0 0', fontSize: '0.78rem',
-            color: '#9A3412', fontWeight: '600', textAlign: 'center',
+            margin: '14px 0 0', fontSize: '0.82rem',
+            color: '#9A3412', fontWeight: '700', textAlign: 'center',
           }}>
-            💡 Click "Cancel Refund" within {seconds} seconds to stop the auto-refund
+            💡 Click "Cancel Refund" within the timer to stop the auto-refund
           </p>
         </div>
       )}
@@ -359,17 +364,17 @@ export default function AdminRefundDetail({ params }) {
       {isScheduled && timeLeft === 0 && (
         <div style={{
           background: 'linear-gradient(135deg, #DBEAFE, #BFDBFE)',
-          border: '2px solid #3B82F6',
+          border: '3px solid #3B82F6',
           borderRadius: '16px',
-          padding: '20px',
+          padding: '24px',
           marginBottom: '24px',
           textAlign: 'center',
         }}>
-          <div style={{ fontSize: '2rem', marginBottom: '8px' }}>⚡</div>
-          <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', color: '#1E40AF' }}>
+          <div style={{ fontSize: '3rem', marginBottom: '8px', animation: 'spin 1s linear infinite' }}>⚡</div>
+          <p style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900', color: '#1E40AF' }}>
             Auto-Processing Refund...
           </p>
-          <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#1E3A8A', fontWeight: '600' }}>
+          <p style={{ margin: '6px 0 0', fontSize: '0.88rem', color: '#1E3A8A', fontWeight: '600' }}>
             Calling Razorpay API now. Please wait...
           </p>
         </div>
@@ -460,7 +465,7 @@ export default function AdminRefundDetail({ params }) {
                 border: '1.5px solid #A7F3D0', borderRadius: '10px',
               }}>
                 <p style={{ margin: '0 0 6px', fontSize: '0.74rem', fontWeight: '800', color: '#065F46', textTransform: 'uppercase' }}>
-                  UPI ID
+                  UPI ID — Copy to send refund
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                   <code style={{
@@ -628,14 +633,17 @@ export default function AdminRefundDetail({ params }) {
             {isPending && (
               <>
                 <div style={{
-                  padding: '12px',
+                  padding: '14px',
                   background: '#FEF3C7',
                   border: '1px solid #FDE68A',
                   borderRadius: '10px',
-                  marginBottom: '12px',
+                  marginBottom: '14px',
                 }}>
-                  <p style={{ margin: 0, fontSize: '0.82rem', color: '#92400E', fontWeight: '700' }}>
+                  <p style={{ margin: 0, fontSize: '0.86rem', color: '#92400E', fontWeight: '700' }}>
                     💡 Click "Accept Return" to schedule auto-refund in 2 minutes
+                  </p>
+                  <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: '#A16207', fontWeight: '600' }}>
+                    You can cancel anytime within 2 minutes window
                   </p>
                 </div>
 
@@ -643,13 +651,13 @@ export default function AdminRefundDetail({ params }) {
                   onClick={handleAcceptReturn}
                   disabled={updating}
                   style={{
-                    width: '100%', padding: '14px',
+                    width: '100%', padding: '16px',
                     background: 'linear-gradient(135deg, #10B981, #059669)',
-                    color: 'white', border: 'none', borderRadius: '10px',
-                    fontWeight: '900', fontSize: '1rem',
+                    color: 'white', border: 'none', borderRadius: '12px',
+                    fontWeight: '900', fontSize: '1.05rem',
                     cursor: 'pointer', fontFamily: 'inherit',
                     marginBottom: '10px',
-                    boxShadow: '0 6px 18px rgba(16,185,129,0.30)',
+                    boxShadow: '0 8px 22px rgba(16,185,129,0.35)',
                   }}
                 >
                   {updating ? '⏳ Scheduling...' : '✅ Accept Return & Auto-Refund'}
@@ -686,8 +694,8 @@ export default function AdminRefundDetail({ params }) {
               </>
             )}
 
-            {/* SCHEDULED — Show cancel + info */}
-            {isScheduled && (
+            {/* SCHEDULED — Info */}
+            {isScheduled && timeLeft > 0 && (
               <div style={{
                 padding: '14px', background: '#FFEDD5',
                 border: '1.5px solid #FED7AA', borderRadius: '10px',
@@ -705,45 +713,48 @@ export default function AdminRefundDetail({ params }) {
             {/* COMPLETED */}
             {isCompleted && (
               <div style={{
-                padding: '20px', background: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)',
+                padding: '24px', background: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)',
                 border: '2px solid #10B981', borderRadius: '12px',
                 textAlign: 'center',
               }}>
-                <div style={{ fontSize: '3rem' }}>✅</div>
-                <p style={{ margin: '8px 0 0', fontSize: '1.1rem', color: '#065F46', fontWeight: '900' }}>
+                <div style={{ fontSize: '3.5rem' }}>✅</div>
+                <p style={{ margin: '8px 0 0', fontSize: '1.2rem', color: '#065F46', fontWeight: '900' }}>
                   Refund Completed!
                 </p>
                 {refund.processedAt && (
-                  <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: '#047857', fontWeight: '700' }}>
+                  <p style={{ margin: '6px 0 0', fontSize: '0.84rem', color: '#047857', fontWeight: '700' }}>
                     {new Date(refund.processedAt).toLocaleDateString('en-IN', {
                       day: 'numeric', month: 'long', year: 'numeric',
                       hour: '2-digit', minute: '2-digit',
                     })}
                   </p>
                 )}
+                <p style={{ margin: '12px 0 0', fontSize: '0.78rem', color: '#065F46', fontWeight: '600' }}>
+                  Customer received ₹{refund.amount?.toLocaleString('en-IN')}
+                </p>
               </div>
             )}
 
             {/* PROCESSING */}
             {refund.refundStatus === 'processing' && (
               <div style={{
-                padding: '20px', background: '#DBEAFE',
+                padding: '24px', background: '#DBEAFE',
                 border: '2px solid #3B82F6', borderRadius: '12px',
                 textAlign: 'center',
               }}>
                 <div style={{ fontSize: '3rem' }}>⚙️</div>
-                <p style={{ margin: '8px 0 0', fontSize: '1rem', color: '#1E40AF', fontWeight: '800' }}>
+                <p style={{ margin: '8px 0 0', fontSize: '1.05rem', color: '#1E40AF', fontWeight: '800' }}>
                   Razorpay Processing
                 </p>
-                <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: '#1E3A8A', fontWeight: '600' }}>
+                <p style={{ margin: '6px 0 0', fontSize: '0.82rem', color: '#1E3A8A', fontWeight: '600' }}>
                   Money will reach customer in 2-3 hours
                 </p>
                 <button
                   onClick={() => handleStatusUpdate('completed')}
                   style={{
-                    marginTop: '12px',
-                    padding: '8px 20px', background: '#10B981', color: 'white',
-                    border: 'none', borderRadius: '8px', fontSize: '0.82rem',
+                    marginTop: '14px',
+                    padding: '10px 24px', background: '#10B981', color: 'white',
+                    border: 'none', borderRadius: '10px', fontSize: '0.84rem',
                     fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit',
                   }}
                 >
@@ -755,25 +766,41 @@ export default function AdminRefundDetail({ params }) {
             {/* FAILED */}
             {isFailed && (
               <div style={{
-                padding: '14px', background: '#FEE2E2',
+                padding: '18px', background: '#FEE2E2',
                 border: '1.5px solid #FCA5A5', borderRadius: '10px',
                 textAlign: 'center',
               }}>
-                <div style={{ fontSize: '2rem' }}>❌</div>
+                <div style={{ fontSize: '2.5rem' }}>❌</div>
                 <p style={{ margin: '8px 0 0', fontSize: '0.96rem', color: '#991B1B', fontWeight: '800' }}>
                   Refund Failed
                 </p>
-                <button
-                  onClick={handleAcceptReturn}
-                  style={{
-                    marginTop: '10px',
-                    padding: '8px 20px', background: '#3B82F6', color: 'white',
-                    border: 'none', borderRadius: '8px', fontSize: '0.82rem',
-                    fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit',
-                  }}
-                >
-                  🔄 Retry Auto-Refund
-                </button>
+                {refund.notes && (
+                  <p style={{ margin: '6px 0 0', fontSize: '0.78rem', color: '#7F1D1D', fontWeight: '600' }}>
+                    {refund.notes}
+                  </p>
+                )}
+                <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap', justifyContent: 'center' }}>
+                  <button
+                    onClick={handleAcceptReturn}
+                    style={{
+                      padding: '8px 20px', background: '#3B82F6', color: 'white',
+                      border: 'none', borderRadius: '8px', fontSize: '0.82rem',
+                      fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                  >
+                    🔄 Retry Auto-Refund
+                  </button>
+                  <button
+                    onClick={() => handleStatusUpdate('completed')}
+                    style={{
+                      padding: '8px 20px', background: '#10B981', color: 'white',
+                      border: 'none', borderRadius: '8px', fontSize: '0.82rem',
+                      fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                  >
+                    ✅ Mark Completed
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -803,6 +830,10 @@ export default function AdminRefundDetail({ params }) {
         @keyframes pulse {
           0%, 100% { box-shadow: 0 10px 30px rgba(249,115,22,0.20); }
           50% { box-shadow: 0 10px 40px rgba(249,115,22,0.40); }
+        }
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
         }
         @media (max-width: 900px) {
           div[style*="grid-template-columns: 1.4fr 1fr"] {

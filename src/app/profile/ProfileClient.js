@@ -9,23 +9,25 @@ import styles from './profile.module.css';
 const STATUS_STEPS = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered'];
 
 const STATUS_COLOR = {
-  Pending:    '#f59e0b',
-  Confirmed:  '#3b82f6',
-  Processing: '#8b5cf6',
-  Shipped:    '#06b6d4',
-  Delivered:  '#10b981',
-  Cancelled:  '#ef4444',
-  Refunded:   '#6b7280',
+  Pending:          '#f59e0b',
+  Confirmed:        '#3b82f6',
+  Processing:       '#8b5cf6',
+  Shipped:          '#06b6d4',
+  Delivered:        '#10b981',
+  Cancelled:        '#ef4444',
+  Refunded:         '#10b981',
+  Return_Requested: '#f97316',
 };
 
 const STATUS_EMOJI = {
-  Pending:    '📋',
-  Confirmed:  '✅',
-  Processing: '⚙️',
-  Shipped:    '🚚',
-  Delivered:  '🎉',
-  Cancelled:  '❌',
-  Refunded:   '↩️',
+  Pending:          '📋',
+  Confirmed:        '✅',
+  Processing:       '⚙️',
+  Shipped:          '🚚',
+  Delivered:        '🎉',
+  Cancelled:        '❌',
+  Refunded:         '💰',
+  Return_Requested: '🔄',
 };
 
 const STATUS_DESC = {
@@ -207,19 +209,77 @@ function OrderTrackingCard({ order }) {
       {/* ── INLINE TRACKING TIMELINE ── */}
       <div style={{ padding: '18px 20px' }}>
 
-        {isCancelled ? (
-          <div style={{ padding: '14px 18px', background: '#FEF2F2', border: '1.5px solid #FCA5A5', borderRadius: '14px', display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-            <span style={{ fontSize: '1.5rem' }}>❌</span>
-            <div>
-              <strong style={{ color: '#DC2626', fontSize: '0.90rem' }}>Order {order.orderStatus}</strong>
-              <p style={{ margin: '4px 0 0', fontSize: '0.80rem', color: '#6B7280', fontWeight: '500' }}>
-                {order.orderStatus === 'Refunded'
-                  ? 'Refund will be processed within 5–7 business days.'
-                  : 'Your order has been cancelled.'}
-              </p>
-            </div>
-          </div>
-        ) : (
+   {isCancelled ? (
+  <div style={{
+    padding: '14px 18px',
+    background: order.orderStatus === 'Refunded' ? '#ECFDF5' : '#FEF2F2',
+    border: `1.5px solid ${order.orderStatus === 'Refunded' ? '#10B981' : '#FCA5A5'}`,
+    borderRadius: '14px',
+    display: 'flex', gap: '12px', alignItems: 'flex-start',
+  }}>
+    <span style={{ fontSize: '1.5rem' }}>
+      {order.orderStatus === 'Refunded' ? '💰' : '✅'}
+    </span>
+    <div style={{ flex: 1 }}>
+      <strong style={{
+        color: order.orderStatus === 'Refunded' ? '#065F46' : '#DC2626',
+        fontSize: '0.95rem',
+      }}>
+        {order.orderStatus === 'Refunded' ? '✅ Order Refunded' : `Order ${order.orderStatus}`}
+      </strong>
+      {order.orderStatus === 'Refunded' && order.refundAmount && (
+        <p style={{
+          margin: '6px 0 0', fontSize: '0.88rem',
+          color: '#065F46', fontWeight: '800',
+        }}>
+          💵 Refunded: ₹{order.refundAmount.toLocaleString('en-IN')}
+        </p>
+      )}
+      {order.refundStatus === 'completed' && (
+        <p style={{
+          margin: '4px 0 0', fontSize: '0.82rem',
+          color: '#047857', fontWeight: '700',
+        }}>
+          ✅ Money credited to your account
+        </p>
+      )}
+      {order.refundStatus === 'processing' && (
+        <p style={{
+          margin: '4px 0 0', fontSize: '0.82rem',
+          color: '#1E40AF', fontWeight: '700',
+        }}>
+          ⚙️ Refund processing — will reach you in 2-3 hours
+        </p>
+      )}
+      {order.refundStatus === 'scheduled' && (
+        <p style={{
+          margin: '4px 0 0', fontSize: '0.82rem',
+          color: '#EA580C', fontWeight: '700',
+        }}>
+          ⏱️ Refund scheduled — processing soon
+        </p>
+      )}
+      {order.refundStatus === 'pending' && (
+        <p style={{
+          margin: '4px 0 0', fontSize: '0.82rem',
+          color: '#92400E', fontWeight: '700',
+        }}>
+          🟡 Refund being processed — 5-7 business days
+        </p>
+      )}
+      {!order.refundStatus && (
+        <p style={{
+          margin: '4px 0 0', fontSize: '0.80rem',
+          color: '#6B7280', fontWeight: '500',
+        }}>
+          {order.orderStatus === 'Refunded'
+            ? 'Refund will be processed within 5-7 business days.'
+            : 'Your order has been cancelled.'}
+        </p>
+      )}
+    </div>
+  </div>
+) : (
           <>
             {/* HORIZONTAL STEP TRACKER */}
             <div style={{ marginBottom: '14px' }}>
@@ -554,6 +614,16 @@ export default function ProfileClient() {
       setOrdersLoading(false);
     }
   };
+  // ✅ NEW: Auto-refresh orders every 10 seconds to show live refund status
+useEffect(() => {
+  if (status !== 'authenticated' || activeTab !== 'orders') return;
+  
+  const interval = setInterval(() => {
+    fetchOrders();
+  }, 10000); // refresh every 10 seconds
+  
+  return () => clearInterval(interval);
+}, [status, activeTab]);
 
   const handleSave = async (e) => {
     e.preventDefault();

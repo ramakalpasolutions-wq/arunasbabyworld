@@ -47,7 +47,12 @@ export async function POST(request) {
 
     let razorpayResult = null;
     let finalStatus = 'completed';
+    let isAlreadyRefunded = false;
+    let successMessage = '';
 
+    /* ══════════════════════════════════════════
+       TRY RAZORPAY AUTO REFUND
+    ══════════════════════════════════════════ */
     if (order.paymentMethod === 'Razorpay' && order.isPaid && refund.razorpayPaymentId) {
       console.log(`⚡ Triggering Razorpay refund for: ${refund.razorpayPaymentId}`);
 
@@ -62,38 +67,69 @@ export async function POST(request) {
 
       if (razorpayResult.success) {
         finalStatus = 'processing';
-        console.log(`✅ Razorpay refund triggered: ${razorpayResult.refund.id}`);
+        successMessage = `Razorpay refund triggered: ${razorpayResult.refund.id}`;
+        console.log(`✅ ${successMessage}`);
       } else {
-        finalStatus = 'failed';
-        console.error('❌ Razorpay refund failed:', razorpayResult.error);
+        // ✅ KEY FIX: Check if payment was ALREADY refunded
+        const errorMsg = razorpayResult.error?.toLowerCase() || '';
+        
+        if (errorMsg.includes('already') || errorMsg.includes('fully refunded')) {
+          // Payment was already refunded earlier → MARK AS COMPLETED!
+          finalStatus = 'completed';
+          isAlreadyRefunded = true;
+          successMessage = '✅ Payment was already refunded earlier. Marking as completed.';
+          console.log(`✅ ${successMessage}`);
+        } else {
+          // Real failure
+          finalStatus = 'failed';
+          console.error('❌ Razorpay refund failed:', razorpayResult.error);
+        }
       }
     } else {
+      // COD/manual refunds - just mark as completed
       finalStatus = 'completed';
+      successMessage = 'Manual refund - marked as completed';
     }
 
+    // Build notes
+    let notesMessage;
+    if (isAlreadyRefunded) {
+      notesMessage = `✅ Already refunded by Razorpay earlier. Customer received money.`;
+    } else if (razorpayResult?.success) {
+      notesMessage = `Auto-refund triggered. Razorpay ID: ${razorpayResult.refund.id}`;
+    } else if (razorpayResult?.error && finalStatus === 'failed') {
+      notesMessage = `Auto-refund failed: ${razorpayResult.error}`;
+    } else {
+      notesMessage = `Auto-processed at ${now.toLocaleString('en-IN')}`;
+    }
+
+    // Update refund record
     const updated = await prisma.refund.update({
       where: { id: refundId },
       data: {
         refundStatus: finalStatus,
         processedAt: now,
         razorpayRefundId: razorpayResult?.refund?.id || refund.razorpayRefundId,
-        notes: razorpayResult?.success
-          ? `Auto-refund triggered. Razorpay ID: ${razorpayResult.refund.id}`
-          : razorpayResult?.error
-          ? `Auto-refund failed: ${razorpayResult.error}`
-          : `Auto-processed at ${now.toLocaleString('en-IN')}`,
+        notes: notesMessage,
       },
     });
 
+    // Update order
     await prisma.order.update({
       where: { id: refund.orderId },
       data: {
         refundStatus: finalStatus,
-        ...(finalStatus === 'completed' && { refundedAt: now, orderStatus: 'Refunded' }),
-        ...(finalStatus === 'processing' && { orderStatus: 'Refunded' }),
+        ...(finalStatus === 'completed' && {
+          refundedAt: now,
+          orderStatus: 'Refunded',
+        }),
+        ...(finalStatus === 'processing' && {
+          orderStatus: 'Refunded',
+        }),
       },
     });
 
+    // Send email (only if not failed)
     if (order.user?.email && finalStatus !== 'failed') {
       try {
         await sendRefundProcessed(
@@ -115,11 +151,9 @@ export async function POST(request) {
 
     return NextResponse.json({
       success: true,
-      message: razorpayResult?.success
-        ? 'Refund triggered via Razorpay'
-        : finalStatus === 'failed'
-        ? 'Refund failed'
-        : 'Refund processed',
+      message: successMessage || 'Refund processed',
+      isAlreadyRefunded,
+      finalStatus,
       refund: updated,
       razorpayResult,
     });

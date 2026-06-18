@@ -38,6 +38,26 @@ export default function OrderDetailClient({ id }) {
 
   useEffect(() => { fetchOrder(); }, [id]);
 
+// ✅ NEW: Auto-refresh every 10 seconds to show live refund status
+useEffect(() => {
+  if (!order) return;
+  
+  // Only auto-refresh if refund is in progress
+  const needsRefresh = 
+    order.refundStatus === 'pending' ||
+    order.refundStatus === 'processing' ||
+    order.refundStatus === 'scheduled' ||
+    order.returnStatus === 'Pending';
+  
+  if (!needsRefresh) return;
+  
+  const interval = setInterval(() => {
+    fetchOrder();
+  }, 10000); // 10 seconds
+  
+  return () => clearInterval(interval);
+}, [order?.refundStatus, order?.returnStatus]);
+
   const fetchOrder = () => {
     fetch(`/api/orders/${id}`)
       .then(r => r.json())
@@ -251,34 +271,103 @@ export default function OrderDetailClient({ id }) {
         </div>
       </div>
 
-      {isReturnRequested && order.returnRequest && (
-        <div style={{
-          background: '#fff7ed', border: '1.5px solid #fed7aa',
-          borderRadius: '20px', padding: '20px 24px',
-          display: 'flex', gap: '16px', alignItems: 'flex-start',
-          marginBottom: '24px',
-        }}>
-          <span style={{ fontSize: '2rem' }}>🔄</span>
-          <div style={{ flex: 1 }}>
-            <strong style={{ color: '#f97316', fontSize: '1rem', display: 'block', marginBottom: '4px' }}>
-              Return Request Submitted
-            </strong>
-            <p style={{ margin: 0, fontSize: '0.85rem', color: '#9a3412', lineHeight: 1.7, fontWeight: '600' }}>
-              Reason: {order.returnRequest.reason}<br />
-              Refund via:{' '}
-              {order.returnRequest.refundMethod === 'upi'
-                ? `UPI — ${order.returnRequest.upiId}`
-                : `Bank Transfer — ${order.returnRequest.bankName || 'Bank Account'}`
-              }<br />
-              <span style={{ color: '#f97316' }}>
-                Status: {order.returnRequest.status || 'Under Review'} —
-                Refund within 5–7 business days after pickup.
-              </span>
-            </p>
-          </div>
-        </div>
-      )}
+     {isReturnRequested && order.returnRequest && (
+  <div style={{
+    background: order.refundStatus === 'completed' ? '#ECFDF5' : '#fff7ed',
+    border: `1.5px solid ${order.refundStatus === 'completed' ? '#10B981' : '#fed7aa'}`,
+    borderRadius: '20px',
+    padding: '20px 24px',
+    display: 'flex',
+    gap: '16px',
+    alignItems: 'flex-start',
+    marginBottom: '24px',
+  }}>
+    <span style={{ fontSize: '2rem' }}>
+      {order.refundStatus === 'completed' ? '✅' : '🔄'}
+    </span>
+    <div style={{ flex: 1 }}>
+      <strong style={{
+        color: order.refundStatus === 'completed' ? '#065F46' : '#f97316',
+        fontSize: '1rem',
+        display: 'block',
+        marginBottom: '4px',
+      }}>
+        {order.refundStatus === 'completed'
+          ? '✅ Refund Completed Successfully!'
+          : 'Return Request Submitted'}
+      </strong>
 
+      <p style={{
+        margin: 0,
+        fontSize: '0.85rem',
+        color: order.refundStatus === 'completed' ? '#047857' : '#9a3412',
+        lineHeight: 1.7,
+        fontWeight: '600',
+      }}>
+        Reason: {order.returnRequest.reason}
+        <br />
+        Refund via:{' '}
+        {order.returnRequest.refundMethod === 'upi'
+          ? `UPI — ${order.returnRequest.upiId}`
+          : `Bank Transfer — ${order.returnRequest.bankName || 'Bank Account'}`}
+        <br />
+
+        {/* ✅ Dynamic status based on actual refund status */}
+        {order.refundStatus === 'completed' && (
+          <span style={{ color: '#10B981', fontWeight: '800' }}>
+            ✅ Refund Completed — ₹
+            {order.refundAmount?.toLocaleString('en-IN') ||
+              order.totalPrice?.toLocaleString('en-IN')}{' '}
+            credited to your account
+          </span>
+        )}
+
+        {order.refundStatus === 'processing' && (
+          <span style={{ color: '#3B82F6', fontWeight: '800' }}>
+            ⚙️ Refund Processing — Money will reach you in 2-3 hours
+          </span>
+        )}
+
+        {order.refundStatus === 'scheduled' && (
+          <span style={{ color: '#F97316', fontWeight: '800' }}>
+            ⏱️ Refund Scheduled — Auto-processing soon
+          </span>
+        )}
+
+        {(!order.refundStatus || order.refundStatus === 'pending') && (
+          <span style={{ color: '#f97316', fontWeight: '700' }}>
+            Status: {order.returnRequest.status || 'Under Review'} — Refund within 5–7 business days after pickup.
+          </span>
+        )}
+
+        {order.refundStatus === 'failed' && (
+          <span style={{ color: '#EF4444', fontWeight: '800' }}>
+            ❌ Refund Failed — Please contact support
+          </span>
+        )}
+      </p>
+
+      {/* Show refund completion date if completed */}
+      {order.refundStatus === 'completed' && order.refundedAt && (
+        <p style={{
+          margin: '8px 0 0',
+          fontSize: '0.78rem',
+          color: '#047857',
+          fontWeight: '700',
+        }}>
+          🕒 Refunded on{' '}
+          {new Date(order.refundedAt).toLocaleDateString('en-IN', {
+            day: 'numeric',
+            month: 'long',
+            year: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit',
+          })}
+        </p>
+      )}
+    </div>
+  </div>
+)}
       {!isCancelled && !isReturnRequested && (
         <div style={{
           background: 'white', borderRadius: '24px',
