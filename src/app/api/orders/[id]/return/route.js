@@ -90,12 +90,10 @@ export async function POST(request, { params }) {
     };
 
     /* ══════════════════════════════════════════
-       AUTO RAZORPAY REFUND — if paid online
-       No admin action needed!
+       STEP 1: TRY RAZORPAY AUTO REFUND first (if applicable)
     ══════════════════════════════════════════ */
     let razorpayRefundResult = null;
     let refundSpeed = 'normal';
-    let refundRecord = null;
 
     if (order.isPaid && order.paymentMethod === 'Razorpay') {
       const paymentId = order.paymentResult?.razorpayPaymentId;
@@ -110,26 +108,68 @@ export async function POST(request, { params }) {
         if (razorpayRefundResult.success) {
           refundSpeed = razorpayRefundResult.speed || 'optimum';
           console.log(`✅ Razorpay refund created: ${razorpayRefundResult.refund.id} | Speed: ${refundSpeed}`);
-
-          // Save refund record
-          refundRecord = await prisma.refund.create({
-            data: {
-              orderId: order.id,
-              userId: order.userId,
-              amount: order.totalPrice,
-              reason: reason || 'Customer return/refund',
-              refundType: 'razorpay',
-              refundStatus: 'processing',
-              razorpayRefundId: razorpayRefundResult.refund.id,
-              razorpayPaymentId: paymentId,
-            },
-          });
         } else {
           console.error('❌ Auto refund failed:', razorpayRefundResult.error);
-          // Don't block — still save return request, admin can process manually
         }
       }
     }
+
+    /* ══════════════════════════════════════════
+       ✅ STEP 2: ALWAYS CREATE REFUND RECORD (KEY FIX!)
+       This ensures admin can see ALL refund requests
+    ══════════════════════════════════════════ */
+    
+    // Determine refund type based on method + payment
+    let refundType;
+    let refundStatus;
+    
+    if (razorpayRefundResult?.success) {
+      // Razorpay auto-refund succeeded
+      refundType   = 'razorpay';
+      refundStatus = 'processing';
+    } else if (refundMethod === 'upi') {
+      // Manual UPI refund needed
+      refundType   = 'upi_transfer';
+      refundStatus = 'pending';
+    } else {
+      // Manual Bank refund needed
+      refundType   = 'bank_transfer';
+      refundStatus = 'pending';
+    }
+
+    // Build bank details object for Refund record
+    const refundBankDetails = refundMethod === 'upi'
+      ? {
+          upiId: upiId,
+          accountHolderName: null,
+          accountNumber: null,
+          ifscCode: null,
+          bankName: null,
+        }
+      : {
+          upiId: null,
+          accountHolderName: bankDetails?.accountHolderName || null,
+          accountNumber:     bankDetails?.accountNumber || null,
+          ifscCode:          bankDetails?.ifscCode || null,
+          bankName:          bankDetails?.bankName || null,
+        };
+
+    // ✅ ALWAYS create Refund record (not just for Razorpay!)
+    const refundRecord = await prisma.refund.create({
+      data: {
+        orderId:          order.id,
+        userId:           order.userId,
+        amount:           order.totalPrice,
+        reason:           reason || 'Customer return/refund',
+        refundType:       refundType,
+        refundStatus:     refundStatus,
+        razorpayRefundId: razorpayRefundResult?.refund?.id || null,
+        razorpayPaymentId: order.paymentResult?.razorpayPaymentId || null,
+        bankDetails:      refundBankDetails,
+      },
+    });
+
+    console.log(`✅ Refund record created: ${refundRecord.id} | Type: ${refundType} | Status: ${refundStatus}`);
 
     /* ── Build return payload ── */
     const returnPayload = {
@@ -155,18 +195,17 @@ export async function POST(request, { params }) {
       }),
     };
 
-    /* ── Update order in DB ── */
+    /* ── Update order in DB (link to refund) ── */
     const updated = await prisma.order.update({
       where: { id },
       data: {
         returnRequest: returnPayload,
         returnStatus:  'Pending',
         orderStatus:   'Return_Requested',
-        ...(razorpayRefundResult?.success && {
-          refundStatus: 'processing',
-          refundAmount: order.totalPrice,
-          refundId: refundRecord?.id || null,
-        }),
+        // ✅ Always link refund to order (not just for Razorpay)
+        refundId:      refundRecord.id,
+        refundStatus:  refundStatus,
+        refundAmount:  order.totalPrice,
       },
     });
 
@@ -177,9 +216,7 @@ export async function POST(request, { params }) {
     const customerName  = order.user?.name  || session.user.name;
     const adminInfo     = { name: customerName, email: customerEmail };
 
-    // Fire all emails in parallel — don't await (non-blocking)
     Promise.allSettled([
-
       // 1. Customer confirmation email
       (isRefundOnly
         ? sendRefundRequestConfirmation(order, customerEmail, customerName, emailRefundData)
@@ -193,11 +230,11 @@ export async function POST(request, { params }) {
             {
               amount: order.totalPrice,
               razorpayRefundId: razorpayRefundResult.refund.id,
-              id: refundRecord?.id,
+              id: refundRecord.id,
             },
             customerEmail,
             customerName,
-            refundSpeed  // ← passes speed so email shows correct time
+            refundSpeed
           )
         : Promise.resolve()
       ).catch(e => console.error('❌ Refund processed email error:', e)),
@@ -222,15 +259,17 @@ export async function POST(request, { params }) {
         ? 'Refund request submitted successfully'
         : 'Return request submitted successfully',
       returnRequest: updated.returnRequest,
+      refundId: refundRecord.id, // ✅ Always return refundId
 
-      // Tell frontend what happened
       refundInfo: {
         autoRefunded: !!razorpayRefundResult?.success,
         refundSpeed,
+        refundType,
         estimatedTime: razorpayRefundResult?.success
           ? (refundSpeed === 'optimum' ? 'Within 2–3 hours' : 'Within 5–7 business days')
           : 'Manual processing — 5–7 business days',
         razorpayRefundId: razorpayRefundResult?.refund?.id || null,
+        refundRecordId: refundRecord.id,
       },
     });
 
