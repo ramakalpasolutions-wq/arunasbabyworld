@@ -28,6 +28,7 @@ export const sendOrderConfirmation = async (order, customerEmail, customerName) 
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
       <div style="background:linear-gradient(135deg,#ff6b9d,#7c3aed);padding:30px;text-align:center;border-radius:10px 10px 0 0;">
         <h1 style="color:white;margin:0;">🎉 Order Confirmed!</h1>
+        <p style="color:#FCE7F3;margin:8px 0 0;">Thank you for shopping with us!</p>
       </div>
       <div style="padding:30px;background:#f9f9f9;border-radius:0 0 10px 10px;">
         <p>Dear <strong>${customerName || 'Customer'}</strong>,</p>
@@ -60,57 +61,145 @@ export const sendOrderConfirmation = async (order, customerEmail, customerName) 
           </a>
         </div>
         <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">
-          Thank you for shopping with BabyBliss! 🍼
+          Thank you for shopping with Arunas Baby World! 🍼
         </p>
       </div>
     </div>
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `✅ Order Confirmed - #${order.id?.slice(-8)?.toUpperCase()} | BabyBliss`,
+    subject: `✅ Order Confirmed - #${order.id?.slice(-8)?.toUpperCase()} | Arunas Baby World`,
     html,
   });
 };
 
 // ============================================================
-// ✅ ORDER STATUS UPDATE
+// ✅ ORDER STATUS UPDATE — Includes DELIVERED celebration
 // ============================================================
 export const sendOrderStatusUpdate = async (order, customerEmail, customerName) => {
   const statusEmoji = {
-    Confirmed:'✅', Processing:'⚙️', Shipped:'🚚', Delivered:'🎉', Cancelled:'❌',
+    Confirmed:  '✅',
+    Processing: '⚙️',
+    Shipped:    '🚚',
+    Delivered:  '🎉',
+    Cancelled:  '❌',
   };
   const emoji = statusEmoji[order.orderStatus] || '📦';
+
+  const statusMessages = {
+    Confirmed:  'Your order has been confirmed and is being prepared.',
+    Processing: 'Your order is being processed and packed.',
+    Shipped:    'Your order has been shipped! It is on its way to you.',
+    Delivered:  'Your order has been delivered successfully! Enjoy your purchase 🎉',
+    Cancelled:  'Your order has been cancelled.',
+  };
+
+  const isDelivered = order.orderStatus === 'Delivered';
+
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
-      <div style="background:linear-gradient(135deg,#ff6b9d,#7c3aed);padding:30px;text-align:center;border-radius:10px 10px 0 0;">
-        <h1 style="color:white;margin:0;">${emoji} Order ${order.orderStatus}!</h1>
+      <div style="background:${isDelivered 
+        ? 'linear-gradient(135deg,#10b981,#059669)' 
+        : 'linear-gradient(135deg,#ff6b9d,#7c3aed)'};padding:30px;text-align:center;border-radius:10px 10px 0 0;">
+        <div style="font-size:3rem;margin-bottom:10px;">${emoji}</div>
+        <h1 style="color:white;margin:0;font-size:1.6rem;">
+          ${isDelivered ? 'Order Delivered Successfully!' : `Order ${order.orderStatus}!`}
+        </h1>
+        <p style="color:${isDelivered ? '#A7F3D0' : '#FCE7F3'};margin:10px 0 0;font-size:15px;">
+          ${statusMessages[order.orderStatus] || 'Status updated'}
+        </p>
       </div>
       <div style="padding:30px;background:#f9f9f9;border-radius:0 0 10px 10px;">
         <p>Dear <strong>${customerName || 'Customer'}</strong>,</p>
-        <p>Your order <strong>#${order.id?.slice(-8)?.toUpperCase()}</strong> is now <strong>${order.orderStatus}</strong>.</p>
+        <p>Your order <strong>#${order.id?.slice(-8)?.toUpperCase()}</strong> is now <strong style="color:${isDelivered ? '#10b981' : '#ff6b9d'};">${order.orderStatus}</strong>.</p>
+
         ${order.orderStatus === 'Shipped' && order.trackingNumber ? `
-          <div style="background:#e0f2fe;padding:16px;border-radius:8px;margin:16px 0;">
-            <p style="margin:0;color:#0369a1;">🚚 Tracking: <strong>${order.trackingNumber}</strong></p>
+          <div style="background:linear-gradient(135deg,#e0f2fe,#bae6fd);padding:20px;border-radius:10px;margin:20px 0;border:2px solid #06B6D4;">
+            <p style="margin:0 0 8px;font-size:13px;font-weight:800;color:#0E7490;text-transform:uppercase;">
+              🚚 Tracking Number
+            </p>
+            <p style="margin:0;font-family:monospace;font-weight:900;color:#155E75;font-size:1.2rem;">
+              ${order.trackingNumber}
+            </p>
+            <p style="margin:8px 0 0;font-size:12px;color:#0E7490;">
+              Use this number on courier's website to track delivery
+            </p>
           </div>
         ` : ''}
-        ${order.orderStatus === 'Delivered' ? `
-          <div style="background:#d1fae5;padding:16px;border-radius:8px;margin:16px 0;">
-            <p style="margin:0;color:#065f46;">🎉 Your order has been delivered! Enjoy your purchase.</p>
+
+        ${isDelivered ? `
+          <!-- DELIVERED CELEBRATION -->
+          <div style="background:linear-gradient(135deg,#D1FAE5,#A7F3D0);padding:24px;border-radius:12px;margin:20px 0;border:2px solid #10B981;text-align:center;">
+            <div style="font-size:3rem;margin-bottom:10px;">🎉</div>
+            <h2 style="margin:0;color:#065F46;font-size:1.3rem;">Order Delivered!</h2>
+            <p style="margin:8px 0 0;color:#047857;font-weight:700;">
+              ${order.deliveredAt 
+                ? `Delivered on ${new Date(order.deliveredAt).toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' })}`
+                : 'Your package has reached you!'}
+            </p>
+            <p style="margin:14px 0 0;font-size:13px;color:#065F46;">
+              Hope you love your purchase! 💖
+            </p>
+          </div>
+
+          <!-- Return/Refund Info -->
+          <div style="background:#FFF7ED;padding:16px;border-radius:8px;margin:20px 0;border-left:4px solid #F97316;">
+            <h4 style="margin:0 0 8px;color:#9A3412;">📋 Not Happy with Your Order?</h4>
+            <p style="margin:0;color:#7C2D12;font-size:13px;line-height:1.7;">
+              You can <strong>return</strong> or <strong>request a refund</strong> within 7 days.<br/>
+              <strong>Exchange window:</strong> 3 days after delivery.<br/>
+              Visit your order page to raise a request.
+            </p>
+          </div>
+
+          <!-- Items Delivered -->
+          <div style="background:white;padding:20px;border-radius:8px;margin:20px 0;">
+            <h3 style="margin:0 0 12px;color:#333;">📦 Items Delivered</h3>
+            ${order.orderItems?.map(item => `
+              <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #eee;">
+                <span>${item.name} × ${item.quantity}</span>
+                <span><strong>₹${((item.price||0)*(item.quantity||1)).toLocaleString('en-IN')}</strong></span>
+              </div>
+            `).join('')}
           </div>
         ` : ''}
+
+        ${order.orderStatus === 'Cancelled' ? `
+          <div style="background:#fee2e2;padding:16px;border-radius:8px;margin:20px 0;border-left:4px solid #ef4444;">
+            <p style="margin:0;color:#991b1b;font-weight:700;">
+              ❌ Your order has been cancelled.
+            </p>
+          </div>
+        ` : ''}
+
         <div style="text-align:center;margin-top:24px;">
           <a href="${process.env.NEXTAUTH_URL}/orders/${order.id}"
-             style="background:linear-gradient(135deg,#ff6b9d,#7c3aed);color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;">
-            View Order
+             style="background:${isDelivered 
+               ? 'linear-gradient(135deg,#10b981,#059669)' 
+               : 'linear-gradient(135deg,#ff6b9d,#7c3aed)'};color:white;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;">
+            ${isDelivered ? '🎉 View Delivered Order' : 'View Order Details'}
           </a>
         </div>
-        <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">Thank you for shopping with BabyBliss! 🍼</p>
+
+        ${isDelivered ? `
+          <div style="text-align:center;margin-top:14px;">
+            <a href="${process.env.NEXTAUTH_URL}/products"
+               style="display:inline-block;color:#7c3aed;text-decoration:none;font-weight:700;font-size:14px;border:2px solid #7c3aed;padding:10px 24px;border-radius:8px;">
+              🛍️ Continue Shopping
+            </a>
+          </div>
+        ` : ''}
+
+        <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">
+          Need help? Contact us at care@arunasbabyworld.in<br/>
+          Thank you for shopping with Arunas Baby World! 🍼
+        </p>
       </div>
     </div>
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `${emoji} Order ${order.orderStatus} - #${order.id?.slice(-8)?.toUpperCase()} | BabyBliss`,
+    subject: `${emoji} Order ${order.orderStatus} - #${order.id?.slice(-8)?.toUpperCase()} | Arunas Baby World`,
     html,
   });
 };
@@ -153,13 +242,13 @@ export const sendOrderCancelled = async (order, customerEmail, customerName, rea
             Continue Shopping
           </a>
         </div>
-        <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">Need help? Contact us at care@babybliss.in</p>
+        <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">Need help? Contact us at care@arunasbabyworld.in</p>
       </div>
     </div>
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `❌ Order Cancelled - #${order.id?.slice(-8)?.toUpperCase()} | BabyBliss`,
+    subject: `❌ Order Cancelled - #${order.id?.slice(-8)?.toUpperCase()} | Arunas Baby World`,
     html,
   });
 };
@@ -172,7 +261,8 @@ export const sendRefundProcessed = async (order, refund, customerEmail, customer
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
       <div style="background:linear-gradient(135deg,#10b981,#059669);padding:30px;text-align:center;border-radius:10px 10px 0 0;">
-        <h1 style="color:white;margin:0;">${isInstant ? '⚡ Instant Refund Initiated!' : '💰 Refund Initiated!'}</h1>
+        <div style="font-size:3rem;margin-bottom:10px;">${isInstant ? '⚡' : '💰'}</div>
+        <h1 style="color:white;margin:0;">${isInstant ? 'Instant Refund Initiated!' : 'Refund Initiated!'}</h1>
         <p style="color:#a7f3d0;margin:8px 0 0;font-size:15px;">
           ${isInstant ? 'Your money is on its way!' : 'Refund has been processed'}
         </p>
@@ -231,15 +321,81 @@ export const sendRefundProcessed = async (order, refund, customerEmail, customer
         </div>
 
         <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">
-          Need help? Contact us at care@babybliss.in<br/>
-          Thank you for shopping with BabyBliss! 🍼
+          Need help? Contact us at care@arunasbabyworld.in<br/>
+          Thank you for shopping with Arunas Baby World! 🍼
         </p>
       </div>
     </div>
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `⚡ Refund of ₹${(refund.amount || order.totalPrice)?.toLocaleString('en-IN')} Initiated | BabyBliss`,
+    subject: `⚡ Refund of ₹${(refund.amount || order.totalPrice)?.toLocaleString('en-IN')} Initiated | Arunas Baby World`,
+    html,
+  });
+};
+
+// ============================================================
+// ✅ REFUND COMPLETED EMAIL — Money credited
+// ============================================================
+export const sendRefundCompleted = async (order, refund, customerEmail, customerName) => {
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+      <div style="background:linear-gradient(135deg,#10b981,#047857);padding:30px;text-align:center;border-radius:10px 10px 0 0;">
+        <div style="font-size:3rem;margin-bottom:10px;">✅</div>
+        <h1 style="color:white;margin:0;font-size:1.6rem;">Refund Completed!</h1>
+        <p style="color:#A7F3D0;margin:10px 0 0;font-size:15px;">
+          Money has been credited to your account
+        </p>
+      </div>
+      <div style="padding:30px;background:#f9f9f9;border-radius:0 0 10px 10px;">
+        <p>Dear <strong>${customerName || 'Customer'}</strong>,</p>
+        <p>Great news! Your refund of <strong style="color:#10B981;">₹${(refund.amount || order.totalPrice)?.toLocaleString('en-IN')}</strong> has been completed successfully.</p>
+
+        <div style="background:linear-gradient(135deg,#ECFDF5,#D1FAE5);padding:24px;border-radius:12px;margin:20px 0;border:2px solid #10B981;text-align:center;">
+          <p style="margin:0;font-size:13px;font-weight:800;color:#065F46;text-transform:uppercase;letter-spacing:0.6px;">
+            ✅ Refund Amount
+          </p>
+          <p style="margin:10px 0;font-size:3rem;font-weight:900;color:#10B981;">
+            ₹${(refund.amount || order.totalPrice)?.toLocaleString('en-IN')}
+          </p>
+          <p style="margin:0;font-size:14px;color:#047857;font-weight:700;">
+            Credited to your account
+          </p>
+        </div>
+
+        <div style="background:white;padding:20px;border-radius:8px;margin:20px 0;border-left:4px solid #10b981;">
+          <h3 style="margin:0 0 12px;color:#10b981;">Refund Information</h3>
+          <p><strong>Order ID:</strong> #${order.id?.slice(-8)?.toUpperCase()}</p>
+          ${refund.razorpayRefundId ? `<p><strong>Razorpay Refund ID:</strong> <code>${refund.razorpayRefundId}</code></p>` : ''}
+          <p><strong>Completed On:</strong> ${new Date().toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit' })}</p>
+        </div>
+
+        <div style="background:#FEF3C7;padding:16px;border-radius:8px;margin:20px 0;border-left:4px solid #F59E0B;">
+          <h4 style="margin:0 0 8px;color:#92400E;">💡 Check Your Account</h4>
+          <ul style="margin:0;padding-left:20px;color:#78350F;line-height:1.8;font-size:13px;">
+            <li>Check your <strong>bank statement</strong> for the credit</li>
+            <li>Check your <strong>UPI app history</strong></li>
+            <li>If not received within 2–3 hours, contact our support</li>
+          </ul>
+        </div>
+
+        <div style="text-align:center;margin-top:24px;">
+          <a href="${process.env.NEXTAUTH_URL}/orders/${order.id}"
+             style="background:linear-gradient(135deg,#10b981,#059669);color:white;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;">
+            View Order
+          </a>
+        </div>
+
+        <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">
+          Need help? Contact us at care@arunasbabyworld.in<br/>
+          Thank you for shopping with Arunas Baby World! 🍼
+        </p>
+      </div>
+    </div>
+  `;
+  return sendEmail({
+    to: customerEmail,
+    subject: `✅ Refund Completed - ₹${(refund.amount || order.totalPrice)?.toLocaleString('en-IN')} | Arunas Baby World`,
     html,
   });
 };
@@ -324,14 +480,14 @@ export const sendReturnRequestConfirmation = async (order, customerEmail, custom
           </a>
         </div>
         <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">
-          Questions? care@babybliss.in | Thank you for shopping with BabyBliss! 🍼
+          Questions? care@arunasbabyworld.in | Thank you for shopping with Arunas Baby World! 🍼
         </p>
       </div>
     </div>
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `🔄 Return Request - #${order.id?.slice(-8)?.toUpperCase()} | BabyBliss`,
+    subject: `🔄 Return Request - #${order.id?.slice(-8)?.toUpperCase()} | Arunas Baby World`,
     html,
   });
 };
@@ -387,14 +543,14 @@ export const sendRefundRequestConfirmation = async (order, customerEmail, custom
           </a>
         </div>
         <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">
-          Questions? care@babybliss.in | Thank you for shopping with BabyBliss! 🍼
+          Questions? care@arunasbabyworld.in | Thank you for shopping with Arunas Baby World! 🍼
         </p>
       </div>
     </div>
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `💰 Refund Request - ₹${order.totalPrice?.toLocaleString('en-IN')} | BabyBliss`,
+    subject: `💰 Refund Request - ₹${order.totalPrice?.toLocaleString('en-IN')} | Arunas Baby World`,
     html,
   });
 };
@@ -657,14 +813,14 @@ export const sendExchangeRequestConfirmation = async (exchange, order, customerE
           </a>
         </div>
         <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">
-          Questions? care@babybliss.in | Thank you for shopping with BabyBliss! 🍼
+          Questions? care@arunasbabyworld.in | Thank you for shopping with Arunas Baby World! 🍼
         </p>
       </div>
     </div>
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `🔄 Exchange Request - #${order.id?.slice(-8).toUpperCase()} | BabyBliss`,
+    subject: `🔄 Exchange Request - #${order.id?.slice(-8).toUpperCase()} | Arunas Baby World`,
     html,
   });
 };
@@ -789,13 +945,65 @@ export const sendExchangeApproved = async (exchange, order, customerEmail, custo
             Track Exchange Status
           </a>
         </div>
-        <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">Thank you for shopping with BabyBliss! 🍼</p>
+        <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">Thank you for shopping with Arunas Baby World! 🍼</p>
       </div>
     </div>
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `✅ Exchange Approved - #${order.id?.slice(-8).toUpperCase()} | BabyBliss`,
+    subject: `✅ Exchange Approved - #${order.id?.slice(-8).toUpperCase()} | Arunas Baby World`,
+    html,
+  });
+};
+
+// ============================================================
+// ✅ EXCHANGE PICKED UP — Customer
+// ============================================================
+export const sendExchangePickedUp = async (exchange, order, customerEmail, customerName) => {
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+      <div style="background:linear-gradient(135deg,#8B5CF6,#7C3AED);padding:30px;text-align:center;border-radius:10px 10px 0 0;">
+        <div style="font-size:3rem;margin-bottom:10px;">📦</div>
+        <h1 style="color:white;margin:0;">Product Picked Up!</h1>
+        <p style="color:#DDD6FE;margin:8px 0 0;font-size:15px;">Your item is on the way to our warehouse</p>
+      </div>
+      <div style="padding:30px;background:#f9f9f9;border-radius:0 0 10px 10px;">
+        <p>Dear <strong>${customerName || 'Customer'}</strong>,</p>
+        <p>We've successfully picked up your <strong>${exchange.oldProductName}</strong> for exchange.</p>
+
+        ${exchange.pickupTracking ? `
+          <div style="background:linear-gradient(135deg,#EDE9FE,#DDD6FE);padding:20px;border-radius:10px;margin:20px 0;border:2px solid #8B5CF6;text-align:center;">
+            <p style="margin:0;font-size:13px;font-weight:800;color:#6D28D9;text-transform:uppercase;">
+              📦 Pickup Tracking
+            </p>
+            <p style="margin:10px 0;font-size:1.3rem;font-weight:900;color:#5B21B6;font-family:monospace;">
+              ${exchange.pickupTracking}
+            </p>
+          </div>
+        ` : ''}
+
+        <div style="background:white;padding:20px;border-radius:8px;margin:20px 0;border-left:4px solid #8B5CF6;">
+          <h3 style="margin:0 0 10px;color:#8B5CF6;">What Happens Next?</h3>
+          <ol style="margin:10px 0 0;padding-left:20px;line-height:2;color:#374151;">
+            <li>📬 Package arrives at warehouse</li>
+            <li>🔍 Quality verification by team</li>
+            <li>🚚 New product shipped to you</li>
+          </ol>
+        </div>
+
+        <div style="text-align:center;margin-top:24px;">
+          <a href="${process.env.NEXTAUTH_URL}/orders/exchanges"
+             style="background:linear-gradient(135deg,#8B5CF6,#7C3AED);color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;">
+            Track Exchange
+          </a>
+        </div>
+        <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">Thank you for shopping with Arunas Baby World! 🍼</p>
+      </div>
+    </div>
+  `;
+  return sendEmail({
+    to: customerEmail,
+    subject: `📦 Product Picked Up - Exchange #${exchange.id?.slice(-8).toUpperCase()} | Arunas Baby World`,
     html,
   });
 };
@@ -853,13 +1061,143 @@ export const sendExchangeShipped = async (exchange, order, customerEmail, custom
             View Exchange Details
           </a>
         </div>
-        <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">Thank you for shopping with BabyBliss! 🍼</p>
+        <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">Thank you for shopping with Arunas Baby World! 🍼</p>
       </div>
     </div>
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `🚚 Exchange Shipped - #${order.id?.slice(-8).toUpperCase()} | BabyBliss`,
+    subject: `🚚 Exchange Shipped - #${order.id?.slice(-8).toUpperCase()} | Arunas Baby World`,
+    html,
+  });
+};
+
+// ============================================================
+// ✅ EXCHANGE COMPLETED — Customer
+// ============================================================
+export const sendExchangeCompleted = async (exchange, order, customerEmail, customerName) => {
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+      <div style="background:linear-gradient(135deg,#10B981,#047857);padding:30px;text-align:center;border-radius:10px 10px 0 0;">
+        <div style="font-size:3.5rem;margin-bottom:10px;">🎉</div>
+        <h1 style="color:white;margin:0;font-size:1.6rem;">Exchange Completed!</h1>
+        <p style="color:#A7F3D0;margin:10px 0 0;font-size:15px;">
+          Your exchange has been successfully completed
+        </p>
+      </div>
+      <div style="padding:30px;background:#f9f9f9;border-radius:0 0 10px 10px;">
+        <p>Dear <strong>${customerName || 'Customer'}</strong>,</p>
+        <p>🎉 Great news! Your exchange has been <strong style="color:#10B981;">completed successfully</strong>.</p>
+
+        <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;border-left:4px solid #10B981;">
+          <h3 style="margin:0 0 14px;color:#10B981;">Exchange Summary</h3>
+          <table style="width:100%;border-collapse:collapse;">
+            <tr>
+              <td style="width:45%;padding:12px;background:#FEF2F2;border-radius:8px;text-align:center;">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:800;color:#DC2626;">↩️ RETURNED</p>
+                <p style="margin:6px 0 4px;font-size:13px;font-weight:700;">${exchange.oldProductName}</p>
+                <p style="margin:0;font-weight:900;color:#DC2626;">₹${exchange.oldPrice?.toLocaleString('en-IN')}</p>
+              </td>
+              <td style="width:10%;text-align:center;font-size:24px;">→</td>
+              <td style="width:45%;padding:12px;background:#ECFDF5;border-radius:8px;text-align:center;">
+                <p style="margin:0 0 4px;font-size:11px;font-weight:800;color:#10B981;">✅ RECEIVED</p>
+                <p style="margin:6px 0 4px;font-size:13px;font-weight:700;">${exchange.newProductName}</p>
+                <p style="margin:0;font-weight:900;color:#10B981;">₹${exchange.newPrice?.toLocaleString('en-IN')}</p>
+              </td>
+            </tr>
+          </table>
+        </div>
+
+        ${exchange.priceDifference < 0 && exchange.razorpayRefundId ? `
+          <div style="background:#ECFDF5;padding:16px;border-radius:8px;margin:20px 0;border-left:4px solid #10B981;">
+            <p style="margin:0;color:#065F46;font-weight:800;">
+              ✅ ₹${Math.abs(exchange.priceDifference)?.toLocaleString('en-IN')} refunded to your original payment method
+            </p>
+            <p style="margin:6px 0 0;font-size:12px;color:#047857;font-family:monospace;">
+              Ref: ${exchange.razorpayRefundId}
+            </p>
+          </div>
+        ` : ''}
+
+        <div style="background:linear-gradient(135deg,#D1FAE5,#A7F3D0);padding:20px;border-radius:10px;margin:20px 0;text-align:center;">
+          <div style="font-size:2.5rem;margin-bottom:8px;">💖</div>
+          <p style="margin:0;color:#065F46;font-weight:800;font-size:1.1rem;">
+            Hope you love your new product!
+          </p>
+          <p style="margin:8px 0 0;font-size:13px;color:#047857;">
+            Completed on ${new Date().toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' })}
+          </p>
+        </div>
+
+        <div style="text-align:center;margin-top:24px;">
+          <a href="${process.env.NEXTAUTH_URL}/products"
+             style="background:linear-gradient(135deg,#10B981,#047857);color:white;padding:14px 32px;border-radius:8px;text-decoration:none;font-weight:700;font-size:15px;">
+            🛍️ Continue Shopping
+          </a>
+        </div>
+
+        <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">
+          Need help? Contact us at care@arunasbabyworld.in<br/>
+          Thank you for shopping with Arunas Baby World! 🍼
+        </p>
+      </div>
+    </div>
+  `;
+  return sendEmail({
+    to: customerEmail,
+    subject: `🎉 Exchange Completed - #${order.id?.slice(-8).toUpperCase()} | Arunas Baby World`,
+    html,
+  });
+};
+
+// ============================================================
+// ✅ EXCHANGE REJECTED — Customer
+// ============================================================
+export const sendExchangeRejected = async (exchange, order, customerEmail, customerName, rejectionReason) => {
+  const html = `
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;">
+      <div style="background:linear-gradient(135deg,#EF4444,#DC2626);padding:30px;text-align:center;border-radius:10px 10px 0 0;">
+        <h1 style="color:white;margin:0;">❌ Exchange Request Rejected</h1>
+      </div>
+      <div style="padding:30px;background:#f9f9f9;border-radius:0 0 10px 10px;">
+        <p>Dear <strong>${customerName || 'Customer'}</strong>,</p>
+        <p>We're sorry to inform you that your exchange request has been rejected.</p>
+
+        <div style="background:#FEF2F2;padding:20px;border-radius:8px;margin:20px 0;border-left:4px solid #EF4444;">
+          <h3 style="margin:0 0 12px;color:#DC2626;">Rejection Reason</h3>
+          <p style="margin:0;color:#991B1B;font-weight:600;">
+            ${rejectionReason || 'Unable to process exchange at this time.'}
+          </p>
+        </div>
+
+        <div style="background:white;padding:20px;border-radius:8px;margin:20px 0;">
+          <h3 style="margin:0 0 12px;color:#333;">Exchange Details</h3>
+          <p><strong>Order ID:</strong> #${order.id?.slice(-8).toUpperCase()}</p>
+          <p><strong>Product:</strong> ${exchange.oldProductName}</p>
+          <p><strong>Reason for Exchange:</strong> ${exchange.reason}</p>
+        </div>
+
+        <div style="background:#FEF3C7;padding:16px;border-radius:8px;margin:20px 0;border-left:4px solid #F59E0B;">
+          <p style="margin:0;color:#92400E;font-weight:600;">
+            💡 You can contact our support team for further assistance or request a refund instead.
+          </p>
+        </div>
+
+        <div style="text-align:center;margin-top:24px;">
+          <a href="mailto:care@arunasbabyworld.in"
+             style="background:linear-gradient(135deg,#EF4444,#DC2626);color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;">
+            📧 Contact Support
+          </a>
+        </div>
+        <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">
+          Need help? care@arunasbabyworld.in | Thank you for shopping with Arunas Baby World! 🍼
+        </p>
+      </div>
+    </div>
+  `;
+  return sendEmail({
+    to: customerEmail,
+    subject: `❌ Exchange Rejected - #${order.id?.slice(-8).toUpperCase()} | Arunas Baby World`,
     html,
   });
 };
