@@ -1,0 +1,136 @@
+import { NextResponse } from 'next/server';
+import prisma from '@/lib/prisma';
+import { createRefund } from '@/lib/razorpay';
+import { sendRefundProcessed } from '@/lib/nodemailer';
+
+export async function POST(request) {
+  try {
+    const body = await request.json();
+    const { refundId } = body;
+
+    if (!refundId) {
+      return NextResponse.json({ error: 'refundId required' }, { status: 400 });
+    }
+
+    const refund = await prisma.refund.findUnique({
+      where: { id: refundId },
+    });
+
+    if (!refund) {
+      return NextResponse.json({ error: 'Refund not found' }, { status: 404 });
+    }
+
+    if (refund.refundStatus !== 'scheduled') {
+      return NextResponse.json({
+        success: false,
+        message: `Refund is ${refund.refundStatus}, not scheduled. Skipping.`,
+      });
+    }
+
+    const now = new Date();
+    if (refund.scheduledAt && new Date(refund.scheduledAt) > now) {
+      return NextResponse.json({
+        success: false,
+        message: 'Scheduled time has not yet passed',
+        timeLeft: new Date(refund.scheduledAt).getTime() - now.getTime(),
+      });
+    }
+
+    const order = await prisma.order.findUnique({
+      where: { id: refund.orderId },
+      include: { user: { select: { name: true, email: true } } },
+    });
+
+    if (!order) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+
+    let razorpayResult = null;
+    let finalStatus = 'completed';
+
+    if (order.paymentMethod === 'Razorpay' && order.isPaid && refund.razorpayPaymentId) {
+      console.log(`⚡ Triggering Razorpay refund for: ${refund.razorpayPaymentId}`);
+
+      razorpayResult = await createRefund(
+        refund.razorpayPaymentId,
+        refund.amount,
+        {
+          reason: refund.reason || 'Customer return approved',
+          orderId: refund.orderId,
+        }
+      );
+
+      if (razorpayResult.success) {
+        finalStatus = 'processing';
+        console.log(`✅ Razorpay refund triggered: ${razorpayResult.refund.id}`);
+      } else {
+        finalStatus = 'failed';
+        console.error('❌ Razorpay refund failed:', razorpayResult.error);
+      }
+    } else {
+      finalStatus = 'completed';
+    }
+
+    const updated = await prisma.refund.update({
+      where: { id: refundId },
+      data: {
+        refundStatus: finalStatus,
+        processedAt: now,
+        razorpayRefundId: razorpayResult?.refund?.id || refund.razorpayRefundId,
+        notes: razorpayResult?.success
+          ? `Auto-refund triggered. Razorpay ID: ${razorpayResult.refund.id}`
+          : razorpayResult?.error
+          ? `Auto-refund failed: ${razorpayResult.error}`
+          : `Auto-processed at ${now.toLocaleString('en-IN')}`,
+      },
+    });
+
+    await prisma.order.update({
+      where: { id: refund.orderId },
+      data: {
+        refundStatus: finalStatus,
+        ...(finalStatus === 'completed' && { refundedAt: now, orderStatus: 'Refunded' }),
+        ...(finalStatus === 'processing' && { orderStatus: 'Refunded' }),
+      },
+    });
+
+    if (order.user?.email && finalStatus !== 'failed') {
+      try {
+        await sendRefundProcessed(
+          order,
+          {
+            amount: refund.amount,
+            razorpayRefundId: razorpayResult?.refund?.id || refund.razorpayRefundId,
+            id: refund.id,
+          },
+          order.user.email,
+          order.user.name,
+          razorpayResult?.speed || 'optimum'
+        );
+        console.log('✅ Refund email sent');
+      } catch (emailErr) {
+        console.error('❌ Email error:', emailErr);
+      }
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: razorpayResult?.success
+        ? 'Refund triggered via Razorpay'
+        : finalStatus === 'failed'
+        ? 'Refund failed'
+        : 'Refund processed',
+      refund: updated,
+      razorpayResult,
+    });
+  } catch (err) {
+    console.error('Process scheduled error:', err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
+  }
+}
+
+export async function GET() {
+  return NextResponse.json({
+    message: 'Use POST with { refundId } to process scheduled refund',
+  });
+}

@@ -15,8 +15,8 @@ export async function GET(request) {
 
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
-    const page   = parseInt(searchParams.get('page')  || '1');
-    const limit  = parseInt(searchParams.get('limit') || '20');
+    const page = parseInt(searchParams.get('page') || '1');
+    const limit = parseInt(searchParams.get('limit') || '20');
 
     const where = {};
     if (status && status !== 'all') where.refundStatus = status;
@@ -29,7 +29,6 @@ export async function GET(request) {
       take: limit,
     });
 
-    // Enrich
     const enriched = await Promise.all(
       refunds.map(async (r) => {
         const [user, order] = await Promise.all([
@@ -99,7 +98,10 @@ export async function PUT(request) {
       where: { id: refund.orderId },
       data: {
         refundStatus,
-        ...(refundStatus === 'completed' && { refundedAt: new Date() }),
+        ...(refundStatus === 'completed' && {
+          refundedAt: new Date(),
+          orderStatus: 'Refunded',
+        }),
       },
     });
 

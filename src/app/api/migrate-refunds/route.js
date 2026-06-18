@@ -10,16 +10,25 @@ export async function GET() {
 
 export async function POST() {
   try {
-    const ordersNeedingRefunds = await prisma.order.findMany({
+    // ✅ Find ALL orders with returnRequest (more aggressive)
+    const allOrders = await prisma.order.findMany({
       where: {
-        AND: [
-          { returnRequest: { not: null } },
-          { refundId: null },
-        ],
+        returnRequest: { not: null },
       },
     });
 
-    console.log(`Found ${ordersNeedingRefunds.length} orders needing Refund records`);
+    console.log(`📊 Total orders with returnRequest: ${allOrders.length}`);
+
+    // Get all existing refunds to check duplicates
+    const existingRefunds = await prisma.refund.findMany({
+      select: { orderId: true },
+    });
+    const existingOrderIds = new Set(existingRefunds.map(r => r.orderId));
+
+    console.log(`📊 Existing refunds in DB: ${existingRefunds.length}`);
+
+    const ordersNeedingRefunds = allOrders.filter(o => !existingOrderIds.has(o.id));
+    console.log(`📊 Orders needing refunds: ${ordersNeedingRefunds.length}`);
 
     const created = [];
     const failed = [];
@@ -90,12 +99,13 @@ export async function POST() {
           type: refundType,
           status: refundStatus,
           amount: order.totalPrice,
-          customer: rr.upiId || rr.accountHolderName,
+          customer: rr.upiId || rr.accountHolderName || 'Manual',
+          reason: rr.reason,
         });
 
-        console.log(`Created refund for order ${order.id}`);
+        console.log(`✅ Created refund for order ${order.id}`);
       } catch (err) {
-        console.error(`Failed for order ${order.id}:`, err.message);
+        console.error(`❌ Failed for order ${order.id}:`, err.message);
         failed.push({
           orderId: order.id,
           error: err.message,
@@ -106,7 +116,8 @@ export async function POST() {
     return NextResponse.json({
       success: true,
       message: 'Migration complete!',
-      totalScanned: ordersNeedingRefunds.length,
+      totalOrdersWithReturns: allOrders.length,
+      existingRefundsCount: existingRefunds.length,
       created: created.length,
       failed: failed.length,
       createdRefunds: created,
@@ -116,6 +127,7 @@ export async function POST() {
     return NextResponse.json({
       success: false,
       error: err.message,
+      stack: err.stack,
     }, { status: 500 });
   }
 }
