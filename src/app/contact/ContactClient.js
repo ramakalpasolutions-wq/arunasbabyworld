@@ -1,3 +1,4 @@
+// src/app/contact/ContactClient.js
 'use client';
 import { useState } from 'react';
 import toast from 'react-hot-toast';
@@ -42,10 +43,9 @@ export default function ContactClient() {
   return (
     <div className={styles.contact}>
 
-      {/* ===== HERO WITH BABY CLOTHING IMAGE ===== */}
+      {/* ===== HERO ===== */}
       <div className={styles.hero}>
         <div className={styles.heroImageGrid}>
-          {/* Baby clothing images */}
           <div className={styles.heroImg} style={{ backgroundImage: "url('https://images.unsplash.com/photo-1522771930-78848d9293e8?w=400&q=80')" }} />
           <div className={styles.heroImg} style={{ backgroundImage: "url('https://images.unsplash.com/photo-1519689680058-324335c77eba?w=400&q=80')" }} />
           <div className={styles.heroImg} style={{ backgroundImage: "url('https://images.unsplash.com/photo-1515488042361-ee00e0ddd4e4?w=400&q=80')" }} />
@@ -53,70 +53,70 @@ export default function ContactClient() {
         </div>
         <div className={styles.heroOverlay}>
           <div className={styles.heroContent}>
-            <span className={styles.heroBadge}>👋 We are here for you</span>
             <h1>Get In Touch</h1>
             <p>Have a question about baby products? Need help with your order? We love hearing from parents!</p>
           </div>
         </div>
       </div>
 
-      {/* ===== CONTACT CARDS - NEW STYLE ===== */}
+      {/* ===== QUICK CONTACT CARDS ===== */}
       <div className="container">
         <div className={styles.contactCards}>
 
-          {/* Card 1 - Call */}
+          {/* Card 1 — Call */}
           <div className={styles.contactCard}>
             <div className={styles.cardIconWrap} style={{ background: 'linear-gradient(135deg, #ff6b9d, #ff8fab)' }}>
               <span>📞</span>
             </div>
             <div className={styles.cardBody}>
               <h3>Call Us</h3>
-              <p>1800-123-456</p>
-              <span>Mon–Sat, 9am–6pm IST</span>
+              <p>+91 90529 99659</p>
+              <span>Mon–Sat, 9am–10pm</span>
             </div>
-            <a href="tel:1800123456" className={styles.cardBtn} style={{ '--btn-color': '#ff6b9d' }}>
+            <a href="tel:+919052999659" className={styles.cardBtn} style={{ '--btn-color': '#ff6b9d' }}>
               Call Now →
             </a>
           </div>
 
-          {/* Card 2 - Email */}
+          {/* Card 2 — Email */}
           <div className={styles.contactCard}>
             <div className={styles.cardIconWrap} style={{ background: 'linear-gradient(135deg, #7c3aed, #9f7aea)' }}>
               <span>✉️</span>
             </div>
             <div className={styles.cardBody}>
               <h3>Email Us</h3>
-              <p>care@babybliss.in</p>
+              <p>Arunasbabyworld947@gmail.com</p>
               <span>Reply within 24 hours</span>
             </div>
-            <a href="mailto:care@babybliss.in" className={styles.cardBtn} style={{ '--btn-color': '#7c3aed' }}>
+            <a href="mailto:Arunasbabyworld947@gmail.com" className={styles.cardBtn} style={{ '--btn-color': '#7c3aed' }}>
               Send Email →
             </a>
           </div>
 
-          {/* Card 3 - Delivery */}
+          {/* Card 3 — Track Order */}
           <div className={styles.contactCard}>
             <div className={styles.cardIconWrap} style={{ background: 'linear-gradient(135deg, #10b981, #34d399)' }}>
               <span>🚚</span>
             </div>
             <div className={styles.cardBody}>
-           
-              <span>fast Deliver</span>
+              <h3>Track Order</h3>
+              <p>Fast Delivery</p>
+              <span>Pan India shipping</span>
             </div>
-            <a href="/track-order" className={styles.cardBtn} style={{ '--btn-color': '#10b981' }}>
+            <a href="/orders" className={styles.cardBtn} style={{ '--btn-color': '#10b981' }}>
               Track Now →
             </a>
           </div>
 
-          {/* Card 4 - Location */}
+          {/* Card 4 — Visit */}
           <div className={styles.contactCard}>
             <div className={styles.cardIconWrap} style={{ background: 'linear-gradient(135deg, #f59e0b, #fbbf24)' }}>
               <span>📍</span>
             </div>
             <div className={styles.cardBody}>
               <h3>Visit Us</h3>
-              <p>Amaravathi road</p>
-              <span>Guntur -522002</span>
+              <p>Koritepadu</p>
+              <span>Guntur – 522007</span>
             </div>
             <a href="#map" className={styles.cardBtn} style={{ '--btn-color': '#f59e0b' }}>
               View Map →
@@ -130,7 +130,7 @@ export default function ContactClient() {
       <div className="container">
         <div className={styles.mainGrid}>
 
-          {/* Contact Form */}
+          {/* ── Contact Form ── */}
           <div className={styles.formSection}>
             <div className={styles.formHeader}>
               <h2>💬 Send Us a Message</h2>
@@ -212,18 +212,38 @@ export default function ContactClient() {
             </form>
           </div>
 
-          {/* Info Section */}
+          {/* ── Info Section ── */}
           <div className={styles.infoSection}>
 
-            {/* Info Card */}
+            {/* Contact Info Card */}
             <div className={styles.infoCard}>
               <h3>📌 Contact Information</h3>
               <div className={styles.infoList}>
                 {[
-                  { icon: '📍', title: 'Address', lines: ['Amaravathi road'] },
-                  { icon: '📞', title: 'Phone', lines: ['1800-123-456 (Toll Free)', '+91 98765 43210'] },
-                  { icon: '✉️', title: 'Email', lines: ['care@babybliss.in', 'support@babybliss.in'] },
-                  { icon: '🕐', title: 'Hours', lines: ['Mon – Sat: 9:00 AM – 6:00 PM', 'Sunday: Closed'] },
+                  {
+                    icon: '📍',
+                    title: 'Address',
+                    lines: [
+                      'Arunas Baby World',
+                      'Lakshmipuram, Koritepadu',
+                      'Guntur, Andhra Pradesh — 522007',
+                    ],
+                  },
+                  {
+                    icon: '📞',
+                    title: 'Phone',
+                    lines: ['+91 90529 99659'],
+                  },
+                  {
+                    icon: '✉️',
+                    title: 'Email',
+                    lines: ['Arunasbabyworld947@gmail.com'],
+                  },
+                  {
+                    icon: '🕐',
+                    title: 'Store Hours',
+                    lines: ['Mon – Sat: 9:00 AM – 10:00 PM', 'Sunday: Closed'],
+                  },
                 ].map(item => (
                   <div key={item.title} className={styles.infoItem}>
                     <div className={styles.infoIconBox}>{item.icon}</div>
@@ -236,53 +256,37 @@ export default function ContactClient() {
                   </div>
                 ))}
               </div>
-
-              {/* Socials */}
-              <div className={styles.socials}>
-                <p>Follow Us</p>
-                <div className={styles.socialIcons}>
-                  {[
-                    { icon: '📘', label: 'Facebook', href: '#', color: '#1877f2' },
-                    { icon: '📸', label: 'Instagram', href: '#', color: '#e1306c' },
-                    { icon: '🐦', label: 'Twitter', href: '#', color: '#1da1f2' },
-                    { icon: '▶️', label: 'YouTube', href: '#', color: '#ff0000' },
-                    { icon: '📌', label: 'Pinterest', href: '#', color: '#e60023' },
-                  ].map(s => (
-                    <a
-                      key={s.label}
-                      href={s.href}
-                      aria-label={s.label}
-                      className={styles.socialIcon}
-                      style={{ '--social-color': s.color }}
-                    >
-                      {s.icon}
-                    </a>
-                  ))}
-                </div>
-              </div>
             </div>
 
-            {/* Delivery Card */}
-            <div className={styles.deliveryCard}>
-              <div className={styles.deliveryIcon}>🚚</div>
-              <div>
-                <strong>Free Home Delivery</strong>
-                <p>Pan India — 19,000+ pin codes.<br />Free on orders above ₹499!</p>
-              </div>
-            </div>
-
-            {/* Map */}
+            {/* Google Map — Arunas Baby World, Koritepadu */}
             <div className={styles.mapContainer} id="map">
               <iframe
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3771.0597577743715!2d72.8266654!3d19.0596099!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3be7c947a5b1b6b5%3A0x11c8b37a1e3e1e0e!2sBandra%20West%2C%20Mumbai!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3826.7521234567890!2d80.4313098!3d16.3133958!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x3a4a75003cb74ef5%3A0xd2a0e1ec47ec24b3!2sARUNAS%20BABY%20WORLD%20koretipadu!5e0!3m2!1sen!2sin!4v1700000000000!5m2!1sen!2sin"
                 width="100%"
-                height="180"
+                height="280"
                 style={{ border: 0, borderRadius: '12px', display: 'block' }}
                 allowFullScreen=""
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                title="BabyBliss Location"
+                title="Arunas Baby World - Koritepadu, Guntur"
               />
+              <a
+                href="https://www.google.com/maps/place/ARUNAS+BABY+WORLD+koretipadu/@16.3133958,80.4313098,17z"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{
+                  display: 'block',
+                  textAlign: 'center',
+                  padding: '12px',
+                  background: 'linear-gradient(135deg, #ff6b9d, #7c3aed)',
+                  color: 'white',
+                  textDecoration: 'none',
+                  fontWeight: '700',
+                  fontSize: '0.88rem',
+                }}
+              >
+                🗺️ Open in Google Maps
+              </a>
             </div>
           </div>
         </div>
