@@ -4,9 +4,11 @@ import { useState, useEffect } from 'react';
 import styles from '../products/page.module.css';
 
 export default function AdminContacts() {
-  const [contacts, setContacts] = useState([]);
-  const [loading,  setLoading]  = useState(true);
-  const [selected, setSelected] = useState(null);
+  const [contacts,   setContacts]   = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [selected,   setSelected]   = useState(null);
+  const [deleting,   setDeleting]   = useState(null);   // id being deleted
+  const [confirmId,  setConfirmId]  = useState(null);   // id waiting confirm
 
   useEffect(() => {
     fetch('/api/contact')
@@ -14,6 +16,23 @@ export default function AdminContacts() {
       .then(d => { setContacts(d.contacts || []); setLoading(false); })
       .catch(() => setLoading(false));
   }, []);
+
+  // ── DELETE handler ──────────────────────────────────────────
+  const handleDelete = async (id) => {
+    setDeleting(id);
+    try {
+      const res = await fetch(`/api/contact?id=${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setContacts(prev => prev.filter(c => c.id !== id));
+        if (selected?.id === id) setSelected(null);   // close modal if open
+      }
+    } catch (err) {
+      console.error('Delete error:', err);
+    } finally {
+      setDeleting(null);
+      setConfirmId(null);
+    }
+  };
 
   const unread = contacts.filter(c => !c.isRead).length;
 
@@ -38,6 +57,59 @@ export default function AdminContacts() {
           </p>
         </div>
       </div>
+
+      {/* ── DELETE CONFIRM MODAL ── */}
+      {confirmId && (
+        <div style={{
+          position: 'fixed', inset: 0,
+          background: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          zIndex: 2000, padding: '16px',
+        }}>
+          <div style={{
+            background: 'white', borderRadius: '20px',
+            padding: '28px 24px', maxWidth: '380px',
+            width: '100%', textAlign: 'center',
+            boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
+          }}>
+            <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🗑️</div>
+            <h3 style={{ margin: '0 0 8px', fontSize: '1.1rem', fontWeight: '800' }}>
+              Delete Message?
+            </h3>
+            <p style={{ margin: '0 0 24px', color: '#666', fontSize: '14px' }}>
+              This action cannot be undone. The message will be permanently deleted.
+            </p>
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'center' }}>
+              <button
+                onClick={() => handleDelete(confirmId)}
+                disabled={deleting === confirmId}
+                style={{
+                  background: 'linear-gradient(135deg, #ff6b9d, #7c3aed)',
+                  color: 'white', border: 'none',
+                  padding: '11px 24px', borderRadius: '10px',
+                  fontWeight: '700', fontSize: '14px',
+                  cursor: deleting === confirmId ? 'not-allowed' : 'pointer',
+                  opacity: deleting === confirmId ? 0.7 : 1,
+                  minWidth: '110px',
+                }}
+              >
+                {deleting === confirmId ? '⏳ Deleting...' : '🗑️ Yes, Delete'}
+              </button>
+              <button
+                onClick={() => setConfirmId(null)}
+                style={{
+                  background: 'white', color: '#555',
+                  border: '1.5px solid #eee',
+                  padding: '11px 24px', borderRadius: '10px',
+                  fontWeight: '600', fontSize: '14px', cursor: 'pointer',
+                }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ── MESSAGE DETAIL MODAL ── */}
       {selected && (
@@ -115,11 +187,12 @@ export default function AdminContacts() {
               }}>{selected.message}</p>
             </div>
 
+            {/* ── Modal Action Buttons ── */}
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               <a
                 href={`mailto:${selected.email}?subject=Re: ${selected.subject || 'Your inquiry'}`}
                 style={{
-                  flex: 1, minWidth: '140px',
+                  flex: 1, minWidth: '120px',
                   background: 'linear-gradient(135deg, #ff6b9d, #7c3aed)',
                   color: 'white', padding: '12px',
                   borderRadius: '10px', textDecoration: 'none',
@@ -128,8 +201,22 @@ export default function AdminContacts() {
               >
                 📧 Reply
               </a>
+
+              {/* DELETE from modal */}
+              <button
+                onClick={() => { setSelected(null); setConfirmId(selected.id); }}
+                style={{
+                  padding: '12px 16px', border: '1.5px solid #fecdd3',
+                  borderRadius: '10px', cursor: 'pointer',
+                  background: '#fff1f2', color: '#ff6b9d',
+                  fontWeight: '700', fontSize: '14px',
+                }}
+              >
+                🗑️ Delete
+              </button>
+
               <button onClick={() => setSelected(null)} style={{
-                padding: '12px 20px', border: '1.5px solid #eee',
+                padding: '12px 16px', border: '1.5px solid #eee',
                 borderRadius: '10px', cursor: 'pointer',
                 background: 'white', fontWeight: '600', fontSize: '14px',
               }}>
@@ -150,7 +237,7 @@ export default function AdminContacts() {
               <th>Subject</th>
               <th>Message</th>
               <th>Date</th>
-              <th>Action</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -174,8 +261,7 @@ export default function AdminContacts() {
                     {!c.isRead && (
                       <span style={{
                         width: '7px', height: '7px', borderRadius: '50%',
-                        background: '#ff6b9d', display: 'inline-block',
-                        flexShrink: 0,
+                        background: '#ff6b9d', display: 'inline-block', flexShrink: 0,
                       }} />
                     )}
                     <strong style={{ whiteSpace: 'nowrap' }}>{c.name}</strong>
@@ -199,8 +285,7 @@ export default function AdminContacts() {
                 <td style={{ fontSize: '13px', color: '#666' }}>
                   <span style={{
                     display: 'block', overflow: 'hidden',
-                    textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    maxWidth: '180px',
+                    textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px',
                   }}>
                     {c.message}
                   </span>
@@ -210,15 +295,65 @@ export default function AdminContacts() {
                     day: 'numeric', month: 'short', year: 'numeric',
                   })}
                 </td>
+
+                {/* ── TABLE Action Buttons ── */}
                 <td>
-                  <button onClick={() => setSelected(c)} style={{
-                    background: '#ede9fe', color: '#7c3aed', border: 'none',
-                    padding: '6px 12px', borderRadius: '8px',
-                    fontSize: '12px', fontWeight: '700',
-                    cursor: 'pointer', whiteSpace: 'nowrap',
-                  }}>
-                    👁️ View
-                  </button>
+                  <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+                    {/* View */}
+                    <button onClick={() => setSelected(c)} style={{
+                      background: '#ede9fe', color: '#7c3aed', border: 'none',
+                      padding: '6px 10px', borderRadius: '8px',
+                      fontSize: '12px', fontWeight: '700',
+                      cursor: 'pointer', whiteSpace: 'nowrap',
+                    }}>
+                      👁️ View
+                    </button>
+
+                    {/* Delete */}
+                    {confirmId === c.id ? (
+                      // inline mini-confirm in table row
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        <button
+                          onClick={() => handleDelete(c.id)}
+                          disabled={deleting === c.id}
+                          style={{
+                            background: 'linear-gradient(135deg,#ff6b9d,#7c3aed)',
+                            color: 'white', border: 'none',
+                            padding: '6px 10px', borderRadius: '8px',
+                            fontSize: '12px', fontWeight: '700',
+                            cursor: deleting === c.id ? 'not-allowed' : 'pointer',
+                            opacity: deleting === c.id ? 0.7 : 1,
+                            whiteSpace: 'nowrap',
+                          }}
+                        >
+                          {deleting === c.id ? '⏳' : '✓ Sure?'}
+                        </button>
+                        <button
+                          onClick={() => setConfirmId(null)}
+                          style={{
+                            background: '#f3f4f6', color: '#555', border: 'none',
+                            padding: '6px 8px', borderRadius: '8px',
+                            fontSize: '12px', cursor: 'pointer',
+                          }}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmId(c.id)}
+                        style={{
+                          background: '#fff1f2', color: '#ff6b9d',
+                          border: '1px solid #fecdd3',
+                          padding: '6px 10px', borderRadius: '8px',
+                          fontSize: '12px', fontWeight: '700',
+                          cursor: 'pointer', whiteSpace: 'nowrap',
+                        }}
+                      >
+                        🗑️ Delete
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
@@ -241,8 +376,7 @@ export default function AdminContacts() {
               width: '44px', height: '44px', borderRadius: '50%',
               background: 'linear-gradient(135deg, #ff6b9d, #7c3aed)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              color: 'white', fontWeight: '700', fontSize: '1rem',
-              flexShrink: 0,
+              color: 'white', fontWeight: '700', fontSize: '1rem', flexShrink: 0,
             }}>
               {c.name?.[0]?.toUpperCase()}
             </div>
@@ -257,30 +391,24 @@ export default function AdminContacts() {
                   {!c.isRead && (
                     <span style={{
                       width: '7px', height: '7px', borderRadius: '50%',
-                      background: '#ff6b9d', display: 'inline-block',
-                      marginRight: '5px',
+                      background: '#ff6b9d', display: 'inline-block', marginRight: '5px',
                     }} />
                   )}
                   {c.name}
                 </div>
-                <span style={{
-                  fontSize: '11px', color: '#9ca3af', whiteSpace: 'nowrap',
-                }}>
+                <span style={{ fontSize: '11px', color: '#9ca3af', whiteSpace: 'nowrap' }}>
                   {new Date(c.createdAt).toLocaleDateString('en-IN', {
                     day: 'numeric', month: 'short',
                   })}
                 </span>
               </div>
 
-              {/* Email */}
+              {/* Email + Subject */}
               <div className={styles.mobileCardMeta}>
-                <span style={{ color: '#7c3aed', fontSize: '0.75rem' }}>
-                  {c.email}
-                </span>
+                <span style={{ color: '#7c3aed', fontSize: '0.75rem' }}>{c.email}</span>
                 <span style={{
                   background: '#f3f4f6', padding: '1px 6px',
-                  borderRadius: '4px', fontSize: '11px',
-                  fontWeight: '600', color: '#555',
+                  borderRadius: '4px', fontSize: '11px', fontWeight: '600', color: '#555',
                 }}>
                   {c.subject || 'General'}
                 </span>
@@ -289,13 +417,12 @@ export default function AdminContacts() {
               {/* Message preview */}
               <div style={{
                 fontSize: '12px', color: '#666', marginTop: '4px',
-                overflow: 'hidden', textOverflow: 'ellipsis',
-                whiteSpace: 'nowrap',
+                overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
                 {c.message}
               </div>
 
-              {/* View Button */}
+              {/* ── Mobile Action Buttons ── */}
               <div className={styles.mobileCardActions}>
                 <button onClick={() => setSelected(c)} style={{
                   background: '#ede9fe', color: '#7c3aed',
@@ -303,8 +430,50 @@ export default function AdminContacts() {
                   borderRadius: '8px', fontSize: '12px',
                   fontWeight: '700', cursor: 'pointer',
                 }}>
-                  👁️ View Message
+                  👁️ View
                 </button>
+
+                {/* Mobile Delete */}
+                {confirmId === c.id ? (
+                  <div style={{ display: 'flex', gap: '4px' }}>
+                    <button
+                      onClick={() => handleDelete(c.id)}
+                      disabled={deleting === c.id}
+                      style={{
+                        background: 'linear-gradient(135deg,#ff6b9d,#7c3aed)',
+                        color: 'white', border: 'none',
+                        padding: '6px 10px', borderRadius: '8px',
+                        fontSize: '12px', fontWeight: '700',
+                        cursor: deleting === c.id ? 'not-allowed' : 'pointer',
+                        opacity: deleting === c.id ? 0.7 : 1,
+                      }}
+                    >
+                      {deleting === c.id ? '⏳' : '✓ Sure?'}
+                    </button>
+                    <button
+                      onClick={() => setConfirmId(null)}
+                      style={{
+                        background: '#f3f4f6', color: '#555', border: 'none',
+                        padding: '6px 8px', borderRadius: '8px',
+                        fontSize: '12px', cursor: 'pointer',
+                      }}
+                    >
+                      ✕
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setConfirmId(c.id)}
+                    style={{
+                      background: '#fff1f2', color: '#ff6b9d',
+                      border: '1px solid #fecdd3',
+                      padding: '6px 12px', borderRadius: '8px',
+                      fontSize: '12px', fontWeight: '700', cursor: 'pointer',
+                    }}
+                  >
+                    🗑️ Delete
+                  </button>
+                )}
               </div>
             </div>
           </div>

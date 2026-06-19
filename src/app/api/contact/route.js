@@ -1,3 +1,4 @@
+// src/app/api/contact/route.js
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { sendEmail } from '@/lib/nodemailer';
@@ -25,12 +26,11 @@ export async function POST(request) {
       );
     }
 
-    // ✅ Save to database
     const contact = await prisma.contact.create({
       data: { name, email, phone: phone || null, subject: subject || null, message },
     });
 
-    // ✅ Send email to admin
+    // Send email to admin
     try {
       await sendEmail({
         to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
@@ -79,11 +79,11 @@ export async function POST(request) {
       console.error('Admin email error:', emailErr);
     }
 
-    // ✅ Send confirmation email to customer
+    // Send confirmation to customer
     try {
       await sendEmail({
         to: email,
-        subject: '✅ We received your message - BabyBliss',
+        subject: '✅ We received your message - Arunas Baby World',
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <div style="background: linear-gradient(135deg, #ff6b9d, #7c3aed); padding: 24px; border-radius: 10px 10px 0 0; text-align: center;">
@@ -91,17 +91,14 @@ export async function POST(request) {
             </div>
             <div style="padding: 24px; background: #f9f9f9; border-radius: 0 0 10px 10px;">
               <p>Dear <strong>${name}</strong>,</p>
-              <p>Thank you for contacting <strong>BabyBliss</strong>! We have received your message and will get back to you within <strong>24 hours</strong>.</p>
+              <p>Thank you for contacting <strong>Arunas Baby World</strong>! We have received your message and will get back to you within <strong>24 hours</strong>.</p>
               <div style="background: white; padding: 16px; border-radius: 8px; margin: 16px 0; border-left: 4px solid #ff6b9d;">
                 <p style="margin: 0; color: #666; font-size: 14px;"><strong>Your message:</strong></p>
                 <p style="margin: 8px 0 0; color: #333;">${message}</p>
               </div>
               <p style="color: #888; font-size: 13px;">
-                If you need urgent help, call us at <strong>1800-123-456</strong> (Mon-Sat, 9am-6pm IST)
-              </p>
-              <p style="color: #888; font-size: 13px;">
                 With love, 🍼<br/>
-                <strong>BabyBliss Team</strong>
+                <strong>Arunas Baby World Team</strong>
               </p>
             </div>
           </div>
@@ -117,6 +114,25 @@ export async function POST(request) {
     );
   } catch (error) {
     console.error('Contact POST error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+// ✅ NEW — Delete a contact message
+export async function DELETE(request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'Contact ID is required' }, { status: 400 });
+    }
+
+    await prisma.contact.delete({ where: { id } });
+
+    return NextResponse.json({ message: 'Contact deleted successfully' });
+  } catch (error) {
+    console.error('Contact DELETE error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
