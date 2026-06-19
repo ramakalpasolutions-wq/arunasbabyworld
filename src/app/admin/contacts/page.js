@@ -212,7 +212,7 @@ export default function AdminContacts() {
                   fontWeight: '700', fontSize: '14px',
                 }}
               >
-                🗑️ Delete
+                🗑️ 
               </button>
 
               <button onClick={() => setSelected(null)} style={{
@@ -306,7 +306,7 @@ export default function AdminContacts() {
                       fontSize: '12px', fontWeight: '700',
                       cursor: 'pointer', whiteSpace: 'nowrap',
                     }}>
-                      👁️ View
+                      👁️ 
                     </button>
 
                     {/* Delete */}
@@ -350,7 +350,7 @@ export default function AdminContacts() {
                           cursor: 'pointer', whiteSpace: 'nowrap',
                         }}
                       >
-                        🗑️ Delete
+                        🗑️ 
                       </button>
                     )}
                   </div>
