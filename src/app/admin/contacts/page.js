@@ -430,7 +430,7 @@ export default function AdminContacts() {
                   borderRadius: '8px', fontSize: '12px',
                   fontWeight: '700', cursor: 'pointer',
                 }}>
-                  👁️ View
+                  👁️ 
                 </button>
 
                 {/* Mobile Delete */}
@@ -471,7 +471,7 @@ export default function AdminContacts() {
                       fontSize: '12px', fontWeight: '700', cursor: 'pointer',
                     }}
                   >
-                    🗑️ Delete
+                    🗑️ 
                   </button>
                 )}
               </div>
