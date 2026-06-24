@@ -99,6 +99,7 @@ model Product {
 type ProductImage {
   url      String?
   publicId String?
+  type     String?
 }
 
 model Review {
