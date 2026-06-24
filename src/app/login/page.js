@@ -186,14 +186,14 @@ function LoginForm() {
             <span className="demo-icon">🔑</span>
             <div className="demo-text">
               <span className="demo-label">Demo Admin</span>
-              <span className="demo-creds">arunasbabyworld@gmail.com / admin123</span>
+              <span className="demo-creds"></span>
             </div>
           </div>
           <button
             type="button"
             className="demo-btn"
             onClick={() => {
-              setForm({ email: 'arunasbabyworld@gmail.com', password: 'admin123' });
+              setForm({ email: '', password: '' });
               toast.success('Credentials filled! 🎉');
             }}
           >
