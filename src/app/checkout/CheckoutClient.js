@@ -169,7 +169,7 @@ export default function CheckoutClient() {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderData.order.amount,
         currency: 'INR',
-        name: 'BabyBliss',
+        name: 'Aruna's Baby World',
         description: 'Baby & Kids Products',
         order_id: orderData.order.id,
         handler: async (response) => {

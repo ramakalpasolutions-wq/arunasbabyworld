@@ -175,14 +175,14 @@ export const sendExchangeRequestConfirmation = async (exchange, order, customerE
           </a>
         </div>
         <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">
-          Questions? care@babybliss.in | Thank you for shopping with BabyBliss! 🍼
+          Questions? care@Aruna's Baby World.in | Thank you for shopping with Aruna's Baby World! 🍼
         </p>
       </div>
     </div>
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `🔄 Exchange Request - #${order.id?.slice(-8).toUpperCase()} | BabyBliss`,
+    subject: `🔄 Exchange Request - #${order.id?.slice(-8).toUpperCase()} | Aruna's Baby World`,
     html,
   });
 };
@@ -309,13 +309,13 @@ export const sendExchangeApproved = async (exchange, order, customerEmail, custo
             Track Exchange Status
           </a>
         </div>
-        <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">Thank you for shopping with BabyBliss! 🍼</p>
+        <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">Thank you for shopping with Aruna's Baby World! 🍼</p>
       </div>
     </div>
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `✅ Exchange Approved - #${order.id?.slice(-8).toUpperCase()} | BabyBliss`,
+    subject: `✅ Exchange Approved - #${order.id?.slice(-8).toUpperCase()} | Aruna's Baby World`,
     html,
   });
 };
@@ -374,13 +374,13 @@ export const sendExchangeShipped = async (exchange, order, customerEmail, custom
             View Exchange Details
           </a>
         </div>
-        <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">Thank you for shopping with BabyBliss! 🍼</p>
+        <p style="margin-top:24px;color:#888;font-size:13px;text-align:center;">Thank you for shopping with Aruna's Baby World! 🍼</p>
       </div>
     </div>
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `🚚 Exchange Shipped - #${order.id?.slice(-8).toUpperCase()} | BabyBliss`,
+    subject: `🚚 Exchange Shipped - #${order.id?.slice(-8).toUpperCase()} | Aruna's Baby World`,
     html,
   });
 };

@@ -1,4 +1,4 @@
-# 🍼 BabyBliss - Full-Stack eCommerce Platform
+# 🍼 Aruna's Baby World - Full-Stack eCommerce Platform
 
 A premium, production-ready eCommerce platform for baby & kids products built with **Next.js 14 App Router**, MongoDB, NextAuth, Razorpay, and Cloudinary.
 
@@ -171,4 +171,4 @@ Add all environment variables in Vercel dashboard.
 
 ## 📝 License
 
-MIT — Built with ❤️ for the BabyBliss project.
+MIT — Built with ❤️ for the Aruna's Baby World project.

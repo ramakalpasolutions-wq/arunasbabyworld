@@ -6,7 +6,7 @@ export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'BabyBliss - Premium Baby & Kids Store',
+  title: 'Aruna's Baby World - Premium Baby & Kids Store',
   description: 'Shop the best baby clothing, toys, gear, and more.',
 };
 
