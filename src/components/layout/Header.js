@@ -125,7 +125,7 @@ useEffect(() => {
           <Link href="/" className={styles.logo} onClick={closeMobile}>
             <Image
               src="/logo.png"
-              alt="Aruna's Baby World"
+              alt="Arunas Baby World"
               width={200}
               height={60}
               priority

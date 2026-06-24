@@ -288,7 +288,7 @@ export default function AdminLoginPage() {
                   type="email"
                   value={form.email}
                   onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                  placeholder="admin@Aruna's Baby World.com"
+                  placeholder="admin@Arunas Baby World.com"
                   required
                   style={{
                     flex: 1, border: 'none', outline: 'none',
@@ -411,7 +411,7 @@ export default function AdminLoginPage() {
               color: 'rgba(255,255,255,0.30)',
               fontSize: '0.84rem', fontWeight: '600',
               textDecoration: 'none',
-            }}>← Back to Aruna's Baby World Store</Link>
+            }}>← Back to Arunas Baby World Store</Link>
           </div>
 
           {/* Demo credentials */}
@@ -460,7 +460,7 @@ export default function AdminLoginPage() {
           fontSize: '0.72rem',
           color: 'rgba(255,255,255,0.15)',
           fontWeight: '500',
-        }}>© 2024 Aruna's Baby World Admin Portal. All rights reserved.</p>
+        }}>© 2024 Arunas Baby World Admin Portal. All rights reserved.</p>
 
       </div>
     </div>

@@ -37,7 +37,7 @@ export default function Footer() {
               <Link href="/" className={styles.logo}>
                 <Image
                   src="/logo.png"
-                  alt="Aruna's Baby World"
+                  alt="Arunas Baby World"
                   width={220}
                   height={90}
                   className={styles.logoImg}

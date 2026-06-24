@@ -42,7 +42,7 @@ export default function AboutClient() {
               <span className={styles.tag}>Our Story</span>
               <h1>Born from a Parent's Love 💝</h1>
               <p>
-                Aruna's Baby World was founded in 2019 by parents who struggled to find quality, safe, and
+                Arunas Baby World was founded in 2019 by parents who struggled to find quality, safe, and
                 affordable products for their little ones. We understood the anxiety, the joy, and
                 the overwhelming choices new parents face — and we built a solution.
               </p>
@@ -121,7 +121,7 @@ export default function AboutClient() {
       <section className={styles.whySection}>
         <div className="container">
           <div className="text-center reveal">
-            <h2 className={styles.sectionTitle}>Why 5 Lakh+ Parents Choose Aruna's Baby World</h2>
+            <h2 className={styles.sectionTitle}>Why 5 Lakh+ Parents Choose Arunas Baby World</h2>
             <p className={styles.sectionSub}>We're not just a store — we're your parenting partner</p>
           </div>
           <div className={styles.whyGrid}>
@@ -148,7 +148,7 @@ export default function AboutClient() {
         <div className="container">
           <div className="text-center reveal">
             <h2 className={styles.sectionTitle}>Meet the Founders</h2>
-            <p className={styles.sectionSub}>Parents who built Aruna's Baby World for parents</p>
+            <p className={styles.sectionSub}>Parents who built Arunas Baby World for parents</p>
           </div>
           <div className={styles.teamGrid}>
             {[

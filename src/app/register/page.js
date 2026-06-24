@@ -193,7 +193,7 @@ export default function RegisterPage() {
               fontSize: '1.6rem', fontWeight: '900',
               background: 'linear-gradient(135deg, #ff6b9d, #7c3aed)',
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
-            }}>Aruna's Baby World</span>
+            }}>Arunas Baby World</span>
           </Link>
           <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#1a1a2e', margin: '0 0 4px' }}>
             Create Account ✨

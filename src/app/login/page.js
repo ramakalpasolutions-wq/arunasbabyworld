@@ -80,7 +80,7 @@ function LoginForm() {
             <div className="logo-wrap">
               <Image
                 src="/logo.png"
-                alt="Aruna's Baby World"
+                alt="Arunas Baby World"
                 width={180}
                 height={180}
                 className="logo-img"

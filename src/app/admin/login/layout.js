@@ -2,7 +2,7 @@
 // ✅ Empty pass-through — parent layout handles login page specially
 
 export const metadata = {
-  title: 'Admin Login | Aruna's Baby World',
+  title: 'Admin Login | Arunas Baby World',
 };
 
 export default function AdminLoginLayout({ children }) {

@@ -1,7 +1,7 @@
 import MainLayout from '@/components/layout/MainLayout';
 import Link from 'next/link';
 
-export const metadata = { title: 'My Orders | Aruna's Baby World' };
+export const metadata = { title: 'My Orders | Arunas Baby World' };
 
 export default function OrdersPage() {
   return (

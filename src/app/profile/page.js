@@ -3,7 +3,7 @@ import MainLayout from '@/components/layout/MainLayout';
 import ProfileClient from './ProfileClient';
 
 export const metadata = {
-  title: 'My Profile | Aruna's Baby World',
+  title: 'My Profile | Arunas Baby World',
 };
 
 export default function ProfilePage() {

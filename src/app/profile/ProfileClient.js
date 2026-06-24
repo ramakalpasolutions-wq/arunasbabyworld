@@ -818,7 +818,7 @@ useEffect(() => {
           <div className={styles.logoutCard}>
             <div className={styles.logoutCardInfo}>
               <h4>Sign Out</h4>
-              <p>Sign out from your Aruna's Baby World account</p>
+              <p>Sign out from your Arunas Baby World account</p>
             </div>
             <button className={styles.logoutCardBtn} onClick={() => signOut({ callbackUrl: '/' })}>
               🚪 Logout

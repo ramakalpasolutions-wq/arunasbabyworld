@@ -446,7 +446,7 @@ function RefundCard({ order, status }) {
           </Link>
 
           {status === 'failed' && (
-            <a href="mailto:care@Aruna's Baby World.in" style={{
+            <a href="mailto:care@Arunas Baby World.in" style={{
               padding: '10px 16px',
               background: 'white',
               color: '#EF4444',
