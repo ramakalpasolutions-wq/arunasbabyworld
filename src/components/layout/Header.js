@@ -103,16 +103,8 @@ export default function Header() {
 
   const closeMobile = () => setMobileOpen(false);
 
-  // ✅ Session loading state
-// ✅ Smarter session detection
-const isLoadingSession = status === 'loading';
-const isLoggedIn = status === 'authenticated' && session && session.user;
-
-// ✅ DEBUG - Remove later
-useEffect(() => {
-  console.log('🔐 Session Status:', status);
-  console.log('👤 Session Data:', session);
-}, [status, session]);
+  const isLoadingSession = status === 'loading';
+  const isLoggedIn = status === 'authenticated' && session && session.user;
 
   return (
     <header className={`${styles.header} ${scrolled ? styles.scrolled : ''}`}>
@@ -174,9 +166,8 @@ useEffect(() => {
               <span className={styles.actionLabel}>Cart</span>
             </Link>
 
-            {/* ✅ Profile / Login / Loading */}
+            {/* Profile / Login / Loading */}
             {isLoadingSession ? (
-              // ✅ Loading skeleton (prevents flicker on refresh)
               <div className={styles.actionBtn} style={{ opacity: 0.6 }}>
                 <div
                   className={styles.avatar}
@@ -341,204 +332,192 @@ useEffect(() => {
       )}
 
       {/* MOBILE MENU */}
-      {mobileOpen && (
-        <div className={styles.mobileMenu}>
+{mobileOpen && (
+  <div className={styles.mobileMenu}>
 
-          {/* Top Bar with Back Button */}
-          <div className={styles.mobileMenuTop}>
-            <button
-              className={styles.mobileBackBtn}
-              onClick={closeMobile}
-              aria-label="Close menu"
-            >
-              <span className={styles.backArrow}>←</span>
-              <span>Back</span>
-            </button>
-            <span className={styles.mobileMenuTitle}>Menu</span>
-            <button
-              className={styles.mobileCloseBtn}
-              onClick={closeMobile}
-              aria-label="Close menu"
-            >
-              ✕
-            </button>
-          </div>
+    {/* Top Bar */}
+    <div className={styles.mobileMenuTop}>
+      <button
+        className={styles.mobileBackBtn}
+        onClick={closeMobile}
+        aria-label="Close menu"
+      >
+        <span className={styles.backArrow}>←</span>
+        <span>Back</span>
+      </button>
+      <span className={styles.mobileMenuTitle}>Menu</span>
+      <button
+        className={styles.mobileCloseBtn}
+        onClick={closeMobile}
+        aria-label="Close menu"
+      >
+        ✕
+      </button>
+    </div>
 
-          {/* Mobile Search */}
-          <div className={styles.mobileSearch}>
-            <form onSubmit={handleSearch}>
-              <div className={styles.searchBox}>
-                <span className={styles.searchIcon}>🔍</span>
-                <input
-                  ref={searchRef}
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  className={styles.searchInput}
-                />
-                <button type="submit" className={styles.searchBtn}>Go</button>
-              </div>
-            </form>
-          </div>
-
-          <div className={styles.mobileLinks}>
-
-            {/* Categories */}
-            <div className={styles.mobileCatSection}>
-              <p className={styles.mobileCatTitle}>Shop by Category</p>
-              {catLoading ? (
-                <div className={styles.mobileCatList}>
-                  {[...Array(8)].map((_, i) => (
-                    <div key={i} className={styles.mobileCatSkeleton} />
-                  ))}
-                </div>
-              ) : (
-                <div className={styles.mobileCatList}>
-                  {navCategories.map((cat, i) => (
-                    <Link
-                      key={cat.id}
-                      href={`/products?category=${cat.id}`}
-                      className={styles.mobileCatItem}
-                      onClick={closeMobile}
-                      style={{ animationDelay: `${i * 40}ms` }}
-                    >
-                      <span className={styles.mobileCatItemName}>{cat.name}</span>
-                      <span className={styles.mobileCatItemArrow}>›</span>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className={styles.mobileDivider} />
-
-            {/* Quick Filters */}
-            <div className={styles.mobileBtnGroup}>
-              <Link
-                href="/products?featured=true"
-                className={styles.mobilePill}
-                style={{ background: 'linear-gradient(135deg,#FF6B35,#FF8C5A)' }}
-                onClick={closeMobile}
-              >
-                ⭐ Featured
-              </Link>
-              <Link
-                href="/products?sort=createdAt&order=desc"
-                className={styles.mobilePill}
-                style={{ background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)' }}
-                onClick={closeMobile}
-              >
-                ✨ New
-              </Link>
-              <Link
-                href="/products?trending=true"
-                className={styles.mobilePill}
-                style={{ background: 'linear-gradient(135deg,#FF3366,#FF6B35)' }}
-                onClick={closeMobile}
-              >
-                🔥 Trending
-              </Link>
-              <Link
-                href="/contact"
-                className={styles.mobilePill}
-                style={{ background: 'linear-gradient(135deg,#0EA5E9,#7B2FBE)' }}
-                onClick={closeMobile}
-              >
-                📞 Contact
-              </Link>
-            </div>
-
-            <div className={styles.mobileDivider} />
-
-            {/* Cart & Wishlist */}
-            <Link href="/cart" className={styles.mobileLink} onClick={closeMobile}>
-              🛒 Cart {totalItems > 0 && `(${totalItems})`}
-            </Link>
-            <Link href="/wishlist" className={styles.mobileLink} onClick={closeMobile}>
-              ❤️ Wishlist {wishlistItems.length > 0 && `(${wishlistItems.length})`}
-            </Link>
-
-            <div className={styles.mobileDivider} />
-
-            {/* ✅ Profile / Login Section (Mobile) */}
-            {isLoadingSession ? (
-              <div
-                className={styles.mobileLink}
-                style={{
-                  opacity: 0.6,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                }}
-              >
-                <div
-                  style={{
-                    width: '24px',
-                    height: '24px',
-                    borderRadius: '50%',
-                    background: 'linear-gradient(135deg, #E5E7EB, #D1D5DB)',
-                    animation: 'pulse 1.5s ease-in-out infinite',
-                  }}
-                />
-                ⏳ Loading session...
-              </div>
-            ) : isLoggedIn ? (
-              <>
-                <div className={styles.mobileUserCard}>
-                  <div className={styles.mobileUserAvatar}>
-                    {session.user.name?.[0]?.toUpperCase() || 'U'}
-                  </div>
-                  <div className={styles.mobileUserInfo}>
-                    <div className={styles.mobileUserName}>{session.user.name}</div>
-                    <div className={styles.mobileUserEmail}>{session.user.email}</div>
-                  </div>
-                </div>
-
-                <Link href="/profile" className={styles.mobileLink} onClick={closeMobile}>
-                  👤 My Profile
-                </Link>
-                <Link href="/profile?tab=orders" className={styles.mobileLink} onClick={closeMobile}>
-                  📦 My Orders
-                </Link>
-
-                {session.user.role === 'admin' && (
-                  <Link
-                    href="/admin/dashboard"
-                    className={styles.mobileLink}
-                    onClick={closeMobile}
-                    style={{ color: '#7B2FBE', fontWeight: '800' }}
-                  >
-                    ⚙️ Admin Dashboard
-                  </Link>
-                )}
-
-                <button
-                  className={styles.mobileLink}
-                  style={{ color: '#ef4444' }}
-                  onClick={() => {
-                    signOut({ callbackUrl: '/' });
-                    closeMobile();
-                  }}
-                >
-                  🚪 Logout
-                </button>
-              </>
-            ) : (
-              <>
-                <Link href="/login" className={styles.mobileLink} onClick={closeMobile}>
-                  🔑 Login
-                </Link>
-                <Link href="/register" className={styles.mobileLink} onClick={closeMobile}>
-                  ✨ Create Account
-                </Link>
-              </>
-            )}
-          </div>
+    {/* Mobile Search */}
+    <div className={styles.mobileSearch}>
+      <form onSubmit={handleSearch}>
+        <div className={styles.searchBox}>
+          <span className={styles.searchIcon}>🔍</span>
+          <input
+            ref={searchRef}
+            type="text"
+            placeholder="Search products..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className={styles.searchInput}
+          />
+          <button type="submit" className={styles.searchBtn}>Go</button>
         </div>
-      )}
+      </form>
+    </div>
 
-      {/* ✅ Pulse animation for loading skeleton */}
+    <div className={styles.mobileLinks}>
+
+      {/* ✅ Browse All Products — Hero CTA */}
+      <Link
+        href="/products"
+        onClick={closeMobile}
+        className={styles.mobileBrowseBtn}
+      >
+        <span className={styles.mobileBrowseBtnInner}>
+          <span className={styles.mobileBrowseBtnIcon}>🛍️</span>
+          <span>Browse All Products</span>
+        </span>
+        <span className={styles.mobileBrowseBtnArrow}>›</span>
+      </Link>
+
+      {/* ✅ Quick Filters Label */}
+      <p className={styles.mobileSectionLabel}>Quick Filters</p>
+
+      <div className={styles.mobileBtnGroup}>
+        <Link
+          href="/products?featured=true"
+          className={styles.mobilePill}
+          style={{ background: 'linear-gradient(135deg,#FF6B35,#FF8C5A)' }}
+          onClick={closeMobile}
+        >
+          ⭐ Featured
+        </Link>
+        <Link
+          href="/products?sort=createdAt&order=desc"
+          className={styles.mobilePill}
+          style={{ background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)' }}
+          onClick={closeMobile}
+        >
+          ✨ New
+        </Link>
+        <Link
+          href="/products?trending=true"
+          className={styles.mobilePill}
+          style={{ background: 'linear-gradient(135deg,#FF3366,#FF6B35)' }}
+          onClick={closeMobile}
+        >
+          🔥 Trending
+        </Link>
+        <Link
+          href="/contact"
+          className={styles.mobilePill}
+          style={{ background: 'linear-gradient(135deg,#0EA5E9,#7B2FBE)' }}
+          onClick={closeMobile}
+        >
+          📞 Contact
+        </Link>
+      </div>
+
+      <div className={styles.mobileDivider} />
+
+      {/* ✅ Shopping Section */}
+      <p className={styles.mobileSectionLabel}>Shopping</p>
+
+      <Link href="/cart" className={styles.mobileLink} onClick={closeMobile}>
+        <span className={styles.mobileLinkIcon}>🛒</span>
+        <span className={styles.mobileLinkText}>Cart</span>
+        {totalItems > 0 && (
+          <span className={styles.mobileLinkCount}>{totalItems}</span>
+        )}
+      </Link>
+      <Link href="/wishlist" className={styles.mobileLink} onClick={closeMobile}>
+        <span className={styles.mobileLinkIcon}>❤️</span>
+        <span className={styles.mobileLinkText}>Wishlist</span>
+        {wishlistItems.length > 0 && (
+          <span className={styles.mobileLinkCount}>{wishlistItems.length}</span>
+        )}
+      </Link>
+
+      <div className={styles.mobileDivider} />
+
+      {/* ✅ Account Section */}
+      {isLoadingSession ? (
+        <div className={styles.mobileLink} style={{ opacity: 0.6 }}>
+          <span className={styles.mobileLinkIcon}>⏳</span>
+          <span className={styles.mobileLinkText}>Loading...</span>
+        </div>
+      ) : isLoggedIn ? (
+        <>
+          <div className={styles.mobileUserCard}>
+            <div className={styles.mobileUserAvatar}>
+              {session.user.name?.[0]?.toUpperCase() || 'U'}
+            </div>
+            <div className={styles.mobileUserInfo}>
+              <div className={styles.mobileUserName}>{session.user.name}</div>
+              <div className={styles.mobileUserEmail}>{session.user.email}</div>
+            </div>
+          </div>
+
+          <p className={styles.mobileSectionLabel}>Account</p>
+
+          <Link href="/profile" className={styles.mobileLink} onClick={closeMobile}>
+            <span className={styles.mobileLinkIcon}>👤</span>
+            <span className={styles.mobileLinkText}>My Profile</span>
+          </Link>
+          <Link href="/profile?tab=orders" className={styles.mobileLink} onClick={closeMobile}>
+            <span className={styles.mobileLinkIcon}>📦</span>
+            <span className={styles.mobileLinkText}>My Orders</span>
+          </Link>
+
+          {session.user.role === 'admin' && (
+            <Link
+              href="/admin/dashboard"
+              className={`${styles.mobileLink} ${styles.mobileLinkAdmin}`}
+              onClick={closeMobile}
+            >
+              <span className={styles.mobileLinkIcon}>⚙️</span>
+              <span className={styles.mobileLinkText}>Admin Dashboard</span>
+            </Link>
+          )}
+
+          <div className={styles.mobileDivider} />
+
+          <button
+            className={`${styles.mobileLink} ${styles.mobileLinkLogout}`}
+            onClick={() => {
+              signOut({ callbackUrl: '/' });
+              closeMobile();
+            }}
+          >
+            <span className={styles.mobileLinkIcon}>🚪</span>
+            <span className={styles.mobileLinkText}>Logout</span>
+          </button>
+        </>
+      ) : (
+        <>
+          <p className={styles.mobileSectionLabel}>Account</p>
+          <Link href="/login" className={styles.mobileLink} onClick={closeMobile}>
+            <span className={styles.mobileLinkIcon}>🔑</span>
+            <span className={styles.mobileLinkText}>Login</span>
+          </Link>
+          <Link href="/register" className={styles.mobileLink} onClick={closeMobile}>
+            <span className={styles.mobileLinkIcon}>✨</span>
+            <span className={styles.mobileLinkText}>Create Account</span>
+          </Link>
+        </>
+      )}
+    </div>
+  </div>
+)}
+      {/* Pulse animation for loading skeleton */}
       <style jsx>{`
         @keyframes pulse {
           0%, 100% { opacity: 1; }

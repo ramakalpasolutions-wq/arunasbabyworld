@@ -64,6 +64,7 @@
   object-fit: contain;
   display: block;
 }
+
 /* ============================================================
    SEARCH (Desktop)
    ============================================================ */
@@ -518,10 +519,10 @@
 .profileLogout:hover { background: #fef2f2; color: #dc2626; }
 
 /* ============================================================
-   MOBILE MENU
+   ✅ MOBILE MENU — Clean white design
    ============================================================ */
 .mobileMenu {
- background: linear-gradient(180deg, #ffcf86 0%, #f59e3c 100%);
+  background: #FFFFFF;
   border-top: 2px solid #EDD9FF;
   box-shadow: 0 8px 32px rgba(123,47,190,0.14);
   max-height: calc(100vh - 70px);
@@ -536,280 +537,16 @@
 .mobileMenu::-webkit-scrollbar { width: 3px; }
 .mobileMenu::-webkit-scrollbar-thumb { background: #EDD9FF; border-radius: 3px; }
 
-.mobileSearch {
-  display: none;
-  padding: 12px 16px;
-  border-bottom: 1px solid #EDD9FF;
-  background: #FAFAFA;
-}
-
-.mobileLinks {
-  display: flex;
-  flex-direction: column;
-  padding: 8px 0 24px;
-}
-
-.mobileCatSection { padding: 14px 20px 12px; }
-
-.mobileCatTitle {
-  font-size: 0.72rem;
-  font-weight: 800;
-  color: #9585B0;
-  text-transform: uppercase;
-  letter-spacing: 1.2px;
-  margin: 0 0 10px;
-  padding-bottom: 8px;
-  border-bottom: 1.5px solid #EDD9FF;
-}
-
-.mobileCatList { display: flex; flex-direction: column; gap: 2px; }
-
-.mobileCatItem {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 11px 14px;
-  border-radius: 10px;
-  text-decoration: none;
-  color: #2D1A4A;
-  font-family: 'Nunito', sans-serif;
-  font-size: 0.90rem;
-  font-weight: 700;
-  transition: all 0.18s ease;
-  border-left: 3px solid transparent;
-  animation: catItemFadeIn 0.3s ease both;
-}
-
-.mobileCatItem:hover {
-  background: linear-gradient(135deg, #FFF3EC, #F3E8FF);
-  color: #FF6B35;
-  border-left-color: #FF6B35;
-  padding-left: 18px;
-}
-
-.mobileCatItemName { flex: 1; font-size: 0.90rem; font-weight: 700; line-height: 1; }
-
-.mobileCatItemArrow {
-  font-size: 1.1rem;
-  color: #C8B8DC;
-  font-weight: 400;
-  flex-shrink: 0;
-  transition: all 0.18s ease;
-}
-
-.mobileCatItem:hover .mobileCatItemArrow { color: #FF6B35; transform: translateX(3px); }
-
-.mobileCatSkeleton {
-  height: 40px;
-  border-radius: 10px;
-  background: linear-gradient(90deg, #F0E8FA 0%, #F8F2FF 40%, #F0E8FA 80%);
-  background-size: 200% 100%;
-  animation: skeletonMove 1.6s ease-in-out infinite;
-  margin-bottom: 2px;
-}
-
-.mobileDivider { height: 1px; background: #EDD9FF; margin: 8px 0; }
-
-.mobileBtnGroup {
-  display: flex;
-  gap: 8px;
-  padding: 10px 20px;
-  flex-wrap: wrap;
-}
-
-.mobilePill {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 7px 14px;
-  border-radius: 9999px;
-  font-size: 0.78rem;
-  font-weight: 800;
-  color: white;
-  text-decoration: none;
-  font-family: 'Nunito', sans-serif;
-  box-shadow: 0 3px 10px rgba(0,0,0,0.12);
-  transition: all 0.2s ease;
-}
-
-.mobilePill:hover { transform: translateY(-2px); }
-
-.mobileLink {
-  padding: 12px 20px;
-  font-size: 0.90rem;
-  font-weight: 700;
-  color: #6B4E8A;
-  border: none;
-  background: none;
-  text-align: left;
-  cursor: pointer;
-  font-family: 'Nunito', sans-serif;
-  text-decoration: none;
-  display: block;
-  border-left: 3px solid transparent;
-  transition: all 0.18s ease;
-  width: 100%;
-}
-
-.mobileLink:hover {
-  background: linear-gradient(135deg, #FFF3EC, #F3E8FF);
-  color: #FF6B35;
-  border-left-color: #FF6B35;
-  padding-left: 26px;
-}
-
-.mobileUserCard {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 14px 20px;
-  background: linear-gradient(135deg, #FFF3EC, #F3E8FF);
-  border-top: 1px solid #EDD9FF;
-  border-bottom: 1px solid #EDD9FF;
-  margin: 4px 0;
-}
-
-.mobileUserAvatar {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: linear-gradient(135deg, #FF6B35, #7B2FBE);
-  color: white;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 800;
-  font-size: 1rem;
-  flex-shrink: 0;
-}
-
-.mobileUserInfo { min-width: 0; flex: 1; }
-
-.mobileUserName {
-  font-weight: 800;
-  font-size: 0.90rem;
-  color: #2D1A4A;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.mobileUserEmail {
-  font-size: 0.72rem;
-  color: #9585B0;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-top: 2px;
-}
-
 /* ============================================================
-   KEYFRAMES
-   ============================================================ */
-@keyframes gradientSlide { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
-@keyframes cartBounceAnim { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.25); } 60% { transform: scale(0.92); } }
-@keyframes pulseDot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.7; } }
-@keyframes megaFadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes dropdownIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes mobileMenuIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
-@keyframes catItemFadeIn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: translateX(0); } }
-@keyframes skeletonMove { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
-
-/* ============================================================
-   ✅ RESPONSIVE — TABLET LANDSCAPE (1280px)
-   ============================================================ */
-@media (max-width: 1280px) {
-  .navLink { padding: 10px 10px; font-size: 0.78rem; }
-  .navBtn  { padding: 5px 10px;  font-size: 0.74rem; }
-  .searchBtn { padding: 10px 14px; font-size: 0.80rem; }
-}
-
-/* ============================================================
-   ✅ RESPONSIVE — TABLET (1024px)
-   ============================================================ */
-@media (max-width: 1024px) {
-  .mainContent { gap: 12px; }
-  .logoImg     { height: 52px; }
-  .searchBtn   { padding: 9px 12px; font-size: 0.78rem; }
-  .navLink     { padding: 10px 8px; font-size: 0.74rem; }
-  .navBtn      { padding: 5px 9px;  font-size: 0.70rem; gap: 4px; margin: 4px 2px; }
-  .navBtnDot   { width: 5px; height: 5px; }
-  .navBtnPulse { width: 5px; height: 5px; }
-  .navDivider  { margin: 0 3px; }
-  .actionLabel { font-size: 0.62rem; }
-  .actionBtn   { padding: 6px 8px; }
-}
-/* ============================================================
-   ✅ RESPONSIVE — TABLET PORTRAIT / LARGE MOBILE (900px)
-   Hide desktop search → show in mobile menu
-   ============================================================ */
-@media (max-width: 900px) {
-  .searchForm    { display: none; }
-  .mobileMenuBtn { display: flex; }
-  .actionLabel   { display: none; }
-  .actionBtn     { padding: 6px 8px; }
-  .actionIcon    { font-size: 1.35rem; }
-  .categoryNav   { display: none; }
-  .mobileSearch  { display: block; }
-}
-
-/* ============================================================
-   ✅ RESPONSIVE — MOBILE (768px)
-   ============================================================ */
-@media (max-width: 800px) {
-  .mainContent   { gap: 10px; }
-  .logoImg       { height: 80px; }
-  .avatar        { width: 30px; height: 30px; font-size: 0.80rem; }
-}
-
-/* ============================================================
-   ✅ RESPONSIVE — SMALL MOBILE (480px)
-   ============================================================ */
-@media (max-width: 480px) {
-  .mainHeader      { padding: 8px 0; }
-  .mainContent     { gap: 6px; }
-  .logoImg         { height: 40px; }
-  .actionBtn       { padding: 5px 6px; }
-  .actionIcon      { font-size: 1.30rem; }
-  .badge           { min-width: 16px; height: 16px; font-size: 0.56rem; top: 0; right: 1px; }
-  .profileDropdown { right: -6px; min-width: 200px; }
-  .mobileCatSection { padding: 12px 16px 10px; }
-  .mobileCatItem   { padding: 10px 12px; font-size: 0.86rem; }
-  .mobileBtnGroup  { padding: 10px 16px; gap: 6px; }
-  .mobilePill      { padding: 6px 12px; font-size: 0.74rem; }
-  .mobileSearch    { padding: 10px 12px; }
-  .mobileSearch .searchInput { font-size: 0.85rem; padding: 9px 0; }
-  .mobileSearch .searchBtn   { padding: 9px 14px; font-size: 0.78rem; }
-}
-/* ============================================================
-   ✅ RESPONSIVE — EXTRA SMALL (380px)
-   ============================================================ */
-@media (max-width: 380px) {
-  .mainContent   { gap: 4px; }
-  .logoImg       { height: 36px; }
-  .actionIcon    { font-size: 1.20rem; }
-  .actions       { gap: 2px; }
-  .actionBtn     { padding: 4px 5px; }
-  .mobileMenuBtn { padding: 6px; }
-}
-/* ============================================================
-   ✅ RESPONSIVE — TINY (340px)
-   ============================================================ */
-@media (max-width: 340px) {
-  .logoImg       { height: 32px; }
-  .actionIcon    { font-size: 1.15rem; }
-  .actionBtn     { padding: 4px; }
-}
-/* ============================================================
-   ✅ MOBILE MENU TOP BAR (with Back & Close buttons)
+   ✅ MOBILE MENU TOP BAR
    ============================================================ */
 .mobileMenuTop {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 12px 16px;
-  background: linear-gradient(135deg, #FFF3EC, #F3E8FF);
-  border-bottom: 2px solid #EDD9FF;
+  padding: 14px 16px;
+  background: #FFFFFF;
+  border-bottom: 1.5px solid #EDD9FF;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -820,7 +557,7 @@
   align-items: center;
   gap: 6px;
   padding: 8px 14px;
-  background: white;
+  background: #F8F4FF;
   border: 1.5px solid #EDD9FF;
   border-radius: 999px;
   font-size: 0.82rem;
@@ -829,7 +566,6 @@
   cursor: pointer;
   font-family: 'Nunito', sans-serif;
   transition: all 0.2s ease;
-  box-shadow: 0 2px 6px rgba(123,47,190,0.08);
 }
 
 .mobileBackBtn:hover {
@@ -837,7 +573,6 @@
   color: white;
   border-color: transparent;
   transform: translateX(-2px);
-  box-shadow: 0 4px 12px rgba(123,47,190,0.25);
 }
 
 .backArrow {
@@ -847,7 +582,7 @@
 }
 
 .mobileMenuTitle {
-  font-size: 0.95rem;
+  font-size: 1rem;
   font-weight: 800;
   color: #2D1A4A;
   font-family: 'Nunito', sans-serif;
@@ -857,7 +592,7 @@
   width: 34px;
   height: 34px;
   border-radius: 50%;
-  background: white;
+  background: #F8F4FF;
   border: 1.5px solid #EDD9FF;
   color: #6B4E8A;
   font-size: 0.95rem;
@@ -875,4 +610,311 @@
   color: white;
   border-color: #ef4444;
   transform: rotate(90deg);
+}
+
+/* ============================================================
+   ✅ MOBILE SEARCH
+   ============================================================ */
+.mobileSearch {
+  display: none;
+  padding: 14px 16px;
+  border-bottom: 1px solid #F0E8FA;
+  background: #FFFFFF;
+}
+
+/* ============================================================
+   ✅ MOBILE LINKS — Clean structure
+   ============================================================ */
+.mobileLinks {
+  display: flex;
+  flex-direction: column;
+  padding: 0 0 20px;
+  background: #FFFFFF;
+}
+
+/* ✅ Section labels (small uppercase headings) */
+.mobileSectionLabel {
+  font-size: 0.70rem;
+  font-weight: 800;
+  color: #9585B0;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  padding: 16px 20px 8px;
+  margin: 0;
+}
+
+/* ✅ Browse Products — Hero CTA */
+.mobileBrowseBtn {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 12px 16px 16px;
+  padding: 14px 18px;
+  background: linear-gradient(135deg, #FF6B35, #7B2FBE);
+  color: white;
+  border-radius: 14px;
+  font-weight: 800;
+  font-size: 0.95rem;
+  text-decoration: none;
+  box-shadow: 0 6px 18px rgba(255,107,53,0.25);
+  transition: transform 0.2s ease;
+}
+
+.mobileBrowseBtn:hover {
+  transform: translateY(-2px);
+}
+
+.mobileBrowseBtnInner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobileBrowseBtnIcon {
+  font-size: 1.3rem;
+}
+
+.mobileBrowseBtnArrow {
+  font-size: 1.3rem;
+  font-weight: 800;
+}
+
+/* ✅ Quick Filter Pills */
+.mobileBtnGroup {
+  display: flex;
+  gap: 8px;
+  padding: 4px 16px 16px;
+  flex-wrap: wrap;
+}
+
+.mobilePill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 8px 14px;
+  border-radius: 9999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: white;
+  text-decoration: none;
+  font-family: 'Nunito', sans-serif;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.10);
+  transition: transform 0.2s ease;
+}
+
+.mobilePill:hover { transform: translateY(-2px); }
+
+/* ✅ Section Divider (clean, thin) */
+.mobileDivider {
+  height: 1px;
+  background: #F0E8FA;
+  margin: 4px 16px;
+}
+
+/* ✅ Plain menu link rows */
+.mobileLink {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px 20px;
+  font-size: 0.92rem;
+  font-weight: 600;
+  color: #2D1A4A;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-family: 'Nunito', sans-serif;
+  text-decoration: none;
+  width: 100%;
+  border-left: 3px solid transparent;
+  transition: all 0.18s ease;
+}
+
+.mobileLink:hover {
+  background: #FFF3EC;
+  color: #FF6B35;
+  border-left-color: #FF6B35;
+  padding-left: 24px;
+}
+
+.mobileLinkIcon {
+  font-size: 1.1rem;
+  width: 24px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.mobileLinkText {
+  flex: 1;
+}
+
+.mobileLinkCount {
+  font-size: 0.72rem;
+  font-weight: 800;
+  color: #9585B0;
+  background: #F8F4FF;
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+
+/* ✅ User Card (clean white with border) */
+.mobileUserCard {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 16px;
+  padding: 14px;
+  background: linear-gradient(135deg, #FFF3EC, #F3E8FF);
+  border: 1.5px solid #EDD9FF;
+  border-radius: 14px;
+}
+
+.mobileUserAvatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #FF6B35, #7B2FBE);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1.05rem;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(255,107,53,0.25);
+}
+
+.mobileUserInfo { min-width: 0; flex: 1; }
+
+.mobileUserName {
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: #2D1A4A;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mobileUserEmail {
+  font-size: 0.72rem;
+  color: #9585B0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-top: 2px;
+}
+
+/* ✅ Logout button (red accent) */
+.mobileLinkLogout {
+  color: #ef4444 !important;
+}
+
+.mobileLinkLogout:hover {
+  background: #fef2f2 !important;
+  color: #dc2626 !important;
+  border-left-color: #ef4444 !important;
+}
+
+/* ✅ Admin link (purple accent) */
+.mobileLinkAdmin {
+  color: #7B2FBE !important;
+  font-weight: 800 !important;
+}
+
+/* ============================================================
+   KEYFRAMES
+   ============================================================ */
+@keyframes gradientSlide { 0% { background-position: 0% 50%; } 100% { background-position: 200% 50%; } }
+@keyframes cartBounceAnim { 0%, 100% { transform: scale(1); } 30% { transform: scale(1.25); } 60% { transform: scale(0.92); } }
+@keyframes pulseDot { 0%, 100% { transform: scale(1); opacity: 1; } 50% { transform: scale(1.5); opacity: 0.7; } }
+@keyframes megaFadeIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes dropdownIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes mobileMenuIn { from { opacity: 0; transform: translateY(-8px); } to { opacity: 1; transform: translateY(0); } }
+
+/* ============================================================
+   ✅ RESPONSIVE — 1280px
+   ============================================================ */
+@media (max-width: 1280px) {
+  .navLink { padding: 10px 10px; font-size: 0.78rem; }
+  .navBtn  { padding: 5px 10px;  font-size: 0.74rem; }
+  .searchBtn { padding: 10px 14px; font-size: 0.80rem; }
+}
+
+/* ============================================================
+   ✅ RESPONSIVE — 1024px
+   ============================================================ */
+@media (max-width: 1024px) {
+  .mainContent { gap: 12px; }
+  .logoImg     { height: 52px; }
+  .searchBtn   { padding: 9px 12px; font-size: 0.78rem; }
+  .navLink     { padding: 10px 8px; font-size: 0.74rem; }
+  .navBtn      { padding: 5px 9px;  font-size: 0.70rem; gap: 4px; margin: 4px 2px; }
+  .navBtnDot   { width: 5px; height: 5px; }
+  .navBtnPulse { width: 5px; height: 5px; }
+  .navDivider  { margin: 0 3px; }
+  .actionLabel { font-size: 0.62rem; }
+  .actionBtn   { padding: 6px 8px; }
+}
+
+/* ============================================================
+   ✅ RESPONSIVE — 900px (Tablet → Mobile menu)
+   ============================================================ */
+@media (max-width: 900px) {
+  .searchForm    { display: none; }
+  .mobileMenuBtn { display: flex; }
+  .actionLabel   { display: none; }
+  .actionBtn     { padding: 6px 8px; }
+  .actionIcon    { font-size: 1.35rem; }
+  .categoryNav   { display: none; }
+  .mobileSearch  { display: block; }
+}
+
+/* ============================================================
+   ✅ RESPONSIVE — 800px
+   ============================================================ */
+@media (max-width: 800px) {
+  .mainContent { gap: 10px; }
+  .logoImg     { height: 80px; }
+  .avatar      { width: 30px; height: 30px; font-size: 0.80rem; }
+}
+
+/* ============================================================
+   ✅ RESPONSIVE — 480px
+   ============================================================ */
+@media (max-width: 480px) {
+  .mainHeader      { padding: 8px 0; }
+  .mainContent     { gap: 6px; }
+  .logoImg         { height: 40px; }
+  .actionBtn       { padding: 5px 6px; }
+  .actionIcon      { font-size: 1.30rem; }
+  .badge           { min-width: 16px; height: 16px; font-size: 0.56rem; top: 0; right: 1px; }
+  .profileDropdown { right: -6px; min-width: 200px; }
+
+  .mobileBrowseBtn { margin: 10px 14px 14px; padding: 12px 16px; font-size: 0.90rem; }
+  .mobileBtnGroup  { padding: 4px 14px 14px; gap: 6px; }
+  .mobilePill      { padding: 7px 12px; font-size: 0.74rem; }
+  .mobileLink      { padding: 12px 16px; font-size: 0.88rem; }
+  .mobileSearch    { padding: 12px 14px; }
+}
+
+/* ============================================================
+   ✅ RESPONSIVE — 380px
+   ============================================================ */
+@media (max-width: 380px) {
+  .mainContent   { gap: 4px; }
+  .logoImg       { height: 36px; }
+  .actionIcon    { font-size: 1.20rem; }
+  .actions       { gap: 2px; }
+  .actionBtn     { padding: 4px 5px; }
+  .mobileMenuBtn { padding: 6px; }
+}
+
+/* ============================================================
+   ✅ RESPONSIVE — 340px
+   ============================================================ */
+@media (max-width: 340px) {
+  .logoImg    { height: 32px; }
+  .actionIcon { font-size: 1.15rem; }
+  .actionBtn  { padding: 4px; }
 }

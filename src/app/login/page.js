@@ -179,27 +179,6 @@ function LoginForm() {
           New here?{' '}
           <Link href="/register" className="signup-link">Create account</Link>
         </p>
-
-        {/* Demo */}
-        <div className="demo-strip">
-          <div className="demo-info">
-            <span className="demo-icon">🔑</span>
-            <div className="demo-text">
-              <span className="demo-label">Demo Admin</span>
-              <span className="demo-creds"></span>
-            </div>
-          </div>
-          <button
-            type="button"
-            className="demo-btn"
-            onClick={() => {
-              setForm({ email: '', password: '' });
-              toast.success('Credentials filled! 🎉');
-            }}
-          >
-            Fill
-          </button>
-        </div>
       </div>
     </div>
   );

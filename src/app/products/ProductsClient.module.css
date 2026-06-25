@@ -100,8 +100,8 @@
   background: linear-gradient(135deg,
     #FFF5EE 0%, #FDF0FF 40%, #FFF3F8 70%, #FFF8EE 100%);
   border-bottom: 1.5px solid var(--border);
-  /* ✅ Remove overflow:hidden so pills never get cut */
   padding: 36px 24px 28px;
+  overflow: hidden;
 }
 
 .heroStripInner {
@@ -114,6 +114,8 @@
   flex-wrap: wrap;
   position: relative;
   z-index: 2;
+  min-width: 0;
+  width: 100%;
 }
 
 .heroStripLeft { min-width: 0; }
@@ -162,7 +164,7 @@
 
 .heroIn { color: var(--pu); font-weight: 700; }
 
-/* ✅ Quick pills wrapper — scrollable, never cut off */
+/* ✅ Quick pills wrapper — scrollable, all 4 visible */
 .quickPillsWrap {
   flex-shrink: 0;
   max-width: 100%;
@@ -178,6 +180,7 @@
   gap: 8px;
   flex-wrap: nowrap;
   width: max-content;
+  padding-right: 20px;
 }
 
 .quickPill {
@@ -618,7 +621,7 @@
 }
 
 /* ============================================================
-   ✅ SIDEBAR — Fixed z-index so it shows properly
+   ✅ SIDEBAR
    ============================================================ */
 .sidebar {
   position: sticky;
@@ -673,7 +676,7 @@
 
 .closeSidebar {
   display: none;
-  background: rgba(255,255,255,0.9);
+  background: #F8F2FF;
   border: 1.5px solid var(--border);
   border-radius: 50%;
   width: 34px;
@@ -1056,21 +1059,21 @@
 .emptyBtn:hover { transform: translateY(-2px); }
 
 /* ============================================================
-   ✅ OVERLAY — z-index 45, ABOVE sidebar (z-index 50 for sidebar)
+   ✅ OVERLAY
    ============================================================ */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(45,26,74,0.55);
-  backdrop-filter: blur(4px);
+  background: rgba(20, 10, 40, 0.6);
   -webkit-backdrop-filter: blur(4px);
-  z-index: 45;
+  backdrop-filter: blur(4px);
+  z-index: 9998;
   cursor: pointer;
   animation: overlayFadeIn 0.25s ease forwards;
 }
 
 /* ============================================================
-   ALL KEYFRAMES — once only
+   KEYFRAMES
    ============================================================ */
 @keyframes orbDrift1 {
   0%, 100% { transform: translateY(0) scale(1); }
@@ -1114,7 +1117,7 @@
 }
 
 /* ============================================================
-   RESPONSIVE — 900px
+   ✅ RESPONSIVE — 900px (MOBILE DRAWER + PILLS FIT)
    ============================================================ */
 @media (max-width: 900px) {
   .mobileCatBar    { display: block !important; }
@@ -1122,26 +1125,43 @@
   .filterToggle    { display: inline-flex; }
   .layout          { grid-template-columns: 1fr; }
 
-  /* ✅ Sidebar drawer — z-index 50 (above overlay 45) */
+  /* ✅ SIDEBAR DRAWER — Fully solid */
   .sidebar {
-    position: fixed;
-    top: 0; left: 0; bottom: 0;
-    width: min(300px, 85vw);
-    height: 100vh;
-    max-height: 100vh;
-    border-radius: 0 20px 20px 0;
-    z-index: 50;
-    overflow-y: auto;
+    position: fixed !important;
+    top: 0 !important;
+    left: 0 !important;
+    bottom: 0 !important;
+    width: min(320px, 88vw) !important;
+    height: 100vh !important;
+    height: 100dvh !important;
+    max-height: 100vh !important;
+    max-height: 100dvh !important;
+    border-radius: 0 24px 24px 0 !important;
+    border: none !important;
+    border-right: 2px solid var(--border) !important;
+    z-index: 9999 !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
     transform: translateX(-110%);
-    transition: transform 0.35s cubic-bezier(0.22,1,0.36,1);
-    box-shadow: 4px 0 40px rgba(45,26,74,0.25);
-    padding: 20px;
-    /* ✅ Make sure it's fully visible */
-    background: var(--white) !important;
+    transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+    box-shadow: 8px 0 40px rgba(20, 10, 40, 0.4) !important;
+    padding: 20px !important;
+    background-color: #FFFFFF !important;
+    background-image: none !important;
     opacity: 1 !important;
-    visibility: visible;
+    visibility: visible !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+    isolation: isolate;
+    will-change: transform;
+    transform-style: flat;
   }
-  .sidebarOpen  { transform: translateX(0) !important; }
+
+  .sidebarOpen { transform: translateX(0) !important; }
+
+  .sidebarOpen .sidebarBlob1,
+  .sidebarOpen .sidebarBlob2 { display: none !important; }
+
   .closeSidebar { display: flex; }
 
   .productsGrid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
@@ -1151,14 +1171,41 @@
 }
 
 /* ============================================================
-   RESPONSIVE — 768px
+   ✅ RESPONSIVE — 768px (PILLS FIT MOBILE)
    ============================================================ */
 @media (max-width: 768px) {
-  .heroStrip      { padding: 24px 16px 20px; }
-  .heroStripInner { flex-direction: column; align-items: flex-start; gap: 12px; }
-  .heroTitle      { font-size: clamp(1.3rem, 5vw, 2rem); }
-  .heroEmoji      { font-size: 1.6rem; }
-  .quickPillsWrap { width: 100%; }
+  .heroStrip {
+    padding: 24px 16px 20px;
+    overflow: hidden;
+  }
+  .heroStripInner {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    width: 100%;
+  }
+  .heroTitle { font-size: clamp(1.3rem, 5vw, 2rem); }
+  .heroEmoji { font-size: 1.6rem; }
+
+  /* ✅ SMALLER pills so all 4 fit */
+  .quickPill {
+    padding: 8px 14px;
+    font-size: 0.80rem;
+    gap: 5px;
+  }
+
+  /* ✅ Edge-to-edge scroll wrapper */
+  .quickPillsWrap {
+    width: calc(100% + 32px);
+    margin-left: -16px;
+    margin-right: -16px;
+    padding-left: 16px;
+    padding-right: 16px;
+    box-sizing: border-box;
+  }
+  .quickPills {
+    padding-right: 0;
+  }
 
   .toolbarInner { padding: 9px 14px; gap: 8px; }
   .searchBox    { padding: 8px 12px; }
@@ -1176,15 +1223,36 @@
 }
 
 /* ============================================================
-   RESPONSIVE — 480px
+   ✅ RESPONSIVE — 480px (ALL 4 PILLS FIT)
    ============================================================ */
 @media (max-width: 480px) {
-  .heroStrip  { padding: 18px 14px 14px; }
-  .heroTitle  { font-size: 1.28rem; gap: 8px; }
-  .heroEmoji  { font-size: 1.35rem; }
-  .heroSub    { font-size: 0.84rem; }
+  .heroStrip {
+    padding: 18px 14px 14px;
+    overflow: hidden;
+  }
+  .heroTitle { font-size: 1.28rem; gap: 8px; }
+  .heroEmoji { font-size: 1.35rem; }
+  .heroSub   { font-size: 0.84rem; }
 
-  .quickPill  { padding: 8px 16px; font-size: 0.80rem; }
+  /* ✅ SMALLER pills — all 4 fit on most phones */
+  .quickPill {
+    padding: 7px 11px;
+    font-size: 0.72rem;
+    gap: 4px;
+  }
+
+  /* ✅ Edge-to-edge scroll */
+  .quickPillsWrap {
+    width: calc(100% + 28px);
+    margin-left: -14px;
+    margin-right: -14px;
+    padding-left: 14px;
+    padding-right: 14px;
+    box-sizing: border-box;
+  }
+  .quickPills {
+    padding-right: 0;
+  }
 
   .toolbarInner { padding: 8px 12px; gap: 6px; }
   .searchBox    { padding: 8px 10px; border-radius: 10px; }
@@ -1208,17 +1276,24 @@
   .productsGrid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .skeletonGrid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .pageBtn      { min-width: 32px; padding: 6px 8px; font-size: 0.76rem; border-radius: 10px; }
-  .sidebar      { width: min(280px, 90vw); }
+  .sidebar      { width: min(280px, 90vw) !important; }
 }
 
 /* ============================================================
-   RESPONSIVE — 360px
+   ✅ RESPONSIVE — 360px (TINY PHONES)
    ============================================================ */
 @media (max-width: 360px) {
   .productsGrid  { grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .skeletonGrid  { grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .heroTitle     { font-size: 1.15rem; }
-  .quickPill     { padding: 7px 13px; font-size: 0.76rem; }
+
+  /* ✅ Even smaller pills */
+  .quickPill {
+    padding: 6px 10px;
+    font-size: 0.68rem;
+    gap: 3px;
+  }
+
   .mobileCatPill { padding: 5px 10px; font-size: 0.70rem; }
-  .sidebar       { width: 92vw; }
+  .sidebar       { width: 92vw !important; }
 }

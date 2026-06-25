@@ -387,7 +387,7 @@ const fetchProducts = useCallback(async () => {
       },
     },
     {
-      key: 'new', label: 'New In', icon: '✨',
+      key: 'new', label: 'New Arrivals', icon: '✨',
       action: () => {
         setFilters(prev => ({
           ...prev, sort: 'createdAt-desc', page: 1,
