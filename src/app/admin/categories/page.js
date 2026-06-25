@@ -5,7 +5,8 @@ import toast from 'react-hot-toast';
 import styles from './page.module.css';
 
 /* ============================================================
-   ✅ ONLY these 9 categories — fixed order
+   ✅ Predefined 9 categories — fixed order (shown first)
+   ✅ But admin can ALSO add custom categories now
    ============================================================ */
 const ALLOWED_CATEGORIES = [
   { slug: 'clothing',          name: 'Clothing',          icon: '', color: '#FF6B35' },
@@ -27,6 +28,7 @@ export default function AdminCategories() {
   const [saving,        setSaving]        = useState(false);
   const [uploading,     setUploading]     = useState(false);
   const [uploadingGrid, setUploadingGrid] = useState(false);
+  const [isCustom,      setIsCustom]      = useState(false); // ✅ NEW: track custom mode
 
   const emptyForm = {
     name: '', description: '', color: '#FF6B35',
@@ -43,12 +45,14 @@ export default function AdminCategories() {
       const data = await res.json();
       const all  = data.categories || [];
 
-      // ✅ Filter + sort by ALLOWED_CATEGORIES order
-      const filtered = ALLOWED_CATEGORIES
+      // ✅ Show predefined categories first (in order), then custom ones
+      const predefinedSlugs = ALLOWED_CATEGORIES.map(c => c.slug);
+      const predefined = ALLOWED_CATEGORIES
         .map(allowed => all.find(db => db.slug === allowed.slug))
         .filter(Boolean);
+      const custom = all.filter(db => !predefinedSlugs.includes(db.slug));
 
-      setCategories(filtered);
+      setCategories([...predefined, ...custom]);
     } catch (err) {
       toast.error('Failed to load categories');
     } finally {
@@ -61,6 +65,7 @@ export default function AdminCategories() {
   /* ── Open Add form ── */
   const openAdd = () => {
     setEditing(null);
+    setIsCustom(false);
     setForm({ ...emptyForm });
     setShowForm(true);
   };
@@ -68,6 +73,7 @@ export default function AdminCategories() {
   /* ── Open Edit form ── */
   const openEdit = (cat) => {
     setEditing(cat);
+    setIsCustom(true); // ✅ editing is always "custom" mode (free text)
     setForm({
       name:        cat.name        || '',
       description: cat.description || '',
@@ -144,7 +150,6 @@ export default function AdminCategories() {
       });
       const data = await res.json();
 
-      // ✅ 200, 201, or 409 (already exists but updated) = success
       if (res.ok || res.status === 409) {
         toast.success(`✅ "${cat.name}" is ready!`);
         fetchCategories();
@@ -159,20 +164,21 @@ export default function AdminCategories() {
   /* ── Save category (add or edit) ── */
   const handleSave = async (e) => {
     e.preventDefault();
-    if (!form.name) { toast.error('Category name is required'); return; }
+    if (!form.name?.trim()) { toast.error('Category name is required'); return; }
 
-    // ✅ Validate — only allowed category names (when adding new)
+    // ✅ REMOVED the restrictive validation — now allows ANY category name
+    // Just check for duplicates by slug
     if (!editing) {
       const slug = form.name
         .toLowerCase()
+        .trim()
         .replace(/[^a-z0-9]/g, '-')
         .replace(/-+/g, '-')
         .replace(/^-|-$/g, '');
-      const isAllowed = ALLOWED_CATEGORIES.some(c => c.slug === slug);
-      if (!isAllowed) {
-        toast.error(
-          `❌ "${form.name}" is not an allowed category.\n\nAllowed: ${ALLOWED_CATEGORIES.map(c => c.name).join(', ')}`
-        );
+
+      const existingSlugs = categories.map(c => c.slug);
+      if (existingSlugs.includes(slug)) {
+        toast.error(`❌ "${form.name}" already exists. Please choose a different name.`);
         return;
       }
     }
@@ -189,7 +195,6 @@ export default function AdminCategories() {
       });
       const data = await res.json();
 
-      // ✅ Handle "already exists" gracefully
       if (res.status === 409) {
         toast('ℹ️ Category already exists — updated it instead', { duration: 3000 });
         setShowForm(false);
@@ -231,10 +236,14 @@ export default function AdminCategories() {
   const missingCats   = ALLOWED_CATEGORIES.filter(
     c => !existingSlugs.includes(c.slug)
   );
+  const customCats = categories.filter(
+    c => !ALLOWED_CATEGORIES.some(a => a.slug === c.slug)
+  );
 
   /* ── Render category card ── */
   const renderCategoryCard = (cat) => {
     const allowed = ALLOWED_CATEGORIES.find(c => c.slug === cat.slug);
+    const isCustomCat = !allowed;
     return (
       <div key={cat.id} className={styles.catCard} style={{ borderColor: cat.color }}>
         <div className={styles.catHeader}>
@@ -263,7 +272,22 @@ export default function AdminCategories() {
           </div>
         </div>
 
-        <h3 className={styles.catName}>{cat.name}</h3>
+        <h3 className={styles.catName}>
+          {cat.name}
+          {isCustomCat && (
+            <span style={{
+              marginLeft: '6px',
+              fontSize: '10px',
+              background: '#FEF3C7',
+              color: '#92400E',
+              padding: '2px 6px',
+              borderRadius: '6px',
+              fontWeight: '700',
+            }}>
+              CUSTOM
+            </span>
+          )}
+        </h3>
         {cat.description && <p className={styles.catDesc}>{cat.description}</p>}
 
         {cat.gridImages?.length > 0 && (
@@ -296,7 +320,10 @@ export default function AdminCategories() {
       <div className={styles.header}>
         <div>
           <h1>Categories 🗂️</h1>
-          <p>{categories.length} / {ALLOWED_CATEGORIES.length} categories set up</p>
+          <p>
+            {categories.length} total ({ALLOWED_CATEGORIES.filter(c => existingSlugs.includes(c.slug)).length}/{ALLOWED_CATEGORIES.length} predefined
+            {customCats.length > 0 && `, ${customCats.length} custom`})
+          </p>
         </div>
         <div className={styles.headerActions}>
           <button
@@ -309,7 +336,7 @@ export default function AdminCategories() {
         </div>
       </div>
 
-      {/* ── ALLOWED CATEGORIES INFO BOX ── */}
+      {/* ── PREDEFINED CATEGORIES INFO BOX ── */}
       <div style={{
         background: 'linear-gradient(135deg, #FFF3EC, #F3E8FF)',
         border: '2px solid #EDD9FF',
@@ -321,7 +348,7 @@ export default function AdminCategories() {
           margin: '0 0 10px', color: '#2D1A4A',
           fontSize: '0.90rem', fontWeight: '800',
         }}>
-          ✅ Allowed Categories (9 total — fixed order)
+          ⭐ Predefined Categories (9 recommended)
         </h4>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
           {ALLOWED_CATEGORIES.map((cat, i) => (
@@ -346,6 +373,12 @@ export default function AdminCategories() {
             </span>
           ))}
         </div>
+        <p style={{
+          margin: '10px 0 0', fontSize: '0.76rem',
+          color: '#6B5B85', fontWeight: '600',
+        }}>
+          💡 You can also create your own custom categories using "+ Add Category" button.
+        </p>
       </div>
 
       {/* ── MISSING CATEGORIES — Quick Create ── */}
@@ -361,7 +394,7 @@ export default function AdminCategories() {
             margin: '0 0 12px', color: '#92400E',
             fontSize: '0.90rem', fontWeight: '800',
           }}>
-            ⚠️ {missingCats.length} category(ies) not in database yet — Click to create:
+            ⚠️ {missingCats.length} predefined category(ies) not in database yet — Click to create:
           </h4>
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
             {missingCats.map(cat => (
@@ -390,36 +423,6 @@ export default function AdminCategories() {
               </button>
             ))}
           </div>
-          <p style={{
-            margin: '10px 0 0', fontSize: '0.76rem',
-            color: '#92400E', fontWeight: '600',
-          }}>
-            💡 Click any button above to instantly create that category in the database.
-          </p>
-        </div>
-      )}
-
-      {/* ── ALL CREATED ── */}
-      {missingCats.length === 0 && categories.length > 0 && (
-        <div style={{
-          background: '#F0FDF4',
-          border: '2px solid #BBF7D0',
-          borderRadius: '16px',
-          padding: '14px 20px',
-          marginBottom: '24px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-        }}>
-          <span style={{ fontSize: '1.4rem' }}>🎉</span>
-          <div>
-            <p style={{ margin: 0, fontWeight: '800', color: '#166534', fontSize: '0.90rem' }}>
-              All 9 categories are set up!
-            </p>
-            <p style={{ margin: 0, fontSize: '0.78rem', color: '#166534', fontWeight: '600' }}>
-              Admin → Add Product → Category dropdown will show all 9 in correct order.
-            </p>
-          </div>
         </div>
       )}
 
@@ -439,65 +442,147 @@ export default function AdminCategories() {
 
             <form onSubmit={handleSave} className={styles.form}>
 
-              {/* ✅ Category picker — only when adding new */}
+              {/* ✅ Mode toggle — only when adding new */}
               {!editing && (
                 <div style={{ marginBottom: '20px' }}>
-                  <label style={{
-                    display: 'block',
-                    fontSize: '0.78rem',
-                    fontWeight: '800',
-                    color: '#9585B0',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.5px',
-                    marginBottom: '10px',
+                  <div style={{
+                    display: 'flex',
+                    gap: '8px',
+                    marginBottom: '14px',
+                    background: '#F3E8FF',
+                    padding: '4px',
+                    borderRadius: '12px',
                   }}>
-                    Select Category to Create
-                  </label>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                    {ALLOWED_CATEGORIES.map(cat => {
-                      const exists   = existingSlugs.includes(cat.slug);
-                      const selected = form.name === cat.name;
-                      return (
-                        <button
-                          key={cat.slug}
-                          type="button"
-                          disabled={exists}
-                          onClick={() => setForm(f => ({
-                            ...f,
-                            name:  cat.name,
-                            icon:  cat.icon,
-                            color: cat.color,
-                          }))}
-                          style={{
-                            padding: '7px 16px',
-                            borderRadius: '999px',
-                            border: `2px solid ${selected ? cat.color : '#EDD9FF'}`,
-                            background: exists
-                              ? '#F3F4F6'
-                              : selected ? cat.color : 'white',
-                            color: exists
-                              ? '#9CA3AF'
-                              : selected ? 'white' : cat.color,
-                            fontWeight: '700',
-                            fontSize: '0.82rem',
-                            cursor: exists ? 'not-allowed' : 'pointer',
-                            fontFamily: 'inherit',
-                            opacity: exists ? 0.6 : 1,
-                            transition: 'all 0.2s ease',
-                          }}
-                        >
-                          {cat.icon} {cat.name}
-                          {exists && ' ✅'}
-                        </button>
-                      );
-                    })}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCustom(false);
+                        setForm({ ...emptyForm });
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '8px 12px',
+                        background: !isCustom ? 'white' : 'transparent',
+                        color: !isCustom ? '#7B2FBE' : '#9585B0',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontWeight: '700',
+                        fontSize: '0.84rem',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                        boxShadow: !isCustom ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      ⭐ Predefined
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setIsCustom(true);
+                        setForm({ ...emptyForm });
+                      }}
+                      style={{
+                        flex: 1,
+                        padding: '8px 12px',
+                        background: isCustom ? 'white' : 'transparent',
+                        color: isCustom ? '#7B2FBE' : '#9585B0',
+                        border: 'none',
+                        borderRadius: '8px',
+                        fontWeight: '700',
+                        fontSize: '0.84rem',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                        boxShadow: isCustom ? '0 2px 6px rgba(0,0,0,0.08)' : 'none',
+                        transition: 'all 0.2s',
+                      }}
+                    >
+                      ✨ Custom (New)
+                    </button>
                   </div>
-                  <p style={{
-                    fontSize: '0.72rem', color: '#9585B0',
-                    marginTop: '8px', fontWeight: '600',
-                  }}>
-                    ✅ = Already in database. Grey = Cannot create duplicate.
-                  </p>
+
+                  {!isCustom && (
+                    <>
+                      <label style={{
+                        display: 'block',
+                        fontSize: '0.78rem',
+                        fontWeight: '800',
+                        color: '#9585B0',
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.5px',
+                        marginBottom: '10px',
+                      }}>
+                        Select Predefined Category
+                      </label>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                        {ALLOWED_CATEGORIES.map(cat => {
+                          const exists   = existingSlugs.includes(cat.slug);
+                          const selected = form.name === cat.name;
+                          return (
+                            <button
+                              key={cat.slug}
+                              type="button"
+                              disabled={exists}
+                              onClick={() => setForm(f => ({
+                                ...f,
+                                name:  cat.name,
+                                icon:  cat.icon,
+                                color: cat.color,
+                              }))}
+                              style={{
+                                padding: '7px 16px',
+                                borderRadius: '999px',
+                                border: `2px solid ${selected ? cat.color : '#EDD9FF'}`,
+                                background: exists
+                                  ? '#F3F4F6'
+                                  : selected ? cat.color : 'white',
+                                color: exists
+                                  ? '#9CA3AF'
+                                  : selected ? 'white' : cat.color,
+                                fontWeight: '700',
+                                fontSize: '0.82rem',
+                                cursor: exists ? 'not-allowed' : 'pointer',
+                                fontFamily: 'inherit',
+                                opacity: exists ? 0.6 : 1,
+                                transition: 'all 0.2s ease',
+                              }}
+                            >
+                              {cat.icon} {cat.name}
+                              {exists && ' ✅'}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      <p style={{
+                        fontSize: '0.72rem', color: '#9585B0',
+                        marginTop: '8px', fontWeight: '600',
+                      }}>
+                        ✅ = Already in database. Switch to "Custom" tab to create your own category.
+                      </p>
+                    </>
+                  )}
+
+                  {isCustom && (
+                    <div style={{
+                      background: '#FEF3C7',
+                      border: '1.5px solid #FDE68A',
+                      borderRadius: '10px',
+                      padding: '12px 14px',
+                    }}>
+                      <p style={{
+                        margin: 0, fontSize: '0.82rem',
+                        color: '#92400E', fontWeight: '700',
+                      }}>
+                        ✨ Custom Category Mode
+                      </p>
+                      <p style={{
+                        margin: '4px 0 0', fontSize: '0.74rem',
+                        color: '#92400E', fontWeight: '600',
+                      }}>
+                        Type any category name below (e.g. "Books", "Shoes", "Gifts").
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -515,7 +600,7 @@ export default function AdminCategories() {
                       className="form-control"
                       value={form.name}
                       onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                      placeholder="e.g. Clothing"
+                      placeholder={isCustom ? "e.g. Books, Shoes, Gifts..." : "e.g. Clothing"}
                       required
                     />
                   </div>
@@ -748,7 +833,7 @@ export default function AdminCategories() {
                 No categories in database yet
               </p>
               <p style={{ fontSize: '0.84rem', color: '#aaa', marginBottom: '20px' }}>
-                Use the yellow panel above to quickly create all 9 required categories
+                Use the yellow panel above to quickly create predefined categories, or click "+ Add Category" to create custom ones.
               </p>
               <button onClick={openAdd} className="btn btn-primary">
                 + Add Category

@@ -1,12 +1,42 @@
+// src/app/api/categories/[id]/route.js
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
 
+const PREDEFINED_SLUGS = [
+  'clothing', 'personal-care', 'health-care', 'baby-gear',
+  'walkers', 'toys', 'cradles-cribs', 'electric-vehicles', 'food',
+];
+
+const SLUG_OVERRIDE = {
+  'food & nutrition':   'food',
+  'food nutrition':     'food',
+  'food and nutrition': 'food',
+  'cradles & cribs':    'cradles-cribs',
+  'cradles and cribs':  'cradles-cribs',
+  'personal care':      'personal-care',
+  'health care':        'health-care',
+  'baby gear':          'baby-gear',
+  'electric vehicles':  'electric-vehicles',
+};
+
+function generateSlug(name) {
+  const lower = name.toLowerCase().trim();
+  if (SLUG_OVERRIDE[lower]) return SLUG_OVERRIDE[lower];
+  return lower
+    .replace(/[^a-z0-9]/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+}
+
+/* ============================================================
+   GET — single category
+   ============================================================ */
 export async function GET(request, { params }) {
   try {
-    const { id }     = await params;
-    const category   = await prisma.category.findUnique({ where: { id } });
+    const { id }   = await params;
+    const category = await prisma.category.findUnique({ where: { id } });
     if (!category) {
       return NextResponse.json({ error: 'Category not found' }, { status: 404 });
     }
@@ -16,6 +46,10 @@ export async function GET(request, { params }) {
   }
 }
 
+/* ============================================================
+   PUT — Update category
+   ✅ NOW ALLOWS ANY CATEGORY NAME (custom or predefined)
+   ============================================================ */
 export async function PUT(request, { params }) {
   try {
     const session = await getServerSession(authOptions);
@@ -26,42 +60,23 @@ export async function PUT(request, { params }) {
     const { id } = await params;
     const data   = await request.json();
 
-    const ALLOWED_SLUGS = [
-      'clothing', 'personal-care', 'health-care', 'baby-gear',
-      'walkers', 'toys', 'cradles-cribs', 'electric-vehicles', 'food',
-    ];
-
-    // ✅ Slug override map
-    const SLUG_OVERRIDE = {
-      'food & nutrition':  'food',
-      'food nutrition':    'food',
-      'food and nutrition':'food',
-      'cradles & cribs':   'cradles-cribs',
-      'cradles and cribs': 'cradles-cribs',
-      'personal care':     'personal-care',
-      'health care':       'health-care',
-      'baby gear':         'baby-gear',
-      'electric vehicles': 'electric-vehicles',
-    };
-
     const updateData = {};
 
-    if (data.name !== undefined && data.name !== null) {
-      updateData.name = data.name;
+    if (data.name !== undefined && data.name !== null && data.name.trim()) {
+      updateData.name = data.name.trim();
 
-      // ✅ Generate slug correctly using override map
-      const lower = data.name.toLowerCase().trim();
-      const slug  = SLUG_OVERRIDE[lower] || lower
-        .replace(/[^a-z0-9]/g, '-')
-        .replace(/-+/g, '-')
-        .replace(/^-|-$/g, '');
+      // ✅ Generate slug
+      const slug = generateSlug(data.name);
 
-      // ✅ Only update slug if it's a valid allowed slug
-      if (ALLOWED_SLUGS.includes(slug)) {
-        updateData.slug  = slug;
-        updateData.order = ALLOWED_SLUGS.indexOf(slug);
+      if (slug) {
+        updateData.slug = slug;
+        // ✅ Set order: predefined keeps fixed order, custom keeps existing/999+
+        const predefinedIdx = PREDEFINED_SLUGS.indexOf(slug);
+        if (predefinedIdx !== -1) {
+          updateData.order = predefinedIdx;
+        }
+        // If custom, don't auto-change order — keep existing
       }
-      // If not in allowed list, just update name, keep existing slug
     }
 
     if (data.description !== undefined) updateData.description = data.description;
@@ -81,6 +96,14 @@ export async function PUT(request, { params }) {
     return NextResponse.json({ category });
   } catch (error) {
     console.error('Category PUT error:', error);
+
+    if (error.code === 'P2002') {
+      return NextResponse.json(
+        { error: 'A category with this name/slug already exists' },
+        { status: 409 }
+      );
+    }
+
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }
@@ -88,6 +111,9 @@ export async function PUT(request, { params }) {
   }
 }
 
+/* ============================================================
+   DELETE — Delete category
+   ============================================================ */
 export async function DELETE(request, { params }) {
   try {
     const session = await getServerSession(authOptions);

@@ -57,42 +57,27 @@ function ImageSlot({ slot, image, onUpload, onRemove, uploading, index }) {
   };
 
   return (
-    <div style={{
-      display: 'flex',
-      flexDirection: 'column',
-      gap: '8px',
-    }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
       {/* Slot Label */}
       <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
-        fontSize: '0.80rem',
-        fontWeight: '800',
-        color: '#6B4E8A',
-        textTransform: 'uppercase',
-        letterSpacing: '0.5px',
+        display: 'flex', alignItems: 'center', gap: '6px',
+        fontSize: '0.80rem', fontWeight: '800', color: '#6B4E8A',
+        textTransform: 'uppercase', letterSpacing: '0.5px',
       }}>
         <span>{slot.icon}</span>
         <span>{slot.label}</span>
         {slot.required && (
           <span style={{
-            fontSize: '0.65rem',
-            background: '#FF6B35',
-            color: 'white',
-            padding: '1px 6px',
-            borderRadius: '999px',
-            fontWeight: '800',
+            fontSize: '0.65rem', background: '#FF6B35', color: 'white',
+            padding: '1px 6px', borderRadius: '999px', fontWeight: '800',
           }}>Required</span>
         )}
         {index === 0 && image && (
           <span style={{
             fontSize: '0.65rem',
             background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
-            color: 'white',
-            padding: '1px 8px',
-            borderRadius: '999px',
-            fontWeight: '800',
+            color: 'white', padding: '1px 8px',
+            borderRadius: '999px', fontWeight: '800',
           }}>⭐ Main</span>
         )}
       </div>
@@ -104,20 +89,16 @@ function ImageSlot({ slot, image, onUpload, onRemove, uploading, index }) {
         onDragLeave={() => setDragOver(false)}
         onClick={() => !uploading && !image && inputRef.current?.click()}
         style={{
-          width: '100%',
-          aspectRatio: '1',
+          width: '100%', aspectRatio: '1',
           border: `2px dashed ${
             image       ? '#22C55E'  :
             dragOver    ? '#7B2FBE'  :
             slot.required && !image ? '#FF6B35' : '#EDD9FF'
           }`,
           borderRadius: '14px',
-          background: image
-            ? 'transparent'
-            : dragOver ? '#F3E8FF' : '#FBF7FF',
+          background: image ? 'transparent' : dragOver ? '#F3E8FF' : '#FBF7FF',
           cursor: image || uploading ? 'default' : 'pointer',
-          position: 'relative',
-          overflow: 'hidden',
+          position: 'relative', overflow: 'hidden',
           transition: 'all 0.2s ease',
           boxShadow: image
             ? '0 4px 16px rgba(34,197,94,0.15)'
@@ -138,31 +119,18 @@ function ImageSlot({ slot, image, onUpload, onRemove, uploading, index }) {
           disabled={uploading || !!image}
         />
 
-        {/* Uploaded Image */}
         {image ? (
           <>
             <img
               src={image.url}
               alt={slot.label}
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
-                display: 'block',
-              }}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
             />
-            {/* Overlay on hover */}
             <div style={{
-              position: 'absolute',
-              inset: 0,
-              background: 'rgba(0,0,0,0.45)',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '8px',
-              opacity: 0,
-              transition: 'opacity 0.2s',
+              position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)',
+              display: 'flex', flexDirection: 'column',
+              alignItems: 'center', justifyContent: 'center',
+              gap: '8px', opacity: 0, transition: 'opacity 0.2s',
             }}
               onMouseEnter={e => e.currentTarget.style.opacity = '1'}
               onMouseLeave={e => e.currentTarget.style.opacity = '0'}
@@ -171,68 +139,45 @@ function ImageSlot({ slot, image, onUpload, onRemove, uploading, index }) {
                 type="button"
                 onClick={e => { e.stopPropagation(); onRemove(index); }}
                 style={{
-                  background: '#DC2626',
-                  color: 'white',
-                  border: 'none',
-                  padding: '6px 14px',
-                  borderRadius: '8px',
-                  fontSize: '0.78rem',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
+                  background: '#DC2626', color: 'white',
+                  border: 'none', padding: '6px 14px',
+                  borderRadius: '8px', fontSize: '0.78rem',
+                  fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit',
                 }}
-              >
-                🗑️ Remove
-              </button>
+              >🗑️ Remove</button>
               <button
                 type="button"
-                onClick={e => { e.stopPropagation(); onRemove(index); setTimeout(() => inputRef.current?.click(), 100); }}
-                style={{
-                  background: '#7B2FBE',
-                  color: 'white',
-                  border: 'none',
-                  padding: '6px 14px',
-                  borderRadius: '8px',
-                  fontSize: '0.78rem',
-                  fontWeight: '700',
-                  cursor: 'pointer',
-                  fontFamily: 'inherit',
+                onClick={e => {
+                  e.stopPropagation();
+                  onRemove(index);
+                  setTimeout(() => inputRef.current?.click(), 100);
                 }}
-              >
-                🔄 Replace
-              </button>
+                style={{
+                  background: '#7B2FBE', color: 'white',
+                  border: 'none', padding: '6px 14px',
+                  borderRadius: '8px', fontSize: '0.78rem',
+                  fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit',
+                }}
+              >🔄 Replace</button>
             </div>
 
-            {/* Green check */}
             <div style={{
-              position: 'absolute',
-              top: '6px',
-              right: '6px',
-              background: '#22C55E',
-              color: 'white',
-              width: '22px',
-              height: '22px',
+              position: 'absolute', top: '6px', right: '6px',
+              background: '#22C55E', color: 'white',
+              width: '22px', height: '22px',
               borderRadius: '50%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '0.70rem',
-              fontWeight: '800',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '0.70rem', fontWeight: '800',
             }}>✓</div>
           </>
         ) : uploading ? (
-          /* Uploading Spinner */
           <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100%',
-            gap: '8px',
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            height: '100%', gap: '8px',
           }}>
             <div style={{
-              width: '28px',
-              height: '28px',
+              width: '28px', height: '28px',
               border: '3px solid rgba(255,107,53,0.2)',
               borderTop: '3px solid #FF6B35',
               borderRadius: '50%',
@@ -244,23 +189,15 @@ function ImageSlot({ slot, image, onUpload, onRemove, uploading, index }) {
             </span>
           </div>
         ) : (
-          /* Empty Slot */
           <div style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100%',
-            gap: '6px',
-            padding: '12px',
+            display: 'flex', flexDirection: 'column',
+            alignItems: 'center', justifyContent: 'center',
+            height: '100%', gap: '6px', padding: '12px',
           }}>
             <span style={{ fontSize: '1.8rem' }}>{slot.icon}</span>
             <span style={{
-              fontSize: '0.72rem',
-              fontWeight: '700',
-              color: '#9585B0',
-              textAlign: 'center',
-              lineHeight: 1.3,
+              fontSize: '0.72rem', fontWeight: '700',
+              color: '#9585B0', textAlign: 'center', lineHeight: 1.3,
             }}>
               Click or drop<br />{slot.label}
             </span>
@@ -277,29 +214,17 @@ function MultiImageUploader({ images, onUploadSlot, onRemoveSlot, uploadingSlot 
 
   return (
     <div>
-      {/* Progress Bar */}
       <div style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        marginBottom: '12px',
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between', marginBottom: '12px',
       }}>
-        <span style={{
-          fontSize: '0.80rem',
-          fontWeight: '700',
-          color: '#6B4E8A',
-        }}>
+        <span style={{ fontSize: '0.80rem', fontWeight: '700', color: '#6B4E8A' }}>
           {uploadedCount}/4 images uploaded
         </span>
-        <div style={{
-          display: 'flex',
-          gap: '4px',
-        }}>
+        <div style={{ display: 'flex', gap: '4px' }}>
           {IMAGE_SLOTS.map((_, i) => (
             <div key={i} style={{
-              width: '28px',
-              height: '6px',
-              borderRadius: '999px',
+              width: '28px', height: '6px', borderRadius: '999px',
               background: images[i] ? '#22C55E' : '#EDD9FF',
               transition: 'background 0.3s',
             }} />
@@ -307,7 +232,6 @@ function MultiImageUploader({ images, onUploadSlot, onRemoveSlot, uploadingSlot 
         </div>
       </div>
 
-      {/* 4 Slots Grid */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: 'repeat(4, 1fr)',
@@ -326,21 +250,16 @@ function MultiImageUploader({ images, onUploadSlot, onRemoveSlot, uploadingSlot 
         ))}
       </div>
 
-      {/* Helper Text */}
       <div style={{
-        marginTop: '12px',
-        padding: '10px 14px',
+        marginTop: '12px', padding: '10px 14px',
         background: uploadedCount === 0
           ? '#FFF3EC'
-          : uploadedCount === 4
-            ? '#F0FDF4'
-            : '#FBF7FF',
+          : uploadedCount === 4 ? '#F0FDF4' : '#FBF7FF',
         border: `1.5px solid ${
           uploadedCount === 0 ? '#FFD4B8' :
           uploadedCount === 4 ? '#BBF7D0' : '#EDD9FF'
         }`,
-        borderRadius: '10px',
-        fontSize: '0.78rem',
+        borderRadius: '10px', fontSize: '0.78rem',
         fontWeight: '600',
         color: uploadedCount === 4 ? '#166534' : '#6B4E8A',
       }}>
@@ -360,14 +279,13 @@ export default function ProductForm({ id }) {
 
   const [categories,    setCategories]    = useState([]);
   const [loading,       setLoading]       = useState(false);
-  const [uploadingSlot, setUploadingSlot] = useState(null); // which slot is uploading
+  const [uploadingSlot, setUploadingSlot] = useState(null);
 
   const [selectedCatSlug, setSelectedCatSlug] = useState('');
   const isClothing = selectedCatSlug?.toLowerCase().includes('cloth') ||
                      selectedCatSlug?.toLowerCase().includes('apparel') ||
                      selectedCatSlug?.toLowerCase().includes('wear');
 
-  // ✅ images is now array of 4 slots [front, back, side, top]
   const [form, setForm] = useState({
     name:             '',
     description:      '',
@@ -383,29 +301,39 @@ export default function ProductForm({ id }) {
     isTrending:       false,
     isActive:         true,
     features:         '',
-    images:           [null, null, null, null], // 4 slots
+    images:           [null, null, null, null],
     size:             '',
     gender:           '',
     color:            '',
     material:         '',
   });
 
-  /* ── Fetch categories & product (edit mode) ── */
+  /* ============================================================
+     ✅ Fetch categories & product (edit mode)
+     ✅ Shows BOTH predefined + custom categories
+     ============================================================ */
   useEffect(() => {
+    // ── Fetch ALL categories (predefined + custom) ──
     fetch('/api/categories?all=true')
       .then(r => r.json())
       .then(d => {
         let cats = d.categories || [];
-        const ALLOWED = [
-          'clothing', 'personal-care', 'health-care', 'baby-gear',
-          'walkers', 'toys', 'cradles-cribs', 'electric-vehicles', 'food',
-        ];
-        cats = cats.filter(c => ALLOWED.includes(c.slug));
-        cats.sort((a, b) => ALLOWED.indexOf(a.slug) - ALLOWED.indexOf(b.slug));
+
+        // ✅ Sort: predefined first (fixed order), then custom (alphabetical)
+        cats.sort((a, b) => {
+          const aIdx = CATEGORY_ORDER.indexOf(a.slug);
+          const bIdx = CATEGORY_ORDER.indexOf(b.slug);
+          const aOrder = aIdx === -1 ? 999 : aIdx;
+          const bOrder = bIdx === -1 ? 999 : bIdx;
+          if (aOrder !== bOrder) return aOrder - bOrder;
+          return a.name.localeCompare(b.name);
+        });
+
         setCategories(cats);
       })
       .catch(() => toast.error('Failed to load categories'));
 
+    // ── If editing, load product data ──
     if (isEdit) {
       fetch(`/api/products/${id}`)
         .then(r => r.json())
@@ -413,7 +341,6 @@ export default function ProductForm({ id }) {
           const p = d.product;
           if (!p) return;
 
-          // ✅ Map existing images into 4 slots
           const existingImages = p.images || [];
           const slottedImages = [
             existingImages[0] || null,
@@ -464,7 +391,6 @@ export default function ProductForm({ id }) {
   const handleSlotUpload = async (file, slotIndex) => {
     if (!file) return;
 
-    // Validate size
     if (file.size > 5 * 1024 * 1024) {
       toast.error(`Image too large. Max 5MB`);
       return;
@@ -484,7 +410,6 @@ export default function ProductForm({ id }) {
       const uploaded = data.images?.[0] || { url: data.url, publicId: data.publicId };
       if (!uploaded?.url) throw new Error('No image URL returned');
 
-      // ✅ Place image in correct slot
       setForm(f => {
         const newImages = [...f.images];
         newImages[slotIndex] = uploaded;
@@ -520,7 +445,6 @@ export default function ProductForm({ id }) {
       return;
     }
 
-    // ✅ At least front image required
     if (!form.images[0]) {
       toast.error('Please upload at least the Front View image');
       return;
@@ -537,7 +461,6 @@ export default function ProductForm({ id }) {
 
     setLoading(true);
     try {
-      // ✅ Filter out null slots — only send uploaded images
       const uploadedImages = form.images.filter(Boolean);
 
       const payload = {
@@ -555,7 +478,7 @@ export default function ProductForm({ id }) {
         isFeatured:       form.isFeatured,
         isTrending:       form.isTrending,
         isActive:         form.isActive,
-        images:           uploadedImages, // ✅ array with view labels
+        images:           uploadedImages,
         size:             form.size     || null,
         gender:           form.gender   || null,
         color:            form.color    || null,
@@ -591,6 +514,10 @@ export default function ProductForm({ id }) {
 
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
   const uploadedCount = form.images.filter(Boolean).length;
+
+  // ✅ Split categories: predefined vs custom (for grouped dropdown)
+  const predefinedCats = categories.filter(c => CATEGORY_ORDER.includes(c.slug));
+  const customCats     = categories.filter(c => !CATEGORY_ORDER.includes(c.slug));
 
   return (
     <div className={styles.page}>
@@ -640,20 +567,16 @@ export default function ProductForm({ id }) {
               </div>
             </div>
 
-            {/* ✅ 4-Slot Image Uploader */}
             <div className={styles.card}>
               <h3>
                 🖼️ Product Images
                 <span style={{
-                  marginLeft: '10px',
-                  fontSize: '0.70rem',
+                  marginLeft: '10px', fontSize: '0.70rem',
                   background: uploadedCount > 0
                     ? 'linear-gradient(135deg,#22C55E,#16A34A)'
                     : '#FFF3EC',
                   color: uploadedCount > 0 ? 'white' : '#FF6B35',
-                  padding: '2px 10px',
-                  borderRadius: '999px',
-                  fontWeight: '800',
+                  padding: '2px 10px', borderRadius: '999px', fontWeight: '800',
                 }}>
                   {uploadedCount}/4 uploaded
                 </span>
@@ -670,19 +593,14 @@ export default function ProductForm({ id }) {
             {/* Clothing Fields */}
             {isClothing && (
               <div className={styles.card} style={{
-                border: '2px solid #FF6B35',
-                borderRadius: '16px',
+                border: '2px solid #FF6B35', borderRadius: '16px',
               }}>
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#FF6B35' }}>
                   👗 Clothing Details
                   <span style={{
-                    fontSize: '0.70rem',
-                    background: '#FFF3EC',
-                    color: '#FF6B35',
-                    padding: '2px 10px',
-                    borderRadius: '999px',
-                    fontWeight: '700',
-                    textTransform: 'uppercase',
+                    fontSize: '0.70rem', background: '#FFF3EC', color: '#FF6B35',
+                    padding: '2px 10px', borderRadius: '999px',
+                    fontWeight: '700', textTransform: 'uppercase',
                   }}>Required for clothing</span>
                 </h3>
 
@@ -819,18 +737,52 @@ export default function ProductForm({ id }) {
 
               <div className="form-group">
                 <label>Category *</label>
+
+                {/* ✅ Grouped dropdown: predefined + custom */}
                 <select className="form-control" value={form.categoryId}
                   onChange={e => handleCategoryChange(e.target.value)} required>
                   <option value="">-- Select Category --</option>
-                  {categories.map(c => (
-                    <option key={c.id} value={c.id}>
-                      {c.icon ? `${c.icon} ` : ''}{c.name}
-                    </option>
-                  ))}
+
+                  {/* ⭐ Predefined */}
+                  {predefinedCats.length > 0 && (
+                    <optgroup label="⭐ Main Categories">
+                      {predefinedCats.map(c => (
+                        <option key={c.id} value={c.id}>
+                          {c.icon ? `${c.icon} ` : ''}{c.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
+
+                  {/* ✨ Custom */}
+                  {customCats.length > 0 && (
+                    <optgroup label="✨ Custom Categories">
+                      {customCats.map(c => (
+                        <option key={c.id} value={c.id}>
+                          {c.icon ? `${c.icon} ` : ''}{c.name}
+                        </option>
+                      ))}
+                    </optgroup>
+                  )}
                 </select>
+
                 {categories.length === 0 && (
                   <small style={{ color: 'red' }}>⚠️ No categories found</small>
                 )}
+
+                {/* Show category count info */}
+                {categories.length > 0 && (
+                  <small style={{
+                    display: 'block',
+                    marginTop: '6px',
+                    color: '#6B4E8A',
+                    fontSize: '0.72rem',
+                    fontWeight: '600',
+                  }}>
+                    📊 {predefinedCats.length} main + {customCats.length} custom = {categories.length} total
+                  </small>
+                )}
+
                 {isClothing && (
                   <div style={{
                     marginTop: '8px', padding: '6px 14px',
@@ -885,7 +837,6 @@ export default function ProductForm({ id }) {
               </div>
             </div>
 
-            {/* Image Preview Summary */}
             {uploadedCount > 0 && (
               <div className={styles.card}>
                 <h3>📸 Image Preview</h3>
@@ -898,8 +849,7 @@ export default function ProductForm({ id }) {
                     <div key={i} style={{ textAlign: 'center' }}>
                       {form.images[i] ? (
                         <div style={{
-                          aspectRatio: '1',
-                          borderRadius: '10px',
+                          aspectRatio: '1', borderRadius: '10px',
                           overflow: 'hidden',
                           border: i === 0
                             ? '2px solid #FF6B35'
@@ -913,21 +863,17 @@ export default function ProductForm({ id }) {
                         </div>
                       ) : (
                         <div style={{
-                          aspectRatio: '1',
-                          borderRadius: '10px',
+                          aspectRatio: '1', borderRadius: '10px',
                           border: '2px dashed #EDD9FF',
                           display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          background: '#FBF7FF',
-                          fontSize: '1.2rem',
+                          alignItems: 'center', justifyContent: 'center',
+                          background: '#FBF7FF', fontSize: '1.2rem',
                         }}>
                           {slot.icon}
                         </div>
                       )}
                       <p style={{
-                        fontSize: '0.65rem',
-                        fontWeight: '700',
+                        fontSize: '0.65rem', fontWeight: '700',
                         color: form.images[i] ? '#22C55E' : '#9585B0',
                         margin: '4px 0 0',
                         textTransform: 'uppercase',
