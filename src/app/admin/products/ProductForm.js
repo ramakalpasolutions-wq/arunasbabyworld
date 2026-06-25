@@ -31,11 +31,6 @@ const CLOTHING_MATERIALS = [
   'Fleece', 'Denim', 'Linen', 'Silk', 'Blend',
 ];
 
-const AGE_GROUPS = [
-  '0-3 months', '3-6 months', '6-12 months', '1-2 years',
-  '2-3 years', '3-5 years', '5-8 years', '8-12 years', '12+ years', 'All ages',
-];
-
 // ✅ 4 Fixed image slots
 const IMAGE_SLOTS = [
   { key: 'front', label: 'Front View',  icon: '🖼️', required: true  },
@@ -58,7 +53,6 @@ function ImageSlot({ slot, image, onUpload, onRemove, uploading, index }) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-      {/* Slot Label */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: '6px',
         fontSize: '0.80rem', fontWeight: '800', color: '#6B4E8A',
@@ -82,7 +76,6 @@ function ImageSlot({ slot, image, onUpload, onRemove, uploading, index }) {
         )}
       </div>
 
-      {/* Upload Box */}
       <div
         onDrop={handleDrop}
         onDragOver={e => { e.preventDefault(); setDragOver(true); }}
@@ -310,16 +303,12 @@ export default function ProductForm({ id }) {
 
   /* ============================================================
      ✅ Fetch categories & product (edit mode)
-     ✅ Shows BOTH predefined + custom categories
      ============================================================ */
   useEffect(() => {
-    // ── Fetch ALL categories (predefined + custom) ──
     fetch('/api/categories?all=true')
       .then(r => r.json())
       .then(d => {
         let cats = d.categories || [];
-
-        // ✅ Sort: predefined first (fixed order), then custom (alphabetical)
         cats.sort((a, b) => {
           const aIdx = CATEGORY_ORDER.indexOf(a.slug);
           const bIdx = CATEGORY_ORDER.indexOf(b.slug);
@@ -328,12 +317,10 @@ export default function ProductForm({ id }) {
           if (aOrder !== bOrder) return aOrder - bOrder;
           return a.name.localeCompare(b.name);
         });
-
         setCategories(cats);
       })
       .catch(() => toast.error('Failed to load categories'));
 
-    // ── If editing, load product data ──
     if (isEdit) {
       fetch(`/api/products/${id}`)
         .then(r => r.json())
@@ -515,7 +502,6 @@ export default function ProductForm({ id }) {
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
   const uploadedCount = form.images.filter(Boolean).length;
 
-  // ✅ Split categories: predefined vs custom (for grouped dropdown)
   const predefinedCats = categories.filter(c => CATEGORY_ORDER.includes(c.slug));
   const customCats     = categories.filter(c => !CATEGORY_ORDER.includes(c.slug));
 
@@ -738,12 +724,10 @@ export default function ProductForm({ id }) {
               <div className="form-group">
                 <label>Category *</label>
 
-                {/* ✅ Grouped dropdown: predefined + custom */}
                 <select className="form-control" value={form.categoryId}
                   onChange={e => handleCategoryChange(e.target.value)} required>
                   <option value="">-- Select Category --</option>
 
-                  {/* ⭐ Predefined */}
                   {predefinedCats.length > 0 && (
                     <optgroup label="⭐ Main Categories">
                       {predefinedCats.map(c => (
@@ -754,7 +738,6 @@ export default function ProductForm({ id }) {
                     </optgroup>
                   )}
 
-                  {/* ✨ Custom */}
                   {customCats.length > 0 && (
                     <optgroup label="✨ Custom Categories">
                       {customCats.map(c => (
@@ -770,7 +753,6 @@ export default function ProductForm({ id }) {
                   <small style={{ color: 'red' }}>⚠️ No categories found</small>
                 )}
 
-                {/* Show category count info */}
                 {categories.length > 0 && (
                   <small style={{
                     display: 'block',
@@ -801,15 +783,25 @@ export default function ProductForm({ id }) {
                   onChange={e => set('brand', e.target.value)} placeholder="Brand name" />
               </div>
 
+              {/* ✅ SIMPLE AGE GROUP — TYPE FREELY */}
               <div className="form-group">
                 <label>Age Group</label>
-                <select className="form-control" value={form.ageGroup}
-                  onChange={e => set('ageGroup', e.target.value)}>
-                  <option value="">Select Age Group</option>
-                  {AGE_GROUPS.map(a => (
-                    <option key={a} value={a}>{a}</option>
-                  ))}
-                </select>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={form.ageGroup}
+                  onChange={e => set('ageGroup', e.target.value)}
+                  placeholder="e.g. 13 yrs, 2 yrs, 6 months, Newborn..."
+                />
+                <small style={{
+                  display: 'block',
+                  marginTop: '6px',
+                  color: '#9585B0',
+                  fontSize: '0.72rem',
+                  fontWeight: '600',
+                }}>
+                  💡 Type any age (e.g. "13 yrs", "2 yrs", "6 months", "All ages")
+                </small>
               </div>
 
               <div className="form-group">
