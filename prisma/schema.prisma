@@ -63,6 +63,9 @@ type CategoryImage {
   title    String?
 }
 
+// ============================================================
+// ✅ PRODUCT MODEL — with Color Variants
+// ============================================================
 model Product {
   id               String         @id @default(auto()) @map("_id") @db.ObjectId
   name             String
@@ -85,6 +88,11 @@ model Product {
   gender           String?
   color            String?
   material         String?
+
+  // ✅ Color Variants
+  hasVariants      Boolean        @default(false)
+  colorVariants    ColorVariant[]
+
   reviews          Review[]
   rating           Float          @default(0)
   numReviews       Int            @default(0)
@@ -100,6 +108,23 @@ type ProductImage {
   url      String?
   publicId String?
   type     String?
+}
+
+type ColorVariant {
+  colorName     String?
+  colorHex      String?
+  price         Float?
+  discountPrice Float?
+  stock         Int?           @default(0)
+  sizes         String[]
+  images        VariantImage[]
+  sku           String?
+}
+
+type VariantImage {
+  url      String?
+  publicId String?
+  view     String?
 }
 
 model Review {
@@ -223,7 +248,7 @@ model Order {
   returnRequest Json?
   returnStatus  String?
 
-  // ── Exchange fields ──  ✅ NEW!
+  // ── Exchange fields ──
   exchangeId      String?   @db.ObjectId
   exchangeStatus  String?
 
@@ -323,39 +348,29 @@ model Exchange {
 
   // Price difference
   priceDifference   Float    @default(0)
-  // positive = customer pays extra | negative = we refund difference | 0 = same price
 
   // Reason
   reason            String
   description       String?
-  images            String[] // optional damage proof photos
+  images            String[]
 
-  // Status flow:
-  // pending → approved → picked_up → received → 
-  // verified → awaiting_payment → ready_to_ship → shipped → delivered → completed
-  // OR: rejected
   status            String   @default("pending")
 
-  // Payment link (if customer needs to pay extra)
   paymentLinkId     String?
   paymentLinkUrl    String?
-  paymentStatus     String?  // pending, paid, failed
+  paymentStatus     String?
   paymentPaidAt     DateTime?
 
-  // Refund (if new product cheaper — auto-refund difference)
   razorpayRefundId  String?
   refundAmount      Float?
   refundedAt        DateTime?
 
-  // Tracking
-  pickupTracking    String?  // courier pickup tracking
-  shipmentTracking  String?  // new product shipment tracking
+  pickupTracking    String?
+  shipmentTracking  String?
 
-  // Admin
   adminNotes        String?
   rejectionReason   String?
 
-  // Timestamps
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   approvedAt        DateTime?
@@ -379,10 +394,8 @@ model Refund {
   amount            Float
   reason            String?
   refundType        String          @default("razorpay")
-  // razorpay | upi_transfer | bank_transfer | not_required
   
   refundStatus      String          @default("pending")
-  // pending | scheduled | processing | completed | failed | cancelled
   
   razorpayRefundId  String?
   razorpayPaymentId String?
@@ -390,10 +403,9 @@ model Refund {
   notes             String?
   processedAt       DateTime?
 
-  // ✅ NEW: 2-minute delay fields
-  scheduledAt          DateTime?  // When refund will auto-trigger
-  scheduledCancelledAt DateTime?  // If admin cancelled before timer ran out
-  scheduledByAdmin     String?    // Which admin clicked the refund button
+  scheduledAt          DateTime?
+  scheduledCancelledAt DateTime?
+  scheduledByAdmin     String?
 
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt

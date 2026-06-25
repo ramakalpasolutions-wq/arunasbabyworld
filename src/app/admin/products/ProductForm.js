@@ -21,26 +21,41 @@ const CLOTHING_GENDERS = [
   { value: 'unisex', label: '🧒 Unisex' },
 ];
 
-const CLOTHING_COLORS = [
-  'Red', 'Blue', 'Green', 'Yellow', 'Pink', 'Purple', 'Orange',
-  'White', 'Black', 'Grey', 'Brown', 'Navy', 'Maroon', 'Multicolor', 'Printed',
-];
-
 const CLOTHING_MATERIALS = [
   'Cotton', 'Organic Cotton', 'Polyester', 'Wool',
   'Fleece', 'Denim', 'Linen', 'Silk', 'Blend',
 ];
 
-// ✅ 4 Fixed image slots
-const IMAGE_SLOTS = [
-  { key: 'front', label: 'Front View',  icon: '🖼️', required: true  },
-  { key: 'back',  label: 'Back View',   icon: '🔄', required: false },
-  { key: 'side',  label: 'Side View',   icon: '↔️', required: false },
-  { key: 'top',   label: 'Top View',    icon: '⬆️', required: false },
+// ✅ Predefined Color Palette
+const PRESET_COLORS = [
+  { name: 'Red',        hex: '#EF4444' },
+  { name: 'Blue',       hex: '#3B82F6' },
+  { name: 'Pink',       hex: '#EC4899' },
+  { name: 'Yellow',     hex: '#F59E0B' },
+  { name: 'Green',      hex: '#10B981' },
+  { name: 'Purple',     hex: '#8B5CF6' },
+  { name: 'Orange',     hex: '#F97316' },
+  { name: 'White',      hex: '#FFFFFF' },
+  { name: 'Black',      hex: '#000000' },
+  { name: 'Grey',       hex: '#6B7280' },
+  { name: 'Brown',      hex: '#92400E' },
+  { name: 'Navy',       hex: '#1E3A8A' },
+  { name: 'Maroon',     hex: '#7F1D1D' },
+  { name: 'Multicolor', hex: '#A855F7' },
+  { name: 'Printed',    hex: '#EAB308' },
 ];
 
-/* ── Single Image Slot Uploader ── */
-function ImageSlot({ slot, image, onUpload, onRemove, uploading, index }) {
+const IMAGE_SLOTS = [
+  { key: 'front', label: 'Front', icon: '🖼️', required: true  },
+  { key: 'back',  label: 'Back',  icon: '🔄', required: false },
+  { key: 'side',  label: 'Side',  icon: '↔️', required: false },
+  { key: 'top',   label: 'Top',   icon: '⬆️', required: false },
+];
+
+/* ────────────────────────────────────────────────────────────
+   IMAGE SLOT — single image uploader
+   ──────────────────────────────────────────────────────────── */
+function ImageSlot({ slot, image, onUpload, onRemove, uploading, index, accentColor = '#FF6B35' }) {
   const inputRef = useRef(null);
   const [dragOver, setDragOver] = useState(false);
 
@@ -52,27 +67,19 @@ function ImageSlot({ slot, image, onUpload, onRemove, uploading, index }) {
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
       <div style={{
-        display: 'flex', alignItems: 'center', gap: '6px',
-        fontSize: '0.80rem', fontWeight: '800', color: '#6B4E8A',
-        textTransform: 'uppercase', letterSpacing: '0.5px',
+        display: 'flex', alignItems: 'center', gap: '4px',
+        fontSize: '0.70rem', fontWeight: '800', color: '#6B4E8A',
+        textTransform: 'uppercase', letterSpacing: '0.3px',
       }}>
         <span>{slot.icon}</span>
         <span>{slot.label}</span>
         {slot.required && (
           <span style={{
-            fontSize: '0.65rem', background: '#FF6B35', color: 'white',
-            padding: '1px 6px', borderRadius: '999px', fontWeight: '800',
-          }}>Required</span>
-        )}
-        {index === 0 && image && (
-          <span style={{
-            fontSize: '0.65rem',
-            background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
-            color: 'white', padding: '1px 8px',
-            borderRadius: '999px', fontWeight: '800',
-          }}>⭐ Main</span>
+            fontSize: '0.55rem', background: accentColor, color: 'white',
+            padding: '1px 5px', borderRadius: '999px', fontWeight: '800',
+          }}>*</span>
         )}
       </div>
 
@@ -84,25 +91,19 @@ function ImageSlot({ slot, image, onUpload, onRemove, uploading, index }) {
         style={{
           width: '100%', aspectRatio: '1',
           border: `2px dashed ${
-            image       ? '#22C55E'  :
-            dragOver    ? '#7B2FBE'  :
-            slot.required && !image ? '#FF6B35' : '#EDD9FF'
+            image    ? '#22C55E'  :
+            dragOver ? accentColor  :
+            slot.required && !image ? accentColor : '#EDD9FF'
           }`,
-          borderRadius: '14px',
+          borderRadius: '12px',
           background: image ? 'transparent' : dragOver ? '#F3E8FF' : '#FBF7FF',
           cursor: image || uploading ? 'default' : 'pointer',
           position: 'relative', overflow: 'hidden',
           transition: 'all 0.2s ease',
-          boxShadow: image
-            ? '0 4px 16px rgba(34,197,94,0.15)'
-            : dragOver
-              ? '0 4px 16px rgba(123,47,190,0.15)'
-              : 'none',
         }}
       >
         <input
-          ref={inputRef}
-          type="file"
+          ref={inputRef} type="file"
           accept="image/png,image/jpeg,image/jpg,image/webp"
           onChange={e => {
             if (e.target.files[0]) onUpload(e.target.files[0], index);
@@ -114,86 +115,56 @@ function ImageSlot({ slot, image, onUpload, onRemove, uploading, index }) {
 
         {image ? (
           <>
-            <img
-              src={image.url}
-              alt={slot.label}
-              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
-            />
+            <img src={image.url} alt={slot.label}
+              style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
+            <button
+              type="button"
+              onClick={e => { e.stopPropagation(); onRemove(index); }}
+              style={{
+                position: 'absolute', top: '4px', right: '4px',
+                background: 'rgba(220,38,38,0.95)', color: 'white',
+                border: 'none', borderRadius: '50%',
+                width: '22px', height: '22px',
+                fontSize: '0.70rem', fontWeight: '800',
+                cursor: 'pointer', display: 'flex',
+                alignItems: 'center', justifyContent: 'center',
+              }}
+            >✕</button>
             <div style={{
-              position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)',
-              display: 'flex', flexDirection: 'column',
-              alignItems: 'center', justifyContent: 'center',
-              gap: '8px', opacity: 0, transition: 'opacity 0.2s',
-            }}
-              onMouseEnter={e => e.currentTarget.style.opacity = '1'}
-              onMouseLeave={e => e.currentTarget.style.opacity = '0'}
-            >
-              <button
-                type="button"
-                onClick={e => { e.stopPropagation(); onRemove(index); }}
-                style={{
-                  background: '#DC2626', color: 'white',
-                  border: 'none', padding: '6px 14px',
-                  borderRadius: '8px', fontSize: '0.78rem',
-                  fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit',
-                }}
-              >🗑️ Remove</button>
-              <button
-                type="button"
-                onClick={e => {
-                  e.stopPropagation();
-                  onRemove(index);
-                  setTimeout(() => inputRef.current?.click(), 100);
-                }}
-                style={{
-                  background: '#7B2FBE', color: 'white',
-                  border: 'none', padding: '6px 14px',
-                  borderRadius: '8px', fontSize: '0.78rem',
-                  fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit',
-                }}
-              >🔄 Replace</button>
-            </div>
-
-            <div style={{
-              position: 'absolute', top: '6px', right: '6px',
+              position: 'absolute', bottom: '4px', left: '4px',
               background: '#22C55E', color: 'white',
-              width: '22px', height: '22px',
+              width: '18px', height: '18px',
               borderRadius: '50%',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '0.70rem', fontWeight: '800',
+              fontSize: '0.65rem', fontWeight: '800',
             }}>✓</div>
           </>
         ) : uploading ? (
           <div style={{
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
-            height: '100%', gap: '8px',
+            height: '100%', gap: '6px',
           }}>
             <div style={{
-              width: '28px', height: '28px',
-              border: '3px solid rgba(255,107,53,0.2)',
-              borderTop: '3px solid #FF6B35',
+              width: '22px', height: '22px',
+              border: `3px solid ${accentColor}33`,
+              borderTop: `3px solid ${accentColor}`,
               borderRadius: '50%',
               animation: 'spin 0.7s linear infinite',
             }} />
             <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
-            <span style={{ fontSize: '0.72rem', color: '#FF6B35', fontWeight: '700' }}>
-              Uploading...
-            </span>
           </div>
         ) : (
           <div style={{
             display: 'flex', flexDirection: 'column',
             alignItems: 'center', justifyContent: 'center',
-            height: '100%', gap: '6px', padding: '12px',
+            height: '100%', gap: '4px', padding: '8px',
           }}>
-            <span style={{ fontSize: '1.8rem' }}>{slot.icon}</span>
+            <span style={{ fontSize: '1.4rem' }}>{slot.icon}</span>
             <span style={{
-              fontSize: '0.72rem', fontWeight: '700',
-              color: '#9585B0', textAlign: 'center', lineHeight: 1.3,
-            }}>
-              Click or drop<br />{slot.label}
-            </span>
+              fontSize: '0.62rem', fontWeight: '700',
+              color: '#9585B0', textAlign: 'center',
+            }}>{slot.label}</span>
           </div>
         )}
       </div>
@@ -201,78 +172,283 @@ function ImageSlot({ slot, image, onUpload, onRemove, uploading, index }) {
   );
 }
 
-/* ── 4-Slot Image Uploader ── */
-function MultiImageUploader({ images, onUploadSlot, onRemoveSlot, uploadingSlot }) {
-  const uploadedCount = images.filter(Boolean).length;
+/* ────────────────────────────────────────────────────────────
+   COLOR VARIANT CARD — one card per color
+   ──────────────────────────────────────────────────────────── */
+function ColorVariantCard({
+  variant, index, onUpdate, onRemove,
+  onUploadImage, onRemoveImage, uploadingSlot,
+}) {
+  const [showPicker, setShowPicker] = useState(false);
+
+  const set = (key, val) => onUpdate(index, { ...variant, [key]: val });
+
+  const toggleSize = (size) => {
+    const sizes = variant.sizes || [];
+    if (sizes.includes(size)) {
+      set('sizes', sizes.filter(s => s !== size));
+    } else {
+      set('sizes', [...sizes, size]);
+    }
+  };
+
+  const handlePickPreset = (preset) => {
+    onUpdate(index, { ...variant, colorName: preset.name, colorHex: preset.hex });
+    setShowPicker(false);
+  };
+
+  const uploadedImages = (variant.images || []).filter(Boolean);
 
   return (
-    <div>
+    <div style={{
+      border: `2px solid ${variant.colorHex || '#EDD9FF'}`,
+      borderRadius: '16px',
+      padding: '16px',
+      marginBottom: '16px',
+      background: 'white',
+      boxShadow: `0 4px 16px ${variant.colorHex || '#EDD9FF'}22`,
+    }}>
+      {/* ── Header ── */}
       <div style={{
-        display: 'flex', alignItems: 'center',
-        justifyContent: 'space-between', marginBottom: '12px',
+        display: 'flex', justifyContent: 'space-between',
+        alignItems: 'center', marginBottom: '14px',
+        paddingBottom: '12px',
+        borderBottom: `1.5px dashed ${variant.colorHex || '#EDD9FF'}66`,
       }}>
-        <span style={{ fontSize: '0.80rem', fontWeight: '700', color: '#6B4E8A' }}>
-          {uploadedCount}/4 images uploaded
-        </span>
-        <div style={{ display: 'flex', gap: '4px' }}>
-          {IMAGE_SLOTS.map((_, i) => (
-            <div key={i} style={{
-              width: '28px', height: '6px', borderRadius: '999px',
-              background: images[i] ? '#22C55E' : '#EDD9FF',
-              transition: 'background 0.3s',
-            }} />
-          ))}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{
+            width: '36px', height: '36px',
+            borderRadius: '50%',
+            background: variant.colorHex || '#ccc',
+            border: '3px solid white',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+          }} />
+          <div>
+            <div style={{
+              fontSize: '0.92rem', fontWeight: '800',
+              color: '#2D1A4A',
+            }}>
+              {variant.colorName || `Color #${index + 1}`}
+            </div>
+            <div style={{
+              fontSize: '0.70rem', color: '#9585B0',
+              fontFamily: 'monospace',
+            }}>
+              {variant.colorHex || 'No hex'}
+            </div>
+          </div>
+        </div>
+
+        <button
+          type="button"
+          onClick={() => onRemove(index)}
+          style={{
+            background: '#FEE2E2', color: '#DC2626',
+            border: 'none', padding: '6px 12px',
+            borderRadius: '8px', fontSize: '0.78rem',
+            fontWeight: '700', cursor: 'pointer',
+            fontFamily: 'inherit',
+          }}
+        >
+          🗑️ Remove
+        </button>
+      </div>
+
+      {/* ── Color Picker ── */}
+      <div className="form-group">
+        <label style={{ fontSize: '0.78rem' }}>Color Name & Hex *</label>
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+          <input
+            type="text"
+            className="form-control"
+            value={variant.colorName || ''}
+            onChange={e => set('colorName', e.target.value)}
+            placeholder="e.g. Red, Sky Blue, Baby Pink..."
+            style={{ flex: 1 }}
+          />
+          <input
+            type="color"
+            value={variant.colorHex || '#000000'}
+            onChange={e => set('colorHex', e.target.value)}
+            style={{
+              width: '44px', height: '40px',
+              border: '2px solid #EDD9FF',
+              borderRadius: '8px', cursor: 'pointer',
+            }}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPicker(!showPicker)}
+            style={{
+              background: '#F3E8FF', color: '#7B2FBE',
+              border: 'none', padding: '8px 12px',
+              borderRadius: '8px', fontSize: '0.78rem',
+              fontWeight: '700', cursor: 'pointer',
+              fontFamily: 'inherit', whiteSpace: 'nowrap',
+            }}
+          >
+            🎨 Pick
+          </button>
+        </div>
+
+        {/* Preset color palette */}
+        {showPicker && (
+          <div style={{
+            marginTop: '10px', padding: '12px',
+            background: '#FBF7FF',
+            border: '1.5px solid #EDD9FF',
+            borderRadius: '10px',
+            display: 'flex', flexWrap: 'wrap', gap: '6px',
+          }}>
+            {PRESET_COLORS.map(p => (
+              <button
+                key={p.name}
+                type="button"
+                onClick={() => handlePickPreset(p)}
+                title={p.name}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '6px',
+                  padding: '4px 10px',
+                  background: 'white',
+                  border: `2px solid ${variant.colorHex === p.hex ? '#7B2FBE' : '#EDD9FF'}`,
+                  borderRadius: '999px',
+                  fontSize: '0.74rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                <div style={{
+                  width: '14px', height: '14px',
+                  borderRadius: '50%',
+                  background: p.hex,
+                  border: '1.5px solid #ddd',
+                }} />
+                {p.name}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* ── Price + Stock ── */}
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
+        <div className="form-group">
+          <label style={{ fontSize: '0.78rem' }}>Price (₹) *</label>
+          <input
+            type="number"
+            className="form-control"
+            value={variant.price || ''}
+            onChange={e => set('price', e.target.value)}
+            placeholder="0.00" min="0" step="0.01"
+          />
+        </div>
+        <div className="form-group">
+          <label style={{ fontSize: '0.78rem' }}>Discount (₹)</label>
+          <input
+            type="number"
+            className="form-control"
+            value={variant.discountPrice || ''}
+            onChange={e => set('discountPrice', e.target.value)}
+            placeholder="Optional" min="0" step="0.01"
+          />
+        </div>
+        <div className="form-group">
+          <label style={{ fontSize: '0.78rem' }}>Stock *</label>
+          <input
+            type="number"
+            className="form-control"
+            value={variant.stock ?? ''}
+            onChange={e => set('stock', e.target.value)}
+            placeholder="0" min="0"
+          />
         </div>
       </div>
 
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(4, 1fr)',
-        gap: '12px',
-      }}>
-        {IMAGE_SLOTS.map((slot, i) => (
-          <ImageSlot
-            key={slot.key}
-            slot={slot}
-            image={images[i] || null}
-            onUpload={onUploadSlot}
-            onRemove={onRemoveSlot}
-            uploading={uploadingSlot === i}
-            index={i}
-          />
-        ))}
+      {/* ── Sizes (per color) ── */}
+      <div className="form-group">
+        <label style={{ fontSize: '0.78rem' }}>
+          Available Sizes for {variant.colorName || 'this color'}
+          {variant.sizes?.length > 0 && (
+            <span style={{
+              marginLeft: '8px', fontSize: '0.70rem',
+              background: variant.colorHex, color: 'white',
+              padding: '2px 8px', borderRadius: '999px',
+            }}>
+              {variant.sizes.length} selected
+            </span>
+          )}
+        </label>
+        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
+          {CLOTHING_SIZES.map(s => {
+            const selected = variant.sizes?.includes(s);
+            return (
+              <button
+                key={s}
+                type="button"
+                onClick={() => toggleSize(s)}
+                style={{
+                  padding: '5px 12px', borderRadius: '8px',
+                  border: '2px solid',
+                  borderColor: selected ? variant.colorHex : '#EDD9FF',
+                  background: selected ? variant.colorHex : 'white',
+                  color: selected ? 'white' : '#6B4E8A',
+                  fontWeight: '700', fontSize: '0.76rem',
+                  cursor: 'pointer', fontFamily: 'inherit',
+                  transition: 'all 0.2s',
+                }}
+              >{s}</button>
+            );
+          })}
+        </div>
       </div>
 
-      <div style={{
-        marginTop: '12px', padding: '10px 14px',
-        background: uploadedCount === 0
-          ? '#FFF3EC'
-          : uploadedCount === 4 ? '#F0FDF4' : '#FBF7FF',
-        border: `1.5px solid ${
-          uploadedCount === 0 ? '#FFD4B8' :
-          uploadedCount === 4 ? '#BBF7D0' : '#EDD9FF'
-        }`,
-        borderRadius: '10px', fontSize: '0.78rem',
-        fontWeight: '600',
-        color: uploadedCount === 4 ? '#166534' : '#6B4E8A',
-      }}>
-        {uploadedCount === 0 && '📸 Upload Front View first (required). Other views are optional.'}
-        {uploadedCount === 1 && '✅ Front image uploaded! Add more views for better product display.'}
-        {uploadedCount === 2 && '✅ 2 images uploaded! You can add 2 more views.'}
-        {uploadedCount === 3 && '✅ 3 images uploaded! One more slot available.'}
-        {uploadedCount === 4 && '🎉 All 4 product views uploaded! Customers will love this.'}
+      {/* ── 4 Image Slots ── */}
+      <div className="form-group">
+        <label style={{ fontSize: '0.78rem' }}>
+          Images for {variant.colorName || 'this color'}
+          <span style={{
+            marginLeft: '8px', fontSize: '0.70rem',
+            background: uploadedImages.length > 0 ? '#22C55E' : '#FFF3EC',
+            color: uploadedImages.length > 0 ? 'white' : '#FF6B35',
+            padding: '2px 8px', borderRadius: '999px', fontWeight: '700',
+          }}>
+            {uploadedImages.length}/4 uploaded
+          </span>
+        </label>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(4, 1fr)',
+          gap: '10px', marginTop: '8px',
+        }}>
+          {IMAGE_SLOTS.map((slot, slotIdx) => (
+            <ImageSlot
+              key={slot.key}
+              slot={slot}
+              image={variant.images?.[slotIdx] || null}
+              onUpload={(file, idx) => onUploadImage(index, idx, file)}
+              onRemove={(idx) => onRemoveImage(index, idx)}
+              uploading={uploadingSlot?.variant === index && uploadingSlot?.slot === slotIdx}
+              index={slotIdx}
+              accentColor={variant.colorHex || '#FF6B35'}
+            />
+          ))}
+        </div>
       </div>
     </div>
   );
 }
 
+/* ────────────────────────────────────────────────────────────
+   MAIN PRODUCT FORM
+   ──────────────────────────────────────────────────────────── */
 export default function ProductForm({ id }) {
   const router  = useRouter();
   const isEdit  = !!id;
 
   const [categories,    setCategories]    = useState([]);
   const [loading,       setLoading]       = useState(false);
-  const [uploadingSlot, setUploadingSlot] = useState(null);
+  const [uploadingSlot, setUploadingSlot] = useState(null); // { variant: 0, slot: 1 }
 
   const [selectedCatSlug, setSelectedCatSlug] = useState('');
   const isClothing = selectedCatSlug?.toLowerCase().includes('cloth') ||
@@ -294,16 +470,14 @@ export default function ProductForm({ id }) {
     isTrending:       false,
     isActive:         true,
     features:         '',
-    images:           [null, null, null, null],
-    size:             '',
     gender:           '',
-    color:            '',
     material:         '',
+
+    // ✅ Color variants
+    colorVariants: [],
   });
 
-  /* ============================================================
-     ✅ Fetch categories & product (edit mode)
-     ============================================================ */
+  /* ── Fetch categories + product (edit mode) ── */
   useEffect(() => {
     fetch('/api/categories?all=true')
       .then(r => r.json())
@@ -328,14 +502,6 @@ export default function ProductForm({ id }) {
           const p = d.product;
           if (!p) return;
 
-          const existingImages = p.images || [];
-          const slottedImages = [
-            existingImages[0] || null,
-            existingImages[1] || null,
-            existingImages[2] || null,
-            existingImages[3] || null,
-          ];
-
           setForm({
             name:             p.name             || '',
             description:      p.description      || '',
@@ -351,11 +517,9 @@ export default function ProductForm({ id }) {
             isTrending:       p.isTrending       || false,
             isActive:         p.isActive !== false,
             features:         p.features?.join('\n') || '',
-            images:           slottedImages,
-            size:             p.size             || '',
             gender:           p.gender           || '',
-            color:            p.color            || '',
             material:         p.material         || '',
+            colorVariants:    p.colorVariants    || [],
           });
 
           const cat = p.category;
@@ -364,26 +528,55 @@ export default function ProductForm({ id }) {
     }
   }, [id, isEdit]);
 
+  const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
+
   const handleCategoryChange = (catId) => {
     set('categoryId', catId);
     const cat = categories.find(c => c.id === catId);
     setSelectedCatSlug(cat?.slug || cat?.name || '');
-    set('size', '');
-    set('gender', '');
-    set('color', '');
-    set('material', '');
   };
 
-  /* ── Upload single slot ── */
-  const handleSlotUpload = async (file, slotIndex) => {
-    if (!file) return;
+  /* ── Color Variants Management ── */
+  const addVariant = () => {
+    const newVariant = {
+      colorName:     '',
+      colorHex:      '#FF6B35',
+      price:         form.price || '',
+      discountPrice: '',
+      stock:         0,
+      sizes:         [],
+      images:        [null, null, null, null],
+    };
+    setForm(f => ({ ...f, colorVariants: [...f.colorVariants, newVariant] }));
+    toast.success('🎨 New color added! Fill in the details.');
+  };
 
+  const updateVariant = (index, updated) => {
+    setForm(f => {
+      const variants = [...f.colorVariants];
+      variants[index] = updated;
+      return { ...f, colorVariants: variants };
+    });
+  };
+
+  const removeVariant = (index) => {
+    if (!confirm(`Remove "${form.colorVariants[index]?.colorName || 'this color'}"?`)) return;
+    setForm(f => ({
+      ...f,
+      colorVariants: f.colorVariants.filter((_, i) => i !== index),
+    }));
+    toast.success('Color removed');
+  };
+
+  /* ── Upload image to specific variant slot ── */
+  const handleVariantImageUpload = async (variantIdx, slotIdx, file) => {
+    if (!file) return;
     if (file.size > 5 * 1024 * 1024) {
-      toast.error(`Image too large. Max 5MB`);
+      toast.error('Image too large. Max 5MB');
       return;
     }
 
-    setUploadingSlot(slotIndex);
+    setUploadingSlot({ variant: variantIdx, slot: slotIdx });
     try {
       const fd = new FormData();
       fd.append('file', file);
@@ -391,20 +584,27 @@ export default function ProductForm({ id }) {
 
       const res  = await fetch('/api/upload', { method: 'POST', body: fd });
       const data = await res.json();
-
       if (!res.ok) throw new Error(data.error || 'Upload failed');
 
       const uploaded = data.images?.[0] || { url: data.url, publicId: data.publicId };
-      if (!uploaded?.url) throw new Error('No image URL returned');
+      if (!uploaded?.url) throw new Error('No image URL');
+
+      const viewNames = ['front', 'back', 'side', 'top'];
+      const imageObj = {
+        url: uploaded.url,
+        publicId: uploaded.publicId || '',
+        view: viewNames[slotIdx],
+      };
 
       setForm(f => {
-        const newImages = [...f.images];
-        newImages[slotIndex] = uploaded;
-        return { ...f, images: newImages };
+        const variants = [...f.colorVariants];
+        const images = [...(variants[variantIdx].images || [null, null, null, null])];
+        images[slotIdx] = imageObj;
+        variants[variantIdx] = { ...variants[variantIdx], images };
+        return { ...f, colorVariants: variants };
       });
 
-      const slotNames = ['Front', 'Back', 'Side', 'Top'];
-      toast.success(`${slotNames[slotIndex]} view uploaded! ✅`);
+      toast.success(`${viewNames[slotIdx]} view uploaded! ✅`);
     } catch (err) {
       toast.error(err.message || 'Upload failed');
     } finally {
@@ -412,43 +612,61 @@ export default function ProductForm({ id }) {
     }
   };
 
-  /* ── Remove single slot ── */
-  const handleSlotRemove = (slotIndex) => {
+  const handleVariantImageRemove = (variantIdx, slotIdx) => {
     setForm(f => {
-      const newImages = [...f.images];
-      newImages[slotIndex] = null;
-      return { ...f, images: newImages };
+      const variants = [...f.colorVariants];
+      const images = [...(variants[variantIdx].images || [null, null, null, null])];
+      images[slotIdx] = null;
+      variants[variantIdx] = { ...variants[variantIdx], images };
+      return { ...f, colorVariants: variants };
     });
-    const slotNames = ['Front', 'Back', 'Side', 'Top'];
-    toast.success(`${slotNames[slotIndex]} view removed`);
   };
 
   /* ── Submit ── */
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!form.name || !form.price || !form.stock || !form.categoryId || !form.description) {
-      toast.error('Please fill all required fields');
+    if (!form.name || !form.price || !form.categoryId || !form.description) {
+      toast.error('Please fill all required fields (name, price, category, description)');
       return;
     }
 
-    if (!form.images[0]) {
-      toast.error('Please upload at least the Front View image');
+    // ✅ Validate color variants
+    if (form.colorVariants.length === 0) {
+      toast.error('Please add at least one color variant');
       return;
     }
 
-    if (isClothing && !form.size) {
-      toast.error('Please select size for clothing product');
-      return;
-    }
-    if (isClothing && !form.gender) {
-      toast.error('Please select gender for clothing product');
-      return;
+    for (let i = 0; i < form.colorVariants.length; i++) {
+      const v = form.colorVariants[i];
+      if (!v.colorName?.trim()) {
+        toast.error(`Color #${i + 1}: Name is required`);
+        return;
+      }
+      if (!v.price || parseFloat(v.price) <= 0) {
+        toast.error(`${v.colorName}: Price is required`);
+        return;
+      }
+      if (v.stock === '' || v.stock === null || v.stock === undefined) {
+        toast.error(`${v.colorName}: Stock is required`);
+        return;
+      }
+      // ✅ Only Front (slot 0) required
+      if (!v.images || !v.images[0]) {
+        toast.error(`${v.colorName}: Please upload at least the Front image`);
+        return;
+      }
     }
 
     setLoading(true);
     try {
-      const uploadedImages = form.images.filter(Boolean);
+      // ✅ Use first variant's first image as default product image
+      const firstVariantImages = form.colorVariants[0]?.images?.filter(Boolean) || [];
+      const defaultImages = firstVariantImages.map(img => ({
+        url:      img.url,
+        publicId: img.publicId,
+        type:     img.view,
+      }));
 
       const payload = {
         name:             form.name,
@@ -456,7 +674,7 @@ export default function ProductForm({ id }) {
         shortDescription: form.shortDescription || null,
         price:            parseFloat(form.price),
         discountPrice:    form.discountPrice ? parseFloat(form.discountPrice) : null,
-        stock:            parseInt(form.stock),
+        stock:            parseInt(form.stock) || 0,
         brand:            form.brand    || null,
         categoryId:       form.categoryId,
         ageGroup:         form.ageGroup || null,
@@ -465,11 +683,20 @@ export default function ProductForm({ id }) {
         isFeatured:       form.isFeatured,
         isTrending:       form.isTrending,
         isActive:         form.isActive,
-        images:           uploadedImages,
-        size:             form.size     || null,
+        images:           defaultImages,
         gender:           form.gender   || null,
-        color:            form.color    || null,
         material:         form.material || null,
+
+        // ✅ Color variants
+        colorVariants: form.colorVariants.map(v => ({
+          colorName:     v.colorName,
+          colorHex:      v.colorHex,
+          price:         parseFloat(v.price),
+          discountPrice: v.discountPrice ? parseFloat(v.discountPrice) : null,
+          stock:         parseInt(v.stock) || 0,
+          sizes:         v.sizes || [],
+          images:        (v.images || []).filter(Boolean),
+        })),
       };
 
       if (payload.discountPrice && payload.price) {
@@ -499,11 +726,13 @@ export default function ProductForm({ id }) {
     }
   };
 
-  const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
-  const uploadedCount = form.images.filter(Boolean).length;
-
   const predefinedCats = categories.filter(c => CATEGORY_ORDER.includes(c.slug));
   const customCats     = categories.filter(c => !CATEGORY_ORDER.includes(c.slug));
+
+  // ✅ Calculate totals
+  const totalStock = form.colorVariants.reduce(
+    (sum, v) => sum + (parseInt(v.stock) || 0), 0
+  );
 
   return (
     <div className={styles.page}>
@@ -521,6 +750,7 @@ export default function ProductForm({ id }) {
           {/* ══ LEFT COLUMN ══ */}
           <div className={styles.col}>
 
+            {/* Basic Info */}
             <div className={styles.card}>
               <h3>📝 Basic Information</h3>
 
@@ -553,41 +783,114 @@ export default function ProductForm({ id }) {
               </div>
             </div>
 
-            <div className={styles.card}>
-              <h3>
-                🖼️ Product Images
-                <span style={{
-                  marginLeft: '10px', fontSize: '0.70rem',
-                  background: uploadedCount > 0
-                    ? 'linear-gradient(135deg,#22C55E,#16A34A)'
-                    : '#FFF3EC',
-                  color: uploadedCount > 0 ? 'white' : '#FF6B35',
-                  padding: '2px 10px', borderRadius: '999px', fontWeight: '800',
-                }}>
-                  {uploadedCount}/4 uploaded
-                </span>
+            {/* ✅ COLOR VARIANTS — Main Feature */}
+            <div className={styles.card} style={{
+              border: '2px solid #7B2FBE',
+              background: 'linear-gradient(135deg, #FBF7FF, #FFF)',
+            }}>
+              <h3 style={{
+                display: 'flex', alignItems: 'center',
+                justifyContent: 'space-between',
+                color: '#7B2FBE',
+              }}>
+                <span>🎨 Color Variants ({form.colorVariants.length})</span>
+                <button
+                  type="button"
+                  onClick={addVariant}
+                  style={{
+                    background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)',
+                    color: 'white', border: 'none',
+                    padding: '8px 16px', borderRadius: '10px',
+                    fontSize: '0.82rem', fontWeight: '700',
+                    cursor: 'pointer', fontFamily: 'inherit',
+                    boxShadow: '0 4px 12px rgba(123,47,190,0.3)',
+                  }}
+                >
+                  + Add Color
+                </button>
               </h3>
 
-              <MultiImageUploader
-                images={form.images}
-                onUploadSlot={handleSlotUpload}
-                onRemoveSlot={handleSlotRemove}
-                uploadingSlot={uploadingSlot}
-              />
+              {form.colorVariants.length === 0 ? (
+                <div style={{
+                  padding: '40px 20px',
+                  textAlign: 'center',
+                  background: '#FBF7FF',
+                  border: '2px dashed #EDD9FF',
+                  borderRadius: '12px',
+                  marginTop: '12px',
+                }}>
+                  <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🎨</div>
+                  <p style={{
+                    fontSize: '0.92rem', fontWeight: '700',
+                    color: '#6B4E8A', margin: '0 0 8px',
+                  }}>
+                    No colors added yet
+                  </p>
+                  <p style={{
+                    fontSize: '0.78rem', color: '#9585B0',
+                    marginBottom: '16px',
+                  }}>
+                    Click "+ Add Color" to add color variants with different prices, sizes & images
+                  </p>
+                  <button
+                    type="button"
+                    onClick={addVariant}
+                    style={{
+                      background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+                      color: 'white', border: 'none',
+                      padding: '10px 24px', borderRadius: '999px',
+                      fontSize: '0.88rem', fontWeight: '700',
+                      cursor: 'pointer', fontFamily: 'inherit',
+                    }}
+                  >
+                    + Add First Color
+                  </button>
+                </div>
+              ) : (
+                <div style={{ marginTop: '14px' }}>
+                  {form.colorVariants.map((variant, i) => (
+                    <ColorVariantCard
+                      key={i}
+                      variant={variant}
+                      index={i}
+                      onUpdate={updateVariant}
+                      onRemove={removeVariant}
+                      onUploadImage={handleVariantImageUpload}
+                      onRemoveImage={handleVariantImageRemove}
+                      uploadingSlot={uploadingSlot}
+                    />
+                  ))}
+
+                  {/* Summary */}
+                  <div style={{
+                    marginTop: '12px', padding: '14px 18px',
+                    background: 'linear-gradient(135deg,#F0FDF4,#FBF7FF)',
+                    border: '2px solid #BBF7D0',
+                    borderRadius: '12px',
+                    display: 'flex', flexWrap: 'wrap', gap: '14px',
+                    fontSize: '0.84rem', fontWeight: '700',
+                  }}>
+                    <span style={{ color: '#166534' }}>
+                      🎨 {form.colorVariants.length} color(s)
+                    </span>
+                    <span style={{ color: '#166534' }}>
+                      📦 Total stock: {totalStock} units
+                    </span>
+                    <span style={{ color: '#166534' }}>
+                      💰 Price range: ₹{Math.min(...form.colorVariants.map(v => parseFloat(v.price) || 0))} – ₹{Math.max(...form.colorVariants.map(v => parseFloat(v.price) || 0))}
+                    </span>
+                  </div>
+                </div>
+              )}
             </div>
 
-            {/* Clothing Fields */}
+            {/* Clothing Common Fields */}
             {isClothing && (
               <div className={styles.card} style={{
                 border: '2px solid #FF6B35', borderRadius: '16px',
               }}>
                 <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#FF6B35' }}>
                   👗 Clothing Details
-                  <span style={{
-                    fontSize: '0.70rem', background: '#FFF3EC', color: '#FF6B35',
-                    padding: '2px 10px', borderRadius: '999px',
-                    fontWeight: '700', textTransform: 'uppercase',
-                  }}>Required for clothing</span>
                 </h3>
 
                 <div className="form-group">
@@ -602,48 +905,10 @@ export default function ProductForm({ id }) {
                             ? 'linear-gradient(135deg,#FF6B35,#7B2FBE)' : 'white',
                           color: form.gender === g.value ? 'white' : '#6B4E8A',
                           fontWeight: '700', fontSize: '0.88rem', cursor: 'pointer',
-                          transition: 'all 0.2s', fontFamily: 'inherit',
+                          fontFamily: 'inherit',
                         }}>{g.label}</button>
                     ))}
                   </div>
-                </div>
-
-                <div className="form-group">
-                  <label>Size *</label>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
-                    {CLOTHING_SIZES.map(s => (
-                      <button key={s} type="button" onClick={() => set('size', s)}
-                        style={{
-                          padding: '6px 14px', borderRadius: '10px', border: '2px solid',
-                          borderColor: form.size === s ? '#7B2FBE' : '#EDD9FF',
-                          background: form.size === s
-                            ? 'linear-gradient(135deg,#7B2FBE,#9B4FDE)' : 'white',
-                          color: form.size === s ? 'white' : '#6B4E8A',
-                          fontWeight: '700', fontSize: '0.80rem', cursor: 'pointer',
-                          transition: 'all 0.2s', fontFamily: 'inherit',
-                        }}>{s}</button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="form-group">
-                  <label>Color</label>
-                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
-                    {CLOTHING_COLORS.map(c => (
-                      <button key={c} type="button" onClick={() => set('color', c)}
-                        style={{
-                          padding: '5px 14px', borderRadius: '8px', border: '2px solid',
-                          borderColor: form.color === c ? '#FF6B35' : '#EDD9FF',
-                          background: form.color === c ? '#FFF3EC' : 'white',
-                          color: form.color === c ? '#FF6B35' : '#6B4E8A',
-                          fontWeight: '700', fontSize: '0.78rem', cursor: 'pointer',
-                          transition: 'all 0.2s', fontFamily: 'inherit',
-                        }}>{c}</button>
-                    ))}
-                  </div>
-                  <input className="form-control" value={form.color}
-                    onChange={e => set('color', e.target.value)}
-                    placeholder="Or type custom color..." style={{ marginTop: '10px' }} />
                 </div>
 
                 <div className="form-group">
@@ -657,26 +922,11 @@ export default function ProductForm({ id }) {
                           background: form.material === m ? '#F3E8FF' : 'white',
                           color: form.material === m ? '#7B2FBE' : '#6B4E8A',
                           fontWeight: '700', fontSize: '0.78rem', cursor: 'pointer',
-                          transition: 'all 0.2s', fontFamily: 'inherit',
+                          fontFamily: 'inherit',
                         }}>{m}</button>
                     ))}
                   </div>
                 </div>
-
-                {(form.gender || form.size || form.color) && (
-                  <div style={{
-                    marginTop: '12px', padding: '12px 16px',
-                    background: 'linear-gradient(135deg,#FFF3EC,#F3E8FF)',
-                    borderRadius: '12px', border: '1.5px solid #EDD9FF',
-                    fontSize: '0.84rem', fontWeight: '600', color: '#2D1A4A',
-                    display: 'flex', flexWrap: 'wrap', gap: '10px',
-                  }}>
-                    {form.gender   && <span>{form.gender === 'boy' ? '👦' : form.gender === 'girl' ? '👧' : '🧒'} {form.gender}</span>}
-                    {form.size     && <span>📏 {form.size}</span>}
-                    {form.color    && <span>🎨 {form.color}</span>}
-                    {form.material && <span>🧵 {form.material}</span>}
-                  </div>
-                )}
               </div>
             )}
           </div>
@@ -685,16 +935,23 @@ export default function ProductForm({ id }) {
           <div className={styles.col}>
 
             <div className={styles.card}>
-              <h3>💰 Pricing & Stock</h3>
+              <h3>💰 Default Pricing</h3>
+              <p style={{
+                fontSize: '0.74rem', color: '#9585B0',
+                fontWeight: '600', marginTop: '-6px',
+              }}>
+                💡 Used as fallback. Each color variant can have its own price.
+              </p>
+
               <div className={styles.row2}>
                 <div className="form-group">
-                  <label>Price (₹) *</label>
+                  <label>Base Price (₹) *</label>
                   <input type="number" className="form-control" value={form.price}
                     onChange={e => set('price', e.target.value)}
                     placeholder="0.00" min="0" step="0.01" required />
                 </div>
                 <div className="form-group">
-                  <label>Discount Price (₹)</label>
+                  <label>Base Discount (₹)</label>
                   <input type="number" className="form-control" value={form.discountPrice}
                     onChange={e => set('discountPrice', e.target.value)}
                     placeholder="Optional" min="0" step="0.01" />
@@ -703,19 +960,22 @@ export default function ProductForm({ id }) {
 
               {form.price && form.discountPrice && (
                 <div className={styles.discountPreview}>
-                  🏷️ Discount: <strong>
+                  🏷️ Base discount: <strong>
                     {Math.round(((form.price - form.discountPrice) / form.price) * 100)}% off
                   </strong>
-                  {' '}— Save <strong>₹{(form.price - form.discountPrice).toFixed(2)}</strong>
                 </div>
               )}
 
-              <div className="form-group">
-                <label>Stock Quantity *</label>
-                <input type="number" className="form-control" value={form.stock}
-                  onChange={e => set('stock', e.target.value)}
-                  placeholder="0" min="0" required />
-              </div>
+              {totalStock > 0 && (
+                <div style={{
+                  marginTop: '10px', padding: '10px 14px',
+                  background: '#F0FDF4', border: '1.5px solid #BBF7D0',
+                  borderRadius: '8px', fontSize: '0.82rem',
+                  fontWeight: '700', color: '#166534',
+                }}>
+                  📦 Total Stock (auto-calculated): {totalStock} units
+                </div>
+              )}
             </div>
 
             <div className={styles.card}>
@@ -723,11 +983,9 @@ export default function ProductForm({ id }) {
 
               <div className="form-group">
                 <label>Category *</label>
-
                 <select className="form-control" value={form.categoryId}
                   onChange={e => handleCategoryChange(e.target.value)} required>
                   <option value="">-- Select Category --</option>
-
                   {predefinedCats.length > 0 && (
                     <optgroup label="⭐ Main Categories">
                       {predefinedCats.map(c => (
@@ -737,7 +995,6 @@ export default function ProductForm({ id }) {
                       ))}
                     </optgroup>
                   )}
-
                   {customCats.length > 0 && (
                     <optgroup label="✨ Custom Categories">
                       {customCats.map(c => (
@@ -748,33 +1005,6 @@ export default function ProductForm({ id }) {
                     </optgroup>
                   )}
                 </select>
-
-                {categories.length === 0 && (
-                  <small style={{ color: 'red' }}>⚠️ No categories found</small>
-                )}
-
-                {categories.length > 0 && (
-                  <small style={{
-                    display: 'block',
-                    marginTop: '6px',
-                    color: '#6B4E8A',
-                    fontSize: '0.72rem',
-                    fontWeight: '600',
-                  }}>
-                    📊 {predefinedCats.length} main + {customCats.length} custom = {categories.length} total
-                  </small>
-                )}
-
-                {isClothing && (
-                  <div style={{
-                    marginTop: '8px', padding: '6px 14px',
-                    background: '#FFF3EC', border: '1.5px solid #FFD4B8',
-                    borderRadius: '8px', fontSize: '0.78rem',
-                    fontWeight: '700', color: '#FF6B35',
-                  }}>
-                    👗 Clothing detected — Size & Gender required!
-                  </div>
-                )}
               </div>
 
               <div className="form-group">
@@ -783,7 +1013,6 @@ export default function ProductForm({ id }) {
                   onChange={e => set('brand', e.target.value)} placeholder="Brand name" />
               </div>
 
-              {/* ✅ SIMPLE AGE GROUP — TYPE FREELY */}
               <div className="form-group">
                 <label>Age Group</label>
                 <input
@@ -794,11 +1023,8 @@ export default function ProductForm({ id }) {
                   placeholder="e.g. 13 yrs, 2 yrs, 6 months, Newborn..."
                 />
                 <small style={{
-                  display: 'block',
-                  marginTop: '6px',
-                  color: '#9585B0',
-                  fontSize: '0.72rem',
-                  fontWeight: '600',
+                  display: 'block', marginTop: '6px',
+                  color: '#9585B0', fontSize: '0.72rem', fontWeight: '600',
                 }}>
                   💡 Type any age (e.g. "13 yrs", "2 yrs", "6 months", "All ages")
                 </small>
@@ -829,56 +1055,6 @@ export default function ProductForm({ id }) {
               </div>
             </div>
 
-            {uploadedCount > 0 && (
-              <div className={styles.card}>
-                <h3>📸 Image Preview</h3>
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: 'repeat(4, 1fr)',
-                  gap: '8px',
-                }}>
-                  {IMAGE_SLOTS.map((slot, i) => (
-                    <div key={i} style={{ textAlign: 'center' }}>
-                      {form.images[i] ? (
-                        <div style={{
-                          aspectRatio: '1', borderRadius: '10px',
-                          overflow: 'hidden',
-                          border: i === 0
-                            ? '2px solid #FF6B35'
-                            : '2px solid #EDD9FF',
-                        }}>
-                          <img
-                            src={form.images[i].url}
-                            alt={slot.label}
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          />
-                        </div>
-                      ) : (
-                        <div style={{
-                          aspectRatio: '1', borderRadius: '10px',
-                          border: '2px dashed #EDD9FF',
-                          display: 'flex',
-                          alignItems: 'center', justifyContent: 'center',
-                          background: '#FBF7FF', fontSize: '1.2rem',
-                        }}>
-                          {slot.icon}
-                        </div>
-                      )}
-                      <p style={{
-                        fontSize: '0.65rem', fontWeight: '700',
-                        color: form.images[i] ? '#22C55E' : '#9585B0',
-                        margin: '4px 0 0',
-                        textTransform: 'uppercase',
-                        letterSpacing: '0.3px',
-                      }}>
-                        {slot.label}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
             <div className={styles.submitRow}>
               <button type="button" className="btn btn-outline" onClick={() => router.back()}>
                 Cancel
@@ -892,7 +1068,7 @@ export default function ProductForm({ id }) {
                 {loading
                   ? '⏳ Saving...'
                   : uploadingSlot !== null
-                    ? '⏳ Uploading image...'
+                    ? '⏳ Uploading...'
                     : isEdit
                       ? '💾 Update Product'
                       : '✨ Create Product'}

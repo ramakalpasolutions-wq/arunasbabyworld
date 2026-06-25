@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
@@ -16,6 +16,10 @@ export default function ProductDetailClient({ id }) {
   const [tab,           setTab]           = useState('description');
   const [imgLoaded,     setImgLoaded]     = useState(false);
 
+  // ✅ NEW: Color variant state
+  const [selectedColorIdx, setSelectedColorIdx] = useState(0);
+  const [selectedSize,     setSelectedSize]     = useState('');
+
   // ✅ Auto slide states
   const [isHovered, setIsHovered] = useState(false);
   const [progress,  setProgress]  = useState(0);
@@ -30,12 +34,19 @@ export default function ProductDetailClient({ id }) {
   useEffect(() => {
     setLoading(true);
     setSelectedImage(0);
+    setSelectedColorIdx(0);
+    setSelectedSize('');
     setImgLoaded(false);
     fetch(`/api/products/${id}`)
       .then(r => r.json())
       .then(d => {
         setProduct(d.product);
         setLoading(false);
+
+        // ✅ Auto-select first available size of first color
+        if (d.product?.hasVariants && d.product?.colorVariants?.[0]?.sizes?.length > 0) {
+          setSelectedSize(d.product.colorVariants[0].sizes[0]);
+        }
 
         if (d.product?.categoryId) {
           fetch(
@@ -52,15 +63,69 @@ export default function ProductDetailClient({ id }) {
       .catch(() => setLoading(false));
   }, [id]);
 
+  /* ============================================================
+     ✅ COMPUTED: Current color variant + display data
+     ============================================================ */
+  const hasVariants = product?.hasVariants && product?.colorVariants?.length > 0;
+  const currentVariant = hasVariants ? product.colorVariants[selectedColorIdx] : null;
+
+  // ✅ Images to display: variant images OR default product images
+  const displayImages = useMemo(() => {
+    if (hasVariants && currentVariant?.images?.length > 0) {
+      return currentVariant.images;
+    }
+    return product?.images?.length > 0
+      ? product.images
+      : [{ url: `https://via.placeholder.com/500x500?text=${encodeURIComponent(product?.name || '')}` }];
+  }, [hasVariants, currentVariant, product]);
+
+  // ✅ Price: variant price OR default product price
+  const currentPrice = hasVariants && currentVariant
+    ? currentVariant.price
+    : product?.price;
+
+  const currentDiscountPrice = hasVariants && currentVariant
+    ? currentVariant.discountPrice
+    : product?.discountPrice;
+
+  const finalPrice = currentDiscountPrice || currentPrice;
+  const discount = currentDiscountPrice
+    ? Math.round(((currentPrice - currentDiscountPrice) / currentPrice) * 100)
+    : 0;
+
+  // ✅ Stock: variant stock OR default product stock
+  const currentStock = hasVariants && currentVariant
+    ? currentVariant.stock
+    : product?.stock;
+
+  // ✅ Sizes for current color
+  const currentSizes = hasVariants && currentVariant
+    ? currentVariant.sizes || []
+    : [];
+
+  /* ── When color changes — reset image, set first size ── */
+  const handleColorChange = (idx) => {
+    setSelectedColorIdx(idx);
+    setSelectedImage(0);
+    setImgLoaded(false);
+    setQuantity(1);
+    setProgress(0);
+    clearInterval(intervalRef.current);
+    clearInterval(progressRef.current);
+
+    // Auto-select first size of new color
+    const newVariant = product?.colorVariants?.[idx];
+    if (newVariant?.sizes?.length > 0) {
+      setSelectedSize(newVariant.sizes[0]);
+    } else {
+      setSelectedSize('');
+    }
+  };
+
   /* ── Auto slide logic ── */
   useEffect(() => {
     if (!product) return;
-
-    const images = product.images?.length > 0
-      ? product.images
-      : [{ url: `https://via.placeholder.com/500x500` }];
-
-    if (images.length <= 1) return;
+    if (displayImages.length <= 1) return;
 
     clearInterval(intervalRef.current);
     clearInterval(progressRef.current);
@@ -76,7 +141,7 @@ export default function ProductDetailClient({ id }) {
 
     intervalRef.current = setInterval(() => {
       setSelectedImage(prev => {
-        const next = (prev + 1) % images.length;
+        const next = (prev + 1) % displayImages.length;
         setImgLoaded(false);
         return next;
       });
@@ -88,7 +153,7 @@ export default function ProductDetailClient({ id }) {
       clearInterval(intervalRef.current);
       clearInterval(progressRef.current);
     };
-  }, [isHovered, product, selectedImage]);
+  }, [isHovered, product, selectedImage, displayImages.length]);
 
   /* ── Manual navigation ── */
   const goToSlide = useCallback((index) => {
@@ -99,12 +164,12 @@ export default function ProductDetailClient({ id }) {
     clearInterval(progressRef.current);
   }, []);
 
-  const goPrev = (images) => {
-    goToSlide((selectedImage - 1 + images.length) % images.length);
+  const goPrev = () => {
+    goToSlide((selectedImage - 1 + displayImages.length) % displayImages.length);
   };
 
-  const goNext = (images) => {
-    goToSlide((selectedImage + 1) % images.length);
+  const goNext = () => {
+    goToSlide((selectedImage + 1) % displayImages.length);
   };
 
   /* ── Loading skeleton ── */
@@ -138,19 +203,35 @@ export default function ProductDetailClient({ id }) {
     </div>
   );
 
-  const images = product.images?.length > 0
-    ? product.images
-    : [{ url: `https://via.placeholder.com/500x500?text=${encodeURIComponent(product.name)}` }];
-
-  const finalPrice = product.discountPrice || product.price;
-  const discount   = product.discountPrice
-    ? Math.round(((product.price - product.discountPrice) / product.price) * 100)
-    : 0;
-
   const handleAddToCart = () => {
-    if (product.stock === 0) return;
-    addItem({ ...product, quantity });
-    toast.success(`${product.name} added to cart!`, { icon: '🛒' });
+    if (currentStock === 0) return;
+
+    // ✅ Validate size selection if variant has sizes
+    if (hasVariants && currentSizes.length > 0 && !selectedSize) {
+      toast.error('Please select a size');
+      return;
+    }
+
+    const cartItem = {
+      ...product,
+      quantity,
+      // ✅ Override with variant-specific data
+      ...(hasVariants && currentVariant && {
+        price: currentVariant.price,
+        discountPrice: currentVariant.discountPrice,
+        selectedColor: {
+          name: currentVariant.colorName,
+          hex:  currentVariant.colorHex,
+        },
+        selectedSize: selectedSize || null,
+        images: currentVariant.images || product.images,
+      }),
+    };
+
+    addItem(cartItem);
+
+    const colorLabel = hasVariants ? ` (${currentVariant.colorName}${selectedSize ? `, ${selectedSize}` : ''})` : '';
+    toast.success(`${product.name}${colorLabel} added to cart!`, { icon: '🛒' });
   };
 
   const inWishlist = isWishlisted(product.id);
@@ -199,112 +280,104 @@ export default function ProductDetailClient({ id }) {
       {/* ══ MAIN LAYOUT ══ */}
       <div className={styles.layout}>
 
-        {/* ── IMAGES SECTION — FirstCry Style ── */}
-        <div className={`${styles.imagesSection} ${images.length <= 1 ? styles.singleImage : ''}`}>
+        {/* ── IMAGES SECTION — Main image ONLY at TOP, Thumbnails ONLY at BOTTOM ── */}
+<div className={styles.imagesSection}>
 
-          {/* ✅ Thumbnails LEFT (vertical column) */}
-          {images.length > 1 && (
-            <div className={styles.thumbnails}>
-              {images.map((img, i) => (
-                <button
-                  key={i}
-                  className={`${styles.thumb} ${i === selectedImage ? styles.thumbActive : ''}`}
-                  onClick={() => goToSlide(i)}
-                  aria-label={`View ${i + 1}`}
-                >
-                  <Image
-                    src={img.url}
-                    alt={`${product.name} ${i + 1}`}
-                    width={80}
-                    height={80}
-                    className={styles.thumbImg}
-                  />
-                </button>
-              ))}
-            </div>
-          )}
+  {/* ✅ 1. MAIN IMAGE — TOP */}
+  <div
+    className={styles.mainImageWrap}
+    onMouseEnter={() => setIsHovered(true)}
+    onMouseLeave={() => setIsHovered(false)}
+  >
+    {!imgLoaded && (
+      <div className={styles.imgSkeleton}>
+        <span className={styles.imgSkeletonIcon}>🖼️</span>
+      </div>
+    )}
 
-          {/* ✅ Main Image RIGHT (big square) */}
-          <div
-            className={styles.mainImageWrap}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-          >
-            {/* Skeleton */}
-            {!imgLoaded && (
-              <div className={styles.imgSkeleton}>
-                <span className={styles.imgSkeletonIcon}>🖼️</span>
-              </div>
-            )}
+    <Image
+      src={displayImages[selectedImage]?.url || displayImages[0]?.url}
+      alt={product.name}
+      width={600}
+      height={600}
+      className={`${styles.mainImg} ${imgLoaded ? styles.mainImgVisible : styles.mainImgHidden}`}
+      onLoad={() => setImgLoaded(true)}
+      priority
+    />
 
-            {/* Main Image */}
-            <Image
-              src={images[selectedImage]?.url || images[0]?.url}
-              alt={product.name}
-              width={600}
-              height={600}
-              className={`${styles.mainImg} ${imgLoaded ? styles.mainImgVisible : styles.mainImgHidden}`}
-              onLoad={() => setImgLoaded(true)}
-              priority
-            />
+    {discount > 0 && <span className={styles.discountTag}>{discount}% OFF</span>}
+    {product.isTrending && <span className={styles.trendingTag}>🔥 Trending</span>}
 
-            {/* Badges */}
-            {discount > 0 && <span className={styles.discountTag}>{discount}% OFF</span>}
-            {product.isTrending && <span className={styles.trendingTag}>🔥 Trending</span>}
+    {displayImages.length > 1 && (
+      <>
+        <button
+          onClick={goPrev}
+          className={styles.navArrow}
+          style={{ left: '12px' }}
+          aria-label="Previous"
+        >‹</button>
+        <button
+          onClick={goNext}
+          className={styles.navArrow}
+          style={{ right: '12px' }}
+          aria-label="Next"
+        >›</button>
+      </>
+    )}
 
-            {/* Nav Arrows */}
-            {images.length > 1 && (
-              <>
-                <button
-                  onClick={() => goPrev(images)}
-                  className={styles.navArrow}
-                  style={{ left: '12px' }}
-                  aria-label="Previous"
-                >‹</button>
-                <button
-                  onClick={() => goNext(images)}
-                  className={styles.navArrow}
-                  style={{ right: '12px' }}
-                  aria-label="Next"
-                >›</button>
-              </>
-            )}
+    {displayImages.length > 1 && (
+      <div className={styles.dots}>
+        {displayImages.map((_, i) => (
+          <button
+            key={i}
+            onClick={() => goToSlide(i)}
+            className={`${styles.dot} ${i === selectedImage ? styles.dotActive : ''}`}
+            aria-label={`Go to image ${i + 1}`}
+          />
+        ))}
+      </div>
+    )}
 
-            {/* Dot Indicators */}
-            {images.length > 1 && (
-              <div className={styles.dots}>
-                {images.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => goToSlide(i)}
-                    className={`${styles.dot} ${i === selectedImage ? styles.dotActive : ''}`}
-                    aria-label={`Go to image ${i + 1}`}
-                  />
-                ))}
-              </div>
-            )}
+    {displayImages.length > 1 && !isHovered && (
+      <div className={styles.progressBar}>
+        <div className={styles.progressFill} style={{ width: `${progress}%` }} />
+      </div>
+    )}
 
-            {/* Progress Bar */}
-            {images.length > 1 && !isHovered && (
-              <div className={styles.progressBar}>
-                <div className={styles.progressFill} style={{ width: `${progress}%` }} />
-              </div>
-            )}
+    {displayImages.length > 1 && (
+      <div className={styles.imageCounter}>
+        {selectedImage + 1} / {displayImages.length}
+      </div>
+    )}
+  </div>
 
-            {/* Image Counter */}
-            {images.length > 1 && (
-              <div className={styles.imageCounter}>
-                {selectedImage + 1} / {images.length}
-              </div>
-            )}
-          </div>
+  {/* ✅ 2. THUMBNAILS — BOTTOM ONLY (no top thumbnails!) */}
+  {displayImages.length > 1 && (
+    <div className={styles.thumbnails} data-count={displayImages.length}>
+      {displayImages.map((img, i) => (
+        <button
+          key={i}
+          className={`${styles.thumb} ${i === selectedImage ? styles.thumbActive : ''}`}
+          onClick={() => goToSlide(i)}
+          aria-label={`View ${i + 1}`}
+        >
+          <Image
+            src={img.url}
+            alt={`${product.name} ${i + 1}`}
+            width={120}
+            height={120}
+            className={styles.thumbImg}
+          />
+        </button>
+      ))}
+    </div>
+  )}
 
-        </div>
+</div>
 
         {/* ── INFO SECTION ── */}
         <div className={styles.infoSection}>
 
-          {/* Category link */}
           {product.category && (
             <Link
               href={`/products?category=${product.category?.id}`}
@@ -314,10 +387,8 @@ export default function ProductDetailClient({ id }) {
             </Link>
           )}
 
-          {/* Product name */}
           <h1 className={styles.productName}>{product.name}</h1>
 
-          {/* Rating */}
           {product.rating > 0 && (
             <div className={styles.ratingRow}>
               <div className={styles.stars}>
@@ -338,27 +409,234 @@ export default function ProductDetailClient({ id }) {
           {/* Price */}
           <div className={styles.priceSection}>
             <span className={styles.currentPrice}>
-              ₹{finalPrice.toLocaleString('en-IN')}
+              ₹{finalPrice?.toLocaleString('en-IN')}
             </span>
-            {product.discountPrice && (
+            {currentDiscountPrice && (
               <>
                 <span className={styles.originalPrice}>
-                  ₹{product.price.toLocaleString('en-IN')}
+                  ₹{currentPrice?.toLocaleString('en-IN')}
                 </span>
                 <span className={styles.saveBadge}>
-                  Save ₹{(product.price - finalPrice).toLocaleString('en-IN')}
+                  Save ₹{(currentPrice - finalPrice).toLocaleString('en-IN')}
                 </span>
               </>
             )}
           </div>
 
-          {/* Short description */}
           {product.shortDescription && (
             <p className={styles.shortDesc}>{product.shortDescription}</p>
           )}
 
-          {/* ── CLOTHING DETAILS ── */}
-          {isClothing && (
+          {/* ════════════════════════════════════════════════════════
+              ✅ COLOR VARIANTS — Swatch Picker
+              ════════════════════════════════════════════════════════ */}
+          {hasVariants && (
+            <div style={{
+              marginTop: '18px',
+              padding: '16px 18px',
+              background: 'linear-gradient(135deg,#FBF7FF,#FFF)',
+              border: '2px solid #EDD9FF',
+              borderRadius: '14px',
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginBottom: '12px',
+              }}>
+                <span style={{
+                  fontSize: '0.78rem',
+                  fontWeight: '800',
+                  color: '#6B4E8A',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}>
+                  🎨 Color:
+                </span>
+                <span style={{
+                  fontSize: '0.92rem',
+                  fontWeight: '700',
+                  color: currentVariant?.colorHex || '#2D1A4A',
+                }}>
+                  {currentVariant?.colorName}
+                </span>
+                <span style={{
+                  marginLeft: 'auto',
+                  fontSize: '0.74rem',
+                  color: '#9585B0',
+                  fontWeight: '600',
+                }}>
+                  {product.colorVariants.length} colors available
+                </span>
+              </div>
+
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '10px',
+              }}>
+                {product.colorVariants.map((variant, idx) => {
+                  const isSelected = idx === selectedColorIdx;
+                  const outOfStock = variant.stock === 0;
+                  return (
+                    <button
+                      key={idx}
+                      type="button"
+                      onClick={() => handleColorChange(idx)}
+                      disabled={outOfStock}
+                      title={`${variant.colorName} - ₹${variant.discountPrice || variant.price}${outOfStock ? ' (Out of Stock)' : ''}`}
+                      style={{
+                        position: 'relative',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        alignItems: 'center',
+                        gap: '4px',
+                        padding: '4px',
+                        background: 'transparent',
+                        border: 'none',
+                        cursor: outOfStock ? 'not-allowed' : 'pointer',
+                        opacity: outOfStock ? 0.5 : 1,
+                        fontFamily: 'inherit',
+                      }}
+                    >
+                      <div style={{
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '50%',
+                        background: variant.colorHex || '#ccc',
+                        border: `3px solid ${isSelected ? '#7B2FBE' : 'white'}`,
+                        boxShadow: isSelected
+                          ? '0 0 0 2px #7B2FBE, 0 4px 12px rgba(123,47,190,0.3)'
+                          : '0 2px 8px rgba(0,0,0,0.12)',
+                        transition: 'all 0.2s ease',
+                        position: 'relative',
+                      }}>
+                        {isSelected && (
+                          <span style={{
+                            position: 'absolute',
+                            bottom: '-2px',
+                            right: '-2px',
+                            background: '#22C55E',
+                            color: 'white',
+                            width: '18px',
+                            height: '18px',
+                            borderRadius: '50%',
+                            fontSize: '10px',
+                            fontWeight: '800',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            border: '2px solid white',
+                          }}>✓</span>
+                        )}
+                        {outOfStock && (
+                          <div style={{
+                            position: 'absolute',
+                            inset: 0,
+                            borderRadius: '50%',
+                            background: 'rgba(255,255,255,0.7)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '0.65rem',
+                            fontWeight: '800',
+                            color: '#DC2626',
+                          }}>✕</div>
+                        )}
+                      </div>
+                      <span style={{
+                        fontSize: '0.68rem',
+                        fontWeight: '700',
+                        color: isSelected ? '#7B2FBE' : '#6B4E8A',
+                        maxWidth: '60px',
+                        textAlign: 'center',
+                        lineHeight: 1.1,
+                      }}>
+                        {variant.colorName}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ════════════════════════════════════════════════════════
+              ✅ SIZE PICKER — Per color
+              ════════════════════════════════════════════════════════ */}
+          {hasVariants && currentSizes.length > 0 && (
+            <div style={{
+              marginTop: '14px',
+              padding: '16px 18px',
+              background: 'linear-gradient(135deg,#FFF3EC,#FFF)',
+              border: '2px solid #FFD4B8',
+              borderRadius: '14px',
+            }}>
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                marginBottom: '12px',
+              }}>
+                <span style={{
+                  fontSize: '0.78rem',
+                  fontWeight: '800',
+                  color: '#6B4E8A',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}>
+                  📏 Size:
+                </span>
+                {selectedSize && (
+                  <span style={{
+                    fontSize: '0.92rem',
+                    fontWeight: '700',
+                    color: '#FF6B35',
+                  }}>
+                    {selectedSize}
+                  </span>
+                )}
+              </div>
+
+              <div style={{
+                display: 'flex',
+                flexWrap: 'wrap',
+                gap: '8px',
+              }}>
+                {currentSizes.map(size => {
+                  const isSelected = selectedSize === size;
+                  return (
+                    <button
+                      key={size}
+                      type="button"
+                      onClick={() => setSelectedSize(size)}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '10px',
+                        border: '2px solid',
+                        borderColor: isSelected ? '#FF6B35' : '#FFD4B8',
+                        background: isSelected
+                          ? 'linear-gradient(135deg,#FF6B35,#7B2FBE)'
+                          : 'white',
+                        color: isSelected ? 'white' : '#6B4E8A',
+                        fontWeight: '700',
+                        fontSize: '0.82rem',
+                        cursor: 'pointer',
+                        fontFamily: 'inherit',
+                        transition: 'all 0.2s',
+                        minWidth: '50px',
+                      }}
+                    >
+                      {size}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ── CLOTHING DETAILS (only when NO variants) ── */}
+          {!hasVariants && isClothing && (
             product.gender || product.size || product.color ||
             product.material || product.ageGroup
           ) && (
@@ -427,22 +705,24 @@ export default function ProductDetailClient({ id }) {
 
           {/* Stock */}
           <div className={styles.stockRow}>
-            {product.stock > 0 ? (
+            {currentStock > 0 ? (
               <span className={styles.inStock}>
-                ✅ In Stock ({product.stock} available)
+                ✅ In Stock ({currentStock} available{hasVariants ? ` for ${currentVariant?.colorName}` : ''})
               </span>
             ) : (
-              <span className={styles.outOfStock}>❌ Out of Stock</span>
+              <span className={styles.outOfStock}>
+                ❌ Out of Stock{hasVariants ? ` for ${currentVariant?.colorName}` : ''}
+              </span>
             )}
-            {product.stock > 0 && product.stock <= 10 && (
+            {currentStock > 0 && currentStock <= 10 && (
               <span className={styles.lowStockWarn}>
-                ⚠️ Only {product.stock} left!
+                ⚠️ Only {currentStock} left!
               </span>
             )}
           </div>
 
           {/* Quantity */}
-          {product.stock > 0 && (
+          {currentStock > 0 && (
             <div className={styles.quantityRow}>
               <span className={styles.quantityLabel}>Quantity:</span>
               <div className={styles.quantityControl}>
@@ -453,7 +733,7 @@ export default function ProductDetailClient({ id }) {
                 <span className={styles.qtyNum}>{quantity}</span>
                 <button
                   className={styles.qtyBtn}
-                  onClick={() => setQuantity(q => Math.min(product.stock, q + 1))}
+                  onClick={() => setQuantity(q => Math.min(currentStock, q + 1))}
                 >+</button>
               </div>
             </div>
@@ -464,9 +744,9 @@ export default function ProductDetailClient({ id }) {
             <button
               className={styles.cartBtn}
               onClick={handleAddToCart}
-              disabled={product.stock === 0}
+              disabled={currentStock === 0}
             >
-              🛒 {product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+              🛒 {currentStock === 0 ? 'Out of Stock' : 'Add to Cart'}
             </button>
             <button
               className={`${styles.wishBtn} ${inWishlist ? styles.wishActive : ''}`}
@@ -476,6 +756,41 @@ export default function ProductDetailClient({ id }) {
               {inWishlist ? '❤️' : '🤍'}
             </button>
           </div>
+
+          {/* Selection Summary (when variants exist) */}
+          {hasVariants && (currentVariant || selectedSize) && (
+            <div style={{
+              marginTop: '12px',
+              padding: '12px 16px',
+              background: 'linear-gradient(135deg,#F0FDF4,#FBF7FF)',
+              border: '1.5px solid #BBF7D0',
+              borderRadius: '12px',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '10px',
+              fontSize: '0.84rem',
+              fontWeight: '700',
+              color: '#166534',
+            }}>
+              <span>✅ Your selection:</span>
+              {currentVariant && (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{
+                    display: 'inline-block',
+                    width: '14px',
+                    height: '14px',
+                    borderRadius: '50%',
+                    background: currentVariant.colorHex,
+                    border: '2px solid white',
+                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                  }} />
+                  {currentVariant.colorName}
+                </span>
+              )}
+              {selectedSize && <span>• Size: {selectedSize}</span>}
+              <span>• Qty: {quantity}</span>
+            </div>
+          )}
 
           {/* Highlights */}
           <div className={styles.highlights}>
@@ -517,8 +832,6 @@ export default function ProductDetailClient({ id }) {
         </div>
 
         <div className={styles.tabContent}>
-
-          {/* Description */}
           {tab === 'description' && (
             <div className={styles.descTab}>
               <p className={styles.descText}>{product.description}</p>
@@ -544,11 +857,62 @@ export default function ProductDetailClient({ id }) {
             </div>
           )}
 
-          {/* Specifications */}
           {tab === 'specifications' && (
             <div className={styles.specsTab}>
               <table className={styles.specTable}>
                 <tbody>
+                  {/* ✅ Show variants in specs */}
+                  {hasVariants && (
+                    <>
+                      <tr>
+                        <td className={styles.specKey}>Available Colors</td>
+                        <td>
+                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                            {product.colorVariants.map((v, i) => (
+                              <span key={i} style={{
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '6px',
+                                padding: '3px 10px',
+                                background: '#F3E8FF',
+                                borderRadius: '999px',
+                                fontSize: '0.82rem',
+                                fontWeight: '600',
+                              }}>
+                                <span style={{
+                                  display: 'inline-block',
+                                  width: '12px', height: '12px',
+                                  borderRadius: '50%',
+                                  background: v.colorHex,
+                                  border: '1.5px solid #ddd',
+                                }} />
+                                {v.colorName}
+                              </span>
+                            ))}
+                          </div>
+                        </td>
+                      </tr>
+                      {currentSizes.length > 0 && (
+                        <tr>
+                          <td className={styles.specKey}>Available Sizes ({currentVariant?.colorName})</td>
+                          <td>
+                            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                              {currentSizes.map(s => (
+                                <span key={s} style={{
+                                  padding: '2px 10px',
+                                  background: '#FFF3EC',
+                                  borderRadius: '6px',
+                                  fontSize: '0.82rem',
+                                  fontWeight: '700',
+                                  color: '#FF6B35',
+                                }}>{s}</span>
+                              ))}
+                            </div>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  )}
                   {product.gender && (
                     <tr>
                       <td className={styles.specKey}>Gender</td>
@@ -559,13 +923,13 @@ export default function ProductDetailClient({ id }) {
                       </td>
                     </tr>
                   )}
-                  {product.size && (
+                  {!hasVariants && product.size && (
                     <tr>
                       <td className={styles.specKey}>Size</td>
                       <td>📏 {product.size}</td>
                     </tr>
                   )}
-                  {product.color && (
+                  {!hasVariants && product.color && (
                     <tr>
                       <td className={styles.specKey}>Color</td>
                       <td>🎨 {product.color}</td>
@@ -601,23 +965,11 @@ export default function ProductDetailClient({ id }) {
                       <td><code>{product.sku}</code></td>
                     </tr>
                   )}
-                  {!product.gender && !product.size && !product.color &&
-                   !product.material && !product.ageGroup && !product.brand &&
-                   !product.weight && !product.specifications?.length && (
-                    <tr>
-                      <td colSpan={2} style={{
-                        textAlign: 'center', color: '#9585B0', padding: '28px',
-                      }}>
-                        No specifications available
-                      </td>
-                    </tr>
-                  )}
                 </tbody>
               </table>
             </div>
           )}
 
-          {/* Reviews */}
           {tab === 'reviews' && (
             <div className={styles.reviewsTab}>
               {product.reviews?.length > 0 ? (
@@ -695,10 +1047,22 @@ function RelatedCard({ product, index }) {
   const [adding,    setAdding]    = useState(false);
 
   const inWishlist = isWishlisted(product.id);
-  const imageUrl   = product.images?.[0]?.url || null;
-  const price      = product.discountPrice || product.price;
-  const discount   = product.discountPrice
-    ? Math.round(((product.price - product.discountPrice) / product.price) * 100)
+
+  // ✅ Use first variant's first image if available
+  const firstVariantImage = product.hasVariants && product.colorVariants?.[0]?.images?.[0]?.url;
+  const imageUrl = firstVariantImage || product.images?.[0]?.url || null;
+
+  // ✅ Use first variant's price if available
+  const displayPrice = product.hasVariants && product.colorVariants?.[0]
+    ? product.colorVariants[0].price
+    : product.price;
+  const displayDiscountPrice = product.hasVariants && product.colorVariants?.[0]
+    ? product.colorVariants[0].discountPrice
+    : product.discountPrice;
+
+  const price    = displayDiscountPrice || displayPrice;
+  const discount = displayDiscountPrice
+    ? Math.round(((displayPrice - displayDiscountPrice) / displayPrice) * 100)
     : 0;
 
   const handleCart = (e) => {
@@ -730,7 +1094,6 @@ function RelatedCard({ product, index }) {
       className={styles.relatedCard}
       style={{ animationDelay: `${index * 60}ms` }}
     >
-      {/* Image */}
       <div className={styles.relatedImgWrap}>
         {!imgLoaded && (
           <div className={styles.relatedImgSkeleton}>
@@ -753,7 +1116,6 @@ function RelatedCard({ product, index }) {
           <div className={styles.relatedNoImg}>🛍️</div>
         )}
 
-        {/* Badges */}
         <div className={styles.relatedBadges}>
           {discount > 0 && (
             <span className={styles.relatedDiscount}>-{discount}%</span>
@@ -761,9 +1123,20 @@ function RelatedCard({ product, index }) {
           {product.isTrending && (
             <span className={styles.relatedTrending}>🔥</span>
           )}
+          {product.hasVariants && product.colorVariants?.length > 1 && (
+            <span style={{
+              background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)',
+              color: 'white',
+              padding: '3px 8px',
+              borderRadius: '6px',
+              fontSize: '0.65rem',
+              fontWeight: '800',
+            }}>
+              🎨 {product.colorVariants.length} Colors
+            </span>
+          )}
         </div>
 
-        {/* Wishlist */}
         <button
           className={`${styles.relatedWish} ${inWishlist ? styles.relatedWishOn : ''}`}
           onClick={handleWish}
@@ -772,24 +1145,50 @@ function RelatedCard({ product, index }) {
           {inWishlist ? '❤️' : '🤍'}
         </button>
 
-        {/* Out of stock */}
         {product.stock === 0 && (
           <div className={styles.relatedOos}>Out of Stock</div>
         )}
       </div>
 
-      {/* Info */}
       <div className={styles.relatedInfo}>
         <p className={styles.relatedCat}>{product.category?.name || ''}</p>
         <h3 className={styles.relatedName}>{product.name}</h3>
 
+        {/* Mini color swatches preview */}
+        {product.hasVariants && product.colorVariants?.length > 1 && (
+          <div style={{
+            display: 'flex',
+            gap: '4px',
+            marginBottom: '6px',
+          }}>
+            {product.colorVariants.slice(0, 5).map((v, i) => (
+              <div key={i} style={{
+                width: '14px',
+                height: '14px',
+                borderRadius: '50%',
+                background: v.colorHex,
+                border: '1.5px solid white',
+                boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
+              }} title={v.colorName} />
+            ))}
+            {product.colorVariants.length > 5 && (
+              <span style={{
+                fontSize: '0.65rem',
+                fontWeight: '700',
+                color: '#9585B0',
+                marginLeft: '4px',
+              }}>+{product.colorVariants.length - 5}</span>
+            )}
+          </div>
+        )}
+
         <div className={styles.relatedPriceRow}>
           <span className={styles.relatedPrice}>
-            ₹{price.toLocaleString('en-IN')}
+            ₹{price?.toLocaleString('en-IN')}
           </span>
-          {product.discountPrice && (
+          {displayDiscountPrice && (
             <span className={styles.relatedOldPrice}>
-              ₹{product.price.toLocaleString('en-IN')}
+              ₹{displayPrice?.toLocaleString('en-IN')}
             </span>
           )}
         </div>

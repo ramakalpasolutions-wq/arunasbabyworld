@@ -32,7 +32,6 @@ export async function GET(request) {
     if (featured === 'true') where.isFeatured = true;
     if (trending === 'true') where.isTrending = true;
 
-    // ✅ Price filter
     if (minPrice !== null || maxPrice !== null) {
       where.OR = [
         {
@@ -52,76 +51,44 @@ export async function GET(request) {
       ];
     }
 
-    // ✅ FIXED Search filter — search name, description, brand, tags
     if (search && search.trim()) {
       const s = search.trim();
-
       const searchConditions = [
-        // Search in product name
         { name: { contains: s, mode: 'insensitive' } },
-        // Search in description
         { description: { contains: s, mode: 'insensitive' } },
-        // Search in short description
         { shortDescription: { contains: s, mode: 'insensitive' } },
-        // Search in brand
         { brand: { contains: s, mode: 'insensitive' } },
-        // Search in category name
-        {
-          category: {
-            name: { contains: s, mode: 'insensitive' },
-          },
-        },
-        // Search in category slug
-        {
-          category: {
-            slug: { contains: s, mode: 'insensitive' },
-          },
-        },
+        { category: { name: { contains: s, mode: 'insensitive' } } },
+        { category: { slug: { contains: s, mode: 'insensitive' } } },
       ];
 
       if (where.OR) {
-        // ✅ Price filter already using OR — combine with AND
-        where.AND = [
-          { OR: where.OR },
-          { OR: searchConditions },
-        ];
+        where.AND = [{ OR: where.OR }, { OR: searchConditions }];
         delete where.OR;
       } else {
         where.OR = searchConditions;
       }
     }
 
-    // ✅ Category filter
     if (category) {
       const isObjectId = /^[a-f\d]{24}$/i.test(category);
-
       if (isObjectId) {
         where.categoryId = category;
       } else {
-        // ✅ It's a slug — find category by slug
-        const catBySlug = await prisma.category.findFirst({
-          where: { slug: category },
-        });
+        const catBySlug = await prisma.category.findFirst({ where: { slug: category } });
         if (catBySlug) {
           where.categoryId = catBySlug.id;
         } else {
-          // ✅ Try partial slug match
           const catByPartial = await prisma.category.findFirst({
-            where: {
-              slug: { contains: category, mode: 'insensitive' },
-            },
+            where: { slug: { contains: category, mode: 'insensitive' } },
           });
-          if (catByPartial) {
-            where.categoryId = catByPartial.id;
-          }
+          if (catByPartial) where.categoryId = catByPartial.id;
         }
       }
     }
 
-    // ✅ Count total matching products
     const total = await prisma.product.count({ where });
 
-    // ✅ Fetch products — NO hardcoded limit
     const products = await prisma.product.findMany({
       where,
       include: {
@@ -134,20 +101,12 @@ export async function GET(request) {
 
     return NextResponse.json({
       products,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
 
   } catch (error) {
     console.error('Products GET error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -161,21 +120,16 @@ export async function POST(request) {
     const data = await request.json();
 
     let categoryId = data.categoryId;
-
     const isObjectId = /^[a-f\d]{24}$/i.test(categoryId);
 
     let foundCat = null;
     if (isObjectId) {
-      foundCat = await prisma.category.findUnique({
-        where: { id: categoryId },
-      });
+      foundCat = await prisma.category.findUnique({ where: { id: categoryId } });
     }
 
     if (!foundCat) {
       const slug = data.categorySlug || categoryId;
-      let cat = await prisma.category.findFirst({
-        where: { slug },
-      });
+      let cat = await prisma.category.findFirst({ where: { slug } });
 
       if (!cat) {
         const nameMap = {
@@ -193,12 +147,9 @@ export async function POST(request) {
 
         cat = await prisma.category.create({
           data: {
-            name:     catInfo.name,
-            slug,
-            icon:     catInfo.icon,
-            color:    catInfo.color,
-            isActive: true,
-            order:    0,
+            name: catInfo.name, slug,
+            icon: catInfo.icon, color: catInfo.color,
+            isActive: true, order: 0,
           },
         });
       }
@@ -215,9 +166,28 @@ export async function POST(request) {
 
     let discountPercent = null;
     if (data.discountPrice && data.price) {
-      discountPercent = Math.round(
-        ((data.price - data.discountPrice) / data.price) * 100
-      );
+      discountPercent = Math.round(((data.price - data.discountPrice) / data.price) * 100);
+    }
+
+    // ✅ Handle color variants
+    const hasVariants = Array.isArray(data.colorVariants) && data.colorVariants.length > 0;
+    let colorVariants = [];
+    let totalStock = parseInt(data.stock) || 0;
+
+    if (hasVariants) {
+      colorVariants = data.colorVariants.map(v => ({
+        colorName:     v.colorName     || '',
+        colorHex:      v.colorHex      || '#000000',
+        price:         v.price         ? parseFloat(v.price) : parseFloat(data.price),
+        discountPrice: v.discountPrice ? parseFloat(v.discountPrice) : null,
+        stock:         parseInt(v.stock) || 0,
+        sizes:         Array.isArray(v.sizes) ? v.sizes : [],
+        images:        Array.isArray(v.images) ? v.images.filter(Boolean) : [],
+        sku:           v.sku || `${sku}-${(v.colorName || 'C').toUpperCase().slice(0,3)}`,
+      }));
+
+      // ✅ Total stock = sum of all variant stocks
+      totalStock = colorVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
     }
 
     const product = await prisma.product.create({
@@ -228,7 +198,7 @@ export async function POST(request) {
         price:            parseFloat(data.price),
         discountPrice:    data.discountPrice ? parseFloat(data.discountPrice) : null,
         discountPercent,
-        stock:            parseInt(data.stock),
+        stock:            totalStock,
         brand:            data.brand    || null,
         categoryId,
         ageGroup:         data.ageGroup || null,
@@ -238,7 +208,16 @@ export async function POST(request) {
         isTrending:       data.isTrending || false,
         isActive:         data.isActive !== false,
         images:           data.images   || [],
-        slug:             productSlug,
+        size:             data.size     || null,
+        gender:           data.gender   || null,
+        color:            data.color    || null,
+        material:         data.material || null,
+
+        // ✅ Color variants
+        hasVariants,
+        colorVariants,
+
+        slug: productSlug,
         sku,
       },
     });
