@@ -104,7 +104,7 @@ export async function PUT(request, { params }) {
 }
 
 // ============================================================
-// ✅ DELETE — Cancel exchange (customer or admin)
+// ✅ DELETE — Hard delete (admin) OR Cancel (customer)
 // ============================================================
 export async function DELETE(request, { params }) {
   try {
@@ -114,6 +114,9 @@ export async function DELETE(request, { params }) {
     }
 
     const { id } = await params;
+    const { searchParams } = new URL(request.url);
+    const hardDelete = searchParams.get('hard') === 'true';
+
     const exchange = await prisma.exchange.findUnique({ where: { id } });
     if (!exchange) {
       return NextResponse.json({ error: 'Exchange not found' }, { status: 404 });
@@ -123,7 +126,28 @@ export async function DELETE(request, { params }) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Can only cancel if pending or approved
+    // ── ADMIN HARD DELETE ──
+    if (hardDelete && session.user.role === 'admin') {
+      // Unlink from order first
+      await prisma.order.update({
+        where: { id: exchange.orderId },
+        data: {
+          exchangeId:     null,
+          exchangeStatus: null,
+        },
+      }).catch(() => null);
+
+      // Permanently delete
+      await prisma.exchange.delete({ where: { id } });
+
+      return NextResponse.json({
+        success: true,
+        message: 'Exchange permanently deleted',
+        deleted: true,
+      });
+    }
+
+    // ── CUSTOMER / SOFT CANCEL ──
     if (!['pending', 'approved'].includes(exchange.status)) {
       return NextResponse.json(
         { error: 'Cannot cancel exchange at this stage' },
@@ -134,21 +158,25 @@ export async function DELETE(request, { params }) {
     await prisma.exchange.update({
       where: { id },
       data: {
-        status: 'rejected',
+        status:          'rejected',
         rejectionReason: 'Cancelled by customer',
-        rejectedAt: new Date(),
+        rejectedAt:      new Date(),
       },
     });
 
     await prisma.order.update({
       where: { id: exchange.orderId },
       data: {
-        exchangeId: null,
+        exchangeId:     null,
         exchangeStatus: 'cancelled',
       },
     });
 
-    return NextResponse.json({ success: true, message: 'Exchange cancelled' });
+    return NextResponse.json({
+      success: true,
+      message: 'Exchange cancelled',
+      deleted: false,
+    });
   } catch (error) {
     console.error('Exchange DELETE error:', error);
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });

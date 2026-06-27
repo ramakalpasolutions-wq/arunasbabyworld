@@ -164,7 +164,6 @@
 
 .heroIn { color: var(--pu); font-weight: 700; }
 
-/* ✅ Quick pills wrapper — scrollable, all 4 visible */
 .quickPillsWrap {
   flex-shrink: 0;
   max-width: 100%;
@@ -238,7 +237,7 @@
 }
 
 /* ============================================================
-   ✅ TOOLBAR — Clean
+   TOOLBAR
    ============================================================ */
 .toolbar {
   position: sticky;
@@ -260,7 +259,6 @@
   padding: 12px 20px;
 }
 
-/* Search Box */
 .searchBox {
   display: flex;
   align-items: center;
@@ -313,7 +311,6 @@
 }
 .searchClear:hover { background: var(--op); color: white; }
 
-/* Toolbar right */
 .toolbarRight {
   display: flex;
   align-items: center;
@@ -322,7 +319,6 @@
   flex-shrink: 0;
 }
 
-/* Sort */
 .sortWrap {
   display: flex;
   align-items: center;
@@ -359,7 +355,6 @@
   max-width: 140px;
 }
 
-/* ✅ Filter button */
 .filterToggle {
   display: none;
   align-items: center;
@@ -402,7 +397,6 @@
   border: 2px solid var(--bg);
 }
 
-/* Active filter tags */
 .activeFiltersRow {
   max-width: 1200px;
   margin: 0 auto;
@@ -459,7 +453,7 @@
 .clearAllTagBtn:hover { background: var(--op-soft); }
 
 /* ============================================================
-   ✅ MOBILE CATEGORY BAR — Auto Scroll
+   MOBILE CATEGORY BAR
    ============================================================ */
 .mobileCatBar {
   display: none;
@@ -512,7 +506,6 @@
   will-change: transform;
 }
 
-/* Category Pills */
 .mobileCatPill {
   display: inline-flex;
   align-items: center;
@@ -621,7 +614,7 @@
 }
 
 /* ============================================================
-   ✅ SIDEBAR
+   DESKTOP SIDEBAR
    ============================================================ */
 .sidebar {
   position: sticky;
@@ -1059,17 +1052,22 @@
 .emptyBtn:hover { transform: translateY(-2px); }
 
 /* ============================================================
-   ✅ OVERLAY
+   ✅ OVERLAY — Plain dark, NO BLUR
    ============================================================ */
 .overlay {
   position: fixed;
   inset: 0;
-  background: rgba(20, 10, 40, 0.6);
-  -webkit-backdrop-filter: blur(4px);
-  backdrop-filter: blur(4px);
+  background: rgba(20, 10, 40, 0.55);
   z-index: 9998;
   cursor: pointer;
   animation: overlayFadeIn 0.25s ease forwards;
+}
+
+/* ============================================================
+   ✅ MOBILE DRAWER — Hidden on desktop
+   ============================================================ */
+.mobileDrawer {
+  display: none;
 }
 
 /* ============================================================
@@ -1105,6 +1103,10 @@
   from { opacity: 0; }
   to   { opacity: 1; }
 }
+@keyframes drawerSlideIn {
+  from { transform: translateX(-105%); }
+  to   { transform: translateX(0); }
+}
 
 /* ============================================================
    RESPONSIVE — 1024px
@@ -1117,7 +1119,7 @@
 }
 
 /* ============================================================
-   ✅ RESPONSIVE — 900px (MOBILE DRAWER + PILLS FIT)
+   ✅ RESPONSIVE — 900px (MOBILE DRAWER ACTIVATES)
    ============================================================ */
 @media (max-width: 900px) {
   .mobileCatBar    { display: block !important; }
@@ -1125,44 +1127,43 @@
   .filterToggle    { display: inline-flex; }
   .layout          { grid-template-columns: 1fr; }
 
-  /* ✅ SIDEBAR DRAWER — Fully solid */
-  .sidebar {
-    position: fixed !important;
-    top: 0 !important;
-    left: 0 !important;
-    bottom: 0 !important;
-    width: min(320px, 88vw) !important;
-    height: 100vh !important;
-    height: 100dvh !important;
-    max-height: 100vh !important;
-    max-height: 100dvh !important;
-    border-radius: 0 24px 24px 0 !important;
-    border: none !important;
-    border-right: 2px solid var(--border) !important;
-    z-index: 9999 !important;
-    overflow-y: auto !important;
-    overflow-x: hidden !important;
-    transform: translateX(-110%);
+  /* ✅ Hide desktop sidebar on mobile */
+  .sidebarDesktop  { display: none !important; }
+
+  /* ✅ MOBILE DRAWER — Fully solid white panel */
+  .mobileDrawer {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: min(320px, 85vw);
+    height: 100vh;
+    height: 100dvh;
+    z-index: 9999;
+    background: #FFFFFF;
+    border-right: 2px solid var(--border);
+    border-radius: 0 24px 24px 0;
+    box-shadow: 8px 0 40px rgba(20, 10, 40, 0.35);
+    padding: 20px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    transform: translateX(-105%);
     transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
-    box-shadow: 8px 0 40px rgba(20, 10, 40, 0.4) !important;
-    padding: 20px !important;
-    background-color: #FFFFFF !important;
-    background-image: none !important;
-    opacity: 1 !important;
-    visibility: visible !important;
-    backdrop-filter: none !important;
-    -webkit-backdrop-filter: none !important;
-    isolation: isolate;
-    will-change: transform;
-    transform-style: flat;
+    animation: drawerSlideIn 0.35s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
-  .sidebarOpen { transform: translateX(0) !important; }
+  .mobileDrawerOpen {
+    transform: translateX(0);
+  }
 
-  .sidebarOpen .sidebarBlob1,
-  .sidebarOpen .sidebarBlob2 { display: none !important; }
+  /* ✅ Hide decorative blobs inside mobile drawer */
+  .mobileDrawer .sidebarBlob1,
+  .mobileDrawer .sidebarBlob2 {
+    display: none !important;
+  }
 
-  .closeSidebar { display: flex; }
+  .mobileDrawer .closeSidebar { display: flex; }
 
   .productsGrid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
   .skeletonGrid { grid-template-columns: repeat(2, 1fr); gap: 16px; }
@@ -1171,7 +1172,7 @@
 }
 
 /* ============================================================
-   ✅ RESPONSIVE — 768px (PILLS FIT MOBILE)
+   RESPONSIVE — 768px
    ============================================================ */
 @media (max-width: 768px) {
   .heroStrip {
@@ -1187,14 +1188,12 @@
   .heroTitle { font-size: clamp(1.3rem, 5vw, 2rem); }
   .heroEmoji { font-size: 1.6rem; }
 
-  /* ✅ SMALLER pills so all 4 fit */
   .quickPill {
     padding: 8px 14px;
     font-size: 0.80rem;
     gap: 5px;
   }
 
-  /* ✅ Edge-to-edge scroll wrapper */
   .quickPillsWrap {
     width: calc(100% + 32px);
     margin-left: -16px;
@@ -1223,7 +1222,7 @@
 }
 
 /* ============================================================
-   ✅ RESPONSIVE — 480px (ALL 4 PILLS FIT)
+   RESPONSIVE — 480px
    ============================================================ */
 @media (max-width: 480px) {
   .heroStrip {
@@ -1234,14 +1233,12 @@
   .heroEmoji { font-size: 1.35rem; }
   .heroSub   { font-size: 0.84rem; }
 
-  /* ✅ SMALLER pills — all 4 fit on most phones */
   .quickPill {
     padding: 7px 11px;
     font-size: 0.72rem;
     gap: 4px;
   }
 
-  /* ✅ Edge-to-edge scroll */
   .quickPillsWrap {
     width: calc(100% + 28px);
     margin-left: -14px;
@@ -1276,18 +1273,17 @@
   .productsGrid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .skeletonGrid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
   .pageBtn      { min-width: 32px; padding: 6px 8px; font-size: 0.76rem; border-radius: 10px; }
-  .sidebar      { width: min(280px, 90vw) !important; }
+  .mobileDrawer { width: min(280px, 90vw) !important; }
 }
 
 /* ============================================================
-   ✅ RESPONSIVE — 360px (TINY PHONES)
+   RESPONSIVE — 360px
    ============================================================ */
 @media (max-width: 360px) {
   .productsGrid  { grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .skeletonGrid  { grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .heroTitle     { font-size: 1.15rem; }
 
-  /* ✅ Even smaller pills */
   .quickPill {
     padding: 6px 10px;
     font-size: 0.68rem;
@@ -1295,5 +1291,5 @@
   }
 
   .mobileCatPill { padding: 5px 10px; font-size: 0.70rem; }
-  .sidebar       { width: 92vw !important; }
+  .mobileDrawer  { width: 92vw !important; }
 }

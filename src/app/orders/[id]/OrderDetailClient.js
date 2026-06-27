@@ -1689,7 +1689,7 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
   });
 
   const CANCEL_REASONS = [
-    'Changed my mind',
+    // 'Changed my mind',
     'Found a better price elsewhere',
     'Ordered by mistake',
     'Delivery taking too long',

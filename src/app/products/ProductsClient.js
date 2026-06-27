@@ -247,52 +247,47 @@ export default function ProductsClient() {
   }, [searchParams]);
 
   /* ── Fetch products ── */
-const fetchProducts = useCallback(async () => {
-  setLoading(true);
-  try {
-    const [sortField, sortOrder] = filters.sort.split('-');
+  const fetchProducts = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [sortField, sortOrder] = filters.sort.split('-');
 
-    let minP = filters.minPrice !== '' ? parseFloat(filters.minPrice) : null;
-    let maxP = filters.maxPrice !== '' ? parseFloat(filters.maxPrice) : null;
-    if (minP !== null && maxP !== null && minP > maxP) [minP, maxP] = [maxP, minP];
+      let minP = filters.minPrice !== '' ? parseFloat(filters.minPrice) : null;
+      let maxP = filters.maxPrice !== '' ? parseFloat(filters.maxPrice) : null;
+      if (minP !== null && maxP !== null && minP > maxP) [minP, maxP] = [maxP, minP];
 
-    const paramObj = {
-      page:  String(filters.page),
-      limit: '12',   // ✅ show 12 per page
-      sort:  sortField,
-      order: sortOrder,
-    };
+      const paramObj = {
+        page:  String(filters.page),
+        limit: '12',
+        sort:  sortField,
+        order: sortOrder,
+      };
 
-    // ✅ Only add if not empty
-    if (filters.search   && filters.search.trim())
-      paramObj.search   = filters.search.trim();
-    if (filters.category)
-      paramObj.category = filters.category;
-    if (filters.featured)
-      paramObj.featured = filters.featured;
-    if (filters.trending)
-      paramObj.trending = filters.trending;
-    if (minP !== null)
-      paramObj.minPrice = String(minP);
-    if (maxP !== null)
-      paramObj.maxPrice = String(maxP);
+      if (filters.search   && filters.search.trim())
+        paramObj.search   = filters.search.trim();
+      if (filters.category)
+        paramObj.category = filters.category;
+      if (filters.featured)
+        paramObj.featured = filters.featured;
+      if (filters.trending)
+        paramObj.trending = filters.trending;
+      if (minP !== null)
+        paramObj.minPrice = String(minP);
+      if (maxP !== null)
+        paramObj.maxPrice = String(maxP);
 
-    console.log('🔍 Fetching products with params:', paramObj);
+      const res  = await fetch(`/api/products?${new URLSearchParams(paramObj)}`);
+      const data = await res.json();
 
-    const res  = await fetch(`/api/products?${new URLSearchParams(paramObj)}`);
-    const data = await res.json();
-
-    console.log('📦 Products found:', data.pagination?.total);
-
-    setProducts(data.products     || []);
-    setPagination(data.pagination || { page: 1, pages: 1, total: 0 });
-  } catch (err) {
-    console.error('Fetch products error:', err);
-    setProducts([]);
-  } finally {
-    setLoading(false);
-  }
-}, [filters]); 
+      setProducts(data.products     || []);
+      setPagination(data.pagination || { page: 1, pages: 1, total: 0 });
+    } catch (err) {
+      console.error('Fetch products error:', err);
+      setProducts([]);
+    } finally {
+      setLoading(false);
+    }
+  }, [filters]);
 
   useEffect(() => { fetchProducts(); }, [fetchProducts]);
 
@@ -444,7 +439,6 @@ const fetchProducts = useCallback(async () => {
             </p>
           </div>
 
-          {/* ✅ Quick pills — scrollable, never cut off */}
           <div className={styles.quickPillsWrap}>
             <div className={styles.quickPills}>
               {quickFilters.map(q => (
@@ -470,7 +464,6 @@ const fetchProducts = useCallback(async () => {
       <div className={styles.toolbar}>
         <div className={styles.toolbarInner}>
 
-          {/* Search */}
           <div className={styles.searchBox}>
             <span className={styles.searchIcon}>🔍</span>
             <input
@@ -489,7 +482,6 @@ const fetchProducts = useCallback(async () => {
           </div>
 
           <div className={styles.toolbarRight}>
-            {/* Sort */}
             <div className={styles.sortWrap}>
               <span className={styles.sortIcon}>↕</span>
               <select
@@ -503,7 +495,6 @@ const fetchProducts = useCallback(async () => {
               </select>
             </div>
 
-            {/* Filter button */}
             <button
               className={`${styles.filterToggle} ${
                 hasActiveFilters ? styles.filterToggleActive : ''
@@ -532,7 +523,6 @@ const fetchProducts = useCallback(async () => {
           </div>
         </div>
 
-        {/* Active filter tags */}
         {hasActiveFilters && (
           <div className={styles.activeFiltersRow}>
             <div className={styles.activeFilterTags}>
@@ -594,10 +584,8 @@ const fetchProducts = useCallback(async () => {
       <div className={styles.container}>
         <div className={styles.layout}>
 
-          {/* ✅ SIDEBAR — fixed z-index */}
-          <aside
-            className={`${styles.sidebar} ${sidebarOpen ? styles.sidebarOpen : ''}`}
-          >
+          {/* ✅ DESKTOP SIDEBAR — LEFT SIDE (renders first) */}
+          <aside className={`${styles.sidebar} ${styles.sidebarDesktop}`}>
             <div className={styles.sidebarTop}>
               <div className={styles.sidebarTitle}>
                 <span>🎛️</span>
@@ -606,13 +594,8 @@ const fetchProducts = useCallback(async () => {
               <button className={styles.clearAllBtn} onClick={clearAll}>
                 Clear all
               </button>
-              <button
-                className={styles.closeSidebar}
-                onClick={() => setSidebarOpen(false)}
-              >✕</button>
             </div>
 
-            {/* Categories — desktop only */}
             <div className={`${styles.filterBlock} ${styles.desktopCatBlock}`}>
               <div className={styles.filterBlockTitle}>
                 <span className={styles.filterBlockIcon}>📂</span>
@@ -627,9 +610,7 @@ const fetchProducts = useCallback(async () => {
               ) : (
                 <div className={styles.catList}>
                   <button
-                    className={`${styles.catBtn} ${
-                      !filters.category ? styles.catBtnActive : ''
-                    }`}
+                    className={`${styles.catBtn} ${!filters.category ? styles.catBtnActive : ''}`}
                     onClick={() => handleCategoryClick('')}
                   >
                     <span className={styles.catIcon}>🧸</span>
@@ -638,9 +619,7 @@ const fetchProducts = useCallback(async () => {
                   {categories.map(cat => (
                     <button
                       key={cat.id}
-                      className={`${styles.catBtn} ${
-                        isCategoryActive(cat) ? styles.catBtnActive : ''
-                      }`}
+                      className={`${styles.catBtn} ${isCategoryActive(cat) ? styles.catBtnActive : ''}`}
                       onClick={() => handleCategoryClick(cat.id)}
                     >
                       <span className={styles.catIcon}>
@@ -652,14 +631,10 @@ const fetchProducts = useCallback(async () => {
                       )}
                     </button>
                   ))}
-                  {categories.length === 0 && (
-                    <p className={styles.noCats}>No categories yet</p>
-                  )}
                 </div>
               )}
             </div>
 
-            {/* Price Range */}
             <div className={styles.filterBlock}>
               <div className={styles.filterBlockTitle}>
                 <span className={styles.filterBlockIcon}>💰</span>
@@ -689,23 +664,18 @@ const fetchProducts = useCallback(async () => {
                   className={styles.priceInput}
                 />
               </div>
-              {priceError && (
-                <div className={styles.priceError}>{priceError}</div>
-              )}
+              {priceError && <div className={styles.priceError}>{priceError}</div>}
               <button className={styles.applyPriceBtn} onClick={handleApplyPrice}>
                 🔍 Apply Price Filter
               </button>
               {(appliedMin || appliedMax) && (
                 <div className={styles.appliedPrice}>
                   <span>✅ ₹{appliedMin || '0'} — ₹{appliedMax || '∞'}</span>
-                  <button className={styles.clearPriceBtn} onClick={handleClearPrice}>
-                    Clear
-                  </button>
+                  <button className={styles.clearPriceBtn} onClick={handleClearPrice}>Clear</button>
                 </div>
               )}
             </div>
 
-            {/* Quick Filters */}
             <div className={styles.filterBlock}>
               <div className={styles.filterBlockTitle}>
                 <span className={styles.filterBlockIcon}>⚡</span>
@@ -714,23 +684,15 @@ const fetchProducts = useCallback(async () => {
               <label className={styles.toggleRow}>
                 <span>⭐ Featured Only</span>
                 <div
-                  className={`${styles.toggle} ${
-                    filters.featured === 'true' ? styles.toggleOn : ''
-                  }`}
-                  onClick={() => updateFilter(
-                    'featured', filters.featured === 'true' ? '' : 'true'
-                  )}
+                  className={`${styles.toggle} ${filters.featured === 'true' ? styles.toggleOn : ''}`}
+                  onClick={() => updateFilter('featured', filters.featured === 'true' ? '' : 'true')}
                 />
               </label>
               <label className={styles.toggleRow}>
                 <span>🔥 Trending Only</span>
                 <div
-                  className={`${styles.toggle} ${
-                    filters.trending === 'true' ? styles.toggleOn : ''
-                  }`}
-                  onClick={() => updateFilter(
-                    'trending', filters.trending === 'true' ? '' : 'true'
-                  )}
+                  className={`${styles.toggle} ${filters.trending === 'true' ? styles.toggleOn : ''}`}
+                  onClick={() => updateFilter('trending', filters.trending === 'true' ? '' : 'true')}
                 />
               </label>
             </div>
@@ -739,7 +701,7 @@ const fetchProducts = useCallback(async () => {
             <div className={styles.sidebarBlob2} />
           </aside>
 
-          {/* ══ PRODUCTS GRID ══ */}
+          {/* ══ PRODUCTS GRID — RIGHT SIDE (renders after sidebar) ══ */}
           <main className={styles.main}>
             {loading ? (
               <div className={styles.skeletonGrid}>
@@ -823,12 +785,91 @@ const fetchProducts = useCallback(async () => {
         </div>
       </div>
 
-      {/* ✅ Overlay — MUST be above sidebar */}
+      {/* ✅ MOBILE DRAWER — Rendered OUTSIDE layout, at root level */}
       {sidebarOpen && (
-        <div
-          className={styles.overlay}
-          onClick={() => setSidebarOpen(false)}
-        />
+        <>
+          <div
+            className={styles.overlay}
+            onClick={() => setSidebarOpen(false)}
+          />
+          <aside className={`${styles.mobileDrawer} ${styles.mobileDrawerOpen}`}>
+            <div className={styles.sidebarTop}>
+              <div className={styles.sidebarTitle}>
+                <span>🎛️</span>
+                <span>Filters</span>
+              </div>
+              <button className={styles.clearAllBtn} onClick={clearAll}>
+                Clear all
+              </button>
+              <button
+                className={styles.closeSidebar}
+                onClick={() => setSidebarOpen(false)}
+              >✕</button>
+            </div>
+
+            <div className={styles.filterBlock}>
+              <div className={styles.filterBlockTitle}>
+                <span className={styles.filterBlockIcon}>💰</span>
+                Price Range (₹)
+              </div>
+              <div className={styles.priceInputWrap}>
+                <label className={styles.priceLabel}>Min Price ₹</label>
+                <input
+                  type="number"
+                  value={localMin}
+                  onChange={e => { setLocalMin(e.target.value); setPriceError(''); }}
+                  onKeyDown={e => e.key === 'Enter' && handleApplyPrice()}
+                  placeholder="e.g. 100"
+                  min="0"
+                  className={styles.priceInput}
+                />
+              </div>
+              <div className={styles.priceInputWrap}>
+                <label className={styles.priceLabel}>Max Price ₹</label>
+                <input
+                  type="number"
+                  value={localMax}
+                  onChange={e => { setLocalMax(e.target.value); setPriceError(''); }}
+                  onKeyDown={e => e.key === 'Enter' && handleApplyPrice()}
+                  placeholder="e.g. 999"
+                  min="0"
+                  className={styles.priceInput}
+                />
+              </div>
+              {priceError && <div className={styles.priceError}>{priceError}</div>}
+              <button className={styles.applyPriceBtn} onClick={handleApplyPrice}>
+                🔍 Apply Price Filter
+              </button>
+              {(appliedMin || appliedMax) && (
+                <div className={styles.appliedPrice}>
+                  <span>✅ ₹{appliedMin || '0'} — ₹{appliedMax || '∞'}</span>
+                  <button className={styles.clearPriceBtn} onClick={handleClearPrice}>Clear</button>
+                </div>
+              )}
+            </div>
+
+            <div className={styles.filterBlock}>
+              <div className={styles.filterBlockTitle}>
+                <span className={styles.filterBlockIcon}>⚡</span>
+                Quick Filters
+              </div>
+              <label className={styles.toggleRow}>
+                <span>⭐ Featured Only</span>
+                <div
+                  className={`${styles.toggle} ${filters.featured === 'true' ? styles.toggleOn : ''}`}
+                  onClick={() => updateFilter('featured', filters.featured === 'true' ? '' : 'true')}
+                />
+              </label>
+              <label className={styles.toggleRow}>
+                <span>🔥 Trending Only</span>
+                <div
+                  className={`${styles.toggle} ${filters.trending === 'true' ? styles.toggleOn : ''}`}
+                  onClick={() => updateFilter('trending', filters.trending === 'true' ? '' : 'true')}
+                />
+              </label>
+            </div>
+          </aside>
+        </>
       )}
     </div>
   );

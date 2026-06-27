@@ -795,8 +795,8 @@ export default function ProductDetailClient({ id }) {
           {/* Highlights */}
           <div className={styles.highlights}>
             {[
-              { icon: '🚚', text: 'Free delivery on orders above ₹499' },
-              { icon: '↩️', text: '30-day easy returns'                 },
+              
+             
               { icon: '🔒', text: '100% secure payment'                 },
             ].map((h, i) => (
               <div key={i} className={styles.highlightItem}>
