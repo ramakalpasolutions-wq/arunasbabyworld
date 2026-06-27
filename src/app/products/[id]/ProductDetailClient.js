@@ -793,24 +793,48 @@ export default function ProductDetailClient({ id }) {
           )}
 
           {/* Highlights */}
-          <div className={styles.highlights}>
-            {[
-              
-             
-              { icon: '🔒', text: '100% secure payment'                 },
-            ].map((h, i) => (
-              <div key={i} className={styles.highlightItem}>
-                <span>{h.icon}</span>
-                <span>{h.text}</span>
-              </div>
-            ))}
-            {product.brand && (
-              <div className={styles.highlightItem}>
-                <span>🏷️</span>
-                <span>Brand: <strong>{product.brand}</strong></span>
-              </div>
-            )}
-          </div>
+         {/* Highlights */}
+<div className={styles.highlights}>
+  {[
+    {
+      icon: '🛡️',
+      title: 'Certified &',
+      subtitle: 'Safety Tested',
+      line3: 'Products',
+    },
+    {
+      icon: '💚',
+      title: '1 million +',
+      subtitle: 'Happy Parents',
+      line3: 'Across India',
+    },
+   
+    {
+      icon: '👶',
+      title: 'Safe for',
+      subtitle: 'Newborns',
+      line3: '',
+    },
+  ].map((h, i) => (
+    <div key={i} className={styles.highlightItem}>
+      <div className={styles.highlightIcon}>{h.icon}</div>
+      <div className={styles.highlightText}>
+        <span>{h.title}</span>
+        {h.subtitle && <span>{h.subtitle}</span>}
+        {h.line3 && <span>{h.line3}</span>}
+      </div>
+    </div>
+  ))}
+  {product.brand && (
+    <div className={styles.highlightItem}>
+      <div className={styles.highlightIcon}>🏷️</div>
+      <div className={styles.highlightText}>
+        <span>Brand:</span>
+        <span><strong>{product.brand}</strong></span>
+      </div>
+    </div>
+  )}
+</div>
         </div>
       </div>
 
