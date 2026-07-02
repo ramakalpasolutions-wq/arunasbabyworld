@@ -107,16 +107,16 @@ export default function AdminExchangesPage() {
       {/* STATS */}
       <div className="ex-stats">
         {[
-          { label: 'Total',       value: stats.total      || 0 },
-          { label: 'Pending',     value: stats.pending    || 0 },
-          { label: 'Approved',    value: stats.approved   || 0 },
-          { label: 'In Progress', value: stats.inProgress || 0 },
-          { label: 'Completed',   value: stats.completed  || 0 },
-          { label: 'Rejected',    value: stats.rejected   || 0 },
+          { label: 'Total',       value: stats.total      || 0, color: '#6b7280' },
+          { label: 'Pending',     value: stats.pending    || 0, color: '#F59E0B' },
+          { label: 'Approved',    value: stats.approved   || 0, color: '#3B82F6' },
+          { label: 'In Progress', value: stats.inProgress || 0, color: '#8B5CF6' },
+          { label: 'Completed',   value: stats.completed  || 0, color: '#10B981' },
+          { label: 'Rejected',    value: stats.rejected   || 0, color: '#EF4444' },
         ].map(s => (
-          <div key={s.label} className="ex-stat">
+          <div key={s.label} className="ex-stat" style={{ borderLeftColor: s.color }}>
             <span className="ex-stat-label">{s.label}</span>
-            <span className="ex-stat-value">{s.value}</span>
+            <span className="ex-stat-value" style={{ color: s.color }}>{s.value}</span>
           </div>
         ))}
       </div>
@@ -147,97 +147,191 @@ export default function AdminExchangesPage() {
       {/* EMPTY */}
       {filtered.length === 0 ? (
         <div className="ex-empty">
-          <p>No exchanges found</p>
+          <p>📭 No exchanges found</p>
         </div>
       ) : (
-        /* TABLE */
-        <div className="ex-table-wrap">
-          <table className="ex-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Customer</th>
-                <th>Order</th>
-                <th>Old Product</th>
-                <th>New Product</th>
-                <th>Price Diff</th>
-                <th>Status</th>
-                <th>Date</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {filtered.map(ex => {
-                const cfg = STATUS_CONFIG[ex.status] || STATUS_CONFIG.pending;
-                return (
-                  <tr key={ex.id}>
-                    <td><code>#{ex.id?.slice(-8).toUpperCase()}</code></td>
-                    <td>
-                      <div className="ex-user">
-                        <strong>{ex.user?.name || 'Unknown'}</strong>
-                        <small>{ex.user?.email}</small>
+        <>
+          {/* ═══════ DESKTOP TABLE ═══════ */}
+          <div className="ex-table-wrap">
+            <table className="ex-table">
+              <thead>
+                <tr>
+                  <th>ID</th>
+                  <th>Customer</th>
+                  <th>Order</th>
+                  <th>Old Product</th>
+                  <th>New Product</th>
+                  <th>Price Diff</th>
+                  <th>Status</th>
+                  <th>Date</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {filtered.map(ex => {
+                  const cfg = STATUS_CONFIG[ex.status] || STATUS_CONFIG.pending;
+                  return (
+                    <tr key={ex.id}>
+                      <td><code>#{ex.id?.slice(-8).toUpperCase()}</code></td>
+                      <td>
+                        <div className="ex-user">
+                          <strong>{ex.user?.name || 'Unknown'}</strong>
+                          <small>{ex.user?.email}</small>
+                        </div>
+                      </td>
+                      <td>
+                        <Link href={`/admin/orders/${ex.orderId}`} className="ex-link">
+                          #{ex.orderId?.slice(-8).toUpperCase()}
+                        </Link>
+                      </td>
+                      <td>
+                        <div className="ex-prod">
+                          <span>{ex.oldProductName}</span>
+                          <strong className="ex-old-price">₹{ex.oldPrice}</strong>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="ex-prod">
+                          <span>{ex.newProductName}</span>
+                          <strong className="ex-new-price">₹{ex.newPrice}</strong>
+                        </div>
+                      </td>
+                      <td>
+                        {ex.priceDifference === 0 ? (
+                          <span className="ex-diff-zero">—</span>
+                        ) : ex.priceDifference > 0 ? (
+                          <span className="ex-diff-pay">+₹{ex.priceDifference}</span>
+                        ) : (
+                          <span className="ex-diff-refund">−₹{Math.abs(ex.priceDifference)}</span>
+                        )}
+                      </td>
+                      <td>
+                        <span
+                          className="ex-status"
+                          style={{ background: cfg.bg, color: cfg.color }}
+                        >
+                          {cfg.label}
+                        </span>
+                      </td>
+                      <td>
+                        <small>
+                          {new Date(ex.createdAt).toLocaleDateString('en-IN', {
+                            day: 'numeric', month: 'short', year: '2-digit',
+                          })}
+                        </small>
+                      </td>
+                      <td>
+                        <div className="ex-actions">
+                          <Link href={`/admin/exchanges/${ex.id}`} className="ex-btn ex-btn-view">
+                            View
+                          </Link>
+                          <button
+                            onClick={() => setDeleteTarget(ex)}
+                            className="ex-btn ex-btn-delete"
+                          >
+                            Delete
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* ═══════ MOBILE CARDS ═══════ */}
+          <div className="ex-cards">
+            {filtered.map(ex => {
+              const cfg = STATUS_CONFIG[ex.status] || STATUS_CONFIG.pending;
+              return (
+                <div key={ex.id} className="ex-card" style={{ borderTopColor: cfg.color }}>
+                  {/* Top Row: ID + Status */}
+                  <div className="ex-card-top">
+                    <code className="ex-card-id">#{ex.id?.slice(-8).toUpperCase()}</code>
+                    <span
+                      className="ex-status"
+                      style={{ background: cfg.bg, color: cfg.color }}
+                    >
+                      {cfg.label}
+                    </span>
+                  </div>
+
+                  {/* Customer Section */}
+                  <div className="ex-card-section">
+                    <div className="ex-card-label">👤 Customer</div>
+                    <div className="ex-card-user">
+                      <strong>{ex.user?.name || 'Unknown'}</strong>
+                      <small>{ex.user?.email}</small>
+                    </div>
+                  </div>
+
+                  {/* Order Section */}
+                  <div className="ex-card-section">
+                    <div className="ex-card-label">📦 Order</div>
+                    <Link href={`/admin/orders/${ex.orderId}`} className="ex-link">
+                      #{ex.orderId?.slice(-8).toUpperCase()}
+                    </Link>
+                  </div>
+
+                  {/* Products Section */}
+                  <div className="ex-card-products">
+                    <div className="ex-card-prod ex-card-prod-old">
+                      <div className="ex-prod-label">🔴 Old Product</div>
+                      <div className="ex-prod-name">{ex.oldProductName}</div>
+                      <strong className="ex-old-price">₹{ex.oldPrice}</strong>
+                    </div>
+
+                    <div className="ex-arrow">→</div>
+
+                    <div className="ex-card-prod ex-card-prod-new">
+                      <div className="ex-prod-label">🟢 New Product</div>
+                      <div className="ex-prod-name">{ex.newProductName}</div>
+                      <strong className="ex-new-price">₹{ex.newPrice}</strong>
+                    </div>
+                  </div>
+
+                  {/* Price Diff + Date */}
+                  <div className="ex-card-meta">
+                    <div>
+                      <div className="ex-card-label">💰 Price Diff</div>
+                      <div className="ex-meta-value">
+                        {ex.priceDifference === 0 ? (
+                          <span className="ex-diff-zero">—</span>
+                        ) : ex.priceDifference > 0 ? (
+                          <span className="ex-diff-pay">+₹{ex.priceDifference}</span>
+                        ) : (
+                          <span className="ex-diff-refund">−₹{Math.abs(ex.priceDifference)}</span>
+                        )}
                       </div>
-                    </td>
-                    <td>
-                      <Link href={`/admin/orders/${ex.orderId}`} className="ex-link">
-                        #{ex.orderId?.slice(-8).toUpperCase()}
-                      </Link>
-                    </td>
-                    <td>
-                      <div className="ex-prod">
-                        <span>{ex.oldProductName}</span>
-                        <strong className="ex-old-price">₹{ex.oldPrice}</strong>
-                      </div>
-                    </td>
-                    <td>
-                      <div className="ex-prod">
-                        <span>{ex.newProductName}</span>
-                        <strong className="ex-new-price">₹{ex.newPrice}</strong>
-                      </div>
-                    </td>
-                    <td>
-                      {ex.priceDifference === 0 ? (
-                        <span className="ex-diff-zero">—</span>
-                      ) : ex.priceDifference > 0 ? (
-                        <span className="ex-diff-pay">+₹{ex.priceDifference}</span>
-                      ) : (
-                        <span className="ex-diff-refund">−₹{Math.abs(ex.priceDifference)}</span>
-                      )}
-                    </td>
-                    <td>
-                      <span
-                        className="ex-status"
-                        style={{ background: cfg.bg, color: cfg.color }}
-                      >
-                        {cfg.label}
-                      </span>
-                    </td>
-                    <td>
-                      <small>
+                    </div>
+                    <div>
+                      <div className="ex-card-label">📅 Date</div>
+                      <div className="ex-meta-value ex-card-date">
                         {new Date(ex.createdAt).toLocaleDateString('en-IN', {
                           day: 'numeric', month: 'short', year: '2-digit',
                         })}
-                      </small>
-                    </td>
-                    <td>
-                      <div className="ex-actions">
-                        <Link href={`/admin/exchanges/${ex.id}`} className="ex-btn ex-btn-view">
-                          View
-                        </Link>
-                        <button
-                          onClick={() => setDeleteTarget(ex)}
-                          className="ex-btn ex-btn-delete"
-                        >
-                          Delete
-                        </button>
                       </div>
-                    </td>
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
-        </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="ex-card-actions">
+                    <Link href={`/admin/exchanges/${ex.id}`} className="ex-btn ex-btn-view">
+                      👁️ View Details
+                    </Link>
+                    <button
+                      onClick={() => setDeleteTarget(ex)}
+                      className="ex-btn ex-btn-delete"
+                    >
+                      🗑️ Delete
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </>
       )}
 
       {/* DELETE MODAL */}
@@ -261,7 +355,7 @@ export default function AdminExchangesPage() {
                 Permanently delete exchange{' '}
                 <strong>#{deleteTarget.id?.slice(-8).toUpperCase()}</strong>?
               </p>
-              <p className="ex-warn">This action cannot be undone.</p>
+              <p className="ex-warn">⚠️ This action cannot be undone.</p>
             </div>
             <div className="ex-modal-actions">
               <button
@@ -284,27 +378,33 @@ export default function AdminExchangesPage() {
       )}
 
       <style jsx>{`
+        /* ═══════ BASE PAGE ═══════ */
         .ex-page {
           font-family: 'Nunito', sans-serif;
-          padding: 8px;
+          padding: clamp(8px, 2vw, 16px);
+          max-width: 100%;
+          overflow-x: hidden;
+          box-sizing: border-box;
         }
 
-        /* LOADING / EMPTY */
+        /* ═══════ LOADING / EMPTY ═══════ */
         .ex-loading, .ex-empty {
           text-align: center;
           padding: 60px 20px;
           color: #666;
           background: white;
           border: 1px solid #e5e7eb;
-          border-radius: 8px;
+          border-radius: 12px;
+          font-size: 0.9rem;
         }
 
-        /* HEADER */
+        /* ═══════ HEADER ═══════ */
         .ex-header { margin-bottom: 20px; }
         .ex-header h1 {
-          font-size: 1.5rem;
+          font-size: clamp(1.3rem, 4vw, 1.6rem);
           margin: 0 0 4px;
           color: #1f2937;
+          font-weight: 800;
         }
         .ex-header p {
           margin: 0;
@@ -312,7 +412,7 @@ export default function AdminExchangesPage() {
           font-size: 0.85rem;
         }
 
-        /* STATS */
+        /* ═══════ STATS ═══════ */
         .ex-stats {
           display: grid;
           grid-template-columns: repeat(6, 1fr);
@@ -322,24 +422,33 @@ export default function AdminExchangesPage() {
         .ex-stat {
           background: white;
           border: 1px solid #e5e7eb;
-          border-radius: 6px;
-          padding: 12px;
+          border-left: 4px solid #6b7280;
+          border-radius: 8px;
+          padding: 14px 12px;
           display: flex;
           flex-direction: column;
+          min-width: 0;
+          transition: transform 0.15s, box-shadow 0.15s;
+        }
+        .ex-stat:hover {
+          transform: translateY(-2px);
+          box-shadow: 0 4px 12px rgba(0,0,0,0.08);
         }
         .ex-stat-label {
-          font-size: 0.75rem;
+          font-size: 0.7rem;
           color: #6b7280;
           text-transform: uppercase;
+          font-weight: 700;
+          letter-spacing: 0.4px;
         }
         .ex-stat-value {
-          font-size: 1.4rem;
-          font-weight: 700;
-          color: #1f2937;
-          margin-top: 4px;
+          font-size: clamp(1.4rem, 4vw, 1.7rem);
+          font-weight: 800;
+          margin-top: 6px;
+          line-height: 1;
         }
 
-        /* FILTERS */
+        /* ═══════ FILTERS ═══════ */
         .ex-filters {
           display: flex;
           gap: 10px;
@@ -347,18 +456,20 @@ export default function AdminExchangesPage() {
         }
         .ex-filters input {
           flex: 1;
-          padding: 8px 12px;
+          min-width: 0;
+          padding: 10px 14px;
           border: 1px solid #d1d5db;
-          border-radius: 6px;
-          font-size: 0.88rem;
+          border-radius: 8px;
+          font-size: 0.9rem;
           outline: none;
           font-family: inherit;
+          transition: border-color 0.15s;
         }
         .ex-filters select {
-          padding: 8px 12px;
+          padding: 10px 14px;
           border: 1px solid #d1d5db;
-          border-radius: 6px;
-          font-size: 0.88rem;
+          border-radius: 8px;
+          font-size: 0.9rem;
           background: white;
           cursor: pointer;
           font-family: inherit;
@@ -367,12 +478,13 @@ export default function AdminExchangesPage() {
         .ex-filters input:focus,
         .ex-filters select:focus { border-color: #7c3aed; }
 
-        /* TABLE */
+        /* ═══════ DESKTOP TABLE ═══════ */
         .ex-table-wrap {
           background: white;
           border: 1px solid #e5e7eb;
-          border-radius: 8px;
+          border-radius: 12px;
           overflow-x: auto;
+          display: block;
         }
         .ex-table {
           width: 100%;
@@ -385,15 +497,16 @@ export default function AdminExchangesPage() {
         }
         .ex-table th {
           text-align: left;
-          padding: 10px 12px;
-          font-weight: 600;
+          padding: 12px;
+          font-weight: 700;
           color: #374151;
-          font-size: 0.78rem;
+          font-size: 0.75rem;
           text-transform: uppercase;
           white-space: nowrap;
+          letter-spacing: 0.3px;
         }
         .ex-table td {
-          padding: 10px 12px;
+          padding: 12px;
           border-bottom: 1px solid #f3f4f6;
           color: #1f2937;
           vertical-align: middle;
@@ -405,73 +518,85 @@ export default function AdminExchangesPage() {
           font-family: monospace;
           font-size: 0.78rem;
           color: #7c3aed;
-          font-weight: 600;
+          font-weight: 700;
         }
 
         .ex-user {
           display: flex;
           flex-direction: column;
+          min-width: 0;
+          max-width: 200px;
         }
         .ex-user strong {
           font-size: 0.85rem;
           color: #1f2937;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
         .ex-user small {
           font-size: 0.72rem;
           color: #6b7280;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
 
         .ex-link {
           color: #7c3aed;
           text-decoration: none;
           font-family: monospace;
-          font-size: 0.78rem;
-          font-weight: 600;
+          font-size: 0.82rem;
+          font-weight: 700;
         }
         .ex-link:hover { text-decoration: underline; }
 
         .ex-prod {
           display: flex;
           flex-direction: column;
-          max-width: 150px;
+          max-width: 180px;
+          gap: 3px;
         }
         .ex-prod span {
-          font-size: 0.8rem;
+          font-size: 0.82rem;
           color: #1f2937;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .ex-old-price { color: #dc2626; font-size: 0.82rem; }
-        .ex-new-price { color: #059669; font-size: 0.82rem; }
+        .ex-old-price { color: #dc2626; font-size: 0.85rem; font-weight: 700; }
+        .ex-new-price { color: #059669; font-size: 0.85rem; font-weight: 700; }
 
-        .ex-diff-zero   { color: #9ca3af; }
-        .ex-diff-pay    { color: #d97706; font-weight: 600; }
-        .ex-diff-refund { color: #2563eb; font-weight: 600; }
+        .ex-diff-zero   { color: #9ca3af; font-weight: 600; }
+        .ex-diff-pay    { color: #d97706; font-weight: 700; }
+        .ex-diff-refund { color: #2563eb; font-weight: 700; }
 
         .ex-status {
-          padding: 4px 10px;
-          border-radius: 4px;
-          font-size: 0.74rem;
-          font-weight: 600;
+          padding: 5px 12px;
+          border-radius: 999px;
+          font-size: 0.72rem;
+          font-weight: 700;
           white-space: nowrap;
+          display: inline-block;
         }
 
-        /* ACTIONS */
+        /* ═══════ BUTTONS ═══════ */
         .ex-actions {
           display: flex;
           gap: 6px;
         }
         .ex-btn {
-          padding: 6px 12px;
+          padding: 7px 14px;
           border: none;
-          border-radius: 4px;
-          font-size: 0.78rem;
-          font-weight: 600;
+          border-radius: 6px;
+          font-size: 0.8rem;
+          font-weight: 700;
           cursor: pointer;
           font-family: inherit;
           text-decoration: none;
           display: inline-block;
+          text-align: center;
+          transition: all 0.15s;
         }
         .ex-btn-view {
           background: #7c3aed;
@@ -491,7 +616,143 @@ export default function AdminExchangesPage() {
         .ex-btn-cancel:hover { background: #f3f4f6; }
         .ex-btn:disabled { opacity: 0.6; cursor: not-allowed; }
 
-        /* MODAL */
+        /* ═══════ MOBILE CARDS (hidden by default) ═══════ */
+        .ex-cards {
+          display: none;
+          flex-direction: column;
+          gap: 14px;
+        }
+        .ex-card {
+          background: white;
+          border: 1px solid #e5e7eb;
+          border-top: 4px solid #7c3aed;
+          border-radius: 12px;
+          padding: 16px;
+          display: flex;
+          flex-direction: column;
+          gap: 14px;
+          box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        .ex-card-top {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding-bottom: 12px;
+          border-bottom: 1px dashed #e5e7eb;
+        }
+        .ex-card-id {
+          font-family: monospace;
+          font-size: 0.88rem;
+          color: #7c3aed;
+          font-weight: 700;
+        }
+        .ex-card-section {
+          display: flex;
+          flex-direction: column;
+          gap: 5px;
+        }
+        .ex-card-label {
+          font-size: 0.68rem;
+          font-weight: 700;
+          color: #9ca3af;
+          text-transform: uppercase;
+          letter-spacing: 0.5px;
+        }
+        .ex-card-user {
+          display: flex;
+          flex-direction: column;
+          gap: 2px;
+        }
+        .ex-card-user strong {
+          font-size: 0.92rem;
+          color: #1f2937;
+          font-weight: 700;
+        }
+        .ex-card-user small {
+          font-size: 0.76rem;
+          color: #6b7280;
+          word-break: break-all;
+        }
+        .ex-card-products {
+          display: flex;
+          align-items: stretch;
+          gap: 8px;
+          background: #f9fafb;
+          padding: 12px;
+          border-radius: 10px;
+        }
+        .ex-card-prod {
+          flex: 1;
+          min-width: 0;
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+          padding: 10px;
+          background: white;
+          border-radius: 8px;
+          border: 1px solid #e5e7eb;
+        }
+        .ex-card-prod-old { border-left: 3px solid #dc2626; }
+        .ex-card-prod-new { border-left: 3px solid #059669; }
+        .ex-prod-label {
+          font-size: 0.65rem;
+          font-weight: 700;
+          color: #6b7280;
+          text-transform: uppercase;
+          letter-spacing: 0.3px;
+        }
+        .ex-prod-name {
+          font-size: 0.84rem;
+          color: #1f2937;
+          font-weight: 600;
+          overflow: hidden;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          line-height: 1.35;
+          min-height: 2.3em;
+        }
+        .ex-arrow {
+          color: #7c3aed;
+          font-size: 1.4rem;
+          font-weight: 800;
+          flex-shrink: 0;
+          display: flex;
+          align-items: center;
+        }
+        .ex-card-meta {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 14px;
+          padding: 12px;
+          background: #fafafa;
+          border-radius: 8px;
+        }
+        .ex-card-meta > div {
+          display: flex;
+          flex-direction: column;
+          gap: 4px;
+        }
+        .ex-meta-value {
+          font-size: 0.9rem;
+          font-weight: 700;
+        }
+        .ex-card-date {
+          color: #374151;
+        }
+        .ex-card-actions {
+          display: flex;
+          gap: 10px;
+          padding-top: 12px;
+          border-top: 1px dashed #e5e7eb;
+        }
+        .ex-card-actions .ex-btn {
+          flex: 1;
+          padding: 11px 12px;
+          font-size: 0.85rem;
+        }
+
+        /* ═══════ MODAL ═══════ */
         .ex-modal-overlay {
           position: fixed;
           inset: 0;
@@ -504,7 +765,7 @@ export default function AdminExchangesPage() {
         }
         .ex-modal {
           background: white;
-          border-radius: 8px;
+          border-radius: 12px;
           width: 100%;
           max-width: 420px;
           box-shadow: 0 10px 30px rgba(0,0,0,0.2);
@@ -521,17 +782,18 @@ export default function AdminExchangesPage() {
           margin: 0;
           font-size: 1rem;
           color: #1f2937;
+          font-weight: 700;
         }
         .ex-modal-header button {
           background: none;
           border: none;
-          font-size: 1.1rem;
+          font-size: 1.2rem;
           cursor: pointer;
           color: #6b7280;
         }
         .ex-modal-body {
           padding: 18px;
-          font-size: 0.88rem;
+          font-size: 0.9rem;
           color: #374151;
         }
         .ex-modal-body p { margin: 0 0 8px; }
@@ -542,16 +804,57 @@ export default function AdminExchangesPage() {
           gap: 8px;
           justify-content: flex-end;
         }
-        .ex-modal-actions .ex-btn { padding: 8px 16px; }
+        .ex-modal-actions .ex-btn { padding: 9px 18px; }
 
-        /* RESPONSIVE */
-        @media (max-width: 1100px) {
+        /* ═══════ RESPONSIVE BREAKPOINTS ═══════ */
+
+        /* Large tablet & below */
+        @media (max-width: 1200px) {
           .ex-stats { grid-template-columns: repeat(3, 1fr); }
         }
+
+        /* Tablet: SWITCH to card layout */
+        @media (max-width: 900px) {
+          .ex-table-wrap { display: none; }
+          .ex-cards { display: flex; }
+        }
+
+        /* Small tablet */
+        @media (max-width: 700px) {
+          .ex-stats {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+          }
+        }
+
+        /* Mobile */
         @media (max-width: 600px) {
-          .ex-stats { grid-template-columns: repeat(2, 1fr); }
-          .ex-filters { flex-direction: column; }
+          .ex-filters {
+            flex-direction: column;
+            gap: 10px;
+          }
           .ex-filters select { min-width: 100%; }
+          .ex-stat { padding: 12px 10px; }
+        }
+
+        /* Small mobile */
+        @media (max-width: 420px) {
+          .ex-card-meta {
+            grid-template-columns: 1fr;
+            gap: 10px;
+          }
+          .ex-card-products {
+            flex-direction: column;
+            align-items: stretch;
+          }
+          .ex-arrow {
+            justify-content: center;
+            transform: rotate(90deg);
+            padding: 4px 0;
+          }
+          .ex-card-actions {
+            flex-direction: column;
+          }
         }
       `}</style>
     </div>

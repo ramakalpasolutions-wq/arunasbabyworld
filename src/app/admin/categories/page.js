@@ -20,19 +20,17 @@ const ALLOWED_CATEGORIES = [
   { slug: 'food',              name: 'Food',              icon: '', color: '#F97316' },
 ];
 
-export default function AdminCategories() { 
-  const [categories,    setCategories]    = useState([]);
-  const [loading,       setLoading]       = useState(true);
-  const [showForm,      setShowForm]      = useState(false);
-  const [editing,       setEditing]       = useState(null);
-  const [saving,        setSaving]        = useState(false);
-  const [uploading,     setUploading]     = useState(false);
-  const [uploadingGrid, setUploadingGrid] = useState(false);
-  const [isCustom,      setIsCustom]      = useState(false); // ✅ NEW: track custom mode
+export default function AdminCategories() {
+  const [categories, setCategories] = useState([]);
+  const [loading,    setLoading]    = useState(true);
+  const [showForm,   setShowForm]   = useState(false);
+  const [editing,    setEditing]    = useState(null);
+  const [saving,     setSaving]     = useState(false);
+  const [isCustom,   setIsCustom]   = useState(false);
 
   const emptyForm = {
     name: '', description: '', color: '#FF6B35',
-    icon: '', type: 'normal', banner: null, gridImages: [],
+    icon: '', type: 'normal',
   };
 
   const [form, setForm] = useState(emptyForm);
@@ -73,65 +71,15 @@ export default function AdminCategories() {
   /* ── Open Edit form ── */
   const openEdit = (cat) => {
     setEditing(cat);
-    setIsCustom(true); // ✅ editing is always "custom" mode (free text)
+    setIsCustom(true);
     setForm({
       name:        cat.name        || '',
       description: cat.description || '',
       color:       cat.color       || '#FF6B35',
       icon:        cat.icon        || '',
       type:        cat.type        || 'normal',
-      banner:      cat.banner      || null,
-      gridImages:  cat.gridImages  || [],
     });
     setShowForm(true);
-  };
-
-  /* ── Upload banner image ── */
-  const handleBannerUpload = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-    setUploading(true);
-    try {
-      const fd = new FormData();
-      fd.append('file', file);
-      fd.append('folder', 'firstcry/categories');
-      const res  = await fetch('/api/upload', { method: 'POST', body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      const imageUrl = data.url || data.images?.[0]?.url;
-      setForm(f => ({ ...f, banner: { url: imageUrl, publicId: data.publicId || '' } }));
-      toast.success('✅ Banner uploaded!');
-    } catch (err) {
-      toast.error(err.message || 'Upload failed');
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  /* ── Upload grid images ── */
-  const handleGridImageUpload = async (e) => {
-    const files = Array.from(e.target.files);
-    if (!files.length) return;
-    setUploadingGrid(true);
-    try {
-      const fd = new FormData();
-      for (const file of files) fd.append('file', file);
-      fd.append('folder', 'firstcry/categories/grid');
-      const res  = await fetch('/api/upload', { method: 'POST', body: fd });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
-      const newImages = data.images || [{ url: data.url, publicId: data.publicId }];
-      setForm(f => ({ ...f, gridImages: [...(f.gridImages || []), ...newImages] }));
-      toast.success(`✅ ${newImages.length} image(s) uploaded!`);
-    } catch (err) {
-      toast.error(err.message || 'Upload failed');
-    } finally {
-      setUploadingGrid(false);
-    }
-  };
-
-  const removeGridImage = (idx) => {
-    setForm(f => ({ ...f, gridImages: f.gridImages.filter((_, i) => i !== idx) }));
   };
 
   /* ── Quick create missing category ── */
@@ -166,8 +114,7 @@ export default function AdminCategories() {
     e.preventDefault();
     if (!form.name?.trim()) { toast.error('Category name is required'); return; }
 
-    // ✅ REMOVED the restrictive validation — now allows ANY category name
-    // Just check for duplicates by slug
+    // ✅ Check duplicates by slug
     if (!editing) {
       const slug = form.name
         .toLowerCase()
@@ -251,15 +198,7 @@ export default function AdminCategories() {
             className={styles.catIcon}
             style={{ background: `${cat.color}20`, color: cat.color }}
           >
-            {cat.banner?.url ? (
-              <img
-                src={cat.banner.url}
-                alt={cat.name}
-                style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }}
-              />
-            ) : (
-              cat.icon || allowed?.icon || cat.name[0]
-            )}
+            {cat.icon || allowed?.icon || cat.name[0]}
           </div>
           <div className={styles.catActions}>
             <button onClick={() => openEdit(cat)} className={styles.editBtn}>✏️</button>
@@ -289,17 +228,6 @@ export default function AdminCategories() {
           )}
         </h3>
         {cat.description && <p className={styles.catDesc}>{cat.description}</p>}
-
-        {cat.gridImages?.length > 0 && (
-          <p style={{ fontSize: '11px', color: '#888', margin: '4px 0 0' }}>
-            🖼️ {cat.gridImages.length} grid image(s)
-          </p>
-        )}
-        {cat.banner?.url && (
-          <p style={{ fontSize: '11px', color: '#10b981', margin: '4px 0 0' }}>
-            ✅ Banner set
-          </p>
-        )}
 
         <div className={styles.catMeta}>
           <span style={{ background: `${cat.color}15`, color: cat.color }}>
@@ -429,7 +357,7 @@ export default function AdminCategories() {
       {/* ── FORM MODAL ── */}
       {showForm && (
         <div className={styles.modal}>
-          <div className={styles.modalCard} style={{ maxWidth: '680px' }}>
+          <div className={styles.modalCard} style={{ maxWidth: '560px' }}>
             <div className={styles.modalHeader}>
               <h2>{editing ? '✏️ Edit Category' : '➕ Add Category'}</h2>
               <button
@@ -586,202 +514,61 @@ export default function AdminCategories() {
                 </div>
               )}
 
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-                gap: '16px',
-              }}>
+              {/* ── FORM FIELDS ── */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
 
-                {/* LEFT COLUMN */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  <div className="form-group">
-                    <label>Category Name *</label>
-                    <input
-                      className="form-control"
-                      value={form.name}
-                      onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
-                      placeholder={isCustom ? "e.g. Books, Shoes, Gifts..." : "e.g. Clothing"}
-                      required
-                    />
-                  </div>
-
-                  <div className="form-group">
-                    <label>Description</label>
-                    <textarea
-                      className="form-control"
-                      rows={3}
-                      value={form.description}
-                      onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
-                      placeholder="Short description"
-                    />
-                  </div>
-
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                    <div className="form-group">
-                      <label>Icon (emoji)</label>
-                      <input
-                        className="form-control"
-                        value={form.icon}
-                        onChange={e => setForm(f => ({ ...f, icon: e.target.value }))}
-                        placeholder="👗"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Color</label>
-                      <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <input
-                          type="color"
-                          value={form.color}
-                          onChange={e => setForm(f => ({ ...f, color: e.target.value }))}
-                          style={{
-                            width: '44px', height: '38px',
-                            border: '2px solid #eee',
-                            borderRadius: '8px', cursor: 'pointer',
-                          }}
-                        />
-                        <input
-                          className="form-control"
-                          value={form.color}
-                          onChange={e => setForm(f => ({ ...f, color: e.target.value }))}
-                        />
-                      </div>
-                    </div>
-                  </div>
+                <div className="form-group">
+                  <label>Category Name *</label>
+                  <input
+                    className="form-control"
+                    value={form.name}
+                    onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder={isCustom ? "e.g. Books, Shoes, Gifts..." : "e.g. Clothing"}
+                    required
+                  />
                 </div>
 
-                {/* RIGHT COLUMN */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div className="form-group">
+                  <label>Description</label>
+                  <textarea
+                    className="form-control"
+                    rows={3}
+                    value={form.description}
+                    onChange={e => setForm(f => ({ ...f, description: e.target.value }))}
+                    placeholder="Short description"
+                  />
+                </div>
 
-                  {/* Banner Upload */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
                   <div className="form-group">
-                    <label>🖼️ Banner Image</label>
-                    <label style={{ cursor: 'pointer', display: 'block' }}>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleBannerUpload}
-                        style={{ display: 'none' }}
-                        disabled={uploading}
-                      />
-                      <div style={{
-                        width: '100%', height: '110px',
-                        border: `2px dashed ${form.color || '#FF6B35'}`,
-                        borderRadius: '12px', background: '#fff8fb',
-                        display: 'flex', flexDirection: 'column',
-                        alignItems: 'center', justifyContent: 'center',
-                        overflow: 'hidden', cursor: 'pointer',
-                      }}>
-                        {uploading ? (
-                          <p style={{ margin: 0, fontSize: '0.84rem', color: '#888' }}>
-                            ⏳ Uploading...
-                          </p>
-                        ) : form.banner?.url ? (
-                          <img
-                            src={form.banner.url}
-                            alt="banner"
-                            style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                          />
-                        ) : (
-                          <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: '28px' }}>🖼️</div>
-                            <p style={{
-                              fontSize: '11px', color: '#FF6B35',
-                              fontWeight: '700', margin: '4px 0 0',
-                            }}>
-                              Upload Banner
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </label>
-                    {form.banner?.url && (
-                      <button
-                        type="button"
-                        onClick={() => setForm(f => ({ ...f, banner: null }))}
-                        style={{
-                          marginTop: '6px', background: '#fee2e2',
-                          color: '#dc2626', border: 'none',
-                          borderRadius: '6px', padding: '6px',
-                          width: '100%', cursor: 'pointer',
-                          fontFamily: 'inherit',
-                        }}
-                      >
-                        🗑️ Remove Banner
-                      </button>
-                    )}
+                    <label>Icon (emoji)</label>
+                    <input
+                      className="form-control"
+                      value={form.icon}
+                      onChange={e => setForm(f => ({ ...f, icon: e.target.value }))}
+                      placeholder="👗"
+                    />
                   </div>
-
-                  {/* Grid Images */}
                   <div className="form-group">
-                    <label>📷 Grid Images</label>
-                    <label style={{ cursor: 'pointer', display: 'block' }}>
+                    <label>Color</label>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                       <input
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        onChange={handleGridImageUpload}
-                        style={{ display: 'none' }}
-                        disabled={uploadingGrid}
+                        type="color"
+                        value={form.color}
+                        onChange={e => setForm(f => ({ ...f, color: e.target.value }))}
+                        style={{
+                          width: '44px', height: '38px',
+                          border: '2px solid #eee',
+                          borderRadius: '8px', cursor: 'pointer',
+                          flexShrink: 0,
+                        }}
                       />
-                      <div style={{
-                        width: '100%', height: '70px',
-                        border: '2px dashed #0ea5e9',
-                        borderRadius: '12px', background: '#f0f9ff',
-                        display: 'flex', flexDirection: 'column',
-                        alignItems: 'center', justifyContent: 'center',
-                        cursor: 'pointer',
-                      }}>
-                        {uploadingGrid ? (
-                          <p style={{ margin: 0, fontSize: '0.84rem', color: '#888' }}>
-                            ⏳ Uploading...
-                          </p>
-                        ) : (
-                          <div style={{ textAlign: 'center' }}>
-                            <div style={{ fontSize: '24px' }}>📷</div>
-                            <p style={{
-                              fontSize: '11px', color: '#0ea5e9',
-                              fontWeight: '700', margin: '4px 0 0',
-                            }}>
-                              Upload Grid Images
-                            </p>
-                          </div>
-                        )}
-                      </div>
-                    </label>
-                    {form.gridImages?.length > 0 && (
-                      <div style={{
-                        display: 'grid',
-                        gridTemplateColumns: 'repeat(4, 1fr)',
-                        gap: '6px', marginTop: '10px',
-                      }}>
-                        {form.gridImages.map((img, i) => (
-                          <div key={i} style={{
-                            position: 'relative',
-                            borderRadius: '8px',
-                            overflow: 'hidden',
-                          }}>
-                            <img
-                              src={img.url}
-                              alt=""
-                              style={{ width: '100%', height: '80px', objectFit: 'cover' }}
-                            />
-                            <button
-                              type="button"
-                              onClick={() => removeGridImage(i)}
-                              style={{
-                                position: 'absolute', top: '4px', right: '4px',
-                                background: 'rgba(220,38,38,0.9)', color: 'white',
-                                border: 'none', borderRadius: '50%',
-                                width: '20px', height: '20px',
-                                fontSize: '10px', cursor: 'pointer',
-                              }}
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
+                      <input
+                        className="form-control"
+                        value={form.color}
+                        onChange={e => setForm(f => ({ ...f, color: e.target.value }))}
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -798,7 +585,7 @@ export default function AdminCategories() {
                 <button
                   type="submit"
                   className="btn btn-primary"
-                  disabled={saving || uploading || uploadingGrid}
+                  disabled={saving}
                 >
                   {saving
                     ? '⏳ Saving...'
