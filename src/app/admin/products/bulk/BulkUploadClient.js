@@ -470,6 +470,8 @@ function ProductCard({
       border: '2px solid #EDD9FF', borderRadius: '20px',
       overflow: 'hidden', background: '#FDFBFF',
       boxShadow: '0 2px 16px rgba(123,47,190,0.08)',
+      width: '100%',
+      minWidth: 0,
     }}>
       {/* Card Header */}
       <div style={{
@@ -477,17 +479,26 @@ function ProductCard({
         padding: '10px 16px',
         display: 'flex', alignItems: 'center',
         justifyContent: 'space-between',
+        flexWrap: 'wrap',
+        gap: '8px',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '10px',
+          flexWrap: 'wrap', flex: 1, minWidth: 0,
+        }}>
           <span style={{
             background: 'white', color: '#FF6B35',
             width: '28px', height: '28px', borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '13px', fontWeight: '800',
+            flexShrink: 0,
           }}>
             {index + 1}
           </span>
-          <span style={{ color: 'white', fontWeight: '700', fontSize: '14px' }}>
+          <span style={{
+            color: 'white', fontWeight: '700', fontSize: '14px',
+            wordBreak: 'break-word',
+          }}>
             {product.name || `Product #${index + 1}`}
           </span>
           <span style={{
@@ -502,20 +513,23 @@ function ProductCard({
           background: 'rgba(220,38,38,0.85)', color: 'white',
           border: 'none', padding: '4px 12px', borderRadius: '8px',
           cursor: 'pointer', fontSize: '12px', fontWeight: '700', fontFamily: 'inherit',
+          flexShrink: 0,
         }}>
           🗑️ Remove
         </button>
       </div>
 
-      <div style={{ padding: '20px' }}>
+      <div style={{ padding: 'clamp(12px, 3vw, 20px)' }}>
         <div style={{
           display: 'grid',
-          gridTemplateColumns: '1fr 1fr',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 280px), 1fr))',
           gap: '20px',
+          width: '100%',
+          minWidth: 0,
         }}>
 
           {/* ── LEFT: 4 Image Slots ── */}
-          <div>
+          <div style={{ minWidth: 0, width: '100%' }}>
             <div style={{
               display: 'flex', alignItems: 'center',
               justifyContent: 'space-between', marginBottom: '12px',
@@ -536,6 +550,7 @@ function ProductCard({
               display: 'grid',
               gridTemplateColumns: 'repeat(4, 1fr)',
               gap: '8px',
+              maxWidth: '400px',
             }}>
               {IMAGE_SLOTS.map((slot, i) => {
                 const isUploading = uploadingSlot?.productId === product.id &&
@@ -543,7 +558,7 @@ function ProductCard({
                 const img = product.images[i];
 
                 return (
-                  <div key={slot.key} style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div key={slot.key} style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
                     {/* Label */}
                     <div style={{
                       fontSize: '10px', fontWeight: '800', color: '#9585B0',
@@ -574,7 +589,7 @@ function ProductCard({
 
                     <div
                       onClick={() => {
-                        if (i === 0) return; // can't replace front here
+                        if (i === 0) return;
                         if (!img && !isUploading) slotInputRefs[i].current?.click();
                       }}
                       style={{
@@ -598,7 +613,6 @@ function ProductCard({
                         <>
                           <img src={img.url} alt={slot.label}
                             style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} />
-                          {/* Remove button (not for front) */}
                           {i !== 0 && (
                             <button
                               type="button"
@@ -614,7 +628,6 @@ function ProductCard({
                               }}
                             >✕</button>
                           )}
-                          {/* Green check */}
                           {i === 0 && (
                             <div style={{
                               position: 'absolute', bottom: '2px', right: '2px',
@@ -660,7 +673,7 @@ function ProductCard({
             </div>
 
             {/* Progress dots */}
-            <div style={{ display: 'flex', gap: '4px', marginTop: '8px' }}>
+            <div style={{ display: 'flex', gap: '4px', marginTop: '8px', maxWidth: '400px' }}>
               {IMAGE_SLOTS.map((_, i) => (
                 <div key={i} style={{
                   flex: 1, height: '4px', borderRadius: '999px',
@@ -672,10 +685,14 @@ function ProductCard({
           </div>
 
           {/* ── RIGHT: Product Details ── */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div style={{
+            display: 'flex', flexDirection: 'column', gap: '10px',
+            minWidth: 0,
+            width: '100%',
+          }}>
 
             {/* Name */}
-            <div>
+            <div style={{ minWidth: 0 }}>
               <label style={labelStyle}>Product Name *</label>
               <input value={product.name}
                 onChange={e => onUpdate(product.id, 'name', e.target.value)}
@@ -684,7 +701,7 @@ function ProductCard({
             </div>
 
             {/* Short Description */}
-            <div>
+            <div style={{ minWidth: 0 }}>
               <label style={labelStyle}>Short Description</label>
               <input value={product.shortDescription}
                 onChange={e => onUpdate(product.id, 'shortDescription', e.target.value)}
@@ -693,15 +710,15 @@ function ProductCard({
             </div>
 
             {/* Price & Discount */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              <div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', minWidth: 0 }}>
+              <div style={{ minWidth: 0 }}>
                 <label style={labelStyle}>Price (₹) *</label>
                 <input type="number" value={product.price}
                   onChange={e => onUpdate(product.id, 'price', e.target.value)}
                   placeholder="0" min="0"
                   style={{ ...inputStyle, border: !product.price ? '1px solid #ff4444' : '1px solid #EDD9FF' }} />
               </div>
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <label style={labelStyle}>Discount (₹)</label>
                 <input type="number" value={product.discountPrice}
                   onChange={e => onUpdate(product.id, 'discountPrice', e.target.value)}
@@ -711,15 +728,15 @@ function ProductCard({
             </div>
 
             {/* Stock & Brand */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-              <div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', minWidth: 0 }}>
+              <div style={{ minWidth: 0 }}>
                 <label style={labelStyle}>Stock *</label>
                 <input type="number" value={product.stock}
                   onChange={e => onUpdate(product.id, 'stock', e.target.value)}
                   placeholder="0" min="0"
                   style={{ ...inputStyle, border: !product.stock ? '1px solid #ff4444' : '1px solid #EDD9FF' }} />
               </div>
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <label style={labelStyle}>Brand</label>
                 <input value={product.brand}
                   onChange={e => onUpdate(product.id, 'brand', e.target.value)}
@@ -728,39 +745,38 @@ function ProductCard({
               </div>
             </div>
 
-          {/* Age Group — Free text input */}
-<div>
-  <label style={labelStyle}>Age Group</label>
-  <input
-    type="text"
-    value={product.ageGroup}
-    onChange={e => onUpdate(product.id, 'ageGroup', e.target.value)}
-    placeholder="e.g. 13 yrs, 2 yrs, 6 months, Newborn..."
-    list={`age-suggestions-${product.id}`}
-    style={{ ...inputStyle, border: '1px solid #EDD9FF' }}
-  />
-  {/* ✅ Optional autocomplete suggestions (still typeable) */}
-  <datalist id={`age-suggestions-${product.id}`}>
-    <option value="Newborn" />
-    <option value="0-3 months" />
-    <option value="3-6 months" />
-    <option value="6-12 months" />
-    <option value="1 year" />
-    <option value="2 years" />
-    <option value="3 years" />
-    <option value="5 years" />
-    <option value="8 years" />
-    <option value="10 years" />
-    <option value="12+ years" />
-    <option value="All ages" />
-  </datalist>
-  <small style={{
-    display: 'block', marginTop: '4px',
-    color: '#9585B0', fontSize: '10px', fontWeight: '600',
-  }}>
-    💡 Type any age (e.g. "13 yrs", "2.5 years", "6 months")
-  </small>
-</div>
+            {/* Age Group — Free text input */}
+            <div style={{ minWidth: 0 }}>
+              <label style={labelStyle}>Age Group</label>
+              <input
+                type="text"
+                value={product.ageGroup}
+                onChange={e => onUpdate(product.id, 'ageGroup', e.target.value)}
+                placeholder="e.g. 13 yrs, 2 yrs, 6 months, Newborn..."
+                list={`age-suggestions-${product.id}`}
+                style={{ ...inputStyle, border: '1px solid #EDD9FF' }}
+              />
+              <datalist id={`age-suggestions-${product.id}`}>
+                <option value="Newborn" />
+                <option value="0-3 months" />
+                <option value="3-6 months" />
+                <option value="6-12 months" />
+                <option value="1 year" />
+                <option value="2 years" />
+                <option value="3 years" />
+                <option value="5 years" />
+                <option value="8 years" />
+                <option value="10 years" />
+                <option value="12+ years" />
+                <option value="All ages" />
+              </datalist>
+              <small style={{
+                display: 'block', marginTop: '4px',
+                color: '#9585B0', fontSize: '10px', fontWeight: '600',
+              }}>
+                💡 Type any age (e.g. "13 yrs", "2.5 years", "6 months")
+              </small>
+            </div>
 
             {/* Clothing Fields */}
             {isClothingCat && (
@@ -768,13 +784,14 @@ function ProductCard({
                 background: 'linear-gradient(135deg,#FFF3EC,#F3E8FF)',
                 border: '1.5px solid #EDD9FF', borderRadius: '12px',
                 padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px',
+                minWidth: 0,
               }}>
                 <div style={{ fontSize: '11px', fontWeight: '800', color: '#FF6B35', textTransform: 'uppercase' }}>
                   👗 Clothing Details
                 </div>
 
                 {/* Gender */}
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <label style={labelStyle}>Gender *</label>
                   <div style={{ display: 'flex', gap: '6px' }}>
                     {GENDERS.map(g => (
@@ -796,7 +813,7 @@ function ProductCard({
                 </div>
 
                 {/* Size */}
-                <div>
+                <div style={{ minWidth: 0 }}>
                   <label style={labelStyle}>Size *</label>
                   <select value={product.size}
                     onChange={e => onUpdate(product.id, 'size', e.target.value)}
@@ -824,8 +841,8 @@ function ProductCard({
                 </div>
 
                 {/* Color & Material */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-                  <div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', minWidth: 0 }}>
+                  <div style={{ minWidth: 0 }}>
                     <label style={labelStyle}>Color</label>
                     <select value={product.color}
                       onChange={e => onUpdate(product.id, 'color', e.target.value)}
@@ -834,7 +851,7 @@ function ProductCard({
                       {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
                   </div>
-                  <div>
+                  <div style={{ minWidth: 0 }}>
                     <label style={labelStyle}>Material</label>
                     <select value={product.material}
                       onChange={e => onUpdate(product.id, 'material', e.target.value)}
