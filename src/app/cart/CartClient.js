@@ -6,7 +6,7 @@ import { useCart } from '@/context/CartContext';
 import toast from 'react-hot-toast';
 import styles from './CartClient.module.css';
 
-// ✅ Available Coupons Component
+// ✅ Available Coupons Component (unchanged)
 function AvailableCoupons({ itemsPrice, onApply }) {
   const [coupons, setCoupons] = useState([]);
   const [showAll, setShowAll] = useState(false);
@@ -147,6 +147,54 @@ export default function CartClient() {
   const [couponCode, setCouponCode] = useState('');
   const [applying, setApplying] = useState(false);
 
+  // ✅ NEW: Live stock data from API (in case DB stock changed)
+  const [stockMap, setStockMap] = useState({}); // { productId: stock }
+
+  // ✅ Fetch latest stock for every cart item on load
+  useEffect(() => {
+    if (items.length === 0) return;
+    const ids = items.map(i => i.id || i._id).filter(Boolean);
+    if (ids.length === 0) return;
+
+    Promise.all(
+      ids.map(id =>
+        fetch(`/api/products/${id}`)
+          .then(r => r.json())
+          .then(d => ({ id, stock: d.product?.stock ?? 0 }))
+          .catch(() => ({ id, stock: 0 }))
+      )
+    ).then(results => {
+      const map = {};
+      results.forEach(r => { map[r.id] = r.stock; });
+      setStockMap(map);
+    });
+  }, [items.length]); // Re-fetch when item count changes
+
+  // ✅ Helper: get max stock for an item (live from API, fallback to cart)
+  const getMaxStock = (item) => {
+    const id = item.id || item._id;
+    if (stockMap[id] !== undefined) return stockMap[id];
+    return item.stock ?? 999;
+  };
+
+  // ✅ Smart quantity change with stock enforcement
+  const handleQtyChange = (item, newQty) => {
+    if (newQty < 1) return;
+    const maxStock = getMaxStock(item);
+
+    if (maxStock === 0) {
+      toast.error(`❌ ${item.name} is out of stock!`);
+      return;
+    }
+
+    if (newQty > maxStock) {
+      toast.error(`⚠️ Only ${maxStock} available in stock!`);
+      return;
+    }
+
+    updateQuantity(item.id || item._id, newQty);
+  };
+
   const applyCoupon = async (code) => {
     const codeToApply = code || couponCode;
     if (!codeToApply.trim()) return;
@@ -174,6 +222,12 @@ export default function CartClient() {
       setApplying(false);
     }
   };
+
+  // ✅ Check if any item exceeds stock (blocks checkout)
+  const hasStockIssue = items.some(item => {
+    const maxStock = getMaxStock(item);
+    return item.quantity > maxStock || maxStock === 0;
+  });
 
   if (items.length === 0) return (
     <div className={`container ${styles.empty}`}>
@@ -205,8 +259,26 @@ export default function CartClient() {
             const image = item.images?.[0]?.url ||
               `https://via.placeholder.com/100?text=${encodeURIComponent(item.name)}`;
 
+            // ✅ Stock info for this item
+            const maxStock = getMaxStock(item);
+            const isOutOfStock = maxStock === 0;
+            const exceedsStock = item.quantity > maxStock;
+            const atMaxStock = item.quantity >= maxStock && maxStock > 0;
+            const isLowStock = maxStock > 0 && maxStock <= 5;
+
             return (
-              <div key={itemId} className={styles.cartItem}>
+              <div
+                key={itemId}
+                className={styles.cartItem}
+                style={{
+                  border: exceedsStock || isOutOfStock
+                    ? '2px solid #dc2626'
+                    : undefined,
+                  background: exceedsStock || isOutOfStock
+                    ? '#fef2f2'
+                    : undefined,
+                }}
+              >
                 <div className={styles.itemImage}>
                   <Image
                     src={image}
@@ -234,13 +306,74 @@ export default function CartClient() {
                       👶 {item.ageGroup}
                     </div>
                   )}
+
+                  {/* ✅ Stock status badges */}
+                  {isOutOfStock && (
+                    <div style={{
+                      display: 'inline-block',
+                      marginTop: '6px',
+                      padding: '3px 10px',
+                      background: '#dc2626',
+                      color: 'white',
+                      borderRadius: '999px',
+                      fontSize: '11px',
+                      fontWeight: '800',
+                    }}>
+                      ❌ OUT OF STOCK
+                    </div>
+                  )}
+
+                  {exceedsStock && !isOutOfStock && (
+                    <div style={{
+                      display: 'inline-block',
+                      marginTop: '6px',
+                      padding: '3px 10px',
+                      background: '#dc2626',
+                      color: 'white',
+                      borderRadius: '999px',
+                      fontSize: '11px',
+                      fontWeight: '800',
+                    }}>
+                      ⚠️ Only {maxStock} available (reduce quantity)
+                    </div>
+                  )}
+
+                  {!exceedsStock && !isOutOfStock && isLowStock && (
+                    <div style={{
+                      display: 'inline-block',
+                      marginTop: '6px',
+                      padding: '3px 10px',
+                      background: '#fef3c7',
+                      color: '#92400e',
+                      borderRadius: '999px',
+                      fontSize: '11px',
+                      fontWeight: '800',
+                    }}>
+                      ⚠️ Only {maxStock} left in stock
+                    </div>
+                  )}
                 </div>
 
                 <div className={styles.itemControls}>
                   <div className={styles.quantityCtrl}>
-                    <button onClick={() => updateQuantity(itemId, item.quantity - 1)}>−</button>
+                    <button
+                      onClick={() => handleQtyChange(item, item.quantity - 1)}
+                      disabled={item.quantity <= 1}
+                      style={{
+                        opacity: item.quantity <= 1 ? 0.4 : 1,
+                        cursor: item.quantity <= 1 ? 'not-allowed' : 'pointer',
+                      }}
+                    >−</button>
                     <span>{item.quantity}</span>
-                    <button onClick={() => updateQuantity(itemId, item.quantity + 1)}>+</button>
+                    <button
+                      onClick={() => handleQtyChange(item, item.quantity + 1)}
+                      disabled={atMaxStock || isOutOfStock}
+                      style={{
+                        opacity: (atMaxStock || isOutOfStock) ? 0.4 : 1,
+                        cursor: (atMaxStock || isOutOfStock) ? 'not-allowed' : 'pointer',
+                      }}
+                      title={atMaxStock ? `Max ${maxStock} available` : ''}
+                    >+</button>
                   </div>
                   <div className={styles.itemTotal}>
                     ₹{(price * item.quantity).toLocaleString('en-IN')}
@@ -300,13 +433,11 @@ export default function CartClient() {
               </div>
             ) : (
               <>
-                {/* ✅ Available Coupons List */}
                 <AvailableCoupons
                   itemsPrice={itemsPrice}
                   onApply={(code) => applyCoupon(code)}
                 />
 
-                {/* Manual Coupon Input */}
                 <div className={styles.couponInput}>
                   <input
                     type="text"
@@ -343,9 +474,41 @@ export default function CartClient() {
             </div>
           )}
 
-          <Link href="/checkout" className={`btn btn-primary ${styles.checkoutBtn}`}>
-            Proceed to Checkout →
-          </Link>
+          {/* ✅ Stock warning above checkout */}
+          {hasStockIssue && (
+            <div style={{
+              padding: '12px 14px',
+              background: '#fef2f2',
+              border: '2px solid #dc2626',
+              borderRadius: '10px',
+              marginTop: '10px',
+              fontSize: '13px',
+              color: '#991b1b',
+              fontWeight: '700',
+              textAlign: 'center',
+            }}>
+              ⚠️ Please fix stock issues before checkout
+            </div>
+          )}
+
+          {/* ✅ Checkout button — disabled if stock issues */}
+          {hasStockIssue ? (
+            <button
+              className={`btn btn-primary ${styles.checkoutBtn}`}
+              disabled
+              style={{
+                opacity: 0.5,
+                cursor: 'not-allowed',
+                background: '#9ca3af',
+              }}
+            >
+              Fix Stock Issues First
+            </button>
+          ) : (
+            <Link href="/checkout" className={`btn btn-primary ${styles.checkoutBtn}`}>
+              Proceed to Checkout →
+            </Link>
+          )}
 
           <Link href="/products" className={styles.continueShopping}>
             ← Continue Shopping
