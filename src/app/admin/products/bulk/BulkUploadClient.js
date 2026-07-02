@@ -728,16 +728,39 @@ function ProductCard({
               </div>
             </div>
 
-            {/* Age Group */}
-            <div>
-              <label style={labelStyle}>Age Group</label>
-              <select value={product.ageGroup}
-                onChange={e => onUpdate(product.id, 'ageGroup', e.target.value)}
-                style={{ ...selectStyle, border: '1px solid #EDD9FF' }}>
-                <option value="">Select Age Group</option>
-                {AGE_GROUPS.map(a => <option key={a} value={a}>{a}</option>)}
-              </select>
-            </div>
+          {/* Age Group — Free text input */}
+<div>
+  <label style={labelStyle}>Age Group</label>
+  <input
+    type="text"
+    value={product.ageGroup}
+    onChange={e => onUpdate(product.id, 'ageGroup', e.target.value)}
+    placeholder="e.g. 13 yrs, 2 yrs, 6 months, Newborn..."
+    list={`age-suggestions-${product.id}`}
+    style={{ ...inputStyle, border: '1px solid #EDD9FF' }}
+  />
+  {/* ✅ Optional autocomplete suggestions (still typeable) */}
+  <datalist id={`age-suggestions-${product.id}`}>
+    <option value="Newborn" />
+    <option value="0-3 months" />
+    <option value="3-6 months" />
+    <option value="6-12 months" />
+    <option value="1 year" />
+    <option value="2 years" />
+    <option value="3 years" />
+    <option value="5 years" />
+    <option value="8 years" />
+    <option value="10 years" />
+    <option value="12+ years" />
+    <option value="All ages" />
+  </datalist>
+  <small style={{
+    display: 'block', marginTop: '4px',
+    color: '#9585B0', fontSize: '10px', fontWeight: '600',
+  }}>
+    💡 Type any age (e.g. "13 yrs", "2.5 years", "6 months")
+  </small>
+</div>
 
             {/* Clothing Fields */}
             {isClothingCat && (
