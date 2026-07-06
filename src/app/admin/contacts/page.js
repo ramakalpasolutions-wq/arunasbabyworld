@@ -2,14 +2,6 @@
 'use client';
 import { useState, useEffect } from 'react';
 import styles from '../products/page.module.css';
-import { startSession } from 'mongoose';
-import { uploadFileToR2 } from '@/lib/uploadFile';
-import { projectUpdateInfoSubscribe } from 'next/dist/build/swc/generated-native';
-import { resolveViewport } from 'next/dist/lib/metadata/resolve-metadata';
-import { InventoryConfigurationFilterSensitiveLog, ListBucketIntelligentTieringConfigurationsCommand, UploadPartCommand } from '@aws-sdk/client-s3';
-import { STRING_LITERAL_DROP_BUNDLE } from 'next/dist/shared/lib/constants';
-import paymentLink from 'razorpay/dist/types/paymentLink';
-import { register } from 'next/dist/next-devtools/userspace/pages/pages-dev-overlay-setup';
 
 export default function AdminContacts() {
   const [contacts,   setContacts]   = useState([]);
@@ -491,26 +483,3 @@ export default function AdminContacts() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
