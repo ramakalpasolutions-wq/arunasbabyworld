@@ -18,17 +18,17 @@ const CATEGORY_ORDER = [
 ];
 
 const CATEGORY_ICONS = {
-  'all':               '🧸',
-  'clothing':          '👗',
-  'personal-care':     '🧴',
-  'health-care':       '💊',
-  'baby-gear':         '🎒',
-  'walkers':           '🚶',
-  'toys':              '🎠',
-  'cradles-cribs':     '🛏️',
-  'electric-vehicles': '🚗',
-  'food':              '🍎',
-  'default':           '📦',
+  'all':               '',
+  'clothing':          '',
+  'personal-care':     '',
+  'health-care':       '',
+  'baby-gear':         '',
+  'walkers':           '',
+  'toys':              '',
+  'cradles-cribs':     '',
+  'electric-vehicles': '',
+  'food':              '',
+  'default':           '',
 };
 
 const EXCLUDED_SLUGS = ['maternity', 'nursery'];
@@ -90,7 +90,7 @@ function AutoScrollCatBar({
   const SPEED    = 0.5;
 
   const allItems = [
-    { id: '', slug: 'all', name: 'All', icon: '🧸', productCount: 0 },
+    { id: '', slug: 'all', name: 'All', icon: '', productCount: 0 },
     ...categories,
   ];
 
@@ -360,7 +360,7 @@ export default function ProductsClient() {
 
   const quickFilters = [
     {
-      key: 'all', label: 'All', icon: '🧸',
+      key: 'all', label: 'All', icon: '',
       action: () => { clearAll(); setActiveQuick('all'); },
     },
     {
@@ -426,7 +426,7 @@ export default function ProductsClient() {
                 <span className={styles.heroEmoji}>🔥</span>
               )}
               {!filters.featured && !filters.trending && (
-                <span className={styles.heroEmoji}>🧸</span>
+                <span className={styles.heroEmoji}></span>
               )}
               <span>{pageTitle}</span>
             </h1>
@@ -598,7 +598,7 @@ export default function ProductsClient() {
 
             <div className={`${styles.filterBlock} ${styles.desktopCatBlock}`}>
               <div className={styles.filterBlockTitle}>
-                <span className={styles.filterBlockIcon}>📂</span>
+                <span className={styles.filterBlockIcon}></span>
                 Category
               </div>
               {catLoading ? (
@@ -613,7 +613,7 @@ export default function ProductsClient() {
                     className={`${styles.catBtn} ${!filters.category ? styles.catBtnActive : ''}`}
                     onClick={() => handleCategoryClick('')}
                   >
-                    <span className={styles.catIcon}>🧸</span>
+                    <span className={styles.catIcon}></span>
                     <span className={styles.catName}>All Categories</span>
                   </button>
                   {categories.map(cat => (

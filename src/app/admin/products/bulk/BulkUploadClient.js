@@ -98,26 +98,24 @@ export default function BulkUploadClient() {
       const uploadedImages = data.images || [];
       if (!uploadedImages.length) { toast.error('No images uploaded'); return; }
 
-      // ✅ Each image = 1 product, placed in FRONT slot (index 0)
-      const newProducts = uploadedImages.map((img, i) => ({
-        id:               `${Date.now()}-${i}`,
-        name:             '',
-        price:            '',
-        discountPrice:    '',
-        stock:            '',
-        shortDescription: '',
-        brand:            '',
-        ageGroup:         '',
-        gender:           '',
-        size:             '',
-        color:            '',
-        material:         '',
-        isFeatured:       false,
-        isTrending:       false,
-        isActive:         true,
-        // ✅ 4 slots — first filled, rest empty
-        images:           [img, null, null, null],
-      }));
+    const newProducts = uploadedImages.map((img, i) => ({
+  id:               `${Date.now()}-${i}`,
+  name:             '',
+  price:            '',
+  discountPercent:  '',  // ✅ Changed from discountPrice
+  stock:            '',
+  shortDescription: '',
+  brand:            '',
+  ageGroup:         '',
+  gender:           '',
+  size:             '',
+  color:            '',
+  material:         '',
+  isFeatured:       false,
+  isTrending:       false,
+  isActive:         true,
+  images:           [img, null, null, null],
+}));
 
       setProducts(prev => [...prev, ...newProducts]);
       toast.success(`${uploadedImages.length} products created! Add more views & details below.`);
@@ -211,29 +209,38 @@ export default function BulkUploadClient() {
     const toastId = toast.loading(`Saving ${products.length} products...`);
 
     try {
-      const payload = {
-        categoryId: selectedCategory,
-        products: products.map(p => ({
-          name:             p.name,
-          shortDescription: p.shortDescription || null,
-          price:            parseFloat(p.price),
-          discountPrice:    p.discountPrice ? parseFloat(p.discountPrice) : null,
-          stock:            parseInt(p.stock),
-          brand:            p.brand    || null,
-          ageGroup:         p.ageGroup || null,
-          gender:           p.gender   || null,
-          size:             p.size     || null,
-          color:            p.color    || null,
-          material:         p.material || null,
-          isFeatured:       p.isFeatured,
-          isTrending:       p.isTrending,
-          isActive:         p.isActive,
-          // ✅ Filter out null slots
-          images:           p.images.filter(Boolean),
-          tags:             [],
-          features:         [],
-        })),
-      };
+     const payload = {
+  categoryId: selectedCategory,
+  products: products.map(p => {
+    const price = parseFloat(p.price);
+    const discountPercent = p.discountPercent ? parseFloat(p.discountPercent) : 0;
+    // ✅ Calculate final discounted price
+    const discountPrice = discountPercent > 0 
+      ? Number((price - (price * discountPercent / 100)).toFixed(2))
+      : null;
+
+    return {
+      name:             p.name,
+      shortDescription: p.shortDescription || null,
+      price:            price,
+      discountPrice:    discountPrice,           // ✅ Final calculated price
+      discountPercent:  discountPercent || null, // ✅ Also send percentage (optional)
+      stock:            parseInt(p.stock),
+      brand:            p.brand    || null,
+      ageGroup:         p.ageGroup || null,
+      gender:           p.gender   || null,
+      size:             p.size     || null,
+      color:            p.color    || null,
+      material:         p.material || null,
+      isFeatured:       p.isFeatured,
+      isTrending:       p.isTrending,
+      isActive:         p.isActive,
+      images:           p.images.filter(Boolean),
+      tags:             [],
+      features:         [],
+    };
+  }),
+};
 
       const res  = await fetch('/api/admin/products/bulk', {
         method: 'POST',
@@ -709,23 +716,69 @@ function ProductCard({
                 style={{ ...inputStyle, border: '1px solid #EDD9FF' }} />
             </div>
 
-            {/* Price & Discount */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', minWidth: 0 }}>
-              <div style={{ minWidth: 0 }}>
-                <label style={labelStyle}>Price (₹) *</label>
-                <input type="number" value={product.price}
-                  onChange={e => onUpdate(product.id, 'price', e.target.value)}
-                  placeholder="0" min="0"
-                  style={{ ...inputStyle, border: !product.price ? '1px solid #ff4444' : '1px solid #EDD9FF' }} />
-              </div>
-              <div style={{ minWidth: 0 }}>
-                <label style={labelStyle}>Discount (₹)</label>
-                <input type="number" value={product.discountPrice}
-                  onChange={e => onUpdate(product.id, 'discountPrice', e.target.value)}
-                  placeholder="Optional" min="0"
-                  style={{ ...inputStyle, border: '1px solid #EDD9FF' }} />
-              </div>
-            </div>
+            {/* Price & Discount Percentage */}
+<div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', minWidth: 0 }}>
+  <div style={{ minWidth: 0 }}>
+    <label style={labelStyle}>Price (₹) *</label>
+    <input type="number" value={product.price}
+      onChange={e => onUpdate(product.id, 'price', e.target.value)}
+      placeholder="e.g. 500" min="0"
+      style={{ ...inputStyle, border: !product.price ? '1px solid #ff4444' : '1px solid #EDD9FF' }} />
+  </div>
+  <div style={{ minWidth: 0 }}>
+    <label style={labelStyle}>Discount (%)</label>
+    <input 
+      type="number" 
+      value={product.discountPercent}
+      onChange={e => {
+        const val = e.target.value;
+        // Clamp between 0-100
+        if (val === '' || (Number(val) >= 0 && Number(val) <= 100)) {
+          onUpdate(product.id, 'discountPercent', val);
+        }
+      }}
+      placeholder="e.g. 10" 
+      min="0" 
+      max="100"
+      style={{ ...inputStyle, border: '1px solid #EDD9FF' }} />
+  </div>
+</div>
+
+{/* ✅ Live Price Preview */}
+{product.price && product.discountPercent && Number(product.discountPercent) > 0 && (
+  <div style={{
+    background: 'linear-gradient(135deg,#FFF3EC,#F3E8FF)',
+    border: '1.5px solid #FFD4B8',
+    borderRadius: '10px',
+    padding: '8px 12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    flexWrap: 'wrap',
+    gap: '8px',
+  }}>
+    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+      <span style={{ 
+        fontSize: '11px', fontWeight: '700', color: '#9585B0',
+        textDecoration: 'line-through',
+      }}>
+        ₹{Number(product.price).toFixed(2)}
+      </span>
+      <span style={{
+        background: '#22C55E', color: 'white',
+        padding: '2px 8px', borderRadius: '999px',
+        fontSize: '10px', fontWeight: '800',
+      }}>
+        {product.discountPercent}% OFF
+      </span>
+    </div>
+    <span style={{
+      fontSize: '15px', fontWeight: '800', color: '#FF6B35',
+    }}>
+      ₹{(Number(product.price) - (Number(product.price) * Number(product.discountPercent) / 100)).toFixed(2)}
+    </span>
+  </div>
+)}
 
             {/* Stock & Brand */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', minWidth: 0 }}>

@@ -406,23 +406,23 @@ export default function ProductDetailClient({ id }) {
             </div>
           )}
 
-          {/* Price */}
-          <div className={styles.priceSection}>
-            <span className={styles.currentPrice}>
-              ₹{finalPrice?.toLocaleString('en-IN')}
-            </span>
-            {currentDiscountPrice && (
-              <>
-                <span className={styles.originalPrice}>
-                  ₹{currentPrice?.toLocaleString('en-IN')}
-                </span>
-                <span className={styles.saveBadge}>
-                  Save ₹{(currentPrice - finalPrice).toLocaleString('en-IN')}
-                </span>
-              </>
-            )}
-          </div>
-
+         {/* Price */}
+<div className={styles.priceSection}>
+  <span className={styles.currentPrice}>
+    ₹{finalPrice?.toLocaleString('en-IN')}
+  </span>
+  {currentDiscountPrice && (
+    <>
+      <span className={styles.originalPrice}>
+        ₹{currentPrice?.toLocaleString('en-IN')}
+      </span>
+      {/* ✅ Show percentage instead of saved amount */}
+      <span className={styles.saveBadge}>
+        {discount}% OFF
+      </span>
+    </>
+  )}
+</div>
           {product.shortDescription && (
             <p className={styles.shortDesc}>{product.shortDescription}</p>
           )}

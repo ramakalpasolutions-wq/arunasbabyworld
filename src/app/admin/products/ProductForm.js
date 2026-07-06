@@ -321,6 +321,7 @@ function ColorVariantCard({
         )}
       </div>
 
+      {/* ✅ Price + Discount % + Stock */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
         <div className="form-group">
           <label style={{ fontSize: '0.78rem' }}>Price (₹) *</label>
@@ -329,17 +330,22 @@ function ColorVariantCard({
             className="form-control"
             value={variant.price || ''}
             onChange={e => set('price', e.target.value)}
-            placeholder="0.00" min="0" step="0.01"
+            placeholder="e.g. 500" min="0" step="0.01"
           />
         </div>
         <div className="form-group">
-          <label style={{ fontSize: '0.78rem' }}>Discount (₹)</label>
+          <label style={{ fontSize: '0.78rem' }}>Discount (%)</label>
           <input
             type="number"
             className="form-control"
-            value={variant.discountPrice || ''}
-            onChange={e => set('discountPrice', e.target.value)}
-            placeholder="Optional" min="0" step="0.01"
+            value={variant.discountPercent || ''}
+            onChange={e => {
+              const val = e.target.value;
+              if (val === '' || (Number(val) >= 0 && Number(val) <= 100)) {
+                set('discountPercent', val);
+              }
+            }}
+            placeholder="e.g. 10" min="0" max="100"
           />
         </div>
         <div className="form-group">
@@ -354,7 +360,39 @@ function ColorVariantCard({
         </div>
       </div>
 
-     
+      {/* ✅ Live Preview for variant */}
+      {variant.price && variant.discountPercent && Number(variant.discountPercent) > 0 && (
+        <div style={{
+          marginTop: '4px', marginBottom: '10px',
+          background: '#F0FDF4',
+          border: '1.5px solid #BBF7D0',
+          borderRadius: '8px',
+          padding: '8px 12px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
+          gap: '8px',
+          fontSize: '0.78rem',
+          fontWeight: '700',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{ color: '#9585B0', textDecoration: 'line-through' }}>
+              ₹{Number(variant.price).toFixed(2)}
+            </span>
+            <span style={{
+              background: '#22C55E', color: 'white',
+              padding: '2px 8px', borderRadius: '999px',
+              fontSize: '0.68rem',
+            }}>
+              {variant.discountPercent}% OFF
+            </span>
+          </div>
+          <span style={{ color: '#166534', fontSize: '0.88rem' }}>
+            ₹{(Number(variant.price) - (Number(variant.price) * Number(variant.discountPercent) / 100)).toFixed(2)}
+          </span>
+        </div>
+      )}
 
       <div className="form-group">
         <label style={{ fontSize: '0.78rem' }}>
@@ -414,7 +452,7 @@ export default function ProductForm({ id }) {
     shortDescription: '',
     // ✅ Simple product pricing (used only when NO variants)
     price:            '',
-    discountPrice:    '',
+    discountPercent:  '',
     stock:            '',
     brand:            '',
     categoryId:       '',
@@ -476,7 +514,10 @@ export default function ProductForm({ id }) {
             description:      p.description      || '',
             shortDescription: p.shortDescription || '',
             price:            p.price            || '',
-            discountPrice:    p.discountPrice    || '',
+            // ✅ Calculate percentage from existing discountPrice
+            discountPercent:  (p.price && p.discountPrice)
+              ? Math.round(((p.price - p.discountPrice) / p.price) * 100)
+              : '',
             stock:            p.stock            || '',
             brand:            p.brand            || '',
             categoryId:       p.categoryId       || '',
@@ -489,7 +530,14 @@ export default function ProductForm({ id }) {
             gender:           p.gender           || '',
             material:         p.material         || '',
             productImages:    existingImages,
-            colorVariants:    p.colorVariants    || [],
+            // ✅ Convert existing variant discountPrice → discountPercent
+            colorVariants: (p.colorVariants || []).map(v => ({
+              ...v,
+              discountPercent: v.discountPercent
+                || ((v.price && v.discountPrice)
+                    ? Math.round(((v.price - v.discountPrice) / v.price) * 100)
+                    : ''),
+            })),
           });
 
           const cat = p.category;
@@ -509,13 +557,13 @@ export default function ProductForm({ id }) {
   /* ── Color Variants Management ── */
   const addVariant = () => {
     const newVariant = {
-      colorName:     '',
-      colorHex:      '#FF6B35',
-      price:         form.price || '',
-      discountPrice: '',
-      stock:         0,
-      sizes:         [],
-      images:        [null, null, null, null],
+      colorName:       '',
+      colorHex:        '#FF6B35',
+      price:           form.price || '',
+      discountPercent: '',
+      stock:           0,
+      sizes:           [],
+      images:          [null, null, null, null],
     };
     setForm(f => ({ ...f, colorVariants: [...f.colorVariants, newVariant] }));
     toast.success('🎨 New color added! Fill in the details.');
@@ -721,16 +769,25 @@ export default function ProductForm({ id }) {
       if (hasVariants) {
         const variantPrices = form.colorVariants.map(v => parseFloat(v.price) || 0);
         basePrice = Math.min(...variantPrices);
-        // Use first variant's discount if it exists
-        baseDiscount = form.colorVariants[0]?.discountPrice
-          ? parseFloat(form.colorVariants[0].discountPrice)
-          : null;
+        // Calculate discount from first variant's percentage
+        const firstVariant = form.colorVariants[0];
+        if (firstVariant?.discountPercent && parseFloat(firstVariant.discountPercent) > 0) {
+          const vPrice = parseFloat(firstVariant.price);
+          const vPct = parseFloat(firstVariant.discountPercent);
+          baseDiscount = Number((vPrice - (vPrice * vPct / 100)).toFixed(2));
+        } else {
+          baseDiscount = null;
+        }
         baseStock = form.colorVariants.reduce(
           (sum, v) => sum + (parseInt(v.stock) || 0), 0
         );
       } else {
         basePrice = parseFloat(form.price);
-        baseDiscount = form.discountPrice ? parseFloat(form.discountPrice) : null;
+        // ✅ Calculate discountPrice from percentage
+        const pct = form.discountPercent ? parseFloat(form.discountPercent) : 0;
+        baseDiscount = pct > 0
+          ? Number((basePrice - (basePrice * pct / 100)).toFixed(2))
+          : null;
         baseStock = parseInt(form.stock) || 0;
       }
 
@@ -753,15 +810,23 @@ export default function ProductForm({ id }) {
         gender:           form.gender   || null,
         material:         form.material || null,
 
-        colorVariants: form.colorVariants.map(v => ({
-          colorName:     v.colorName,
-          colorHex:      v.colorHex,
-          price:         parseFloat(v.price),
-          discountPrice: v.discountPrice ? parseFloat(v.discountPrice) : null,
-          stock:         parseInt(v.stock) || 0,
-          sizes:         v.sizes || [],
-          images:        (v.images || []).filter(Boolean),
-        })),
+        colorVariants: form.colorVariants.map(v => {
+          const vPrice = parseFloat(v.price);
+          const vPct = v.discountPercent ? parseFloat(v.discountPercent) : 0;
+          const vDiscount = vPct > 0
+            ? Number((vPrice - (vPrice * vPct / 100)).toFixed(2))
+            : null;
+          return {
+            colorName:       v.colorName,
+            colorHex:        v.colorHex,
+            price:           vPrice,
+            discountPrice:   vDiscount,
+            discountPercent: vPct || null,
+            stock:           parseInt(v.stock) || 0,
+            sizes:           v.sizes || [],
+            images:          (v.images || []).filter(Boolean),
+          };
+        }),
       };
 
       if (payload.discountPrice && payload.price) {
@@ -899,7 +964,7 @@ export default function ProductForm({ id }) {
                   ))}
                 </div>
 
-                {/* Price + Discount + Stock */}
+                {/* ✅ Price + Discount % + Stock */}
                 <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
                   <div className="form-group">
                     <label style={{ fontSize: '0.82rem' }}>Price (₹) *</label>
@@ -908,22 +973,27 @@ export default function ProductForm({ id }) {
                       className="form-control"
                       value={form.price}
                       onChange={e => set('price', e.target.value)}
-                      placeholder="0.00"
+                      placeholder="e.g. 500"
                       min="0"
                       step="0.01"
                       required
                     />
                   </div>
                   <div className="form-group">
-                    <label style={{ fontSize: '0.82rem' }}>Discount (₹)</label>
+                    <label style={{ fontSize: '0.82rem' }}>Discount (%)</label>
                     <input
                       type="number"
                       className="form-control"
-                      value={form.discountPrice}
-                      onChange={e => set('discountPrice', e.target.value)}
-                      placeholder="Optional"
+                      value={form.discountPercent}
+                      onChange={e => {
+                        const val = e.target.value;
+                        if (val === '' || (Number(val) >= 0 && Number(val) <= 100)) {
+                          set('discountPercent', val);
+                        }
+                      }}
+                      placeholder="e.g. 10"
                       min="0"
-                      step="0.01"
+                      max="100"
                     />
                   </div>
                   <div className="form-group">
@@ -940,11 +1010,40 @@ export default function ProductForm({ id }) {
                   </div>
                 </div>
 
-                {form.price && form.discountPrice && (
-                  <div className={styles.discountPreview} style={{ marginTop: '10px' }}>
-                    🏷️ Discount: <strong>
-                      {Math.round(((form.price - form.discountPrice) / form.price) * 100)}% off
-                    </strong>
+                {/* ✅ Live Price Preview */}
+                {form.price && form.discountPercent && Number(form.discountPercent) > 0 && (
+                  <div style={{
+                    marginTop: '10px',
+                    background: 'linear-gradient(135deg,#FFF3EC,#F3E8FF)',
+                    border: '1.5px solid #FFD4B8',
+                    borderRadius: '10px',
+                    padding: '10px 14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    flexWrap: 'wrap',
+                    gap: '10px',
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                      <span style={{
+                        fontSize: '0.82rem', fontWeight: '700', color: '#9585B0',
+                        textDecoration: 'line-through',
+                      }}>
+                        ₹{Number(form.price).toFixed(2)}
+                      </span>
+                      <span style={{
+                        background: '#22C55E', color: 'white',
+                        padding: '3px 10px', borderRadius: '999px',
+                        fontSize: '0.72rem', fontWeight: '800',
+                      }}>
+                        {form.discountPercent}% OFF
+                      </span>
+                    </div>
+                    <span style={{
+                      fontSize: '1rem', fontWeight: '800', color: '#FF6B35',
+                    }}>
+                      Final: ₹{(Number(form.price) - (Number(form.price) * Number(form.discountPercent) / 100)).toFixed(2)}
+                    </span>
                   </div>
                 )}
               </div>
