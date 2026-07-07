@@ -1,3 +1,4 @@
+// C:\Users\user\arunasbabyworld\src\app\api\admin\users\route.js
 import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
@@ -16,16 +17,23 @@ export async function GET() {
         id: true,
         name: true,
         email: true,
-        phone: true,        // ✅ ADD THIS LINE
+        phone: true,
         role: true,
         isActive: true,
         createdAt: true,
+        // ✅ Count their orders too
+        _count: {
+          select: { orders: true },
+        },
       },
     });
 
     return NextResponse.json({ users });
   } catch (error) {
     console.error('Admin users error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    );
   }
 }

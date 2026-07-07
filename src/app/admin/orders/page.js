@@ -1,4 +1,3 @@
-// src/app/admin/orders/page.js
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -21,13 +20,20 @@ const STATUS_COLOR = {
   Refunded:   '#6b7280',
 };
 
+// ✅ Format order number helper
+function fmtOrderNum(order) {
+  return order.orderNumber
+    ? `ABW-${order.orderNumber}`
+    : `#${order.id?.slice(-8)?.toUpperCase()}`;
+}
+
 export default function AdminOrders() {
-  const [orders,        setOrders]        = useState([]);
-  const [loading,       setLoading]       = useState(true);
-  const [filterStatus,  setFilterStatus]  = useState('');
-  const [page,          setPage]          = useState(1);
-  const [pagination,    setPagination]    = useState({});
-  const [statusCounts,  setStatusCounts]  = useState({});
+  const [orders,       setOrders]       = useState([]);
+  const [loading,      setLoading]      = useState(true);
+  const [filterStatus, setFilterStatus] = useState('');
+  const [page,         setPage]         = useState(1);
+  const [pagination,   setPagination]   = useState({});
+  const [statusCounts, setStatusCounts] = useState({});
 
   const fetchOrders = async () => {
     setLoading(true);
@@ -58,9 +64,9 @@ export default function AdminOrders() {
 
   const handleStatusChange = async (orderId, newStatus) => {
     const res = await fetch(`/api/orders/${orderId}`, {
-      method: 'PUT',
+      method:  'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ orderStatus: newStatus }),
+      body:    JSON.stringify({ orderStatus: newStatus }),
     });
     if (res.ok) { toast.success('✅ Status updated'); fetchOrders(); }
     else toast.error('Failed to update');
@@ -169,17 +175,28 @@ export default function AdminOrders() {
               </tr>
             ) : orders.map(order => (
               <tr key={order.id}>
+
+                {/* ✅ Order Number */}
                 <td>
                   <Link
                     href={`/admin/orders/${order.id}`}
                     style={{
-                      fontWeight: '700', color: '#7c3aed',
-                      fontFamily: 'monospace', textDecoration: 'none',
+                      fontWeight: '800',
+                      color: '#7c3aed',
+                      fontFamily: 'monospace',
+                      textDecoration: 'none',
+                      fontSize: '13px',
+                      background: '#f3f0ff',
+                      padding: '3px 8px',
+                      borderRadius: '6px',
+                      whiteSpace: 'nowrap',
                     }}
                   >
-                    #{order.id?.slice(-8)?.toUpperCase()}
+                    {fmtOrderNum(order)}
                   </Link>
                 </td>
+
+                {/* Customer */}
                 <td>
                   <div className={orderStyles.customerCell}>
                     <div style={{ fontWeight: '600', fontSize: '13px' }}>
@@ -190,6 +207,8 @@ export default function AdminOrders() {
                     </div>
                   </div>
                 </td>
+
+                {/* Items */}
                 <td>
                   <div style={{ fontSize: '13px' }}>
                     <span style={{ fontWeight: '700' }}>
@@ -198,16 +217,22 @@ export default function AdminOrders() {
                     <span style={{ color: '#888' }}> items</span>
                   </div>
                 </td>
+
+                {/* Total */}
                 <td>
                   <strong style={{ color: '#ff6b9d', fontSize: '14px', whiteSpace: 'nowrap' }}>
                     ₹{order.totalPrice?.toLocaleString('en-IN')}
                   </strong>
                 </td>
+
+                {/* Payment */}
                 <td>
                   <span className={order.isPaid ? orderStyles.paid : orderStyles.unpaid}>
                     {order.isPaid ? '✅ Paid' : '⏳ Pending'}
                   </span>
                 </td>
+
+                {/* Status */}
                 <td>
                   <span
                     className={orderStyles.statusBadge}
@@ -219,11 +244,15 @@ export default function AdminOrders() {
                     {order.orderStatus}
                   </span>
                 </td>
+
+                {/* Date */}
                 <td style={{ fontSize: '12px', color: '#888', whiteSpace: 'nowrap' }}>
                   {new Date(order.createdAt).toLocaleDateString('en-IN', {
                     day: 'numeric', month: 'short', year: 'numeric',
                   })}
                 </td>
+
+                {/* Actions */}
                 <td>
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                     <select
@@ -262,10 +291,22 @@ export default function AdminOrders() {
           <div className={styles.center}>No orders found</div>
         ) : orders.map(order => (
           <div key={order.id} className={orderStyles.mobileOrderCard}>
-            {/* Top: ID + Status */}
+
+            {/* Top: Order Number + Status */}
             <div className={orderStyles.mobileOrderTop}>
-              <span className={orderStyles.mobileOrderId}>
-                #{order.id?.slice(-8)?.toUpperCase()}
+              <span
+                className={orderStyles.mobileOrderId}
+                style={{
+                  fontFamily: 'monospace',
+                  background: '#f3f0ff',
+                  color: '#7c3aed',
+                  padding: '3px 10px',
+                  borderRadius: '6px',
+                  fontWeight: '800',
+                  fontSize: '13px',
+                }}
+              >
+                {fmtOrderNum(order)}
               </span>
               <span
                 className={orderStyles.statusBadge}

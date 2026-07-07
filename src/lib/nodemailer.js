@@ -21,43 +21,44 @@ export const sendEmail = async ({ to, subject, html }) => {
 };
 
 // ============================================================
-// 🎨 BRAND COLORS (Consistent across ALL emails)
-// Primary:   #FF6B9D (Pink)
-// Secondary: #7C3AED (Purple)
-// Gradient:  linear-gradient(135deg, #FF6B9D, #7C3AED)
-// Light BG:  #FDF2F8
-// Accent:    #10B981 (Green - only for amounts/success values)
+// ✅ HELPER — Format Order Number as ABW-40001
+// ============================================================
+const fmtOrderNum = (order) => {
+  return order?.orderNumber
+    ? `ABW-${order.orderNumber}`
+    : `#${order?.id?.slice(-8)?.toUpperCase()}`;
+};
+
+// ============================================================
+// 🎨 BRAND COLORS
+// Primary:   #FF6B9D | Secondary: #7C3AED
 // ============================================================
 
 // ============================================================
 // ✅ ORDER CONFIRMATION EMAIL
 // ============================================================
 export const sendOrderConfirmation = async (order, customerEmail, customerName) => {
+  const orderNum = fmtOrderNum(order);
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(124,58,237,0.10);">
       
-      <!-- HEADER -->
       <div style="background:linear-gradient(135deg,#FF6B9D,#7C3AED);padding:36px 30px;text-align:center;">
         <div style="font-size:3rem;margin-bottom:10px;">🎉</div>
         <h1 style="color:white;margin:0;font-size:1.7rem;font-weight:800;">Order Confirmed!</h1>
         <p style="color:#FCE7F3;margin:10px 0 0;font-size:15px;">Thank you for shopping with us!</p>
       </div>
 
-      <!-- BODY -->
       <div style="padding:30px;background:#FDF2F8;">
-
         <p style="color:#4B0082;font-size:15px;">Dear <strong>${customerName || 'Customer'}</strong>,</p>
         <p style="color:#555;font-size:14px;line-height:1.6;">Your order has been confirmed and we are getting it ready for you! 🛍️</p>
 
-        <!-- Order Details Card -->
         <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;border-left:4px solid #FF6B9D;box-shadow:0 2px 8px rgba(255,107,157,0.08);">
           <h3 style="margin:0 0 14px;color:#7C3AED;font-size:16px;">📋 Order Details</h3>
-          <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Order ID:</strong> #${order.id?.slice(-8)?.toUpperCase()}</p>
+          <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Order ID:</strong> <span style="font-family:monospace;background:#F3E8FF;color:#7C3AED;padding:3px 10px;border-radius:6px;font-weight:800;">${orderNum}</span></p>
           <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Total Amount:</strong> <span style="color:#10B981;font-weight:800;font-size:16px;">₹${order.totalPrice?.toLocaleString('en-IN')}</span></p>
           <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Payment:</strong> ${order.paymentMethod || 'Razorpay'}</p>
         </div>
 
-        <!-- Items Ordered -->
         <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;box-shadow:0 2px 8px rgba(124,58,237,0.06);">
           <h3 style="margin:0 0 14px;color:#7C3AED;font-size:16px;">🛒 Items Ordered</h3>
           ${order.orderItems?.map(item => `
@@ -71,14 +72,12 @@ export const sendOrderConfirmation = async (order, customerEmail, customerName) 
           </div>
         </div>
 
-        <!-- Info Box -->
         <div style="background:linear-gradient(135deg,#F3E8FF,#FCE7F3);padding:16px;border-radius:10px;margin:20px 0;border:1px solid #E9D5FF;">
           <p style="margin:0;color:#7C3AED;font-weight:600;font-size:14px;">
             📦 We will notify you when your order is shipped!
           </p>
         </div>
 
-        <!-- CTA Button -->
         <div style="text-align:center;margin-top:28px;">
           <a href="${process.env.NEXTAUTH_URL}/orders/${order.id}"
              style="background:linear-gradient(135deg,#FF6B9D,#7C3AED);color:white;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block;">
@@ -86,7 +85,6 @@ export const sendOrderConfirmation = async (order, customerEmail, customerName) 
           </a>
         </div>
 
-        <!-- Footer -->
         <p style="margin-top:28px;color:#999;font-size:13px;text-align:center;border-top:1px solid #F3E8FF;padding-top:20px;">
           Thank you for shopping with <strong style="color:#FF6B9D;">Arunas Baby World</strong>! 🍼<br/>
           Need help? <a href="mailto:care@arunasbabyworld.in" style="color:#7C3AED;">care@arunasbabyworld.in</a>
@@ -96,7 +94,7 @@ export const sendOrderConfirmation = async (order, customerEmail, customerName) 
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `✅ Order Confirmed - #${order.id?.slice(-8)?.toUpperCase()} | Arunas Baby World`,
+    subject: `✅ Order Confirmed - ${orderNum} | Arunas Baby World`,
     html,
   });
 };
@@ -105,12 +103,10 @@ export const sendOrderConfirmation = async (order, customerEmail, customerName) 
 // ✅ ORDER STATUS UPDATE
 // ============================================================
 export const sendOrderStatusUpdate = async (order, customerEmail, customerName) => {
+  const orderNum = fmtOrderNum(order);
   const statusEmoji = {
-    Confirmed:  '✅',
-    Processing: '⚙️',
-    Shipped:    '🚚',
-    Delivered:  '🎉',
-    Cancelled:  '❌',
+    Confirmed:  '✅', Processing: '⚙️', Shipped: '🚚',
+    Delivered:  '🎉', Cancelled: '❌',
   };
   const emoji = statusEmoji[order.orderStatus] || '📦';
 
@@ -127,7 +123,6 @@ export const sendOrderStatusUpdate = async (order, customerEmail, customerName) 
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(124,58,237,0.10);">
 
-      <!-- HEADER -->
       <div style="background:linear-gradient(135deg,#FF6B9D,#7C3AED);padding:36px 30px;text-align:center;">
         <div style="font-size:3rem;margin-bottom:10px;">${emoji}</div>
         <h1 style="color:white;margin:0;font-size:1.6rem;font-weight:800;">
@@ -138,16 +133,13 @@ export const sendOrderStatusUpdate = async (order, customerEmail, customerName) 
         </p>
       </div>
 
-      <!-- BODY -->
       <div style="padding:30px;background:#FDF2F8;">
-
         <p style="color:#4B0082;font-size:15px;">Dear <strong>${customerName || 'Customer'}</strong>,</p>
         <p style="color:#555;font-size:14px;">
-          Your order <strong style="color:#7C3AED;">#${order.id?.slice(-8)?.toUpperCase()}</strong> is now 
+          Your order <span style="font-family:monospace;background:#F3E8FF;color:#7C3AED;padding:3px 10px;border-radius:6px;font-weight:800;">${orderNum}</span> is now 
           <strong style="color:#FF6B9D;">${order.orderStatus}</strong>.
         </p>
 
-        <!-- Tracking Number (if Shipped) -->
         ${order.orderStatus === 'Shipped' && order.trackingNumber ? `
           <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;border:2px solid #7C3AED;text-align:center;box-shadow:0 2px 8px rgba(124,58,237,0.10);">
             <p style="margin:0 0 8px;font-size:12px;font-weight:800;color:#7C3AED;text-transform:uppercase;letter-spacing:0.8px;">
@@ -162,7 +154,6 @@ export const sendOrderStatusUpdate = async (order, customerEmail, customerName) 
           </div>
         ` : ''}
 
-        <!-- Delivered Celebration -->
         ${isDelivered ? `
           <div style="background:white;padding:24px;border-radius:12px;margin:20px 0;border:2px solid #FF6B9D;text-align:center;box-shadow:0 2px 12px rgba(255,107,157,0.12);">
             <div style="font-size:3rem;margin-bottom:10px;">🎉</div>
@@ -175,7 +166,6 @@ export const sendOrderStatusUpdate = async (order, customerEmail, customerName) 
             <p style="margin:14px 0 0;font-size:13px;color:#888;">Hope you love your purchase! 💖</p>
           </div>
 
-          <!-- Return/Refund Info -->
           <div style="background:white;padding:16px;border-radius:10px;margin:20px 0;border-left:4px solid #7C3AED;box-shadow:0 2px 8px rgba(124,58,237,0.06);">
             <h4 style="margin:0 0 8px;color:#7C3AED;">📋 Not Happy with Your Order?</h4>
             <p style="margin:0;color:#555;font-size:13px;line-height:1.8;">
@@ -185,7 +175,6 @@ export const sendOrderStatusUpdate = async (order, customerEmail, customerName) 
             </p>
           </div>
 
-          <!-- Items Delivered -->
           <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;box-shadow:0 2px 8px rgba(124,58,237,0.06);">
             <h3 style="margin:0 0 14px;color:#7C3AED;">📦 Items Delivered</h3>
             ${order.orderItems?.map(item => `
@@ -197,7 +186,6 @@ export const sendOrderStatusUpdate = async (order, customerEmail, customerName) 
           </div>
         ` : ''}
 
-        <!-- Cancelled Box -->
         ${order.orderStatus === 'Cancelled' ? `
           <div style="background:white;padding:16px;border-radius:10px;margin:20px 0;border-left:4px solid #FF6B9D;box-shadow:0 2px 8px rgba(255,107,157,0.08);">
             <p style="margin:0;color:#FF6B9D;font-weight:700;">
@@ -206,7 +194,6 @@ export const sendOrderStatusUpdate = async (order, customerEmail, customerName) 
           </div>
         ` : ''}
 
-        <!-- CTA -->
         <div style="text-align:center;margin-top:28px;">
           <a href="${process.env.NEXTAUTH_URL}/orders/${order.id}"
              style="background:linear-gradient(135deg,#FF6B9D,#7C3AED);color:white;padding:14px 32px;border-radius:10px;text-decoration:none;font-weight:700;font-size:15px;display:inline-block;">
@@ -223,7 +210,6 @@ export const sendOrderStatusUpdate = async (order, customerEmail, customerName) 
           </div>
         ` : ''}
 
-        <!-- Footer -->
         <p style="margin-top:28px;color:#999;font-size:13px;text-align:center;border-top:1px solid #F3E8FF;padding-top:20px;">
           Thank you for shopping with <strong style="color:#FF6B9D;">Arunas Baby World</strong>! 🍼<br/>
           Need help? <a href="mailto:care@arunasbabyworld.in" style="color:#7C3AED;">care@arunasbabyworld.in</a>
@@ -233,7 +219,7 @@ export const sendOrderStatusUpdate = async (order, customerEmail, customerName) 
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `${emoji} Order ${order.orderStatus} - #${order.id?.slice(-8)?.toUpperCase()} | Arunas Baby World`,
+    subject: `${emoji} Order ${order.orderStatus} - ${orderNum} | Arunas Baby World`,
     html,
   });
 };
@@ -242,6 +228,7 @@ export const sendOrderStatusUpdate = async (order, customerEmail, customerName) 
 // ✅ ORDER CANCELLED EMAIL
 // ============================================================
 export const sendOrderCancelled = async (order, customerEmail, customerName, reason) => {
+  const orderNum = fmtOrderNum(order);
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(124,58,237,0.10);">
       
@@ -256,7 +243,7 @@ export const sendOrderCancelled = async (order, customerEmail, customerName, rea
 
         <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;border-left:4px solid #FF6B9D;box-shadow:0 2px 8px rgba(255,107,157,0.08);">
           <h3 style="margin:0 0 14px;color:#7C3AED;">📋 Order Details</h3>
-          <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Order ID:</strong> #${order.id?.slice(-8)?.toUpperCase()}</p>
+          <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Order ID:</strong> <span style="font-family:monospace;background:#F3E8FF;color:#7C3AED;padding:3px 10px;border-radius:6px;font-weight:800;">${orderNum}</span></p>
           <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Amount:</strong> <span style="color:#10B981;font-weight:800;">₹${order.totalPrice?.toLocaleString('en-IN')}</span></p>
           <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Payment:</strong> ${order.paymentMethod}</p>
           ${reason ? `<p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Reason:</strong> ${reason}</p>` : ''}
@@ -294,7 +281,7 @@ export const sendOrderCancelled = async (order, customerEmail, customerName, rea
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `❌ Order Cancelled - #${order.id?.slice(-8)?.toUpperCase()} | Arunas Baby World`,
+    subject: `❌ Order Cancelled - ${orderNum} | Arunas Baby World`,
     html,
   });
 };
@@ -303,6 +290,7 @@ export const sendOrderCancelled = async (order, customerEmail, customerName, rea
 // ✅ REFUND PROCESSED EMAIL
 // ============================================================
 export const sendRefundProcessed = async (order, refund, customerEmail, customerName, refundSpeed = 'optimum') => {
+  const orderNum = fmtOrderNum(order);
   const isInstant = refundSpeed === 'optimum';
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(124,58,237,0.10);">
@@ -325,10 +313,9 @@ export const sendRefundProcessed = async (order, refund, customerEmail, customer
             : 'Your refund has been successfully processed.'}
         </p>
 
-        <!-- Refund Details -->
         <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;border-left:4px solid #FF6B9D;box-shadow:0 2px 8px rgba(255,107,157,0.08);">
           <h3 style="margin:0 0 14px;color:#7C3AED;">💳 Refund Details</h3>
-          <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Order ID:</strong> #${order.id?.slice(-8)?.toUpperCase()}</p>
+          <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Order ID:</strong> <span style="font-family:monospace;background:#F3E8FF;color:#7C3AED;padding:3px 10px;border-radius:6px;font-weight:800;">${orderNum}</span></p>
           <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Refund Amount:</strong>
             <span style="color:#10B981;font-size:1.4rem;font-weight:900;"> ₹${(refund.amount || order.totalPrice)?.toLocaleString('en-IN')}</span>
           </p>
@@ -337,7 +324,6 @@ export const sendRefundProcessed = async (order, refund, customerEmail, customer
           <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Refund To:</strong> 💳 Original Payment Method</p>
         </div>
 
-        <!-- ETA Box -->
         <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;border:2px solid #7C3AED;text-align:center;box-shadow:0 2px 8px rgba(124,58,237,0.10);">
           <p style="margin:0;font-size:13px;font-weight:800;color:#7C3AED;text-transform:uppercase;letter-spacing:0.6px;">
             ${isInstant ? '⚡ Expected Refund Time' : '⏱️ Expected Refund Time'}
@@ -352,7 +338,6 @@ export const sendRefundProcessed = async (order, refund, customerEmail, customer
           </p>
         </div>
 
-        <!-- What to check -->
         <div style="background:white;padding:16px;border-radius:10px;margin:20px 0;border-left:4px solid #7C3AED;box-shadow:0 2px 8px rgba(124,58,237,0.06);">
           <h4 style="margin:0 0 10px;color:#7C3AED;">📋 What to Check</h4>
           <ul style="margin:0;padding-left:20px;color:#555;line-height:1.9;font-size:14px;">
@@ -378,7 +363,7 @@ export const sendRefundProcessed = async (order, refund, customerEmail, customer
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `⚡ Refund of ₹${(refund.amount || order.totalPrice)?.toLocaleString('en-IN')} Initiated | Arunas Baby World`,
+    subject: `⚡ Refund of ₹${(refund.amount || order.totalPrice)?.toLocaleString('en-IN')} Initiated - ${orderNum} | Arunas Baby World`,
     html,
   });
 };
@@ -387,6 +372,7 @@ export const sendRefundProcessed = async (order, refund, customerEmail, customer
 // ✅ REFUND COMPLETED EMAIL
 // ============================================================
 export const sendRefundCompleted = async (order, refund, customerEmail, customerName) => {
+  const orderNum = fmtOrderNum(order);
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(124,58,237,0.10);">
 
@@ -404,7 +390,6 @@ export const sendRefundCompleted = async (order, refund, customerEmail, customer
           has been completed successfully.
         </p>
 
-        <!-- Amount Highlight -->
         <div style="background:white;padding:24px;border-radius:12px;margin:20px 0;border:2px solid #FF6B9D;text-align:center;box-shadow:0 2px 12px rgba(255,107,157,0.12);">
           <p style="margin:0;font-size:12px;font-weight:800;color:#7C3AED;text-transform:uppercase;letter-spacing:0.8px;">✅ Refund Amount</p>
           <p style="margin:10px 0;font-size:3rem;font-weight:900;color:#FF6B9D;">
@@ -413,15 +398,13 @@ export const sendRefundCompleted = async (order, refund, customerEmail, customer
           <p style="margin:0;font-size:14px;color:#7C3AED;font-weight:700;">Credited to your account</p>
         </div>
 
-        <!-- Refund Info -->
         <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;border-left:4px solid #7C3AED;box-shadow:0 2px 8px rgba(124,58,237,0.06);">
           <h3 style="margin:0 0 14px;color:#7C3AED;">📋 Refund Information</h3>
-          <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Order ID:</strong> #${order.id?.slice(-8)?.toUpperCase()}</p>
+          <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Order ID:</strong> <span style="font-family:monospace;background:#F3E8FF;color:#7C3AED;padding:3px 10px;border-radius:6px;font-weight:800;">${orderNum}</span></p>
           ${refund.razorpayRefundId ? `<p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Refund ID:</strong> <code style="background:#F3E8FF;padding:2px 6px;border-radius:4px;color:#7C3AED;">${refund.razorpayRefundId}</code></p>` : ''}
           <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Completed On:</strong> ${new Date().toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' })}</p>
         </div>
 
-        <!-- Check Account -->
         <div style="background:white;padding:16px;border-radius:10px;margin:20px 0;border-left:4px solid #FF6B9D;box-shadow:0 2px 8px rgba(255,107,157,0.08);">
           <h4 style="margin:0 0 10px;color:#FF6B9D;">💡 Check Your Account</h4>
           <ul style="margin:0;padding-left:20px;color:#555;line-height:1.9;font-size:13px;">
@@ -447,7 +430,7 @@ export const sendRefundCompleted = async (order, refund, customerEmail, customer
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `✅ Refund Completed - ₹${(refund.amount || order.totalPrice)?.toLocaleString('en-IN')} | Arunas Baby World`,
+    subject: `✅ Refund Completed ₹${(refund.amount || order.totalPrice)?.toLocaleString('en-IN')} - ${orderNum} | Arunas Baby World`,
     html,
   });
 };
@@ -456,6 +439,7 @@ export const sendRefundCompleted = async (order, refund, customerEmail, customer
 // ✅ RETURN REQUEST CONFIRMATION — Customer
 // ============================================================
 export const sendReturnRequestConfirmation = async (order, customerEmail, customerName, returnData) => {
+  const orderNum = fmtOrderNum(order);
   const isUPI = returnData.refundMethod === 'upi';
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(124,58,237,0.10);">
@@ -470,10 +454,9 @@ export const sendReturnRequestConfirmation = async (order, customerEmail, custom
         <p style="color:#4B0082;font-size:15px;">Dear <strong>${customerName || 'Customer'}</strong>,</p>
         <p style="color:#555;font-size:14px;">We have received your return request. Our team will contact you within <strong>24–48 hours</strong>.</p>
 
-        <!-- Return Details -->
         <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;border-left:4px solid #FF6B9D;box-shadow:0 2px 8px rgba(255,107,157,0.08);">
           <h3 style="margin:0 0 14px;color:#7C3AED;">📋 Return Details</h3>
-          <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Order ID:</strong> #${order.id?.slice(-8)?.toUpperCase()}</p>
+          <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Order ID:</strong> <span style="font-family:monospace;background:#F3E8FF;color:#7C3AED;padding:3px 10px;border-radius:6px;font-weight:800;">${orderNum}</span></p>
           <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Return Reason:</strong> ${returnData.reason}</p>
           <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Refund Amount:</strong>
             <span style="color:#10B981;font-weight:800;font-size:16px;"> ₹${order.totalPrice?.toLocaleString('en-IN')}</span>
@@ -483,7 +466,6 @@ export const sendReturnRequestConfirmation = async (order, customerEmail, custom
           </p>
         </div>
 
-        <!-- Refund Method -->
         <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;border-left:4px solid #7C3AED;box-shadow:0 2px 8px rgba(124,58,237,0.06);">
           <h3 style="margin:0 0 14px;color:#7C3AED;">${isUPI ? '📱 UPI Refund' : '🏦 Bank Refund'}</h3>
           ${isUPI ? `
@@ -497,7 +479,6 @@ export const sendReturnRequestConfirmation = async (order, customerEmail, custom
           `}
         </div>
 
-        <!-- Return Process -->
         <div style="background:white;padding:16px;border-radius:10px;margin:20px 0;border-left:4px solid #FF6B9D;box-shadow:0 2px 8px rgba(255,107,157,0.08);">
           <h4 style="margin:0 0 10px;color:#FF6B9D;">📋 Return Process</h4>
           <ol style="margin:0;padding-left:20px;color:#555;line-height:1.9;font-size:14px;">
@@ -508,7 +489,6 @@ export const sendReturnRequestConfirmation = async (order, customerEmail, custom
           </ol>
         </div>
 
-        <!-- Items -->
         <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;box-shadow:0 2px 8px rgba(124,58,237,0.06);">
           <h3 style="margin:0 0 14px;color:#7C3AED;">📦 Items Being Returned</h3>
           ${order.orderItems?.map(item => `
@@ -538,7 +518,7 @@ export const sendReturnRequestConfirmation = async (order, customerEmail, custom
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `🔄 Return Request - #${order.id?.slice(-8)?.toUpperCase()} | Arunas Baby World`,
+    subject: `🔄 Return Request - ${orderNum} | Arunas Baby World`,
     html,
   });
 };
@@ -547,6 +527,7 @@ export const sendReturnRequestConfirmation = async (order, customerEmail, custom
 // ✅ REFUND REQUEST CONFIRMATION — Customer (COD manual)
 // ============================================================
 export const sendRefundRequestConfirmation = async (order, customerEmail, customerName, refundData) => {
+  const orderNum = fmtOrderNum(order);
   const isUPI = refundData.refundMethod === 'upi';
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(124,58,237,0.10);">
@@ -563,14 +544,13 @@ export const sendRefundRequestConfirmation = async (order, customerEmail, custom
 
         <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;border-left:4px solid #FF6B9D;box-shadow:0 2px 8px rgba(255,107,157,0.08);">
           <h3 style="margin:0 0 14px;color:#7C3AED;">💳 Refund Details</h3>
-          <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Order ID:</strong> #${order.id?.slice(-8)?.toUpperCase()}</p>
+          <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Order ID:</strong> <span style="font-family:monospace;background:#F3E8FF;color:#7C3AED;padding:3px 10px;border-radius:6px;font-weight:800;">${orderNum}</span></p>
           <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Refund Amount:</strong>
             <span style="color:#10B981;font-weight:900;font-size:1.2rem;"> ₹${order.totalPrice?.toLocaleString('en-IN')}</span>
           </p>
           <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Date:</strong> ${new Date().toLocaleDateString('en-IN', { day:'numeric', month:'long', year:'numeric' })}</p>
         </div>
 
-        <!-- Refund Method -->
         <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;border:2px solid #7C3AED;text-align:center;box-shadow:0 2px 8px rgba(124,58,237,0.10);">
           <p style="margin:0;font-size:14px;font-weight:800;color:#7C3AED;">
             ${isUPI ? '📱 Refund via UPI' : '🏦 Refund via Bank Transfer'}
@@ -605,7 +585,7 @@ export const sendRefundRequestConfirmation = async (order, customerEmail, custom
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `💰 Refund Request - ₹${order.totalPrice?.toLocaleString('en-IN')} | Arunas Baby World`,
+    subject: `💰 Refund Request ₹${order.totalPrice?.toLocaleString('en-IN')} - ${orderNum} | Arunas Baby World`,
     html,
   });
 };
@@ -614,6 +594,7 @@ export const sendRefundRequestConfirmation = async (order, customerEmail, custom
 // ✅ ADMIN — Return Request Notification
 // ============================================================
 export const sendAdminReturnNotification = async (order, customer, returnData) => {
+  const orderNum = fmtOrderNum(order);
   const isUPI = returnData.refundMethod === 'upi';
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;">
@@ -623,7 +604,7 @@ export const sendAdminReturnNotification = async (order, customer, returnData) =
       <div style="padding:24px;background:#FDF2F8;border-radius:0 0 10px 10px;">
         <div style="background:white;padding:18px;border-radius:8px;margin-bottom:16px;border-left:4px solid #FF6B9D;">
           <h3 style="margin:0 0 10px;color:#7C3AED;">Order Info</h3>
-          <p style="margin:6px 0;color:#555;"><strong>Order ID:</strong> #${order.id?.slice(-8)?.toUpperCase()}</p>
+          <p style="margin:6px 0;color:#555;"><strong>Order ID:</strong> <span style="font-family:monospace;background:#F3E8FF;color:#7C3AED;padding:3px 10px;border-radius:6px;font-weight:800;">${orderNum}</span></p>
           <p style="margin:6px 0;color:#555;"><strong>Customer:</strong> ${customer.name} (${customer.email})</p>
           <p style="margin:6px 0;color:#555;"><strong>Phone:</strong> ${order.shippingAddress?.phone || 'N/A'}</p>
           <p style="margin:6px 0;color:#555;"><strong>Amount:</strong> <span style="color:#10B981;font-weight:800;">₹${order.totalPrice?.toLocaleString('en-IN')}</span></p>
@@ -666,7 +647,7 @@ export const sendAdminReturnNotification = async (order, customer, returnData) =
   `;
   return sendEmail({
     to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
-    subject: `🔄 Return: #${order.id?.slice(-8)?.toUpperCase()} - ₹${order.totalPrice?.toLocaleString('en-IN')}`,
+    subject: `🔄 Return: ${orderNum} - ₹${order.totalPrice?.toLocaleString('en-IN')}`,
     html,
   });
 };
@@ -675,6 +656,7 @@ export const sendAdminReturnNotification = async (order, customer, returnData) =
 // ✅ ADMIN — Refund Request Notification
 // ============================================================
 export const sendAdminRefundNotification = async (order, customer, refundData) => {
+  const orderNum = fmtOrderNum(order);
   const isUPI = refundData.refundMethod === 'upi';
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;">
@@ -684,7 +666,7 @@ export const sendAdminRefundNotification = async (order, customer, refundData) =
       <div style="padding:24px;background:#FDF2F8;border-radius:0 0 10px 10px;">
         <div style="background:white;padding:18px;border-radius:8px;margin-bottom:16px;border-left:4px solid #FF6B9D;">
           <h3 style="margin:0 0 10px;color:#7C3AED;">Order Info</h3>
-          <p style="margin:6px 0;color:#555;"><strong>Order ID:</strong> #${order.id?.slice(-8)?.toUpperCase()}</p>
+          <p style="margin:6px 0;color:#555;"><strong>Order ID:</strong> <span style="font-family:monospace;background:#F3E8FF;color:#7C3AED;padding:3px 10px;border-radius:6px;font-weight:800;">${orderNum}</span></p>
           <p style="margin:6px 0;color:#555;"><strong>Customer:</strong> ${customer.name} (${customer.email})</p>
           <p style="margin:6px 0;color:#555;"><strong>Refund Amount:</strong> <strong style="color:#10B981;font-size:1.2rem;">₹${order.totalPrice?.toLocaleString('en-IN')}</strong></p>
           <p style="margin:6px 0;color:#555;"><strong>Payment:</strong> ${order.paymentMethod} ${order.isPaid ? '✅ PAID' : '❌ NOT PAID'}</p>
@@ -715,7 +697,7 @@ export const sendAdminRefundNotification = async (order, customer, refundData) =
   `;
   return sendEmail({
     to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
-    subject: `💰 Refund: #${order.id?.slice(-8)?.toUpperCase()} - ₹${order.totalPrice?.toLocaleString('en-IN')}`,
+    subject: `💰 Refund: ${orderNum} - ₹${order.totalPrice?.toLocaleString('en-IN')}`,
     html,
   });
 };
@@ -724,6 +706,7 @@ export const sendAdminRefundNotification = async (order, customer, refundData) =
 // ✅ ADMIN CANCEL NOTIFICATION
 // ============================================================
 export const sendAdminCancelNotification = async (order, customer, reason, refund = null) => {
+  const orderNum = fmtOrderNum(order);
   const refundInfo = refund?.bankDetails || {};
   const isUPI  = refund?.refundType === 'upi_transfer';
   const isBank = refund?.refundType === 'bank_transfer';
@@ -734,7 +717,7 @@ export const sendAdminCancelNotification = async (order, customer, reason, refun
       </div>
       <div style="padding:24px;background:#FDF2F8;border-radius:0 0 10px 10px;">
         <div style="background:white;padding:18px;border-radius:8px;margin-bottom:16px;border-left:4px solid #FF6B9D;">
-          <p style="margin:6px 0;color:#555;"><strong>Order ID:</strong> #${order.id?.slice(-8)?.toUpperCase()}</p>
+          <p style="margin:6px 0;color:#555;"><strong>Order ID:</strong> <span style="font-family:monospace;background:#F3E8FF;color:#7C3AED;padding:3px 10px;border-radius:6px;font-weight:800;">${orderNum}</span></p>
           <p style="margin:6px 0;color:#555;"><strong>Customer:</strong> ${customer.name} (${customer.email})</p>
           <p style="margin:6px 0;color:#555;"><strong>Amount:</strong> <span style="color:#10B981;font-weight:800;">₹${order.totalPrice?.toLocaleString('en-IN')}</span></p>
           <p style="margin:6px 0;color:#555;"><strong>Payment:</strong> ${order.paymentMethod} ${order.isPaid ? '(PAID)' : '(NOT PAID)'}</p>
@@ -776,7 +759,7 @@ export const sendAdminCancelNotification = async (order, customer, reason, refun
   `;
   return sendEmail({
     to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
-    subject: `❌ Cancelled: #${order.id?.slice(-8)?.toUpperCase()} - ₹${order.totalPrice?.toLocaleString('en-IN')}`,
+    subject: `❌ Cancelled: ${orderNum} - ₹${order.totalPrice?.toLocaleString('en-IN')}`,
     html,
   });
 };
@@ -785,6 +768,7 @@ export const sendAdminCancelNotification = async (order, customer, reason, refun
 // ✅ EXCHANGE REQUEST CONFIRMATION — Customer
 // ============================================================
 export const sendExchangeRequestConfirmation = async (exchange, order, customerEmail, customerName, paymentLinkUrl = null) => {
+  const orderNum = fmtOrderNum(order);
   const priceDiff = exchange.priceDifference;
   const needsPay  = priceDiff > 0;
   const samePrice = priceDiff === 0;
@@ -802,7 +786,6 @@ export const sendExchangeRequestConfirmation = async (exchange, order, customerE
         <p style="color:#4B0082;font-size:15px;">Dear <strong>${customerName || 'Customer'}</strong>,</p>
         <p style="color:#555;font-size:14px;">Your exchange request has been received. Here are the details:</p>
 
-        <!-- Products -->
         <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;border-left:4px solid #FF6B9D;box-shadow:0 2px 8px rgba(255,107,157,0.08);">
           <h3 style="margin:0 0 16px;color:#7C3AED;">🔄 Exchange Details</h3>
           <table style="width:100%;border-collapse:collapse;">
@@ -823,10 +806,9 @@ export const sendExchangeRequestConfirmation = async (exchange, order, customerE
             </tr>
           </table>
           <p style="margin:14px 0 6px;color:#555;"><strong style="color:#4B0082;">Reason:</strong> ${exchange.reason}</p>
-          <p style="margin:0;color:#555;"><strong style="color:#4B0082;">Order ID:</strong> #${order.id?.slice(-8).toUpperCase()}</p>
+          <p style="margin:0;color:#555;"><strong style="color:#4B0082;">Order ID:</strong> <span style="font-family:monospace;background:#F3E8FF;color:#7C3AED;padding:3px 10px;border-radius:6px;font-weight:800;">${orderNum}</span></p>
         </div>
 
-        <!-- Price Difference -->
         <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;border:2px solid ${samePrice ? '#7C3AED' : '#FF6B9D'};text-align:center;box-shadow:0 2px 8px rgba(124,58,237,0.10);">
           <p style="margin:0;font-size:13px;font-weight:800;color:#7C3AED;text-transform:uppercase;letter-spacing:0.6px;">
             ${samePrice ? '✅ Free Exchange' : needsPay ? '💰 Price Difference to Pay' : '💸 Refund Coming'}
@@ -843,7 +825,6 @@ export const sendExchangeRequestConfirmation = async (exchange, order, customerE
           </p>
         </div>
 
-        <!-- Pay Button -->
         ${needsPay && paymentLinkUrl ? `
           <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;border:2px solid #FF6B9D;text-align:center;box-shadow:0 2px 8px rgba(255,107,157,0.12);">
             <p style="margin:0 0 12px;font-size:14px;font-weight:800;color:#7C3AED;">💳 Complete Payment to Continue</p>
@@ -855,7 +836,6 @@ export const sendExchangeRequestConfirmation = async (exchange, order, customerE
           </div>
         ` : ''}
 
-        <!-- Process -->
         <div style="background:white;padding:16px;border-radius:10px;margin:20px 0;border-left:4px solid #7C3AED;box-shadow:0 2px 8px rgba(124,58,237,0.06);">
           <h4 style="margin:0 0 10px;color:#7C3AED;">📋 Exchange Process</h4>
           <ol style="margin:0;padding-left:20px;color:#555;line-height:1.9;font-size:14px;">
@@ -883,7 +863,7 @@ export const sendExchangeRequestConfirmation = async (exchange, order, customerE
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `🔄 Exchange Request - #${order.id?.slice(-8).toUpperCase()} | Arunas Baby World`,
+    subject: `🔄 Exchange Request - ${orderNum} | Arunas Baby World`,
     html,
   });
 };
@@ -892,6 +872,7 @@ export const sendExchangeRequestConfirmation = async (exchange, order, customerE
 // ✅ ADMIN — Exchange Notification
 // ============================================================
 export const sendAdminExchangeNotification = async (exchange, order, customer) => {
+  const orderNum = fmtOrderNum(order);
   const priceDiff = exchange.priceDifference;
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;">
@@ -904,7 +885,7 @@ export const sendAdminExchangeNotification = async (exchange, order, customer) =
           <p style="margin:6px 0;color:#555;"><strong>Name:</strong> ${customer.name}</p>
           <p style="margin:6px 0;color:#555;"><strong>Email:</strong> ${customer.email}</p>
           <p style="margin:6px 0;color:#555;"><strong>Phone:</strong> ${order.shippingAddress?.phone || 'N/A'}</p>
-          <p style="margin:6px 0;color:#555;"><strong>Order:</strong> #${order.id?.slice(-8).toUpperCase()}</p>
+          <p style="margin:6px 0;color:#555;"><strong>Order:</strong> <span style="font-family:monospace;background:#F3E8FF;color:#7C3AED;padding:3px 10px;border-radius:6px;font-weight:800;">${orderNum}</span></p>
           <p style="margin:6px 0;color:#555;"><strong>Reason:</strong> <strong style="color:#FF6B9D;">${exchange.reason}</strong></p>
           ${exchange.description ? `<p style="margin:6px 0;color:#555;"><strong>Details:</strong> ${exchange.description}</p>` : ''}
         </div>
@@ -967,7 +948,7 @@ export const sendAdminExchangeNotification = async (exchange, order, customer) =
   `;
   return sendEmail({
     to: process.env.ADMIN_EMAIL || process.env.EMAIL_USER,
-    subject: `🔄 Exchange: #${order.id?.slice(-8).toUpperCase()} - ${exchange.oldProductName}`,
+    subject: `🔄 Exchange: ${orderNum} - ${exchange.oldProductName}`,
     html,
   });
 };
@@ -976,6 +957,7 @@ export const sendAdminExchangeNotification = async (exchange, order, customer) =
 // ✅ EXCHANGE APPROVED — Customer
 // ============================================================
 export const sendExchangeApproved = async (exchange, order, customerEmail, customerName) => {
+  const orderNum = fmtOrderNum(order);
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(124,58,237,0.10);">
 
@@ -987,7 +969,7 @@ export const sendExchangeApproved = async (exchange, order, customerEmail, custo
 
       <div style="padding:30px;background:#FDF2F8;">
         <p style="color:#4B0082;font-size:15px;">Dear <strong>${customerName || 'Customer'}</strong>,</p>
-        <p style="color:#555;font-size:14px;">Great news! Your exchange request has been <strong style="color:#7C3AED;">approved</strong>.</p>
+        <p style="color:#555;font-size:14px;">Great news! Your exchange request for order <span style="font-family:monospace;background:#F3E8FF;color:#7C3AED;padding:3px 10px;border-radius:6px;font-weight:800;">${orderNum}</span> has been <strong style="color:#7C3AED;">approved</strong>.</p>
 
         <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;border-left:4px solid #7C3AED;box-shadow:0 2px 8px rgba(124,58,237,0.06);">
           <h3 style="margin:0 0 12px;color:#7C3AED;">📋 What's Next?</h3>
@@ -1021,7 +1003,7 @@ export const sendExchangeApproved = async (exchange, order, customerEmail, custo
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `✅ Exchange Approved - #${order.id?.slice(-8).toUpperCase()} | Arunas Baby World`,
+    subject: `✅ Exchange Approved - ${orderNum} | Arunas Baby World`,
     html,
   });
 };
@@ -1030,6 +1012,7 @@ export const sendExchangeApproved = async (exchange, order, customerEmail, custo
 // ✅ EXCHANGE PICKED UP — Customer
 // ============================================================
 export const sendExchangePickedUp = async (exchange, order, customerEmail, customerName) => {
+  const orderNum = fmtOrderNum(order);
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(124,58,237,0.10);">
 
@@ -1041,7 +1024,7 @@ export const sendExchangePickedUp = async (exchange, order, customerEmail, custo
 
       <div style="padding:30px;background:#FDF2F8;">
         <p style="color:#4B0082;font-size:15px;">Dear <strong>${customerName || 'Customer'}</strong>,</p>
-        <p style="color:#555;font-size:14px;">We've successfully picked up your <strong>${exchange.oldProductName}</strong> for exchange.</p>
+        <p style="color:#555;font-size:14px;">We've successfully picked up your <strong>${exchange.oldProductName}</strong> for exchange (Order <span style="font-family:monospace;background:#F3E8FF;color:#7C3AED;padding:3px 10px;border-radius:6px;font-weight:800;">${orderNum}</span>).</p>
 
         ${exchange.pickupTracking ? `
           <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;border:2px solid #7C3AED;text-align:center;box-shadow:0 2px 8px rgba(124,58,237,0.10);">
@@ -1075,7 +1058,7 @@ export const sendExchangePickedUp = async (exchange, order, customerEmail, custo
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `📦 Product Picked Up - Exchange #${exchange.id?.slice(-8).toUpperCase()} | Arunas Baby World`,
+    subject: `📦 Product Picked Up - ${orderNum} | Arunas Baby World`,
     html,
   });
 };
@@ -1084,6 +1067,7 @@ export const sendExchangePickedUp = async (exchange, order, customerEmail, custo
 // ✅ EXCHANGE SHIPPED — Customer
 // ============================================================
 export const sendExchangeShipped = async (exchange, order, customerEmail, customerName) => {
+  const orderNum = fmtOrderNum(order);
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(124,58,237,0.10);">
 
@@ -1095,9 +1079,8 @@ export const sendExchangeShipped = async (exchange, order, customerEmail, custom
 
       <div style="padding:30px;background:#FDF2F8;">
         <p style="color:#4B0082;font-size:15px;">Dear <strong>${customerName || 'Customer'}</strong>,</p>
-        <p style="color:#555;font-size:14px;">Your exchange is almost complete! We've shipped your new product.</p>
+        <p style="color:#555;font-size:14px;">Your exchange for order <span style="font-family:monospace;background:#F3E8FF;color:#7C3AED;padding:3px 10px;border-radius:6px;font-weight:800;">${orderNum}</span> is almost complete! We've shipped your new product.</p>
 
-        <!-- New Product -->
         <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;border-left:4px solid #FF6B9D;box-shadow:0 2px 8px rgba(255,107,157,0.08);">
           <h3 style="margin:0 0 14px;color:#7C3AED;">📦 New Product</h3>
           <table style="width:100%;border-collapse:collapse;">
@@ -1113,7 +1096,6 @@ export const sendExchangeShipped = async (exchange, order, customerEmail, custom
           </table>
         </div>
 
-        <!-- Tracking -->
         <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;border:2px solid #7C3AED;text-align:center;box-shadow:0 2px 8px rgba(124,58,237,0.10);">
           <p style="margin:0;font-size:12px;font-weight:800;color:#7C3AED;text-transform:uppercase;letter-spacing:0.8px;">🚚 Tracking Number</p>
           <p style="margin:10px 0;font-size:1.4rem;font-weight:900;color:#FF6B9D;font-family:monospace;">${exchange.shipmentTracking}</p>
@@ -1142,7 +1124,7 @@ export const sendExchangeShipped = async (exchange, order, customerEmail, custom
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `🚚 Exchange Shipped - #${order.id?.slice(-8).toUpperCase()} | Arunas Baby World`,
+    subject: `🚚 Exchange Shipped - ${orderNum} | Arunas Baby World`,
     html,
   });
 };
@@ -1151,6 +1133,7 @@ export const sendExchangeShipped = async (exchange, order, customerEmail, custom
 // ✅ EXCHANGE COMPLETED — Customer
 // ============================================================
 export const sendExchangeCompleted = async (exchange, order, customerEmail, customerName) => {
+  const orderNum = fmtOrderNum(order);
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(124,58,237,0.10);">
 
@@ -1162,9 +1145,8 @@ export const sendExchangeCompleted = async (exchange, order, customerEmail, cust
 
       <div style="padding:30px;background:#FDF2F8;">
         <p style="color:#4B0082;font-size:15px;">Dear <strong>${customerName || 'Customer'}</strong>,</p>
-        <p style="color:#555;font-size:14px;">🎉 Your exchange has been <strong style="color:#7C3AED;">completed successfully</strong>.</p>
+        <p style="color:#555;font-size:14px;">🎉 Your exchange for order <span style="font-family:monospace;background:#F3E8FF;color:#7C3AED;padding:3px 10px;border-radius:6px;font-weight:800;">${orderNum}</span> has been <strong style="color:#7C3AED;">completed successfully</strong>.</p>
 
-        <!-- Exchange Summary -->
         <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;border-left:4px solid #FF6B9D;box-shadow:0 2px 8px rgba(255,107,157,0.08);">
           <h3 style="margin:0 0 14px;color:#7C3AED;">📋 Exchange Summary</h3>
           <table style="width:100%;border-collapse:collapse;">
@@ -1193,7 +1175,6 @@ export const sendExchangeCompleted = async (exchange, order, customerEmail, cust
           </div>
         ` : ''}
 
-        <!-- Celebration Box -->
         <div style="background:white;padding:20px;border-radius:12px;margin:20px 0;border:2px solid #FF6B9D;text-align:center;box-shadow:0 2px 12px rgba(255,107,157,0.12);">
           <div style="font-size:2.5rem;margin-bottom:8px;">💖</div>
           <p style="margin:0;color:#7C3AED;font-weight:800;font-size:1.1rem;">Hope you love your new product!</p>
@@ -1218,7 +1199,7 @@ export const sendExchangeCompleted = async (exchange, order, customerEmail, cust
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `🎉 Exchange Completed - #${order.id?.slice(-8).toUpperCase()} | Arunas Baby World`,
+    subject: `🎉 Exchange Completed - ${orderNum} | Arunas Baby World`,
     html,
   });
 };
@@ -1227,6 +1208,7 @@ export const sendExchangeCompleted = async (exchange, order, customerEmail, cust
 // ✅ EXCHANGE REJECTED — Customer
 // ============================================================
 export const sendExchangeRejected = async (exchange, order, customerEmail, customerName, rejectionReason) => {
+  const orderNum = fmtOrderNum(order);
   const html = `
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 4px 24px rgba(124,58,237,0.10);">
 
@@ -1237,7 +1219,7 @@ export const sendExchangeRejected = async (exchange, order, customerEmail, custo
 
       <div style="padding:30px;background:#FDF2F8;">
         <p style="color:#4B0082;font-size:15px;">Dear <strong>${customerName || 'Customer'}</strong>,</p>
-        <p style="color:#555;font-size:14px;">We're sorry to inform you that your exchange request has been rejected.</p>
+        <p style="color:#555;font-size:14px;">We're sorry to inform you that your exchange request for order <span style="font-family:monospace;background:#F3E8FF;color:#7C3AED;padding:3px 10px;border-radius:6px;font-weight:800;">${orderNum}</span> has been rejected.</p>
 
         <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;border-left:4px solid #FF6B9D;box-shadow:0 2px 8px rgba(255,107,157,0.08);">
           <h3 style="margin:0 0 12px;color:#7C3AED;">❌ Rejection Reason</h3>
@@ -1248,7 +1230,7 @@ export const sendExchangeRejected = async (exchange, order, customerEmail, custo
 
         <div style="background:white;padding:20px;border-radius:10px;margin:20px 0;box-shadow:0 2px 8px rgba(124,58,237,0.06);">
           <h3 style="margin:0 0 12px;color:#7C3AED;">📋 Exchange Details</h3>
-          <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Order ID:</strong> #${order.id?.slice(-8).toUpperCase()}</p>
+          <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Order ID:</strong> <span style="font-family:monospace;background:#F3E8FF;color:#7C3AED;padding:3px 10px;border-radius:6px;font-weight:800;">${orderNum}</span></p>
           <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Product:</strong> ${exchange.oldProductName}</p>
           <p style="margin:6px 0;color:#555;"><strong style="color:#4B0082;">Reason for Exchange:</strong> ${exchange.reason}</p>
         </div>
@@ -1275,13 +1257,13 @@ export const sendExchangeRejected = async (exchange, order, customerEmail, custo
   `;
   return sendEmail({
     to: customerEmail,
-    subject: `❌ Exchange Rejected - #${order.id?.slice(-8).toUpperCase()} | Arunas Baby World`,
+    subject: `❌ Exchange Rejected - ${orderNum} | Arunas Baby World`,
     html,
   });
 };
 
 // ============================================================
-// ✅ CONTACT EMAIL
+// ✅ CONTACT EMAIL (no order — unchanged)
 // ============================================================
 export const sendContactEmail = async ({ name, email, phone, subject, message }) => {
   const html = `

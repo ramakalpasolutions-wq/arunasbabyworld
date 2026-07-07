@@ -36,11 +36,11 @@ export async function PUT(request, { params }) {
     }
 
     const { id } = await params;
-    const data = await request.json();
+    const data   = await request.json();
 
     if (data.orderStatus === 'Delivered') {
-      data.isDelivered = true;
-      data.deliveredAt = new Date();
+      data.isDelivered  = true;
+      data.deliveredAt  = new Date();
     }
 
     const order = await prisma.order.update({
@@ -49,11 +49,10 @@ export async function PUT(request, { params }) {
       include: { user: { select: { name: true, email: true } } },
     });
 
-    // ✅ Send email to CUSTOMER when admin updates status
     if (data.orderStatus && order.user?.email) {
       try {
         await sendOrderStatusUpdate(order, order.user.email, order.user.name);
-        console.log('✅ Status email sent to customer:', order.user.email);
+        console.log('✅ Status email sent:', order.user.email);
       } catch (emailErr) {
         console.error('❌ Status email error:', emailErr);
       }
