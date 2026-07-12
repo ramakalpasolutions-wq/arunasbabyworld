@@ -15,7 +15,7 @@ async function getNextOrderNumber() {
     return counter.value;
   } catch (err) {
     console.error('Counter error:', err);
-    return null; // ✅ Don't crash if counter fails
+    return null;
   }
 }
 
@@ -46,19 +46,11 @@ export async function GET(request) {
 
     return NextResponse.json({
       orders,
-      pagination: {
-        page,
-        limit,
-        total,
-        pages: Math.ceil(total / limit),
-      },
+      pagination: { page, limit, total, pages: Math.ceil(total / limit) },
     });
   } catch (error) {
     console.error('Orders GET error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -71,32 +63,22 @@ export async function POST(request) {
 
     const data = await request.json();
 
-    // ✅ Validate required fields
     if (!data.orderItems || data.orderItems.length === 0) {
-      return NextResponse.json(
-        { error: 'Order items are required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Order items are required' }, { status: 400 });
     }
 
     if (!data.shippingAddress) {
-      return NextResponse.json(
-        { error: 'Shipping address is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Shipping address is required' }, { status: 400 });
     }
 
-    // ✅ Get order number (safe — won't crash if fails)
     const orderNumber = await getNextOrderNumber();
 
-    // ✅ Clean data — remove any undefined/null userId from body
     const {
       orderItems,
       shippingAddress,
       paymentMethod,
       itemsPrice,
       shippingPrice,
-      taxPrice,
       discountAmount,
       totalPrice,
       couponCode,
@@ -108,19 +90,19 @@ export async function POST(request) {
     const order = await prisma.order.create({
       data: {
         orderNumber:     orderNumber ?? undefined,
-        userId:          session.user.id,   // ✅ Always from session
-        orderItems:      orderItems || [],
+        userId:          session.user.id,
+        orderItems:      orderItems      || [],
         shippingAddress: shippingAddress,
-        paymentMethod:   paymentMethod || 'Razorpay',
-        itemsPrice:      itemsPrice    || 0,
-        shippingPrice:   shippingPrice || 0,
-        taxPrice:        taxPrice      || 0,
-        discountAmount:  discountAmount || 0,
-        totalPrice:      totalPrice    || 0,
-        couponCode:      couponCode    || null,
-        isPaid:          isPaid        || false,
-        paidAt:          paidAt        || null,
-        orderStatus:     orderStatus   || 'Pending',
+        paymentMethod:   paymentMethod   || 'Razorpay',
+        itemsPrice:      itemsPrice      || 0,
+        shippingPrice:   shippingPrice   || 0,
+        taxPrice:        0,               // ✅ Always 0 — tax removed
+        discountAmount:  discountAmount  || 0,
+        totalPrice:      totalPrice      || 0,
+        couponCode:      couponCode      || null,
+        isPaid:          isPaid          || false,
+        paidAt:          paidAt          || null,
+        orderStatus:     orderStatus     || 'Pending',
       },
       include: {
         user: { select: { name: true, email: true } },
@@ -129,13 +111,9 @@ export async function POST(request) {
 
     console.log('✅ Order created:', order.id, 'Number:', orderNumber);
 
-    // ✅ Send confirmation email (don't crash if email fails)
+    // ✅ Send confirmation email (non-fatal)
     try {
-      await sendOrderConfirmation(
-        order,
-        session.user.email,
-        session.user.name
-      );
+      await sendOrderConfirmation(order, session.user.email, session.user.name);
       console.log('✅ Email sent to:', session.user.email);
     } catch (emailErr) {
       console.error('❌ Email error (non-fatal):', emailErr);
@@ -148,19 +126,11 @@ export async function POST(request) {
     console.error('Error details:', error.message);
     console.error('Error code:', error.code);
 
-    // ✅ Better error messages
     if (error.code === 'P2002') {
-      return NextResponse.json(
-        { error: 'Duplicate order detected' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Duplicate order detected' }, { status: 400 });
     }
-
     if (error.code === 'P2025') {
-      return NextResponse.json(
-        { error: 'Related record not found' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Related record not found' }, { status: 400 });
     }
 
     return NextResponse.json(

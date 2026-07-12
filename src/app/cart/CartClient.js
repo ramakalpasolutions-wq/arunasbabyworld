@@ -6,7 +6,7 @@ import { useCart } from '@/context/CartContext';
 import toast from 'react-hot-toast';
 import styles from './CartClient.module.css';
 
-// ✅ Available Coupons Component (unchanged)
+// ✅ Available Coupons Component
 function AvailableCoupons({ itemsPrice, onApply }) {
   const [coupons, setCoupons] = useState([]);
   const [showAll, setShowAll] = useState(false);
@@ -25,26 +25,20 @@ function AvailableCoupons({ itemsPrice, onApply }) {
   return (
     <div style={{ marginBottom: '14px' }}>
       <p style={{
-        fontSize: '13px',
-        fontWeight: '700',
-        color: '#333',
-        margin: '0 0 8px',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '6px',
+        fontSize: '13px', fontWeight: '700', color: '#333',
+        margin: '0 0 8px', display: 'flex', alignItems: 'center', gap: '6px',
       }}>
         🎟️ Available Coupons
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
         {displayCoupons.map(c => {
-          const eligible = itemsPrice >= (c.minOrderValue || 0);
+          const eligible  = itemsPrice >= (c.minOrderValue || 0);
           const remaining = (c.minOrderValue || 0) - itemsPrice;
           return (
             <div
               key={c.id}
               style={{
-                display: 'flex',
-                alignItems: 'center',
+                display: 'flex', alignItems: 'center',
                 justifyContent: 'space-between',
                 padding: '10px 12px',
                 background: eligible ? '#f0fdf4' : '#fafafa',
@@ -55,16 +49,14 @@ function AvailableCoupons({ itemsPrice, onApply }) {
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px', flexWrap: 'wrap' }}>
+                <div style={{
+                  display: 'flex', alignItems: 'center',
+                  gap: '6px', marginBottom: '3px', flexWrap: 'wrap',
+                }}>
                   <span style={{
-                    fontWeight: '800',
-                    fontSize: '13px',
-                    color: '#1a1a2e',
-                    fontFamily: 'monospace',
-                    background: '#e0f2fe',
-                    padding: '2px 8px',
-                    borderRadius: '4px',
-                    letterSpacing: '1px',
+                    fontWeight: '800', fontSize: '13px', color: '#1a1a2e',
+                    fontFamily: 'monospace', background: '#e0f2fe',
+                    padding: '2px 8px', borderRadius: '4px', letterSpacing: '1px',
                   }}>
                     {c.code}
                   </span>
@@ -89,15 +81,10 @@ function AvailableCoupons({ itemsPrice, onApply }) {
                     ? 'linear-gradient(135deg, #ff6b9d, #7c3aed)'
                     : '#e5e7eb',
                   color: eligible ? 'white' : '#999',
-                  border: 'none',
-                  padding: '6px 12px',
-                  borderRadius: '8px',
-                  fontSize: '11px',
-                  fontWeight: '700',
+                  border: 'none', padding: '6px 12px',
+                  borderRadius: '8px', fontSize: '11px', fontWeight: '700',
                   cursor: eligible ? 'pointer' : 'not-allowed',
-                  whiteSpace: 'nowrap',
-                  flexShrink: 0,
-                  transition: 'all 0.2s',
+                  whiteSpace: 'nowrap', flexShrink: 0, transition: 'all 0.2s',
                 }}
               >
                 {eligible
@@ -112,14 +99,9 @@ function AvailableCoupons({ itemsPrice, onApply }) {
         <button
           onClick={() => setShowAll(!showAll)}
           style={{
-            background: 'none',
-            border: 'none',
-            color: '#7c3aed',
-            fontSize: '12px',
-            fontWeight: '700',
-            cursor: 'pointer',
-            marginTop: '6px',
-            padding: '4px 0',
+            background: 'none', border: 'none', color: '#7c3aed',
+            fontSize: '12px', fontWeight: '700', cursor: 'pointer',
+            marginTop: '6px', padding: '4px 0',
           }}
         >
           {showAll ? '← Show less' : `View all ${coupons.length} coupons →`}
@@ -136,8 +118,7 @@ export default function CartClient() {
     removeItem,
     itemsPrice,
     shippingPrice,
-    taxPrice,
-    discountAmount,
+    discountAmount,  // ✅ taxPrice removed
     totalPrice,
     coupon,
     setCoupon,
@@ -145,10 +126,8 @@ export default function CartClient() {
   } = useCart();
 
   const [couponCode, setCouponCode] = useState('');
-  const [applying, setApplying] = useState(false);
-
-  // ✅ NEW: Live stock data from API (in case DB stock changed)
-  const [stockMap, setStockMap] = useState({}); // { productId: stock }
+  const [applying,   setApplying]   = useState(false);
+  const [stockMap,   setStockMap]   = useState({});
 
   // ✅ Fetch latest stock for every cart item on load
   useEffect(() => {
@@ -168,30 +147,25 @@ export default function CartClient() {
       results.forEach(r => { map[r.id] = r.stock; });
       setStockMap(map);
     });
-  }, [items.length]); // Re-fetch when item count changes
+  }, [items.length]);
 
-  // ✅ Helper: get max stock for an item (live from API, fallback to cart)
   const getMaxStock = (item) => {
     const id = item.id || item._id;
     if (stockMap[id] !== undefined) return stockMap[id];
     return item.stock ?? 999;
   };
 
-  // ✅ Smart quantity change with stock enforcement
   const handleQtyChange = (item, newQty) => {
     if (newQty < 1) return;
     const maxStock = getMaxStock(item);
-
     if (maxStock === 0) {
       toast.error(`❌ ${item.name} is out of stock!`);
       return;
     }
-
     if (newQty > maxStock) {
       toast.error(`⚠️ Only ${maxStock} available in stock!`);
       return;
     }
-
     updateQuantity(item.id || item._id, newQty);
   };
 
@@ -203,10 +177,7 @@ export default function CartClient() {
       const res = await fetch('/api/coupons/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          code: codeToApply,
-          orderTotal: itemsPrice,
-        }),
+        body: JSON.stringify({ code: codeToApply, orderTotal: itemsPrice }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -223,7 +194,6 @@ export default function CartClient() {
     }
   };
 
-  // ✅ Check if any item exceeds stock (blocks checkout)
   const hasStockIssue = items.some(item => {
     const maxStock = getMaxStock(item);
     return item.quantity > maxStock || maxStock === 0;
@@ -254,37 +224,29 @@ export default function CartClient() {
         {/* ===== CART ITEMS ===== */}
         <div className={styles.itemsList}>
           {items.map((item) => {
-            const itemId = item.id || item._id;
-            const price = item.discountPrice || item.price;
-            const image = item.images?.[0]?.url ||
+            const itemId       = item.id || item._id;
+            const price        = item.discountPrice || item.price;
+            const image        = item.images?.[0]?.url ||
               `https://via.placeholder.com/100?text=${encodeURIComponent(item.name)}`;
-
-            // ✅ Stock info for this item
-            const maxStock = getMaxStock(item);
+            const maxStock     = getMaxStock(item);
             const isOutOfStock = maxStock === 0;
             const exceedsStock = item.quantity > maxStock;
-            const atMaxStock = item.quantity >= maxStock && maxStock > 0;
-            const isLowStock = maxStock > 0 && maxStock <= 5;
+            const atMaxStock   = item.quantity >= maxStock && maxStock > 0;
+            const isLowStock   = maxStock > 0 && maxStock <= 5;
 
             return (
               <div
                 key={itemId}
                 className={styles.cartItem}
                 style={{
-                  border: exceedsStock || isOutOfStock
-                    ? '2px solid #dc2626'
-                    : undefined,
-                  background: exceedsStock || isOutOfStock
-                    ? '#fef2f2'
-                    : undefined,
+                  border: exceedsStock || isOutOfStock ? '2px solid #dc2626' : undefined,
+                  background: exceedsStock || isOutOfStock ? '#fef2f2' : undefined,
                 }}
               >
                 <div className={styles.itemImage}>
                   <Image
-                    src={image}
-                    alt={item.name}
-                    width={100}
-                    height={100}
+                    src={image} alt={item.name}
+                    width={100} height={100}
                     style={{ objectFit: 'cover', borderRadius: '8px' }}
                   />
                 </div>
@@ -307,50 +269,30 @@ export default function CartClient() {
                     </div>
                   )}
 
-                  {/* ✅ Stock status badges */}
+                  {/* Stock badges */}
                   {isOutOfStock && (
                     <div style={{
-                      display: 'inline-block',
-                      marginTop: '6px',
-                      padding: '3px 10px',
-                      background: '#dc2626',
-                      color: 'white',
-                      borderRadius: '999px',
-                      fontSize: '11px',
-                      fontWeight: '800',
-                    }}>
-                      ❌ OUT OF STOCK
-                    </div>
+                      display: 'inline-block', marginTop: '6px',
+                      padding: '3px 10px', background: '#dc2626',
+                      color: 'white', borderRadius: '999px',
+                      fontSize: '11px', fontWeight: '800',
+                    }}>❌ OUT OF STOCK</div>
                   )}
-
                   {exceedsStock && !isOutOfStock && (
                     <div style={{
-                      display: 'inline-block',
-                      marginTop: '6px',
-                      padding: '3px 10px',
-                      background: '#dc2626',
-                      color: 'white',
-                      borderRadius: '999px',
-                      fontSize: '11px',
-                      fontWeight: '800',
-                    }}>
-                      ⚠️ Only {maxStock} available (reduce quantity)
-                    </div>
+                      display: 'inline-block', marginTop: '6px',
+                      padding: '3px 10px', background: '#dc2626',
+                      color: 'white', borderRadius: '999px',
+                      fontSize: '11px', fontWeight: '800',
+                    }}>⚠️ Only {maxStock} available (reduce quantity)</div>
                   )}
-
                   {!exceedsStock && !isOutOfStock && isLowStock && (
                     <div style={{
-                      display: 'inline-block',
-                      marginTop: '6px',
-                      padding: '3px 10px',
-                      background: '#fef3c7',
-                      color: '#92400e',
-                      borderRadius: '999px',
-                      fontSize: '11px',
-                      fontWeight: '800',
-                    }}>
-                      ⚠️ Only {maxStock} left in stock
-                    </div>
+                      display: 'inline-block', marginTop: '6px',
+                      padding: '3px 10px', background: '#fef3c7',
+                      color: '#92400e', borderRadius: '999px',
+                      fontSize: '11px', fontWeight: '800',
+                    }}>⚠️ Only {maxStock} left in stock</div>
                   )}
                 </div>
 
@@ -381,9 +323,7 @@ export default function CartClient() {
                   <button
                     className={styles.removeBtn}
                     onClick={() => { removeItem(itemId); toast.success('Item removed'); }}
-                  >
-                    🗑️
-                  </button>
+                  >🗑️</button>
                 </div>
               </div>
             );
@@ -405,10 +345,7 @@ export default function CartClient() {
                 {shippingPrice === 0 ? '🎉 FREE' : `₹${shippingPrice}`}
               </span>
             </div>
-            <div className={styles.summaryRow}>
-              <span>Tax (5%)</span>
-              <span>₹{taxPrice.toLocaleString('en-IN')}</span>
-            </div>
+            {/* ✅ Tax row REMOVED */}
             {discountAmount > 0 && (
               <div className={`${styles.summaryRow} ${styles.discountRow}`}>
                 <span>Coupon ({coupon?.code})</span>
@@ -421,13 +358,10 @@ export default function CartClient() {
           <div className={styles.couponSection}>
             {coupon ? (
               <div className={styles.couponApplied}>
-                <span>🎉 {coupon.code} applied! Saved ₹{discountAmount.toLocaleString('en-IN')}</span>
-                <button
-                  onClick={() => {
-                    removeCoupon();
-                    setCouponCode('');
-                  }}
-                >
+                <span>
+                  🎉 {coupon.code} applied! Saved ₹{discountAmount.toLocaleString('en-IN')}
+                </span>
+                <button onClick={() => { removeCoupon(); setCouponCode(''); }}>
                   Remove
                 </button>
               </div>
@@ -437,7 +371,6 @@ export default function CartClient() {
                   itemsPrice={itemsPrice}
                   onApply={(code) => applyCoupon(code)}
                 />
-
                 <div className={styles.couponInput}>
                   <input
                     type="text"
@@ -474,33 +407,24 @@ export default function CartClient() {
             </div>
           )}
 
-          {/* ✅ Stock warning above checkout */}
+          {/* Stock warning */}
           {hasStockIssue && (
             <div style={{
-              padding: '12px 14px',
-              background: '#fef2f2',
-              border: '2px solid #dc2626',
-              borderRadius: '10px',
-              marginTop: '10px',
-              fontSize: '13px',
-              color: '#991b1b',
-              fontWeight: '700',
-              textAlign: 'center',
+              padding: '12px 14px', background: '#fef2f2',
+              border: '2px solid #dc2626', borderRadius: '10px',
+              marginTop: '10px', fontSize: '13px',
+              color: '#991b1b', fontWeight: '700', textAlign: 'center',
             }}>
               ⚠️ Please fix stock issues before checkout
             </div>
           )}
 
-          {/* ✅ Checkout button — disabled if stock issues */}
+          {/* Checkout button */}
           {hasStockIssue ? (
             <button
               className={`btn btn-primary ${styles.checkoutBtn}`}
               disabled
-              style={{
-                opacity: 0.5,
-                cursor: 'not-allowed',
-                background: '#9ca3af',
-              }}
+              style={{ opacity: 0.5, cursor: 'not-allowed', background: '#9ca3af' }}
             >
               Fix Stock Issues First
             </button>

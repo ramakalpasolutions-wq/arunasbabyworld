@@ -16,7 +16,6 @@ export default function CheckoutClient() {
     items,
     itemsPrice,
     shippingPrice,
-    taxPrice,
     discountAmount,
     totalPrice,
     coupon,
@@ -93,7 +92,7 @@ export default function CheckoutClient() {
           paymentMethod: 'COD',
           itemsPrice,
           shippingPrice,
-          taxPrice,
+          taxPrice: 0,        // ✅ No tax
           discountAmount,
           totalPrice,
           couponCode: coupon?.code || null,
@@ -153,7 +152,7 @@ export default function CheckoutClient() {
           paymentMethod: 'Razorpay',
           itemsPrice,
           shippingPrice,
-          taxPrice,
+          taxPrice: 0,        // ✅ No tax
           discountAmount,
           totalPrice,
           couponCode: coupon?.code || null,
@@ -401,12 +400,14 @@ export default function CheckoutClient() {
                   alignItems: 'center',
                   gap: '14px',
                   padding: '18px 20px',
-                  background: paymentMethod === 'Razorpay' ? 'linear-gradient(135deg, #FFF5F7, #F3E8FF)' : 'white',
+                  background: paymentMethod === 'Razorpay'
+                    ? 'linear-gradient(135deg, #FFF5F7, #F3E8FF)' : 'white',
                   border: `2.5px solid ${paymentMethod === 'Razorpay' ? '#FF6B9D' : '#E5E7EB'}`,
                   borderRadius: '14px',
                   cursor: 'pointer',
                   transition: 'all 0.25s ease',
-                  boxShadow: paymentMethod === 'Razorpay' ? '0 6px 18px rgba(255,107,157,0.15)' : 'none',
+                  boxShadow: paymentMethod === 'Razorpay'
+                    ? '0 6px 18px rgba(255,107,157,0.15)' : 'none',
                 }}>
                   <input
                     type="radio"
@@ -415,73 +416,55 @@ export default function CheckoutClient() {
                     checked={paymentMethod === 'Razorpay'}
                     onChange={(e) => setPaymentMethod(e.target.value)}
                     style={{
-                      width: '20px',
-                      height: '20px',
+                      width: '20px', height: '20px',
                       accentColor: '#FF6B9D',
-                      cursor: 'pointer',
-                      flexShrink: 0,
+                      cursor: 'pointer', flexShrink: 0,
                     }}
                   />
                   <div style={{
-                    width: '52px',
-                    height: '52px',
+                    width: '52px', height: '52px',
                     borderRadius: '12px',
                     background: 'linear-gradient(135deg, #FF6B9D, #7B2FBE)',
-                    display: 'flex',
-                    alignItems: 'center',
+                    display: 'flex', alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '1.8rem',
-                    flexShrink: 0,
+                    fontSize: '1.8rem', flexShrink: 0,
                     boxShadow: '0 4px 12px rgba(255,107,157,0.30)',
-                  }}>
-                    💳
-                  </div>
+                  }}>💳</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{
-                      margin: 0,
-                      fontSize: '1rem',
-                      fontWeight: '800',
-                      color: '#1F2937',
-                      fontFamily: 'Nunito, sans-serif',
+                      margin: 0, fontSize: '1rem', fontWeight: '800',
+                      color: '#1F2937', fontFamily: 'Nunito, sans-serif',
                     }}>
                       Razorpay Online Payment
                     </p>
                     <p style={{
-                      margin: '4px 0 0',
-                      fontSize: '0.82rem',
-                      color: '#6B7280',
-                      fontWeight: '600',
+                      margin: '4px 0 0', fontSize: '0.82rem',
+                      color: '#6B7280', fontWeight: '600',
                       fontFamily: 'Nunito, sans-serif',
                     }}>
                       UPI, Cards, NetBanking, Wallets
                     </p>
                     {paymentMethod === 'Razorpay' && (
-                      <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
+                      <div style={{
+                        display: 'flex', gap: '6px',
+                        marginTop: '8px', flexWrap: 'wrap',
+                      }}>
                         {['UPI', 'Visa', 'MasterCard', 'Paytm', 'PhonePe'].map(p => (
                           <span key={p} style={{
-                            padding: '2px 8px',
-                            background: 'white',
-                            border: '1px solid #FCA5A5',
-                            borderRadius: '6px',
-                            fontSize: '0.68rem',
-                            fontWeight: '700',
-                            color: '#7B2FBE',
+                            padding: '2px 8px', background: 'white',
+                            border: '1px solid #FCA5A5', borderRadius: '6px',
+                            fontSize: '0.68rem', fontWeight: '700', color: '#7B2FBE',
                           }}>{p}</span>
                         ))}
                       </div>
                     )}
                   </div>
                   <div style={{
-                    padding: '4px 10px',
-                    background: '#10B981',
-                    color: 'white',
-                    borderRadius: '999px',
-                    fontSize: '0.68rem',
-                    fontWeight: '800',
+                    padding: '4px 10px', background: '#10B981',
+                    color: 'white', borderRadius: '999px',
+                    fontSize: '0.68rem', fontWeight: '800',
                     fontFamily: 'Nunito, sans-serif',
-                  }}>
-                    🔒 SECURE
-                  </div>
+                  }}>🔒 SECURE</div>
                 </label>
 
                 {/* COD Option */}
@@ -490,12 +473,14 @@ export default function CheckoutClient() {
                   alignItems: 'center',
                   gap: '14px',
                   padding: '18px 20px',
-                  background: paymentMethod === 'COD' ? 'linear-gradient(135deg, #FFFBEB, #FEF3C7)' : 'white',
+                  background: paymentMethod === 'COD'
+                    ? 'linear-gradient(135deg, #FFFBEB, #FEF3C7)' : 'white',
                   border: `2.5px solid ${paymentMethod === 'COD' ? '#F59E0B' : '#E5E7EB'}`,
                   borderRadius: '14px',
                   cursor: 'pointer',
                   transition: 'all 0.25s ease',
-                  boxShadow: paymentMethod === 'COD' ? '0 6px 18px rgba(245,158,11,0.15)' : 'none',
+                  boxShadow: paymentMethod === 'COD'
+                    ? '0 6px 18px rgba(245,158,11,0.15)' : 'none',
                 }}>
                   <input
                     type="radio"
@@ -504,52 +489,38 @@ export default function CheckoutClient() {
                     checked={paymentMethod === 'COD'}
                     onChange={(e) => setPaymentMethod(e.target.value)}
                     style={{
-                      width: '20px',
-                      height: '20px',
+                      width: '20px', height: '20px',
                       accentColor: '#F59E0B',
-                      cursor: 'pointer',
-                      flexShrink: 0,
+                      cursor: 'pointer', flexShrink: 0,
                     }}
                   />
                   <div style={{
-                    width: '52px',
-                    height: '52px',
+                    width: '52px', height: '52px',
                     borderRadius: '12px',
                     background: 'linear-gradient(135deg, #F59E0B, #D97706)',
-                    display: 'flex',
-                    alignItems: 'center',
+                    display: 'flex', alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '1.8rem',
-                    flexShrink: 0,
+                    fontSize: '1.8rem', flexShrink: 0,
                     boxShadow: '0 4px 12px rgba(245,158,11,0.30)',
-                  }}>
-                    💵
-                  </div>
+                  }}>💵</div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <p style={{
-                      margin: 0,
-                      fontSize: '1rem',
-                      fontWeight: '800',
-                      color: '#1F2937',
-                      fontFamily: 'Nunito, sans-serif',
+                      margin: 0, fontSize: '1rem', fontWeight: '800',
+                      color: '#1F2937', fontFamily: 'Nunito, sans-serif',
                     }}>
                       Cash on Delivery (COD)
                     </p>
                     <p style={{
-                      margin: '4px 0 0',
-                      fontSize: '0.82rem',
-                      color: '#6B7280',
-                      fontWeight: '600',
+                      margin: '4px 0 0', fontSize: '0.82rem',
+                      color: '#6B7280', fontWeight: '600',
                       fontFamily: 'Nunito, sans-serif',
                     }}>
                       Pay with cash when order arrives
                     </p>
                     {paymentMethod === 'COD' && (
                       <p style={{
-                        margin: '8px 0 0',
-                        fontSize: '0.76rem',
-                        color: '#92400E',
-                        fontWeight: '700',
+                        margin: '8px 0 0', fontSize: '0.76rem',
+                        color: '#92400E', fontWeight: '700',
                         fontFamily: 'Nunito, sans-serif',
                       }}>
                         💡 No advance payment required
@@ -557,16 +528,11 @@ export default function CheckoutClient() {
                     )}
                   </div>
                   <div style={{
-                    padding: '4px 10px',
-                    background: '#F59E0B',
-                    color: 'white',
-                    borderRadius: '999px',
-                    fontSize: '0.68rem',
-                    fontWeight: '800',
+                    padding: '4px 10px', background: '#F59E0B',
+                    color: 'white', borderRadius: '999px',
+                    fontSize: '0.68rem', fontWeight: '800',
                     fontFamily: 'Nunito, sans-serif',
-                  }}>
-                    💵 EASY
-                  </div>
+                  }}>💵 EASY</div>
                 </label>
               </div>
 
@@ -588,9 +554,11 @@ export default function CheckoutClient() {
               </div>
 
               <div className={styles.reviewActions}>
-                <button className="btn btn-outline" onClick={() => setStep(1)} disabled={loading}>
-                  ← Back
-                </button>
+                <button
+                  className="btn btn-outline"
+                  onClick={() => setStep(1)}
+                  disabled={loading}
+                >← Back</button>
                 <button
                   className="btn btn-primary"
                   onClick={handlePayment}
@@ -628,10 +596,7 @@ export default function CheckoutClient() {
                 {shippingPrice === 0 ? 'FREE' : `₹${shippingPrice}`}
               </span>
             </div>
-            <div className={styles.row}>
-              <span>Tax</span>
-              <span>₹{taxPrice.toLocaleString('en-IN')}</span>
-            </div>
+            {/* ✅ Tax row REMOVED */}
             {discountAmount > 0 && (
               <div className={`${styles.row} ${styles.discount}`}>
                 <span>Coupon Discount</span>
@@ -659,19 +624,11 @@ export default function CheckoutClient() {
               fontFamily: 'Nunito, sans-serif',
             }}>
               <p style={{
-                margin: 0,
-                fontSize: '0.74rem',
-                fontWeight: '700',
-                color: '#6B7280',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-              }}>
-                Payment Method
-              </p>
+                margin: 0, fontSize: '0.74rem', fontWeight: '700',
+                color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px',
+              }}>Payment Method</p>
               <p style={{
-                margin: '4px 0 0',
-                fontSize: '0.88rem',
-                fontWeight: '800',
+                margin: '4px 0 0', fontSize: '0.88rem', fontWeight: '800',
                 color: paymentMethod === 'COD' ? '#92400E' : '#BE185D',
               }}>
                 {paymentMethod === 'COD' ? '💵 Cash on Delivery' : '💳 Razorpay'}
