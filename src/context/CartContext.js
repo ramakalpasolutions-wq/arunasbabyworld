@@ -6,7 +6,8 @@ const CartContext = createContext();
 const cartReducer = (state, action) => {
   switch (action.type) {
     case 'ADD_ITEM': {
-      const itemId   = action.payload.id || action.payload._id;
+      // ✅ Support both id and _id
+      const itemId = action.payload.id || action.payload._id;
       const existing = state.items.find((i) => (i.id || i._id) === itemId);
       if (existing) {
         const updated = state.items.map((i) =>
@@ -60,71 +61,52 @@ const initialState = { items: [], coupon: null };
 export function CartProvider({ children }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
 
-  // ✅ Load from localStorage — only items & coupon (no old price cache)
   useEffect(() => {
     const saved = localStorage.getItem('cart');
     if (saved) {
       try {
-        const parsed = JSON.parse(saved);
-        dispatch({
-          type: 'HYDRATE',
-          payload: {
-            items:  parsed.items  || [],
-            coupon: parsed.coupon || null,
-          },
-        });
+        dispatch({ type: 'HYDRATE', payload: JSON.parse(saved) });
       } catch {}
     }
   }, []);
 
-  // ✅ Save to localStorage whenever state changes
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify({
-      items:  state.items,
-      coupon: state.coupon,
-    }));
+    localStorage.setItem('cart', JSON.stringify(state));
   }, [state]);
 
-  // ✅ Price calculations — NO TAX + ROUNDED
-  const itemsPrice     = Math.round(
-    state.items.reduce(
-      (acc, i) => acc + (i.discountPrice || i.price) * i.quantity, 0
-    )
+  const itemsPrice = state.items.reduce(
+    (acc, i) => acc + (i.discountPrice || i.price) * i.quantity, 0
   );
-  const shippingPrice  = itemsPrice > 499 ? 0 : 49;
-  const taxPrice       = 0;   // ✅ Tax completely removed
-  const discountAmount = Math.round(
-    state.coupon ? state.coupon.discountAmount || 0 : 0
-  );
-  const totalPrice     = Math.round(
-    itemsPrice + shippingPrice - discountAmount
-  );  // ✅ No tax + Rounded
-  const totalItems     = state.items.reduce((acc, i) => acc + i.quantity, 0);
+  const shippingPrice = itemsPrice > 499 ? 0 : 49;
+  const taxPrice = 0;
+const discountAmount = state.coupon ? state.coupon.discountAmount || 0 : 0;
+const totalPrice = Math.round(itemsPrice + shippingPrice - discountAmount);
+  const totalItems = state.items.reduce((acc, i) => acc + i.quantity, 0);
 
   return (
     <CartContext.Provider
       value={{
-        items:          state.items,
-        cart:           state.items,
-        coupon:         state.coupon,
+        items: state.items,
+        cart: state.items,
+        coupon: state.coupon,
         itemsPrice,
         shippingPrice,
-        taxPrice,        // ✅ Exported as 0 — so no errors in other files
+        taxPrice,
         discountAmount,
         totalPrice,
         totalItems,
-        cartCount:      totalItems,
-        cartTotal:      totalPrice,
+        cartCount: totalItems,
+        cartTotal: totalPrice,
         dispatch,
-        addItem:        (item) => dispatch({ type: 'ADD_ITEM',    payload: item }),
-        addToCart:      (item) => dispatch({ type: 'ADD_ITEM',    payload: item }),
-        removeItem:     (id)   => dispatch({ type: 'REMOVE_ITEM', payload: id   }),
-        removeFromCart: (id)   => dispatch({ type: 'REMOVE_ITEM', payload: id   }),
+        addItem: (item) => dispatch({ type: 'ADD_ITEM', payload: item }),
+        addToCart: (item) => dispatch({ type: 'ADD_ITEM', payload: item }),
+        removeItem: (id) => dispatch({ type: 'REMOVE_ITEM', payload: id }),
+        removeFromCart: (id) => dispatch({ type: 'REMOVE_ITEM', payload: id }),
         updateQuantity: (id, quantity) =>
           dispatch({ type: 'UPDATE_QUANTITY', payload: { id, quantity } }),
-        clearCart:    () => dispatch({ type: 'CLEAR_CART'   }),
-        setCoupon:    (coupon) => dispatch({ type: 'SET_COUPON',    payload: coupon }),
-        removeCoupon: ()       => dispatch({ type: 'REMOVE_COUPON'                  }),
+        clearCart: () => dispatch({ type: 'CLEAR_CART' }),
+        setCoupon: (coupon) => dispatch({ type: 'SET_COUPON', payload: coupon }),
+        removeCoupon: () => dispatch({ type: 'REMOVE_COUPON' }),
       }}
     >
       {children}

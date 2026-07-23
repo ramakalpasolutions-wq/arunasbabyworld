@@ -4,7 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
-// ✅ Format order number helper
 function fmtOrderNum(order) {
   return order?.orderNumber
     ? `ABW-${order.orderNumber}`
@@ -35,6 +34,155 @@ const STATUS_EMOJI = {
   Return_Requested: '🔄',
 };
 
+// ✅ Live Nimbus Post Tracking Component
+function LiveNimbusTracking({ awb }) {
+  const [tracking, setTracking] = useState(null);
+  const [loading,  setLoading]  = useState(true);
+
+  useEffect(() => {
+    if (!awb) return;
+    fetchTracking();
+    const interval = setInterval(fetchTracking, 60000);
+    return () => clearInterval(interval);
+  }, [awb]);
+
+  const fetchTracking = async () => {
+    try {
+      const res  = await fetch(`/api/shipping/track/${awb}`);
+      const data = await res.json();
+      if (data.success) setTracking(data.tracking);
+    } catch (err) {
+      console.error('Tracking error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!awb) return null;
+
+  return (
+    <div style={{
+      background: 'white',
+      borderRadius: '20px',
+      padding: '24px',
+      boxShadow: '0 4px 20px rgba(3,105,161,0.08)',
+      border: '1.5px solid #E0F2FE',
+      marginBottom: '24px',
+    }}>
+      <div style={{
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between',
+        marginBottom: '16px', flexWrap: 'wrap', gap: '10px',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{
+            width: '10px', height: '10px', borderRadius: '50%',
+            background: '#0369A1', animation: 'liveBlip 1.5s ease-in-out infinite',
+          }} />
+          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '800', color: '#0369A1' }}>
+            🚚 Shipment Tracking
+          </h3>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+          <code style={{
+            fontSize: '0.86rem', fontWeight: '800', color: '#0369A1',
+            background: '#E0F2FE', padding: '4px 10px', borderRadius: '8px',
+          }}>
+            AWB: {awb}
+          </code>
+          <button
+            onClick={() => { navigator.clipboard.writeText(awb); toast.success('AWB copied!'); }}
+            style={{
+              padding: '4px 10px', background: '#0369A1', color: 'white',
+              border: 'none', borderRadius: '6px', fontSize: '0.72rem',
+              fontWeight: '700', cursor: 'pointer', fontFamily: 'Nunito, sans-serif',
+            }}
+          >
+            📋 Copy
+          </button>
+        </div>
+      </div>
+
+      {loading ? (
+        <p style={{ color: '#9CA3AF', fontSize: '0.88rem', textAlign: 'center', padding: '16px 0' }}>
+          Loading tracking info...
+        </p>
+      ) : tracking ? (
+        <div>
+          {/* Current Status Banner */}
+          {tracking.current_status && (
+            <div style={{
+              padding: '14px 16px',
+              background: 'linear-gradient(135deg, #E0F2FE, #EDE9FE)',
+              borderRadius: '12px', marginBottom: '16px',
+              display: 'flex', alignItems: 'center', gap: '12px',
+            }}>
+              <span style={{ fontSize: '1.8rem' }}>📦</span>
+              <div>
+                <p style={{ margin: 0, fontWeight: '800', color: '#0369A1', fontSize: '0.96rem' }}>
+                  {tracking.current_status}
+                </p>
+                {tracking.current_timestamp && (
+                  <p style={{ margin: '3px 0 0', fontSize: '0.78rem', color: '#6B7280', fontWeight: '600' }}>
+                    🕒 {new Date(tracking.current_timestamp).toLocaleString('en-IN')}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Tracking Events Timeline */}
+          {tracking.tracking_data?.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column' }}>
+              {tracking.tracking_data.map((event, i) => (
+                <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                    <div style={{
+                      width: '12px', height: '12px', borderRadius: '50%',
+                      background: i === 0 ? '#0369A1' : '#CBD5E1',
+                      marginTop: '4px', flexShrink: 0,
+                    }} />
+                    {i < tracking.tracking_data.length - 1 && (
+                      <div style={{ width: '2px', height: '32px', background: '#E2E8F0' }} />
+                    )}
+                  </div>
+                  <div style={{ paddingBottom: '12px', flex: 1 }}>
+                    <p style={{
+                      margin: 0, fontSize: '0.86rem',
+                      fontWeight: i === 0 ? '800' : '600',
+                      color: i === 0 ? '#0F172A' : '#6B7280',
+                    }}>
+                      {event.status || event.activity}
+                    </p>
+                    {event.location && (
+                      <p style={{ margin: '2px 0 0', fontSize: '0.76rem', color: '#94A3B8', fontWeight: '600' }}>
+                        📍 {event.location}
+                      </p>
+                    )}
+                    {event.timestamp && (
+                      <p style={{ margin: '2px 0 0', fontSize: '0.74rem', color: '#94A3B8' }}>
+                        🕒 {new Date(event.timestamp).toLocaleString('en-IN')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p style={{ color: '#9CA3AF', fontSize: '0.88rem', textAlign: 'center', padding: '16px 0' }}>
+              Tracking updates will appear here once the shipment is picked up.
+            </p>
+          )}
+        </div>
+      ) : (
+        <p style={{ color: '#9CA3AF', fontSize: '0.88rem', textAlign: 'center', padding: '16px 0' }}>
+          Tracking info not yet available. Check back in a few hours.
+        </p>
+      )}
+    </div>
+  );
+}
+
 export default function OrderDetailClient({ id }) {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -47,16 +195,13 @@ export default function OrderDetailClient({ id }) {
 
   useEffect(() => {
     if (!order) return;
-
     const needsRefresh =
       order.refundStatus === 'pending' ||
       order.refundStatus === 'processing' ||
       order.refundStatus === 'scheduled' ||
       order.returnStatus === 'Pending' ||
       (order.exchangeId && !['completed', 'rejected', 'cancelled'].includes(order.exchangeStatus));
-
     if (!needsRefresh) return;
-
     const interval = setInterval(() => { fetchOrder(); }, 10000);
     return () => clearInterval(interval);
   }, [order?.refundStatus, order?.returnStatus, order?.exchangeStatus]);
@@ -152,15 +297,12 @@ export default function OrderDetailClient({ id }) {
           }}>
             Order Details
           </h1>
-
-          {/* ✅ Order Number badge */}
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: '8px',
             padding: '6px 14px',
             background: 'linear-gradient(135deg, #FFF5EE, #F5EDFF)',
             border: '1.5px solid #E9D5FF',
-            borderRadius: '10px',
-            marginBottom: '8px',
+            borderRadius: '10px', marginBottom: '8px',
           }}>
             <span style={{ fontSize: '0.72rem', fontWeight: '800', color: '#9585B0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
               Order ID
@@ -175,7 +317,6 @@ export default function OrderDetailClient({ id }) {
               {fmtOrderNum(order)}
             </span>
           </div>
-
           <p style={{ color: '#9585B0', margin: 0, fontWeight: '600', fontSize: '0.85rem' }}>
             📅 Placed on {new Date(order.createdAt).toLocaleDateString('en-IN', {
               year: 'numeric', month: 'long', day: 'numeric',
@@ -189,8 +330,7 @@ export default function OrderDetailClient({ id }) {
             padding: '8px 18px',
             background: `${statusColor}15`,
             border: `2px solid ${statusColor}35`,
-            borderRadius: '999px',
-            color: statusColor,
+            borderRadius: '999px', color: statusColor,
             fontWeight: '800', fontSize: '0.92rem',
           }}>
             {STATUS_EMOJI[order.orderStatus]} {order.orderStatus?.replace('_', ' ')}
@@ -230,12 +370,11 @@ export default function OrderDetailClient({ id }) {
           )}
 
           {canReturn && (() => {
-            const deliveredAt = order.deliveredAt ? new Date(order.deliveredAt) : new Date(order.updatedAt);
-            const daysSince   = Math.floor((new Date() - deliveredAt) / (1000 * 60 * 60 * 24));
-            const within3Days = daysSince <= 3;
+            const deliveredAt  = order.deliveredAt ? new Date(order.deliveredAt) : new Date(order.updatedAt);
+            const daysSince    = Math.floor((new Date() - deliveredAt) / (1000 * 60 * 60 * 24));
+            const within3Days  = daysSince <= 3;
             const noActiveExchange = !order.exchangeId || ['rejected', 'completed', 'cancelled'].includes(order.exchangeStatus);
             if (!within3Days || !noActiveExchange) return null;
-
             return (
               <Link
                 href={`/orders/${order.id}/exchange`}
@@ -317,7 +456,6 @@ export default function OrderDetailClient({ id }) {
                 ? '✅ Refund Completed Successfully!'
                 : 'Return Request Submitted'}
             </strong>
-
             <p style={{
               margin: 0, fontSize: '0.85rem',
               color: order.refundStatus === 'completed' ? '#047857' : '#9a3412',
@@ -333,8 +471,7 @@ export default function OrderDetailClient({ id }) {
               {order.refundStatus === 'completed' && (
                 <span style={{ color: '#10B981', fontWeight: '800' }}>
                   ✅ Refund Completed — ₹
-                  {order.refundAmount?.toLocaleString('en-IN') ||
-                    order.totalPrice?.toLocaleString('en-IN')}{' '}
+                  {Math.round(order.refundAmount || order.totalPrice)?.toLocaleString('en-IN')}{' '}
                   credited to your account
                 </span>
               )}
@@ -359,7 +496,6 @@ export default function OrderDetailClient({ id }) {
                 </span>
               )}
             </p>
-
             {order.refundStatus === 'completed' && order.refundedAt && (
               <p style={{ margin: '8px 0 0', fontSize: '0.78rem', color: '#047857', fontWeight: '700' }}>
                 🕒 Refunded on{' '}
@@ -466,6 +602,11 @@ export default function OrderDetailClient({ id }) {
         </div>
       )}
 
+      {/* ✅ Nimbus Post Live Tracking — shown when shipped */}
+      {order.awbNumber && !isCancelled && (
+        <LiveNimbusTracking awb={order.awbNumber} />
+      )}
+
       {isCancelled && (
         <div style={{
           background: order.orderStatus === 'Refunded' ? '#ECFDF5' : '#FEF2F2',
@@ -491,43 +632,13 @@ export default function OrderDetailClient({ id }) {
                 <span style={{ color: '#3B82F6', fontWeight: '700' }}>⚙️ Refund Processing — Money will reach you in 2-3 hours</span>
               )}
               {order.refundStatus === 'completed' && (
-                <span style={{ color: '#10B981', fontWeight: '800' }}>✅ Refund completed — ₹{order.refundAmount?.toLocaleString('en-IN')} credited to your account</span>
+                <span style={{ color: '#10B981', fontWeight: '800' }}>✅ Refund completed — ₹{Math.round(order.refundAmount)?.toLocaleString('en-IN')} credited</span>
               )}
               {order.refundStatus === 'not_required' && (
                 <span style={{ color: '#6B7280', fontWeight: '600' }}>ℹ️ No refund needed (COD order)</span>
               )}
             </p>
           </div>
-        </div>
-      )}
-
-      {order.trackingNumber && (
-        <div style={{
-          padding: '16px 20px',
-          background: 'linear-gradient(135deg, #E0F2FE, #EDE9FE)',
-          border: '1.5px solid #7DD3FC', borderRadius: '16px',
-          marginBottom: '24px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          flexWrap: 'wrap', gap: '10px',
-        }}>
-          <div>
-            <p style={{ fontSize: '0.72rem', fontWeight: '800', color: '#0369A1', textTransform: 'uppercase', letterSpacing: '1px', margin: '0 0 4px' }}>
-              📦 Tracking Number
-            </p>
-            <p style={{ fontFamily: 'monospace', fontWeight: '800', color: '#0369A1', fontSize: '1.1rem', margin: 0 }}>
-              {order.trackingNumber}
-            </p>
-          </div>
-          <button
-            onClick={() => { navigator.clipboard.writeText(order.trackingNumber); toast.success('Copied!'); }}
-            style={{
-              padding: '8px 16px', background: '#0369A1', color: 'white',
-              border: 'none', borderRadius: '10px', fontWeight: '700',
-              fontSize: '0.80rem', cursor: 'pointer', fontFamily: 'Nunito, sans-serif',
-            }}
-          >
-            📋 Copy
-          </button>
         </div>
       )}
 
@@ -564,7 +675,7 @@ export default function OrderDetailClient({ id }) {
                     </p>
                   </div>
                   <strong style={{ color: '#FF6B35', whiteSpace: 'nowrap' }}>
-                    ₹{(item.price * item.quantity).toLocaleString('en-IN')}
+                    ₹{Math.round(item.price * item.quantity).toLocaleString('en-IN')}
                   </strong>
                 </div>
               ))}
@@ -588,7 +699,7 @@ export default function OrderDetailClient({ id }) {
                   ? [{ label: 'Transaction ID', value: order.paymentResult.razorpayPaymentId, mono: true }]
                   : []),
                 ...(order.refundAmount > 0
-                  ? [{ label: 'Refund Amount', value: `₹${order.refundAmount?.toLocaleString('en-IN')}`, color: '#10B981' }]
+                  ? [{ label: 'Refund Amount', value: `₹${Math.round(order.refundAmount)?.toLocaleString('en-IN')}`, color: '#10B981' }]
                   : []),
               ].map((row, i) => (
                 <div key={i} style={{
@@ -613,15 +724,14 @@ export default function OrderDetailClient({ id }) {
             'Price Summary', '💰', 'price',
             <div>
               {[
-                { label: 'Items', value: `₹${order.itemsPrice?.toLocaleString('en-IN')}` },
+                { label: 'Items', value: `₹${Math.round(order.itemsPrice)?.toLocaleString('en-IN')}` },
                 {
                   label: 'Shipping',
                   value: order.shippingPrice === 0 ? '🎉 FREE' : `₹${order.shippingPrice}`,
                   color: order.shippingPrice === 0 ? '#10B981' : undefined,
                 },
-                { label: 'Tax', value: `₹${order.taxPrice?.toLocaleString('en-IN')}` },
                 ...(order.discountAmount > 0
-                  ? [{ label: `Coupon (${order.couponCode})`, value: `− ₹${order.discountAmount?.toLocaleString('en-IN')}`, color: '#10B981' }]
+                  ? [{ label: `Coupon (${order.couponCode})`, value: `− ₹${Math.round(order.discountAmount)?.toLocaleString('en-IN')}`, color: '#10B981' }]
                   : []),
               ].map((row, i) => (
                 <div key={i} style={{
@@ -637,7 +747,7 @@ export default function OrderDetailClient({ id }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '14px', marginTop: '6px' }}>
                 <span style={{ fontWeight: '800', color: '#2D1A4A' }}>Total</span>
                 <strong style={{ fontSize: '1.2rem', color: '#FF6B35' }}>
-                  ₹{order.totalPrice?.toLocaleString('en-IN')}
+                  ₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}
                 </strong>
               </div>
             </div>
@@ -691,9 +801,8 @@ export default function OrderDetailClient({ id }) {
                 <button
                   onClick={() => setShowReturnModal(true)}
                   style={{
-                    flex: 1, padding: '9px 10px',
-                    background: 'white', color: '#f97316',
-                    border: '1.5px solid #fed7aa',
+                    flex: 1, padding: '9px 10px', background: 'white',
+                    color: '#f97316', border: '1.5px solid #fed7aa',
                     borderRadius: '10px', fontWeight: '800', fontSize: '0.82rem',
                     fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
                   }}
@@ -703,12 +812,10 @@ export default function OrderDetailClient({ id }) {
                 <Link
                   href={`/orders/${order.id}/refund`}
                   style={{
-                    flex: 1, padding: '9px 10px',
-                    background: 'white', color: '#7B2FBE',
-                    border: '1.5px solid #EDD9FF',
+                    flex: 1, padding: '9px 10px', background: 'white',
+                    color: '#7B2FBE', border: '1.5px solid #EDD9FF',
                     borderRadius: '10px', fontWeight: '800', fontSize: '0.82rem',
-                    fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
-                    textDecoration: 'none', textAlign: 'center',
+                    fontFamily: 'Nunito, sans-serif', textDecoration: 'none', textAlign: 'center',
                   }}
                 >
                   💰 Refund
@@ -721,12 +828,10 @@ export default function OrderDetailClient({ id }) {
                     <Link
                       href={`/orders/${order.id}/exchange`}
                       style={{
-                        flex: 1, padding: '9px 10px',
-                        background: 'white', color: '#FF6B35',
-                        border: '1.5px solid #FFD4B8',
+                        flex: 1, padding: '9px 10px', background: 'white',
+                        color: '#FF6B35', border: '1.5px solid #FFD4B8',
                         borderRadius: '10px', fontWeight: '800', fontSize: '0.82rem',
-                        fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
-                        textDecoration: 'none', textAlign: 'center',
+                        fontFamily: 'Nunito, sans-serif', textDecoration: 'none', textAlign: 'center',
                       }}
                     >
                       🔄 Exchange
@@ -764,7 +869,7 @@ export default function OrderDetailClient({ id }) {
       <style>{`
         @keyframes liveBlip {
           0%, 100% { transform: scale(1); opacity: 1; }
-          50%      { transform: scale(1.4); opacity: 0.6; }
+          50%       { transform: scale(1.4); opacity: 0.6; }
         }
         @media (max-width: 768px) {
           div[style*="grid-template-columns: minmax"] {
@@ -781,7 +886,7 @@ export default function OrderDetailClient({ id }) {
 ══════════════════════════════════════════ */
 function ExchangeStatusBanner({ orderId, exchangeId }) {
   const [exchange, setExchange] = useState(null);
-  const [loading, setLoading]   = useState(true);
+  const [loading,  setLoading]  = useState(true);
 
   useEffect(() => {
     fetchExchange();
@@ -805,19 +910,19 @@ function ExchangeStatusBanner({ orderId, exchangeId }) {
   if (loading || !exchange) return null;
 
   const STATUS_CONFIG = {
-    pending:          { label: 'Pending Approval',   color: '#F59E0B', bg: '#FEF3C7', icon: '🟡', desc: 'Waiting for admin approval' },
-    approved:         { label: 'Approved',           color: '#3B82F6', bg: '#DBEAFE', icon: '✅', desc: 'Pickup will be arranged soon' },
-    picked_up:        { label: 'Picked Up',          color: '#8B5CF6', bg: '#EDE9FE', icon: '📦', desc: 'On the way to our warehouse' },
-    received:         { label: 'Received',           color: '#6366F1', bg: '#E0E7FF', icon: '📬', desc: 'Item received, verifying...' },
-    verified:         { label: 'Verified',           color: '#10B981', bg: '#D1FAE5', icon: '🔍', desc: 'Quality check passed!' },
-    awaiting_payment: { label: 'Awaiting Payment',   color: '#F97316', bg: '#FFEDD5', icon: '💳', desc: 'Complete payment to continue' },
-    ready_to_ship:    { label: 'Ready to Ship',      color: '#10B981', bg: '#D1FAE5', icon: '🎁', desc: 'New product being packed' },
-    shipped:          { label: 'Shipped',            color: '#06B6D4', bg: '#CFFAFE', icon: '🚚', desc: 'New product on the way!' },
-    completed:        { label: 'Exchange Completed', color: '#10B981', bg: '#D1FAE5', icon: '🎉', desc: 'Exchange completed successfully!' },
-    rejected:         { label: 'Rejected',           color: '#EF4444', bg: '#FEE2E2', icon: '❌', desc: 'Exchange request rejected' },
+    pending:          { label: 'Pending Approval',   color: '#F59E0B', icon: '🟡', desc: 'Waiting for admin approval' },
+    approved:         { label: 'Approved',           color: '#3B82F6', icon: '✅', desc: 'Pickup will be arranged soon' },
+    picked_up:        { label: 'Picked Up',          color: '#8B5CF6', icon: '📦', desc: 'On the way to our warehouse' },
+    received:         { label: 'Received',           color: '#6366F1', icon: '📬', desc: 'Item received, verifying...' },
+    verified:         { label: 'Verified',           color: '#10B981', icon: '🔍', desc: 'Quality check passed!' },
+    awaiting_payment: { label: 'Awaiting Payment',   color: '#F97316', icon: '💳', desc: 'Complete payment to continue' },
+    ready_to_ship:    { label: 'Ready to Ship',      color: '#10B981', icon: '🎁', desc: 'New product being packed' },
+    shipped:          { label: 'Shipped',            color: '#06B6D4', icon: '🚚', desc: 'New product on the way!' },
+    completed:        { label: 'Exchange Completed', color: '#10B981', icon: '🎉', desc: 'Exchange completed successfully!' },
+    rejected:         { label: 'Rejected',           color: '#EF4444', icon: '❌', desc: 'Exchange request rejected' },
   };
 
-  const cfg = STATUS_CONFIG[exchange.status] || STATUS_CONFIG.pending;
+  const cfg         = STATUS_CONFIG[exchange.status] || STATUS_CONFIG.pending;
   const isCompleted = exchange.status === 'completed';
   const isRejected  = exchange.status === 'rejected';
 
@@ -1184,16 +1289,13 @@ function ReturnModal({ order, onClose, onSuccess }) {
           {RETURN_REASONS.map(({ label, emoji }) => {
             const selected = returnReason === label;
             return (
-              <label
-                key={label}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '10px',
-                  padding: '11px 14px',
-                  background: selected ? '#FFF7ED' : 'white',
-                  border: `1.5px solid ${selected ? '#F97316' : '#E5E7EB'}`,
-                  borderRadius: '12px', cursor: 'pointer', transition: 'all 0.15s',
-                }}
-              >
+              <label key={label} style={{
+                display: 'flex', alignItems: 'center', gap: '10px',
+                padding: '11px 14px',
+                background: selected ? '#FFF7ED' : 'white',
+                border: `1.5px solid ${selected ? '#F97316' : '#E5E7EB'}`,
+                borderRadius: '12px', cursor: 'pointer', transition: 'all 0.15s',
+              }}>
                 <input
                   type="radio" name="returnReason" value={label}
                   checked={selected} onChange={e => setReturnReason(e.target.value)}
@@ -1238,15 +1340,12 @@ function ReturnModal({ order, onClose, onSuccess }) {
         )}
 
         <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
-          <button
-            onClick={onClose}
-            style={{
-              flex: 1, padding: '12px', background: 'white',
-              border: '1.5px solid #E5E7EB', borderRadius: '10px',
-              fontWeight: '700', color: '#6B7280',
-              cursor: 'pointer', fontFamily: 'Nunito, sans-serif',
-            }}
-          >
+          <button onClick={onClose} style={{
+            flex: 1, padding: '12px', background: 'white',
+            border: '1.5px solid #E5E7EB', borderRadius: '10px',
+            fontWeight: '700', color: '#6B7280',
+            cursor: 'pointer', fontFamily: 'Nunito, sans-serif',
+          }}>
             Cancel
           </button>
           <button
@@ -1254,16 +1353,13 @@ function ReturnModal({ order, onClose, onSuccess }) {
             disabled={!isValid || submitting}
             style={{
               flex: 2, padding: '12px',
-              background: isValid && !submitting
-                ? 'linear-gradient(135deg, #F97316, #EA580C)'
-                : '#F3F4F6',
+              background: isValid && !submitting ? 'linear-gradient(135deg, #F97316, #EA580C)' : '#F3F4F6',
               color: isValid && !submitting ? 'white' : '#9CA3AF',
               border: 'none', borderRadius: '10px',
               fontWeight: '800', fontSize: '0.95rem',
               fontFamily: 'Nunito, sans-serif',
               cursor: isValid && !submitting ? 'pointer' : 'not-allowed',
               transition: 'all 0.2s',
-              boxShadow: isValid ? '0 4px 14px rgba(249,115,22,0.25)' : 'none',
             }}
           >
             {submitting ? '⏳ Submitting...' : '🔄 Submit Return Request'}
@@ -1288,9 +1384,7 @@ function RefundModal({ order, onClose, onSuccess }) {
   const isValid = refundMethod === 'upi'
     ? upiId.trim().length > 3
     : refundMethod === 'bank'
-      ? bankDetails.accountHolderName.trim() &&
-        bankDetails.accountNumber.trim() &&
-        bankDetails.ifscCode.trim()
+      ? bankDetails.accountHolderName.trim() && bankDetails.accountNumber.trim() && bankDetails.ifscCode.trim()
       : false;
 
   const handleSubmit = async () => {
@@ -1322,7 +1416,7 @@ function RefundModal({ order, onClose, onSuccess }) {
     border: '1.5px solid #E5E7EB', borderRadius: '10px',
     fontSize: '0.88rem', fontFamily: 'Nunito, sans-serif',
     outline: 'none', color: '#1F2937', background: 'white',
-    boxSizing: 'border-box', transition: 'border-color 0.2s',
+    boxSizing: 'border-box',
   };
 
   const labelStyle = {
@@ -1358,11 +1452,11 @@ function RefundModal({ order, onClose, onSuccess }) {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <div>
-            <p style={{ margin: 0, fontSize: '0.74rem', fontWeight: '700', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+            <p style={{ margin: 0, fontSize: '0.74rem', fontWeight: '700', color: '#6B7280', textTransform: 'uppercase' }}>
               Refund Amount
             </p>
             <p style={{ margin: '3px 0 0', fontSize: '1.5rem', fontWeight: '900', color: '#10B981' }}>
-              ₹{order.totalPrice?.toLocaleString('en-IN')}
+              ₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}
             </p>
           </div>
           <span style={{ fontSize: '2rem' }}>💰</span>
@@ -1373,159 +1467,68 @@ function RefundModal({ order, onClose, onSuccess }) {
         </p>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
-          <div
-            onClick={() => setRefundMethod('upi')}
-            style={{
-              padding: '16px', textAlign: 'center',
-              background: refundMethod === 'upi' ? '#F0FDF4' : 'white',
-              border: `2px solid ${refundMethod === 'upi' ? '#10B981' : '#E5E7EB'}`,
-              borderRadius: '14px', cursor: 'pointer',
-              transition: 'all 0.2s', position: 'relative',
-            }}
-          >
-            <div style={{ fontSize: '1.8rem', marginBottom: '8px' }}>📱</div>
-            <p style={{
-              margin: '0 0 6px', fontSize: '0.90rem', fontWeight: '800',
-              color: refundMethod === 'upi' ? '#059669' : '#374151',
-            }}>
-              UPI ID
-            </p>
-            <span style={{
-              display: 'inline-block', fontSize: '0.64rem', fontWeight: '800',
-              background: '#D1FAE5', color: '#065F46',
-              padding: '2px 8px', borderRadius: '999px', border: '1px solid #A7F3D0',
-            }}>
-              ⚡ Faster Refund
-            </span>
-            {refundMethod === 'upi' && (
-              <div style={{
-                position: 'absolute', top: '8px', right: '8px',
-                width: '20px', height: '20px', borderRadius: '50%',
-                background: '#10B981', color: 'white',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '0.70rem', fontWeight: '900',
+          {[
+            { id: 'upi', icon: '📱', label: 'UPI ID', sub: '⚡ Faster Refund', color: '#10B981', bg: '#F0FDF4' },
+            { id: 'bank', icon: '🏦', label: 'Bank Account', sub: '5–7 business days', color: '#3B82F6', bg: '#EFF6FF' },
+          ].map(opt => (
+            <div
+              key={opt.id}
+              onClick={() => setRefundMethod(opt.id)}
+              style={{
+                padding: '16px', textAlign: 'center',
+                background: refundMethod === opt.id ? opt.bg : 'white',
+                border: `2px solid ${refundMethod === opt.id ? opt.color : '#E5E7EB'}`,
+                borderRadius: '14px', cursor: 'pointer',
+                transition: 'all 0.2s', position: 'relative',
+              }}
+            >
+              <div style={{ fontSize: '1.8rem', marginBottom: '8px' }}>{opt.icon}</div>
+              <p style={{
+                margin: '0 0 6px', fontSize: '0.90rem', fontWeight: '800',
+                color: refundMethod === opt.id ? opt.color : '#374151',
               }}>
-                ✓
-              </div>
-            )}
-          </div>
-
-          <div
-            onClick={() => setRefundMethod('bank')}
-            style={{
-              padding: '16px', textAlign: 'center',
-              background: refundMethod === 'bank' ? '#EFF6FF' : 'white',
-              border: `2px solid ${refundMethod === 'bank' ? '#3B82F6' : '#E5E7EB'}`,
-              borderRadius: '14px', cursor: 'pointer',
-              transition: 'all 0.2s', position: 'relative',
-            }}
-          >
-            <div style={{ fontSize: '1.8rem', marginBottom: '8px' }}>🏦</div>
-            <p style={{
-              margin: '0 0 6px', fontSize: '0.90rem', fontWeight: '800',
-              color: refundMethod === 'bank' ? '#1D4ED8' : '#374151',
-            }}>
-              Bank Account
-            </p>
-            <span style={{ fontSize: '0.64rem', fontWeight: '700', color: '#6B7280' }}>
-              5–7 business days
-            </span>
-            {refundMethod === 'bank' && (
-              <div style={{
-                position: 'absolute', top: '8px', right: '8px',
-                width: '20px', height: '20px', borderRadius: '50%',
-                background: '#3B82F6', color: 'white',
-                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                fontSize: '0.70rem', fontWeight: '900',
-              }}>
-                ✓
-              </div>
-            )}
-          </div>
+                {opt.label}
+              </p>
+              <span style={{ fontSize: '0.64rem', fontWeight: '700', color: '#6B7280' }}>{opt.sub}</span>
+              {refundMethod === opt.id && (
+                <div style={{
+                  position: 'absolute', top: '8px', right: '8px',
+                  width: '20px', height: '20px', borderRadius: '50%',
+                  background: opt.color, color: 'white',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '0.70rem', fontWeight: '900',
+                }}>✓</div>
+              )}
+            </div>
+          ))}
         </div>
 
         {refundMethod === 'upi' && (
-          <div style={{
-            padding: '16px', background: '#F8FAFC',
-            border: '1.5px solid #E2E8F0', borderRadius: '12px', marginBottom: '16px',
-          }}>
-            <div style={{ marginBottom: '12px' }}>
-              <span style={{
-                fontSize: '0.72rem', fontWeight: '800',
-                background: '#D1FAE5', color: '#065F46',
-                padding: '3px 10px', borderRadius: '999px',
-                border: '1px solid #A7F3D0',
-              }}>
-                ⚡ Faster Refund Recommended
-              </span>
-            </div>
-            <label style={labelStyle}>
-              UPI ID <span style={{ color: '#EF4444' }}>*</span>
-            </label>
-            <input
-              type="text" value={upiId}
-              onChange={e => setUpiId(e.target.value)}
-              placeholder="yourname@upi" style={inputStyle}
-            />
+          <div style={{ padding: '16px', background: '#F8FAFC', border: '1.5px solid #E2E8F0', borderRadius: '12px', marginBottom: '16px' }}>
+            <label style={labelStyle}>UPI ID <span style={{ color: '#EF4444' }}>*</span></label>
+            <input type="text" value={upiId} onChange={e => setUpiId(e.target.value)} placeholder="yourname@upi" style={inputStyle} />
           </div>
         )}
 
         {refundMethod === 'bank' && (
-          <div style={{
-            padding: '16px', background: '#F8FAFC',
-            border: '1.5px solid #E2E8F0', borderRadius: '12px', marginBottom: '16px',
-          }}>
+          <div style={{ padding: '16px', background: '#F8FAFC', border: '1.5px solid #E2E8F0', borderRadius: '12px', marginBottom: '16px' }}>
             <div style={{ display: 'grid', gap: '12px' }}>
               <div>
-                <label style={labelStyle}>
-                  Account Holder Name <span style={{ color: '#EF4444' }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  value={bankDetails.accountHolderName}
-                  onChange={e => setBankDetails(p => ({ ...p, accountHolderName: e.target.value }))}
-                  placeholder="As per bank records" style={inputStyle}
-                />
+                <label style={labelStyle}>Account Holder Name <span style={{ color: '#EF4444' }}>*</span></label>
+                <input type="text" value={bankDetails.accountHolderName} onChange={e => setBankDetails(p => ({ ...p, accountHolderName: e.target.value }))} placeholder="As per bank records" style={inputStyle} />
               </div>
-
               <div>
-                <label style={labelStyle}>
-                  Account Number <span style={{ color: '#EF4444' }}>*</span>
-                </label>
-                <input
-                  type="text"
-                  value={bankDetails.accountNumber}
-                  onChange={e => setBankDetails(p => ({
-                    ...p, accountNumber: e.target.value.replace(/\D/g, ''),
-                  }))}
-                  placeholder="Enter your account number"
-                  maxLength={18} style={inputStyle}
-                />
+                <label style={labelStyle}>Account Number <span style={{ color: '#EF4444' }}>*</span></label>
+                <input type="text" value={bankDetails.accountNumber} onChange={e => setBankDetails(p => ({ ...p, accountNumber: e.target.value.replace(/\D/g, '') }))} placeholder="Enter your account number" maxLength={18} style={inputStyle} />
               </div>
-
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={labelStyle}>
-                    IFSC Code <span style={{ color: '#EF4444' }}>*</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={bankDetails.ifscCode}
-                    onChange={e => setBankDetails(p => ({
-                      ...p, ifscCode: e.target.value.toUpperCase(),
-                    }))}
-                    placeholder="SBIN0001234"
-                    maxLength={11} style={inputStyle}
-                  />
+                  <label style={labelStyle}>IFSC Code <span style={{ color: '#EF4444' }}>*</span></label>
+                  <input type="text" value={bankDetails.ifscCode} onChange={e => setBankDetails(p => ({ ...p, ifscCode: e.target.value.toUpperCase() }))} placeholder="SBIN0001234" maxLength={11} style={inputStyle} />
                 </div>
                 <div>
                   <label style={labelStyle}>Bank Name</label>
-                  <input
-                    type="text"
-                    value={bankDetails.bankName}
-                    onChange={e => setBankDetails(p => ({ ...p, bankName: e.target.value }))}
-                    placeholder="e.g. SBI, HDFC" style={inputStyle}
-                  />
+                  <input type="text" value={bankDetails.bankName} onChange={e => setBankDetails(p => ({ ...p, bankName: e.target.value }))} placeholder="e.g. SBI, HDFC" style={inputStyle} />
                 </div>
               </div>
             </div>
@@ -1533,15 +1536,11 @@ function RefundModal({ order, onClose, onSuccess }) {
         )}
 
         <div style={{ display: 'flex', gap: '10px' }}>
-          <button
-            onClick={onClose}
-            style={{
-              flex: 1, padding: '12px', background: 'white',
-              border: '1.5px solid #E5E7EB', borderRadius: '10px',
-              fontWeight: '700', color: '#6B7280',
-              cursor: 'pointer', fontFamily: 'Nunito, sans-serif',
-            }}
-          >
+          <button onClick={onClose} style={{
+            flex: 1, padding: '12px', background: 'white',
+            border: '1.5px solid #E5E7EB', borderRadius: '10px',
+            fontWeight: '700', color: '#6B7280', cursor: 'pointer', fontFamily: 'Nunito, sans-serif',
+          }}>
             Cancel
           </button>
           <button
@@ -1549,16 +1548,12 @@ function RefundModal({ order, onClose, onSuccess }) {
             disabled={!isValid || submitting}
             style={{
               flex: 2, padding: '12px',
-              background: isValid && !submitting
-                ? 'linear-gradient(135deg, #7B2FBE, #9333EA)'
-                : '#F3F4F6',
+              background: isValid && !submitting ? 'linear-gradient(135deg, #7B2FBE, #9333EA)' : '#F3F4F6',
               color: isValid && !submitting ? 'white' : '#9CA3AF',
               border: 'none', borderRadius: '10px',
               fontWeight: '800', fontSize: '0.95rem',
               fontFamily: 'Nunito, sans-serif',
               cursor: isValid && !submitting ? 'pointer' : 'not-allowed',
-              transition: 'all 0.2s',
-              boxShadow: isValid ? '0 4px 14px rgba(123,47,190,0.25)' : 'none',
             }}
           >
             {submitting ? '⏳ Submitting...' : '💰 Submit Refund Request'}
@@ -1596,9 +1591,9 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
     if (order.paymentMethod === 'COD' && !order.isDelivered)
       return { type: 'info', icon: 'ℹ️', title: 'No refund needed', message: "You haven't paid yet (Cash on Delivery)." };
     if (order.paymentMethod === 'Razorpay' && order.isPaid)
-      return { type: 'success', icon: '💰', title: 'Auto-refund will be initiated', message: `₹${order.totalPrice?.toLocaleString('en-IN')} will be refunded within 5–7 business days.` };
+      return { type: 'success', icon: '💰', title: 'Auto-refund will be initiated', message: `₹${Math.round(order.totalPrice)?.toLocaleString('en-IN')} will be refunded within 5–7 business days.` };
     if (order.paymentMethod === 'COD' && order.isDelivered)
-      return { type: 'warning', icon: '🏦', title: 'Bank details required', message: `₹${order.totalPrice?.toLocaleString('en-IN')} will be transferred after we receive returned items.` };
+      return { type: 'warning', icon: '🏦', title: 'Bank details required', message: `₹${Math.round(order.totalPrice)?.toLocaleString('en-IN')} will be transferred after we receive returned items.` };
     return null;
   };
 
@@ -1664,10 +1659,7 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             {order.orderItems?.[0]?.image && (
-              <img
-                src={order.orderItems[0].image} alt=""
-                style={{ width: '44px', height: '44px', borderRadius: '8px', objectFit: 'cover' }}
-              />
+              <img src={order.orderItems[0].image} alt="" style={{ width: '44px', height: '44px', borderRadius: '8px', objectFit: 'cover' }} />
             )}
             <div>
               <p style={{ fontSize: '0.84rem', fontWeight: '700', color: '#1F2937', margin: 0 }}>
@@ -1679,7 +1671,7 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
             </div>
           </div>
           <strong style={{ color: '#FF6B35', fontSize: '1rem' }}>
-            ₹{order.totalPrice?.toLocaleString('en-IN')}
+            ₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}
           </strong>
         </div>
 
@@ -1717,7 +1709,7 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
               background: reason === r ? '#FEF2F2' : 'white',
               border: `1.5px solid ${reason === r ? '#FCA5A5' : '#E5E7EB'}`,
               borderRadius: '10px', cursor: 'pointer',
-              fontSize: '0.86rem', fontWeight: '600', color: '#1F2937', transition: 'all 0.15s',
+              fontSize: '0.86rem', fontWeight: '600', color: '#1F2937',
             }}>
               <input
                 type="radio" name="cancelReason" value={r}
@@ -1785,16 +1777,11 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
         )}
 
         <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
-          <button
-            onClick={onClose}
-            disabled={loading}
-            style={{
-              flex: 1, padding: '12px', background: 'white',
-              border: '1.5px solid #D1D5DB', borderRadius: '10px',
-              fontWeight: '700', color: '#6B7280',
-              cursor: 'pointer', fontFamily: 'Nunito, sans-serif',
-            }}
-          >
+          <button onClick={onClose} disabled={loading} style={{
+            flex: 1, padding: '12px', background: 'white',
+            border: '1.5px solid #D1D5DB', borderRadius: '10px',
+            fontWeight: '700', color: '#6B7280', cursor: 'pointer', fontFamily: 'Nunito, sans-serif',
+          }}>
             Keep Order
           </button>
           <button

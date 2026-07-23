@@ -247,6 +247,10 @@ model Order {
   exchangeStatus  String?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
+   awbNumber    String?
+  courierName  String?
+  shipmentId   String?
+  trackingUrl  String?
 }
 
 // ✅ ADD THIS NEW MODEL at bottom

@@ -24,11 +24,340 @@ const STATUS_COLOR = {
 
 const STATUS_STEPS = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered'];
 
-// ✅ Format order number helper
 function fmtOrderNum(order) {
   return order?.orderNumber
     ? `ABW-${order.orderNumber}`
     : `#${order?.id?.slice(-8)?.toUpperCase()}`;
+}
+
+// ✅ Ship Button with Manual AWB fallback
+function ShipButton({ order, onSuccess }) {
+  const [loading,       setLoading]       = useState(false);
+  const [showManual,    setShowManual]    = useState(true);
+  const [manualAwb,     setManualAwb]     = useState('');
+  const [manualCourier, setManualCourier] = useState('Nimbus Post');
+
+  const handleAutoShip = async () => {
+    if (!confirm('Try auto-creating shipment via Nimbus Post API?')) return;
+    setLoading(true);
+    try {
+      const res = await fetch('/api/shipping/create', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ orderId: order.id }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        toast.error(data.suggestion || 'API not ready. Use manual AWB below.');
+        setShowManual(true);
+        return;
+      }
+      toast.success(`✅ Shipment created! AWB: ${data.awb}`);
+      onSuccess();
+    } catch (err) {
+      toast.error(err.message);
+      setShowManual(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleManualShip = async () => {
+    if (!manualAwb.trim()) {
+      toast.error('Please enter AWB number');
+      return;
+    }
+    setLoading(true);
+    try {
+      const res = await fetch('/api/shipping/create', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          orderId:       order.id,
+          manualAwb:     manualAwb.trim(),
+          manualCourier: manualCourier.trim(),
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      toast.success(`✅ AWB saved! ${data.awb}`);
+      onSuccess();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Already shipped — show AWB info
+  if (order.awbNumber) {
+    return (
+      <div style={{
+        padding: '14px 16px',
+        background: 'linear-gradient(135deg, #E0F2FE, #EDE9FE)',
+        border: '1.5px solid #7DD3FC',
+        borderRadius: '12px',
+      }}>
+        <p style={{
+          margin: '0 0 6px', fontSize: '0.72rem', fontWeight: '800',
+          color: '#0369A1', textTransform: 'uppercase', letterSpacing: '0.5px',
+        }}>
+          🚚 Shipment Info
+        </p>
+        <p style={{
+          margin: '0 0 4px', fontFamily: 'monospace', fontWeight: '800',
+          color: '#0369A1', fontSize: '1rem',
+        }}>
+          AWB: {order.awbNumber}
+        </p>
+        {order.courierName && (
+          <p style={{ margin: '0 0 10px', fontSize: '0.78rem', color: '#0369A1', fontWeight: '600' }}>
+            via {order.courierName}
+          </p>
+        )}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+          {order.trackingUrl && (
+            <a
+              href={order.trackingUrl}
+              target="_blank" rel="noopener noreferrer"
+              style={{
+                padding: '7px 14px', background: '#0369A1', color: 'white',
+                borderRadius: '8px', textDecoration: 'none',
+                fontWeight: '700', fontSize: '0.80rem', fontFamily: 'Nunito, sans-serif',
+              }}
+            >
+              📦 Track Shipment
+            </a>
+          )}
+          <button
+            onClick={() => { navigator.clipboard.writeText(order.awbNumber); toast.success('AWB copied!'); }}
+            style={{
+              padding: '7px 14px', background: 'white', color: '#0369A1',
+              border: '1.5px solid #7DD3FC', borderRadius: '8px',
+              fontWeight: '700', fontSize: '0.80rem', cursor: 'pointer',
+              fontFamily: 'Nunito, sans-serif',
+            }}
+          >
+            📋 Copy AWB
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+
+      {/* Info banner */}
+      <div style={{
+        padding: '10px 12px',
+        background: '#FEF3C7',
+        border: '1.5px solid #FDE68A',
+        borderRadius: '10px',
+        fontSize: '0.78rem',
+        color: '#92400E',
+        fontWeight: '600',
+        lineHeight: 1.5,
+      }}>
+        ℹ️ <strong>How to ship:</strong>
+        <br />
+        1. Go to{' '}
+        <a
+          href="https://ship.nimbuspost.com"
+          target="_blank" rel="noopener noreferrer"
+          style={{ color: '#0369A1', fontWeight: '800' }}
+        >
+          Nimbus Post Dashboard
+        </a>
+        <br />
+        2. Create shipment for this order manually
+        <br />
+        3. Copy the AWB number and paste below
+      </div>
+
+      {/* Manual AWB entry */}
+      <div style={{
+        padding: '16px',
+        background: '#F8FAFC',
+        border: '1.5px solid #E2E8F0',
+        borderRadius: '12px',
+        display: 'flex', flexDirection: 'column', gap: '10px',
+      }}>
+        <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: '800', color: '#374151' }}>
+          ✏️ Enter AWB from Nimbus Post
+        </p>
+        <input
+          type="text"
+          value={manualAwb}
+          onChange={e => setManualAwb(e.target.value)}
+          placeholder="e.g. NP123456789"
+          style={{
+            width: '100%', padding: '10px 12px',
+            border: '1.5px solid #D1D5DB', borderRadius: '8px',
+            fontSize: '0.90rem', fontFamily: 'monospace',
+            outline: 'none', boxSizing: 'border-box',
+          }}
+        />
+        <input
+          type="text"
+          value={manualCourier}
+          onChange={e => setManualCourier(e.target.value)}
+          placeholder="Courier name (e.g. Delhivery, DTDC)"
+          style={{
+            width: '100%', padding: '10px 12px',
+            border: '1.5px solid #D1D5DB', borderRadius: '8px',
+            fontSize: '0.88rem', fontFamily: 'Nunito, sans-serif',
+            outline: 'none', boxSizing: 'border-box',
+          }}
+        />
+        <button
+          onClick={handleManualShip}
+          disabled={loading || !manualAwb.trim()}
+          style={{
+            width: '100%', padding: '12px',
+            background: manualAwb.trim() && !loading
+              ? 'linear-gradient(135deg, #10B981, #059669)'
+              : '#E5E7EB',
+            color: manualAwb.trim() && !loading ? 'white' : '#9CA3AF',
+            border: 'none', borderRadius: '10px',
+            fontWeight: '800', fontSize: '0.92rem',
+            cursor: manualAwb.trim() && !loading ? 'pointer' : 'not-allowed',
+            fontFamily: 'Nunito, sans-serif',
+          }}
+        >
+          {loading ? '⏳ Saving...' : '✅ Save AWB & Mark as Shipped'}
+        </button>
+      </div>
+
+      {/* Try auto */}
+      <button
+        onClick={handleAutoShip}
+        disabled={loading}
+        style={{
+          width: '100%', padding: '10px',
+          background: 'white', color: '#6B7280',
+          border: '1.5px solid #E5E7EB', borderRadius: '10px',
+          fontWeight: '700', fontSize: '0.80rem',
+          cursor: 'pointer', fontFamily: 'Nunito, sans-serif',
+        }}
+      >
+        🔄 Try Auto-Create via API (when activated)
+      </button>
+    </div>
+  );
+}
+
+// ✅ Live Nimbus Tracking for Admin
+function AdminTrackingPanel({ awb }) {
+  const [tracking, setTracking] = useState(null);
+  const [loading,  setLoading]  = useState(true);
+
+  useEffect(() => {
+    if (!awb) return;
+    fetchTracking();
+    const interval = setInterval(fetchTracking, 60000);
+    return () => clearInterval(interval);
+  }, [awb]);
+
+  const fetchTracking = async () => {
+    try {
+      const res  = await fetch(`/api/shipping/track/${awb}`);
+      const data = await res.json();
+      if (data.success) setTracking(data.tracking);
+    } catch (err) {
+      console.error('Tracking error:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (!awb) return null;
+
+  return (
+    <div style={{
+      background: 'white',
+      border: '1.5px solid #E0F2FE',
+      borderRadius: '12px',
+      padding: '16px',
+      marginTop: '12px',
+    }}>
+      <h4 style={{ margin: '0 0 12px', fontSize: '0.88rem', fontWeight: '800', color: '#0369A1' }}>
+        📡 Live Tracking Events
+      </h4>
+
+      {loading ? (
+        <p style={{ color: '#9CA3AF', fontSize: '0.82rem', textAlign: 'center' }}>
+          Loading tracking...
+        </p>
+      ) : tracking ? (
+        <div>
+          {tracking.current_status && (
+            <div style={{
+              padding: '10px 12px',
+              background: '#E0F2FE',
+              borderRadius: '8px',
+              marginBottom: '12px',
+            }}>
+              <p style={{ margin: 0, fontWeight: '800', color: '#0369A1', fontSize: '0.88rem' }}>
+                Current: {tracking.current_status}
+              </p>
+              {tracking.current_timestamp && (
+                <p style={{ margin: '2px 0 0', fontSize: '0.74rem', color: '#6B7280' }}>
+                  {new Date(tracking.current_timestamp).toLocaleString('en-IN')}
+                </p>
+              )}
+            </div>
+          )}
+
+          {tracking.tracking_data?.length > 0 ? (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0' }}>
+              {tracking.tracking_data.map((event, i) => (
+                <div key={i} style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                    <div style={{
+                      width: '10px', height: '10px', borderRadius: '50%',
+                      background: i === 0 ? '#0369A1' : '#CBD5E1',
+                      marginTop: '4px', flexShrink: 0,
+                    }} />
+                    {i < tracking.tracking_data.length - 1 && (
+                      <div style={{ width: '2px', height: '28px', background: '#E2E8F0' }} />
+                    )}
+                  </div>
+                  <div style={{ paddingBottom: '10px', flex: 1 }}>
+                    <p style={{
+                      margin: 0, fontSize: '0.82rem',
+                      fontWeight: i === 0 ? '700' : '600',
+                      color: i === 0 ? '#0F172A' : '#6B7280',
+                    }}>
+                      {event.status || event.activity}
+                    </p>
+                    {event.location && (
+                      <p style={{ margin: '1px 0 0', fontSize: '0.72rem', color: '#94A3B8' }}>
+                        📍 {event.location}
+                      </p>
+                    )}
+                    {event.timestamp && (
+                      <p style={{ margin: '1px 0 0', fontSize: '0.70rem', color: '#94A3B8' }}>
+                        🕒 {new Date(event.timestamp).toLocaleString('en-IN')}
+                      </p>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p style={{ color: '#9CA3AF', fontSize: '0.82rem', textAlign: 'center', padding: '8px 0' }}>
+              No tracking events yet
+            </p>
+          )}
+        </div>
+      ) : (
+        <p style={{ color: '#9CA3AF', fontSize: '0.82rem', textAlign: 'center' }}>
+          Tracking info not available yet
+        </p>
+      )}
+    </div>
+  );
 }
 
 export default function AdminOrderDetail({ params }) {
@@ -75,7 +404,7 @@ export default function AdminOrderDetail({ params }) {
         method:  'PUT',
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify({
-          orderStatus:   newStatus,
+          orderStatus:    newStatus,
           trackingNumber: trackingNumber || null,
         }),
       });
@@ -174,6 +503,7 @@ export default function AdminOrderDetail({ params }) {
         borderRadius: '50%', animation: 'spin 0.8s linear infinite',
       }} />
       <p style={{ color: '#888' }}>Loading order details...</p>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 
@@ -185,11 +515,13 @@ export default function AdminOrderDetail({ params }) {
     </div>
   );
 
-  const currentStep      = STATUS_STEPS.indexOf(order.orderStatus);
-  const isCancelled      = order.orderStatus === 'Cancelled' || order.orderStatus === 'Refunded';
+  const currentStep       = STATUS_STEPS.indexOf(order.orderStatus);
+  const isCancelled       = order.orderStatus === 'Cancelled' || order.orderStatus === 'Refunded';
   const isReturnRequested = order.orderStatus === 'Return_Requested' || !!order.returnRequest;
-  const hasRefund        = !!refund;
-  const returnReq        = order.returnRequest;
+  const hasRefund         = !!refund;
+  const returnReq         = order.returnRequest;
+
+  const canShip = ['Confirmed', 'Processing', 'Shipped'].includes(order.orderStatus);
 
   return (
     <div className={styles.page}>
@@ -197,7 +529,6 @@ export default function AdminOrderDetail({ params }) {
       {/* ── HEADER ── */}
       <div className={styles.header}>
         <div>
-          {/* ✅ Beautiful order number display */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
             <h1 style={{ margin: 0 }}>
               Order{' '}
@@ -266,7 +597,6 @@ export default function AdminOrderDetail({ params }) {
             </span>
           </div>
 
-          {/* Return Details */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
@@ -278,7 +608,7 @@ export default function AdminOrderDetail({ params }) {
             </div>
             <div style={{ padding: '12px 14px', background: 'white', borderRadius: '10px', border: '1.5px solid #A7F3D0' }}>
               <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '800', color: '#065F46', textTransform: 'uppercase' }}>💰 Refund Amount</p>
-              <p style={{ margin: '4px 0 0', fontSize: '1.1rem', color: '#10B981', fontWeight: '900' }}>₹{order.totalPrice?.toLocaleString('en-IN')}</p>
+              <p style={{ margin: '4px 0 0', fontSize: '1.1rem', color: '#10B981', fontWeight: '900' }}>₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}</p>
             </div>
             <div style={{ padding: '12px 14px', background: 'white', borderRadius: '10px', border: '1.5px solid #FED7AA' }}>
               <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '800', color: '#9A3412', textTransform: 'uppercase' }}>🟡 Refund Status</p>
@@ -286,7 +616,6 @@ export default function AdminOrderDetail({ params }) {
             </div>
           </div>
 
-          {/* UPI Details */}
           {returnReq.refundMethod === 'upi' && (
             <div style={{
               padding: '14px', background: 'white', borderRadius: '10px',
@@ -307,7 +636,6 @@ export default function AdminOrderDetail({ params }) {
             </div>
           )}
 
-          {/* Bank Details */}
           {returnReq.refundMethod === 'bank' && (
             <div style={{ padding: '14px', background: 'white', borderRadius: '10px', marginBottom: '16px', border: '1.5px solid #BFDBFE' }}>
               <h4 style={{ margin: '0 0 10px', fontSize: '0.92rem', fontWeight: '800', color: '#1E40AF' }}>🏦 Bank Account Details</h4>
@@ -330,7 +658,6 @@ export default function AdminOrderDetail({ params }) {
             </div>
           )}
 
-          {/* Action Buttons */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
@@ -340,13 +667,13 @@ export default function AdminOrderDetail({ params }) {
             {refund?.refundStatus === 'pending' && (
               <button onClick={() => handleProcessRefund('processing')} disabled={processingRefund}
                 style={{ padding: '12px 16px', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize: '0.88rem', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>
-                {processingRefund ? '⏳ Processing...' : '⚙️ Mark as Processing'}
+                {processingRefund ? '⏳...' : '⚙️ Mark Processing'}
               </button>
             )}
             {refund && refund.refundStatus !== 'completed' && refund.refundStatus !== 'failed' && (
               <button onClick={() => handleProcessRefund('completed')} disabled={processingRefund}
                 style={{ padding: '12px 16px', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize: '0.88rem', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>
-                {processingRefund ? '⏳ Processing...' : '✅ Mark Refund Completed'}
+                {processingRefund ? '⏳...' : '✅ Mark Completed'}
               </button>
             )}
             {refund?.refundStatus !== 'completed' && (
@@ -358,19 +685,17 @@ export default function AdminOrderDetail({ params }) {
             {refund && (
               <Link href={`/admin/refunds/${refund.id}`}
                 style={{ padding: '12px 16px', background: 'white', color: '#7B2FBE', border: '2px solid #DDD6FE', borderRadius: '10px', fontWeight: '800', fontSize: '0.88rem', textAlign: 'center', textDecoration: 'none', fontFamily: 'Nunito, sans-serif' }}>
-                👁️ View Full Refund Details
+                👁️ View Refund
               </Link>
             )}
           </div>
 
-          {/* Completed status */}
           {refund?.refundStatus === 'completed' && (
             <div style={{ marginTop: '16px', padding: '14px', background: '#ECFDF5', border: '2px solid #10B981', borderRadius: '10px', textAlign: 'center' }}>
               <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', color: '#065F46' }}>✅ Refund Completed Successfully</p>
             </div>
           )}
 
-          {/* Admin Notes */}
           <div style={{ marginTop: '16px' }}>
             <label style={{ display: 'block', fontSize: '0.74rem', fontWeight: '800', color: '#9A3412', marginBottom: '6px', textTransform: 'uppercase' }}>
               📝 Admin Notes
@@ -451,9 +776,10 @@ export default function AdminOrderDetail({ params }) {
               </div>
               <div>
                 <label>Phone</label>
-                <p>{order.shippingAddress?.phone
-                  ? <a href={`tel:${order.shippingAddress.phone}`} style={{ color: '#7c3aed', textDecoration: 'none' }}>📞 {order.shippingAddress.phone}</a>
-                  : '—'}
+                <p>
+                  {order.shippingAddress?.phone
+                    ? <a href={`tel:${order.shippingAddress.phone}`} style={{ color: '#7c3aed', textDecoration: 'none' }}>📞 {order.shippingAddress.phone}</a>
+                    : '—'}
                 </p>
               </div>
               <div>
@@ -495,7 +821,7 @@ export default function AdminOrderDetail({ params }) {
             <div className={styles.priceRows}>
               <div className={styles.priceRow}>
                 <span>Items ({order.orderItems?.reduce((a, i) => a + i.quantity, 0)})</span>
-                <span>₹{order.itemsPrice?.toLocaleString('en-IN')}</span>
+                <span>₹{Math.round(order.itemsPrice)?.toLocaleString('en-IN')}</span>
               </div>
               <div className={styles.priceRow}>
                 <span>Shipping</span>
@@ -503,24 +829,31 @@ export default function AdminOrderDetail({ params }) {
                   {order.shippingPrice === 0 ? '🎉 FREE' : `₹${order.shippingPrice}`}
                 </span>
               </div>
-              <div className={styles.priceRow}>
-                <span>Tax (5%)</span>
-                <span>₹{order.taxPrice?.toLocaleString('en-IN')}</span>
-              </div>
               {order.discountAmount > 0 && (
                 <div className={`${styles.priceRow} ${styles.discountRow}`}>
                   <span>Coupon ({order.couponCode})</span>
-                  <span>− ₹{order.discountAmount?.toLocaleString('en-IN')}</span>
+                  <span>− ₹{Math.round(order.discountAmount)?.toLocaleString('en-IN')}</span>
                 </div>
               )}
             </div>
             <div className={styles.totalRow}>
               <span>Total</span>
               <strong style={{ color: '#ff6b9d', fontSize: '1.2rem' }}>
-                ₹{order.totalPrice?.toLocaleString('en-IN')}
+                ₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}
               </strong>
             </div>
           </div>
+
+          {/* ✅ Nimbus Post Shipping */}
+          {canShip && (
+            <div className={styles.card}>
+              <h3>🚚 Shipping</h3>
+              <ShipButton order={order} onSuccess={fetchOrder} />
+              {order.awbNumber && (
+                <AdminTrackingPanel awb={order.awbNumber} />
+              )}
+            </div>
+          )}
 
           {/* Update Order */}
           {!isReturnRequested && (
@@ -538,10 +871,12 @@ export default function AdminOrderDetail({ params }) {
                   className="form-control"
                   value={trackingNumber}
                   onChange={e => setTrackingNumber(e.target.value)}
-                  placeholder="e.g. DTDC123456789"
+                  placeholder={order.awbNumber ? order.awbNumber : 'e.g. DTDC123456789'}
                 />
                 <small style={{ color: '#888', fontSize: '12px', marginTop: '4px', display: 'block' }}>
-                  Customer will receive email with tracking info
+                  {order.awbNumber
+                    ? `✅ Auto-filled from AWB`
+                    : 'Customer will receive email with tracking info'}
                 </small>
               </div>
               <button
@@ -559,7 +894,7 @@ export default function AdminOrderDetail({ params }) {
           )}
 
           {/* Quick Links */}
-          {refund && (
+          {hasRefund && (
             <div className={styles.card} style={{ background: 'linear-gradient(135deg, #F5F3FF, #EDE9FE)' }}>
               <h3 style={{ color: '#7B2FBE' }}>🔗 Quick Links</h3>
               <Link href={`/admin/refunds/${refund.id}`} style={{
@@ -577,16 +912,6 @@ export default function AdminOrderDetail({ params }) {
               }}>
                 📊 All Refunds Dashboard
               </Link>
-            </div>
-          )}
-
-          {/* Tracking */}
-          {order.trackingNumber && (
-            <div className={styles.card} style={{ background: '#e0f2fe', border: '1px solid #7dd3fc' }}>
-              <h3 style={{ color: '#0369a1' }}>📦 Tracking Info</h3>
-              <p style={{ fontFamily: 'monospace', fontWeight: '700', color: '#0369a1', fontSize: '15px' }}>
-                {order.trackingNumber}
-              </p>
             </div>
           )}
 
