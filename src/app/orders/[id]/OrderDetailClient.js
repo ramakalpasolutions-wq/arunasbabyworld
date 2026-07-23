@@ -234,18 +234,18 @@ export default function OrderDetailClient({ id }) {
 
   // ✅ Download Invoice Handler
   const handleDownloadInvoice = async () => {
-    setDownloadingInvoice(true);
-    try {
-      const { generateInvoice } = await import('@/lib/invoiceGenerator');
-      generateInvoice(order);
-      toast.success('📄 Invoice downloaded!');
-    } catch (err) {
-      console.error('Invoice error:', err);
-      toast.error('Failed to generate invoice');
-    } finally {
-      setDownloadingInvoice(false);
-    }
-  };
+  setDownloadingInvoice(true);
+  try {
+    const { generateInvoice } = await import('@/lib/invoiceGenerator');
+    await generateInvoice(order);  // ✅ Added await
+    toast.success('📄 Invoice downloaded!');
+  } catch (err) {
+    console.error('Invoice error:', err);
+    toast.error('Failed to generate invoice');
+  } finally {
+    setDownloadingInvoice(false);
+  }
+};
 
   // ✅ Retry Payment Handler
   const handleRetryPayment = async () => {
