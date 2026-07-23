@@ -3,6 +3,75 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
 
+// ✅ Calculate search relevance score
+function calculateRelevance(product, searchLower, matchingCategoryIds) {
+  let score = 0;
+  const nameLower       = (product.name || '').toLowerCase();
+  const brandLower      = (product.brand || '').toLowerCase();
+  const descLower       = (product.description || '').toLowerCase();
+  const shortDescLower  = (product.shortDescription || '').toLowerCase();
+  const categoryNameLower = (product.category?.name || '').toLowerCase();
+  const categorySlugLower = (product.category?.slug || '').toLowerCase();
+
+  // 🥇 HIGHEST — Product is in matching category (main category match)
+  if (matchingCategoryIds.includes(product.categoryId)) {
+    score += 10000;
+  }
+
+  // 🥈 Category name/slug match
+  if (categoryNameLower === searchLower || categorySlugLower === searchLower) {
+    score += 5000;
+  }
+  if (categoryNameLower.includes(searchLower) || categorySlugLower.includes(searchLower)) {
+    score += 2000;
+  }
+
+  // 🥉 Exact product name match
+  if (nameLower === searchLower) score += 3000;
+
+  // Name starts with search
+  if (nameLower.startsWith(searchLower)) score += 1500;
+
+  // Name contains search as whole word
+  const nameWords = nameLower.split(/\s+/);
+  if (nameWords.includes(searchLower)) score += 1200;
+
+  // Name contains search (substring)
+  if (nameLower.includes(searchLower)) score += 800;
+
+  // Brand exact match
+  if (brandLower === searchLower) score += 700;
+
+  // Brand contains search
+  if (brandLower.includes(searchLower)) score += 400;
+
+  // Tags exact match
+  if (product.tags?.some(t => t.toLowerCase() === searchLower)) score += 600;
+
+  // Tags contains
+  if (product.tags?.some(t => t.toLowerCase().includes(searchLower))) score += 300;
+
+  // Short description match
+  if (shortDescLower.includes(searchLower)) score += 100;
+
+  // Description match (LOWEST priority — least relevant)
+  if (descLower.includes(searchLower)) score += 20;
+
+  // 🎁 BOOST: Featured products
+  if (product.isFeatured) score += 50;
+
+  // 🎁 BOOST: Trending products
+  if (product.isTrending) score += 40;
+
+  // 🎁 BOOST: In stock
+  if ((product.stock || 0) > 0) score += 10;
+
+  // 🎁 BOOST: Higher rated
+  if (product.rating > 4) score += 15;
+
+  return score;
+}
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -51,15 +120,49 @@ export async function GET(request) {
       ];
     }
 
+    // ✅ SMART SEARCH — Categories first, then products
+    let matchingCategoryIds = [];
+
     if (search && search.trim()) {
       const s = search.trim();
+
+      // STEP 1: Find matching categories
+      const matchingCategories = await prisma.category.findMany({
+        where: {
+          OR: [
+            { name: { contains: s, mode: 'insensitive' } },
+            { slug: { contains: s.toLowerCase(), mode: 'insensitive' } },
+          ],
+          isActive: true,
+        },
+        select: { id: true, name: true, slug: true },
+      });
+
+      matchingCategoryIds = matchingCategories.map(c => c.id);
+      console.log(`🔍 Search "${s}" → Found ${matchingCategoryIds.length} matching categories:`, matchingCategories.map(c => c.name));
+
+      // STEP 2: Build search conditions — category match gets priority in WHERE
       const searchConditions = [
+        // 1. Products in matching categories (highest priority)
+        ...(matchingCategoryIds.length > 0
+          ? [{ categoryId: { in: matchingCategoryIds } }]
+          : []),
+
+        // 2. Product name match
         { name: { contains: s, mode: 'insensitive' } },
-        { description: { contains: s, mode: 'insensitive' } },
-        { shortDescription: { contains: s, mode: 'insensitive' } },
+
+        // 3. Brand match
         { brand: { contains: s, mode: 'insensitive' } },
-        { category: { name: { contains: s, mode: 'insensitive' } } },
-        { category: { slug: { contains: s, mode: 'insensitive' } } },
+
+        // 4. Tags match
+        { tags: { has: s } },
+        { tags: { has: s.toLowerCase() } },
+
+        // 5. Short description
+        { shortDescription: { contains: s, mode: 'insensitive' } },
+
+        // 6. Full description (lowest)
+        { description: { contains: s, mode: 'insensitive' } },
       ];
 
       if (where.OR) {
@@ -70,6 +173,7 @@ export async function GET(request) {
       }
     }
 
+    // ✅ Direct category filter (e.g., ?category=xxx)
     if (category) {
       const isObjectId = /^[a-f\d]{24}$/i.test(category);
       if (isObjectId) {
@@ -89,19 +193,41 @@ export async function GET(request) {
 
     const total = await prisma.product.count({ where });
 
-    const products = await prisma.product.findMany({
+    // ✅ Fetch products
+    let products = await prisma.product.findMany({
       where,
       include: {
         category: { select: { id: true, name: true, slug: true } },
       },
       orderBy: { [sort]: order },
-      skip: (page - 1) * limit,
-      take: limit,
+      // ⚠️ When searching, fetch more results for relevance sorting
+      skip: search ? 0 : (page - 1) * limit,
+      take: search ? Math.min(total, 200) : limit,
     });
+
+    // ✅ SMART RELEVANCE SORTING when searching
+    if (search && search.trim()) {
+      const searchLower = search.trim().toLowerCase();
+
+      products = products
+        .map(product => ({
+          product,
+          score: calculateRelevance(product, searchLower, matchingCategoryIds),
+        }))
+        .sort((a, b) => b.score - a.score)
+        .map(item => item.product);
+
+      // Apply pagination AFTER sorting by relevance
+      const startIndex = (page - 1) * limit;
+      products = products.slice(startIndex, startIndex + limit);
+
+      console.log(`🎯 Sorted ${products.length} products by relevance for "${search}"`);
+    }
 
     return NextResponse.json({
       products,
       pagination: { page, limit, total, pages: Math.ceil(total / limit) },
+      matchingCategories: search ? matchingCategoryIds.length : undefined,
     });
 
   } catch (error) {

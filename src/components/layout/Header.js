@@ -13,6 +13,12 @@ const CATEGORY_ORDER = [
   'toys', 'cradles-cribs', 'electric-vehicles', 'food',
 ];
 
+// ✅ Trending searches — customize as needed
+const TRENDING_SEARCHES = [
+  'Diapers', 'Baby food', 'Walker', 'Cradle',
+  'Toys', 'Baby clothes', 'Feeding bottle', 'Stroller',
+];
+
 export default function Header() {
   const { data: session, status } = useSession();
   const { totalItems }            = useCart();
@@ -28,9 +34,18 @@ export default function Header() {
   const [navCategories, setNavCategories] = useState([]);
   const [catLoading,    setCatLoading]    = useState(true);
 
-  const prevItems  = useRef(totalItems);
-  const profileRef = useRef(null);
-  const searchRef  = useRef(null);
+  // ✅ SEARCH STATES
+  const [searchOpen,        setSearchOpen]        = useState(false);
+  const [searchResults,     setSearchResults]     = useState([]);
+  const [searchLoading,     setSearchLoading]     = useState(false);
+  const [recentSearches,    setRecentSearches]    = useState([]);
+  const [selectedIndex,     setSelectedIndex]     = useState(-1);
+
+  const prevItems   = useRef(totalItems);
+  const profileRef  = useRef(null);
+  const searchRef   = useRef(null);
+  const searchInputRef = useRef(null);
+  const debounceRef = useRef(null);
 
   // ✅ Fetch categories
   useEffect(() => {
@@ -46,6 +61,45 @@ export default function Header() {
       .catch(() => {})
       .finally(() => setCatLoading(false));
   }, []);
+
+  // ✅ Load recent searches from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('recentSearches');
+    if (saved) {
+      try {
+        setRecentSearches(JSON.parse(saved).slice(0, 5));
+      } catch {}
+    }
+  }, []);
+
+  // ✅ Debounced live search
+  useEffect(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+
+    if (!searchQuery.trim() || searchQuery.trim().length < 2) {
+      setSearchResults([]);
+      setSearchLoading(false);
+      return;
+    }
+
+    setSearchLoading(true);
+    debounceRef.current = setTimeout(async () => {
+      try {
+        const res = await fetch(`/api/products?search=${encodeURIComponent(searchQuery.trim())}&limit=6`);
+        const data = await res.json();
+        setSearchResults(data.products || []);
+      } catch (err) {
+        console.error('Search error:', err);
+        setSearchResults([]);
+      } finally {
+        setSearchLoading(false);
+      }
+    }, 300);
+
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+    };
+  }, [searchQuery]);
 
   // ✅ Scroll listener
   useEffect(() => {
@@ -63,11 +117,15 @@ export default function Header() {
     prevItems.current = totalItems;
   }, [totalItems]);
 
-  // ✅ Close profile dropdown on outside click
+  // ✅ Close dropdowns on outside click
   useEffect(() => {
     const handle = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
         setProfileOpen(false);
+      }
+      if (searchRef.current && !searchRef.current.contains(e.target)) {
+        setSearchOpen(false);
+        setSelectedIndex(-1);
       }
     };
     document.addEventListener('mousedown', handle);
@@ -77,34 +135,444 @@ export default function Header() {
   // ✅ Close mobile menu on route change
   useEffect(() => { setMobileOpen(false); }, [router]);
 
-  // ✅ Lock body scroll when mobile menu open
+  // ✅ Lock body scroll
   useEffect(() => {
     document.body.style.overflow = mobileOpen ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [mobileOpen]);
 
-  // ✅ ESC key to close mobile menu
+  // ✅ ESC key handling
   useEffect(() => {
     const handleEsc = (e) => {
-      if (e.key === 'Escape' && mobileOpen) setMobileOpen(false);
+      if (e.key === 'Escape') {
+        if (searchOpen) {
+          setSearchOpen(false);
+          setSelectedIndex(-1);
+          searchInputRef.current?.blur();
+        }
+        if (mobileOpen) setMobileOpen(false);
+      }
     };
     document.addEventListener('keydown', handleEsc);
     return () => document.removeEventListener('keydown', handleEsc);
-  }, [mobileOpen]);
+  }, [mobileOpen, searchOpen]);
 
-  const handleSearch = (e) => {
-    e.preventDefault();
-    if (searchQuery.trim()) {
-      router.push('/products?search=' + encodeURIComponent(searchQuery.trim()));
+  // ✅ Save to recent searches
+  const saveRecentSearch = (query) => {
+    if (!query.trim()) return;
+    const updated = [
+      query.trim(),
+      ...recentSearches.filter(s => s !== query.trim()),
+    ].slice(0, 5);
+    setRecentSearches(updated);
+    localStorage.setItem('recentSearches', JSON.stringify(updated));
+  };
+
+  const clearRecentSearches = () => {
+    setRecentSearches([]);
+    localStorage.removeItem('recentSearches');
+  };
+
+  const handleSearch = (e, customQuery = null) => {
+    if (e) e.preventDefault();
+    const query = customQuery || searchQuery;
+
+    if (query.trim()) {
+      saveRecentSearch(query);
+      router.push('/products?search=' + encodeURIComponent(query.trim()));
       setSearchQuery('');
+      setSearchOpen(false);
+      setSelectedIndex(-1);
       setMobileOpen(false);
+      searchInputRef.current?.blur();
+    }
+  };
+
+  // ✅ Keyboard navigation
+  const handleKeyDown = (e) => {
+    const totalItems = searchResults.length + (searchResults.length === 0 && !searchQuery ? recentSearches.length + TRENDING_SEARCHES.length : 0);
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setSelectedIndex(prev => (prev + 1) % Math.max(totalItems, 1));
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setSelectedIndex(prev => (prev - 1 + totalItems) % Math.max(totalItems, 1));
+    } else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (selectedIndex >= 0) {
+        if (searchResults[selectedIndex]) {
+          const product = searchResults[selectedIndex];
+          router.push(`/products/${product.slug || product.id}`);
+          setSearchOpen(false);
+          setSearchQuery('');
+          setSelectedIndex(-1);
+        }
+      } else {
+        handleSearch(e);
+      }
     }
   };
 
   const closeMobile = () => setMobileOpen(false);
-
   const isLoadingSession = status === 'loading';
   const isLoggedIn = status === 'authenticated' && session && session.user;
+
+  // ✅ Search Dropdown Component
+  const SearchDropdown = () => (
+    <div style={{
+      position: 'absolute',
+      top: 'calc(100% + 8px)',
+      left: 0,
+      right: 0,
+      background: 'white',
+      border: '1.5px solid #38BDF8',
+      borderRadius: '16px',
+      boxShadow: '0 12px 40px rgba(3, 105, 161, 0.15)',
+      maxHeight: '70vh',
+      overflowY: 'auto',
+      zIndex: 999,
+      animation: 'searchFadeIn 0.2s ease-out',
+    }}>
+      {/* Loading */}
+      {searchLoading && (
+        <div style={{
+          padding: '20px',
+          textAlign: 'center',
+          color: '#0369A1',
+          fontSize: '0.86rem',
+          fontWeight: '600',
+        }}>
+          <div style={{
+            display: 'inline-block',
+            width: '24px', height: '24px',
+            border: '3px solid #E0F2FE',
+            borderTop: '3px solid #0369A1',
+            borderRadius: '50%',
+            animation: 'spin 0.8s linear infinite',
+            marginBottom: '8px',
+          }} />
+          <p style={{ margin: 0 }}>Searching...</p>
+        </div>
+      )}
+
+      {/* Live Search Results */}
+      {!searchLoading && searchQuery && searchResults.length > 0 && (
+        <div>
+          <div style={{
+            padding: '10px 16px',
+            background: 'linear-gradient(90deg, #F0F9FF, #E0F2FE)',
+            borderBottom: '1px solid #BAE6FD',
+            fontSize: '0.72rem',
+            fontWeight: '800',
+            color: '#0369A1',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+          }}>
+            🎯 {searchResults.length} Products Found
+          </div>
+          {searchResults.map((product, i) => (
+            <Link
+              key={product.id}
+              href={`/products/${product.slug || product.id}`}
+              onClick={() => {
+                saveRecentSearch(searchQuery);
+                setSearchOpen(false);
+                setSearchQuery('');
+                setSelectedIndex(-1);
+              }}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: '10px 14px',
+                textDecoration: 'none',
+                color: 'inherit',
+                background: selectedIndex === i ? '#F0F9FF' : 'white',
+                borderBottom: i < searchResults.length - 1 ? '1px solid #F1F5F9' : 'none',
+                transition: 'background 0.15s',
+              }}
+              onMouseEnter={() => setSelectedIndex(i)}
+              onMouseLeave={() => setSelectedIndex(-1)}
+            >
+              <img
+                src={product.images?.[0]?.url || 'https://via.placeholder.com/48'}
+                alt={product.name}
+                style={{
+                  width: '48px', height: '48px',
+                  borderRadius: '8px', objectFit: 'cover',
+                  flexShrink: 0, border: '1px solid #E5E7EB',
+                }}
+              />
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <p style={{
+                  margin: 0,
+                  fontSize: '0.86rem',
+                  fontWeight: '700',
+                  color: '#0F172A',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {product.name}
+                </p>
+                <p style={{
+                  margin: '2px 0 0',
+                  fontSize: '0.74rem',
+                  color: '#64748B',
+                  fontWeight: '600',
+                }}>
+                  {product.brand || 'Baby Care'}
+                </p>
+              </div>
+              <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                <p style={{
+                  margin: 0,
+                  fontSize: '0.90rem',
+                  fontWeight: '800',
+                  color: '#0369A1',
+                }}>
+                  ₹{Math.round(product.discountPrice || product.price)?.toLocaleString('en-IN')}
+                </p>
+                {product.discountPrice && product.discountPrice < product.price && (
+                  <p style={{
+                    margin: '2px 0 0',
+                    fontSize: '0.68rem',
+                    color: '#94A3B8',
+                    textDecoration: 'line-through',
+                    fontWeight: '600',
+                  }}>
+                    ₹{Math.round(product.price)?.toLocaleString('en-IN')}
+                  </p>
+                )}
+              </div>
+            </Link>
+          ))}
+
+          {/* View all results */}
+          <button
+            onClick={() => handleSearch()}
+            style={{
+              width: '100%',
+              padding: '12px 16px',
+              background: 'linear-gradient(135deg, #38BDF8, #0369A1)',
+              color: 'white',
+              border: 'none',
+              fontSize: '0.84rem',
+              fontWeight: '800',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '6px',
+              borderRadius: '0 0 14px 14px',
+            }}
+          >
+            🔍 View All Results for "{searchQuery}" →
+          </button>
+        </div>
+      )}
+
+      {/* No results */}
+      {!searchLoading && searchQuery.length >= 2 && searchResults.length === 0 && (
+        <div style={{ padding: '30px 20px', textAlign: 'center' }}>
+          <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🔍</div>
+          <p style={{ margin: 0, fontSize: '0.90rem', fontWeight: '800', color: '#0F172A' }}>
+            No products found
+          </p>
+          <p style={{ margin: '4px 0 12px', fontSize: '0.80rem', color: '#64748B' }}>
+            Try different keywords or browse categories
+          </p>
+          <Link
+            href="/products"
+            onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
+            style={{
+              display: 'inline-block',
+              padding: '8px 20px',
+              background: '#38BDF8',
+              color: 'white',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              fontSize: '0.80rem',
+              fontWeight: '700',
+            }}
+          >
+            Browse All Products
+          </Link>
+        </div>
+      )}
+
+      {/* Recent + Trending (when no query) */}
+      {!searchQuery && (
+        <div>
+          {/* Recent Searches */}
+          {recentSearches.length > 0 && (
+            <div>
+              <div style={{
+                padding: '12px 16px 8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}>
+                <span style={{
+                  fontSize: '0.72rem',
+                  fontWeight: '800',
+                  color: '#64748B',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                }}>
+                  🕐 Recent Searches
+                </span>
+                <button
+                  onClick={clearRecentSearches}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#EF4444',
+                    fontSize: '0.72rem',
+                    fontWeight: '700',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Clear
+                </button>
+              </div>
+              <div style={{ padding: '0 16px 12px' }}>
+                {recentSearches.map((search, i) => (
+                  <button
+                    key={i}
+                    onClick={() => handleSearch(null, search)}
+                    style={{
+                      width: '100%',
+                      padding: '9px 12px',
+                      background: 'transparent',
+                      border: '1px solid #E5E7EB',
+                      borderRadius: '8px',
+                      textAlign: 'left',
+                      cursor: 'pointer',
+                      fontSize: '0.84rem',
+                      color: '#334155',
+                      fontWeight: '600',
+                      marginBottom: '5px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      transition: 'all 0.15s',
+                    }}
+                    onMouseEnter={e => {
+                      e.currentTarget.style.background = '#F0F9FF';
+                      e.currentTarget.style.borderColor = '#38BDF8';
+                    }}
+                    onMouseLeave={e => {
+                      e.currentTarget.style.background = 'transparent';
+                      e.currentTarget.style.borderColor = '#E5E7EB';
+                    }}
+                  >
+                    <span style={{ color: '#94A3B8' }}>🕐</span>
+                    {search}
+                    <span style={{ marginLeft: 'auto', color: '#94A3B8', fontSize: '0.72rem' }}>↗</span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Trending */}
+          <div style={{
+            padding: '12px 16px 8px',
+            borderTop: recentSearches.length > 0 ? '1px solid #F1F5F9' : 'none',
+          }}>
+            <span style={{
+              fontSize: '0.72rem',
+              fontWeight: '800',
+              color: '#0369A1',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+            }}>
+              🔥 Trending Searches
+            </span>
+          </div>
+          <div style={{
+            padding: '0 16px 16px',
+            display: 'flex',
+            flexWrap: 'wrap',
+            gap: '6px',
+          }}>
+            {TRENDING_SEARCHES.map((trend, i) => (
+              <button
+                key={i}
+                onClick={() => handleSearch(null, trend)}
+                style={{
+                  padding: '6px 12px',
+                  background: 'linear-gradient(135deg, #F0F9FF, #E0F2FE)',
+                  border: '1px solid #BAE6FD',
+                  borderRadius: '999px',
+                  cursor: 'pointer',
+                  fontSize: '0.78rem',
+                  color: '#0369A1',
+                  fontWeight: '700',
+                  transition: 'all 0.15s',
+                }}
+                onMouseEnter={e => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #38BDF8, #0369A1)';
+                  e.currentTarget.style.color = 'white';
+                }}
+                onMouseLeave={e => {
+                  e.currentTarget.style.background = 'linear-gradient(135deg, #F0F9FF, #E0F2FE)';
+                  e.currentTarget.style.color = '#0369A1';
+                }}
+              >
+                {trend}
+              </button>
+            ))}
+          </div>
+
+          {/* Category shortcuts */}
+          <div style={{
+            padding: '12px 16px',
+            background: '#F8FAFC',
+            borderTop: '1px solid #F1F5F9',
+            borderRadius: '0 0 14px 14px',
+          }}>
+            <p style={{
+              margin: '0 0 8px',
+              fontSize: '0.72rem',
+              fontWeight: '800',
+              color: '#64748B',
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+            }}>
+              🎯 Quick Categories
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+              {navCategories.slice(0, 6).map(cat => (
+                <Link
+                  key={cat.id}
+                  href={`/products?category=${cat.id}`}
+                  onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
+                  style={{
+                    padding: '5px 10px',
+                    background: 'white',
+                    border: '1px solid #E5E7EB',
+                    borderRadius: '6px',
+                    fontSize: '0.74rem',
+                    color: '#334155',
+                    fontWeight: '700',
+                    textDecoration: 'none',
+                    transition: 'all 0.15s',
+                  }}
+                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#38BDF8'; e.currentTarget.style.color = '#0369A1'; }}
+                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.color = '#334155'; }}
+                >
+                  {cat.name}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 
   return (
     <header className={`${styles.header} ${scrolled ? styles.scrolled : ''}`}>
@@ -125,20 +593,51 @@ export default function Header() {
             />
           </Link>
 
-          {/* Search */}
-          <form onSubmit={handleSearch} className={styles.searchForm}>
-            <div className={styles.searchBox}>
-              <span className={styles.searchIcon}>🔍</span>
-              <input
-                type="text"
-                placeholder="Search baby products..."
-                value={searchQuery}
-                onChange={e => setSearchQuery(e.target.value)}
-                className={styles.searchInput}
-              />
-              <button type="submit" className={styles.searchBtn}>Search</button>
-            </div>
-          </form>
+          {/* ✅ SMART SEARCH */}
+          <div ref={searchRef} style={{ flex: 1, maxWidth: 600, margin: '0 20px', position: 'relative' }}>
+            <form onSubmit={handleSearch} className={styles.searchForm}>
+              <div className={styles.searchBox}>
+                <span className={styles.searchIcon}>🔍</span>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  placeholder="Search for products, brands, categories..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onFocus={() => setSearchOpen(true)}
+                  onKeyDown={handleKeyDown}
+                  className={styles.searchInput}
+                  autoComplete="off"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSearchQuery('');
+                      searchInputRef.current?.focus();
+                    }}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      color: '#94A3B8',
+                      cursor: 'pointer',
+                      fontSize: '1rem',
+                      padding: '0 8px',
+                      display: 'flex',
+                      alignItems: 'center',
+                    }}
+                    aria-label="Clear search"
+                  >
+                    ✕
+                  </button>
+                )}
+                <button type="submit" className={styles.searchBtn}>Search</button>
+              </div>
+            </form>
+
+            {/* ✅ SEARCH DROPDOWN */}
+            {searchOpen && <SearchDropdown />}
+          </div>
 
           {/* Actions */}
           <div className={styles.actions}>
@@ -207,25 +706,13 @@ export default function Header() {
                       </div>
                     </div>
                     <div className={styles.profileDivider} />
-                    <Link
-                      href="/profile"
-                      className={styles.profileItem}
-                      onClick={() => setProfileOpen(false)}
-                    >
+                    <Link href="/profile" className={styles.profileItem} onClick={() => setProfileOpen(false)}>
                       <span>👤</span> My Profile
                     </Link>
-                    <Link
-                      href="/profile?tab=orders"
-                      className={styles.profileItem}
-                      onClick={() => setProfileOpen(false)}
-                    >
+                    <Link href="/profile?tab=orders" className={styles.profileItem} onClick={() => setProfileOpen(false)}>
                       <span>📦</span> My Orders
                     </Link>
-                    <Link
-                      href="/wishlist"
-                      className={styles.profileItem}
-                      onClick={() => setProfileOpen(false)}
-                    >
+                    <Link href="/wishlist" className={styles.profileItem} onClick={() => setProfileOpen(false)}>
                       <span>❤️</span> Wishlist
                     </Link>
                     {session.user.role === 'admin' && (
@@ -332,196 +819,259 @@ export default function Header() {
       )}
 
       {/* MOBILE MENU */}
-{mobileOpen && (
-  <div className={styles.mobileMenu}>
+      {mobileOpen && (
+        <div className={styles.mobileMenu}>
 
-    {/* Top Bar */}
-    <div className={styles.mobileMenuTop}>
-      <button
-        className={styles.mobileBackBtn}
-        onClick={closeMobile}
-        aria-label="Close menu"
-      >
-        <span className={styles.backArrow}>←</span>
-        <span>Back</span>
-      </button>
-      <span className={styles.mobileMenuTitle}>Menu</span>
-      <button
-        className={styles.mobileCloseBtn}
-        onClick={closeMobile}
-        aria-label="Close menu"
-      >
-        ✕
-      </button>
-    </div>
-
-    {/* Mobile Search */}
-    <div className={styles.mobileSearch}>
-      <form onSubmit={handleSearch}>
-        <div className={styles.searchBox}>
-          <span className={styles.searchIcon}>🔍</span>
-          <input
-            ref={searchRef}
-            type="text"
-            placeholder="Search products..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className={styles.searchInput}
-          />
-          <button type="submit" className={styles.searchBtn}>Go</button>
-        </div>
-      </form>
-    </div>
-
-    <div className={styles.mobileLinks}>
-
-      {/* ✅ Browse All Products — Hero CTA */}
-      <Link
-        href="/products"
-        onClick={closeMobile}
-        className={styles.mobileBrowseBtn}
-      >
-        <span className={styles.mobileBrowseBtnInner}>
-          <span className={styles.mobileBrowseBtnIcon}>🛍️</span>
-          <span>Browse All Products</span>
-        </span>
-        <span className={styles.mobileBrowseBtnArrow}>›</span>
-      </Link>
-
-      {/* ✅ Quick Filters Label */}
-      <p className={styles.mobileSectionLabel}>Quick Filters</p>
-
-      <div className={styles.mobileBtnGroup}>
-        <Link
-          href="/products?featured=true"
-          className={styles.mobilePill}
-          style={{ background: 'linear-gradient(135deg,#FF6B35,#FF8C5A)' }}
-          onClick={closeMobile}
-        >
-          ⭐ Featured
-        </Link>
-        <Link
-          href="/products?sort=createdAt&order=desc"
-          className={styles.mobilePill}
-          style={{ background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)' }}
-          onClick={closeMobile}
-        >
-          ✨ New
-        </Link>
-        <Link
-          href="/products?trending=true"
-          className={styles.mobilePill}
-          style={{ background: 'linear-gradient(135deg,#FF3366,#FF6B35)' }}
-          onClick={closeMobile}
-        >
-          🔥 Trending
-        </Link>
-        <Link
-          href="/contact"
-          className={styles.mobilePill}
-          style={{ background: 'linear-gradient(135deg,#0EA5E9,#7B2FBE)' }}
-          onClick={closeMobile}
-        >
-          📞 Contact
-        </Link>
-      </div>
-
-      <div className={styles.mobileDivider} />
-
-      {/* ✅ Shopping Section */}
-      <p className={styles.mobileSectionLabel}>Shopping</p>
-
-      <Link href="/cart" className={styles.mobileLink} onClick={closeMobile}>
-        <span className={styles.mobileLinkIcon}>🛒</span>
-        <span className={styles.mobileLinkText}>Cart</span>
-        {totalItems > 0 && (
-          <span className={styles.mobileLinkCount}>{totalItems}</span>
-        )}
-      </Link>
-      <Link href="/wishlist" className={styles.mobileLink} onClick={closeMobile}>
-        <span className={styles.mobileLinkIcon}>❤️</span>
-        <span className={styles.mobileLinkText}>Wishlist</span>
-        {wishlistItems.length > 0 && (
-          <span className={styles.mobileLinkCount}>{wishlistItems.length}</span>
-        )}
-      </Link>
-
-      <div className={styles.mobileDivider} />
-
-      {/* ✅ Account Section */}
-      {isLoadingSession ? (
-        <div className={styles.mobileLink} style={{ opacity: 0.6 }}>
-          <span className={styles.mobileLinkIcon}>⏳</span>
-          <span className={styles.mobileLinkText}>Loading...</span>
-        </div>
-      ) : isLoggedIn ? (
-        <>
-          <div className={styles.mobileUserCard}>
-            <div className={styles.mobileUserAvatar}>
-              {session.user.name?.[0]?.toUpperCase() || 'U'}
-            </div>
-            <div className={styles.mobileUserInfo}>
-              <div className={styles.mobileUserName}>{session.user.name}</div>
-              <div className={styles.mobileUserEmail}>{session.user.email}</div>
-            </div>
+          {/* Top Bar */}
+          <div className={styles.mobileMenuTop}>
+            <button
+              className={styles.mobileBackBtn}
+              onClick={closeMobile}
+              aria-label="Close menu"
+            >
+              <span className={styles.backArrow}>←</span>
+              <span>Back</span>
+            </button>
+            <span className={styles.mobileMenuTitle}>Menu</span>
+            <button
+              className={styles.mobileCloseBtn}
+              onClick={closeMobile}
+              aria-label="Close menu"
+            >
+              ✕
+            </button>
           </div>
 
-          <p className={styles.mobileSectionLabel}>Account</p>
+          {/* ✅ Mobile Search with Smart Suggestions */}
+          <div className={styles.mobileSearch} style={{ position: 'relative' }}>
+            <form onSubmit={handleSearch}>
+              <div className={styles.searchBox}>
+                <span className={styles.searchIcon}>🔍</span>
+                <input
+                  type="text"
+                  placeholder="Search products..."
+                  value={searchQuery}
+                  onChange={e => setSearchQuery(e.target.value)}
+                  onFocus={() => setSearchOpen(true)}
+                  className={styles.searchInput}
+                  autoComplete="off"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    style={{
+                      background: 'transparent', border: 'none',
+                      color: '#94A3B8', cursor: 'pointer',
+                      fontSize: '1rem', padding: '0 8px',
+                    }}
+                  >
+                    ✕
+                  </button>
+                )}
+                <button type="submit" className={styles.searchBtn}>Go</button>
+              </div>
+            </form>
 
-          <Link href="/profile" className={styles.mobileLink} onClick={closeMobile}>
-            <span className={styles.mobileLinkIcon}>👤</span>
-            <span className={styles.mobileLinkText}>My Profile</span>
-          </Link>
-          <Link href="/profile?tab=orders" className={styles.mobileLink} onClick={closeMobile}>
-            <span className={styles.mobileLinkIcon}>📦</span>
-            <span className={styles.mobileLinkText}>My Orders</span>
-          </Link>
+            {searchOpen && searchQuery.length >= 2 && searchResults.length > 0 && (
+              <div style={{
+                marginTop: '10px',
+                background: 'white',
+                border: '1.5px solid #38BDF8',
+                borderRadius: '12px',
+                overflow: 'hidden',
+                maxHeight: '400px',
+                overflowY: 'auto',
+              }}>
+                {searchResults.map((product) => (
+                  <Link
+                    key={product.id}
+                    href={`/products/${product.slug || product.id}`}
+                    onClick={() => {
+                      saveRecentSearch(searchQuery);
+                      setSearchOpen(false);
+                      setSearchQuery('');
+                      closeMobile();
+                    }}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      padding: '10px 12px',
+                      textDecoration: 'none',
+                      color: 'inherit',
+                      borderBottom: '1px solid #F1F5F9',
+                    }}
+                  >
+                    <img
+                      src={product.images?.[0]?.url || 'https://via.placeholder.com/40'}
+                      alt={product.name}
+                      style={{
+                        width: '40px', height: '40px',
+                        borderRadius: '6px', objectFit: 'cover',
+                        flexShrink: 0,
+                      }}
+                    />
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <p style={{
+                        margin: 0, fontSize: '0.82rem', fontWeight: '700',
+                        color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}>
+                        {product.name}
+                      </p>
+                      <p style={{
+                        margin: 0, fontSize: '0.78rem', fontWeight: '800', color: '#0369A1',
+                      }}>
+                        ₹{Math.round(product.discountPrice || product.price)?.toLocaleString('en-IN')}
+                      </p>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            )}
+          </div>
 
-          {session.user.role === 'admin' && (
-            <Link
-              href="/admin/dashboard"
-              className={`${styles.mobileLink} ${styles.mobileLinkAdmin}`}
-              onClick={closeMobile}
-            >
-              <span className={styles.mobileLinkIcon}>⚙️</span>
-              <span className={styles.mobileLinkText}>Admin Dashboard</span>
+          <div className={styles.mobileLinks}>
+
+            <Link href="/products" onClick={closeMobile} className={styles.mobileBrowseBtn}>
+              <span className={styles.mobileBrowseBtnInner}>
+                <span className={styles.mobileBrowseBtnIcon}>🛍️</span>
+                <span>Browse All Products</span>
+              </span>
+              <span className={styles.mobileBrowseBtnArrow}>›</span>
             </Link>
-          )}
 
-          <div className={styles.mobileDivider} />
+            <p className={styles.mobileSectionLabel}>Quick Filters</p>
 
-          <button
-            className={`${styles.mobileLink} ${styles.mobileLinkLogout}`}
-            onClick={() => {
-              signOut({ callbackUrl: '/' });
-              closeMobile();
-            }}
-          >
-            <span className={styles.mobileLinkIcon}>🚪</span>
-            <span className={styles.mobileLinkText}>Logout</span>
-          </button>
-        </>
-      ) : (
-        <>
-          <p className={styles.mobileSectionLabel}>Account</p>
-          <Link href="/login" className={styles.mobileLink} onClick={closeMobile}>
-            <span className={styles.mobileLinkIcon}>🔑</span>
-            <span className={styles.mobileLinkText}>Login</span>
-          </Link>
-          <Link href="/register" className={styles.mobileLink} onClick={closeMobile}>
-            <span className={styles.mobileLinkIcon}>✨</span>
-            <span className={styles.mobileLinkText}>Create Account</span>
-          </Link>
-        </>
+            <div className={styles.mobileBtnGroup}>
+              <Link href="/products?featured=true" className={styles.mobilePill}
+                style={{ background: 'linear-gradient(135deg,#FF6B35,#FF8C5A)' }}
+                onClick={closeMobile}
+              >
+                ⭐ Featured
+              </Link>
+              <Link href="/products?sort=createdAt&order=desc" className={styles.mobilePill}
+                style={{ background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)' }}
+                onClick={closeMobile}
+              >
+                ✨ New
+              </Link>
+              <Link href="/products?trending=true" className={styles.mobilePill}
+                style={{ background: 'linear-gradient(135deg,#FF3366,#FF6B35)' }}
+                onClick={closeMobile}
+              >
+                🔥 Trending
+              </Link>
+              <Link href="/contact" className={styles.mobilePill}
+                style={{ background: 'linear-gradient(135deg,#0EA5E9,#7B2FBE)' }}
+                onClick={closeMobile}
+              >
+                📞 Contact
+              </Link>
+            </div>
+
+            <div className={styles.mobileDivider} />
+
+            <p className={styles.mobileSectionLabel}>Shopping</p>
+
+            <Link href="/cart" className={styles.mobileLink} onClick={closeMobile}>
+              <span className={styles.mobileLinkIcon}>🛒</span>
+              <span className={styles.mobileLinkText}>Cart</span>
+              {totalItems > 0 && (
+                <span className={styles.mobileLinkCount}>{totalItems}</span>
+              )}
+            </Link>
+            <Link href="/wishlist" className={styles.mobileLink} onClick={closeMobile}>
+              <span className={styles.mobileLinkIcon}>❤️</span>
+              <span className={styles.mobileLinkText}>Wishlist</span>
+              {wishlistItems.length > 0 && (
+                <span className={styles.mobileLinkCount}>{wishlistItems.length}</span>
+              )}
+            </Link>
+
+            <div className={styles.mobileDivider} />
+
+            {isLoadingSession ? (
+              <div className={styles.mobileLink} style={{ opacity: 0.6 }}>
+                <span className={styles.mobileLinkIcon}>⏳</span>
+                <span className={styles.mobileLinkText}>Loading...</span>
+              </div>
+            ) : isLoggedIn ? (
+              <>
+                <div className={styles.mobileUserCard}>
+                  <div className={styles.mobileUserAvatar}>
+                    {session.user.name?.[0]?.toUpperCase() || 'U'}
+                  </div>
+                  <div className={styles.mobileUserInfo}>
+                    <div className={styles.mobileUserName}>{session.user.name}</div>
+                    <div className={styles.mobileUserEmail}>{session.user.email}</div>
+                  </div>
+                </div>
+
+                <p className={styles.mobileSectionLabel}>Account</p>
+
+                <Link href="/profile" className={styles.mobileLink} onClick={closeMobile}>
+                  <span className={styles.mobileLinkIcon}>👤</span>
+                  <span className={styles.mobileLinkText}>My Profile</span>
+                </Link>
+                <Link href="/profile?tab=orders" className={styles.mobileLink} onClick={closeMobile}>
+                  <span className={styles.mobileLinkIcon}>📦</span>
+                  <span className={styles.mobileLinkText}>My Orders</span>
+                </Link>
+
+                {session.user.role === 'admin' && (
+                  <Link href="/admin/dashboard"
+                    className={`${styles.mobileLink} ${styles.mobileLinkAdmin}`}
+                    onClick={closeMobile}
+                  >
+                    <span className={styles.mobileLinkIcon}>⚙️</span>
+                    <span className={styles.mobileLinkText}>Admin Dashboard</span>
+                  </Link>
+                )}
+
+                <div className={styles.mobileDivider} />
+
+                <button
+                  className={`${styles.mobileLink} ${styles.mobileLinkLogout}`}
+                  onClick={() => {
+                    signOut({ callbackUrl: '/' });
+                    closeMobile();
+                  }}
+                >
+                  <span className={styles.mobileLinkIcon}>🚪</span>
+                  <span className={styles.mobileLinkText}>Logout</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <p className={styles.mobileSectionLabel}>Account</p>
+                <Link href="/login" className={styles.mobileLink} onClick={closeMobile}>
+                  <span className={styles.mobileLinkIcon}>🔑</span>
+                  <span className={styles.mobileLinkText}>Login</span>
+                </Link>
+                <Link href="/register" className={styles.mobileLink} onClick={closeMobile}>
+                  <span className={styles.mobileLinkIcon}>✨</span>
+                  <span className={styles.mobileLinkText}>Create Account</span>
+                </Link>
+              </>
+            )}
+          </div>
+        </div>
       )}
-    </div>
-  </div>
-)}
-      {/* Pulse animation for loading skeleton */}
+
+      {/* Animations */}
       <style jsx>{`
         @keyframes pulse {
           0%, 100% { opacity: 1; }
           50% { opacity: 0.5; }
+        }
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+        @keyframes searchFadeIn {
+          from { opacity: 0; transform: translateY(-8px); }
+          to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </header>
