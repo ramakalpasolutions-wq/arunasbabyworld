@@ -242,6 +242,7 @@ model Order {
   refundAmount    Float?
   refundedAt      DateTime?
   returnRequest   Json?
+    paymentStatus   String?     @default("pending") 
   returnStatus    String?
   exchangeId      String?     @db.ObjectId
   exchangeStatus  String?

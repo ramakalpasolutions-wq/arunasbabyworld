@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 
@@ -34,7 +35,9 @@ const STATUS_EMOJI = {
   Return_Requested: '🔄',
 };
 
-// ✅ Live Nimbus Post Tracking Component
+/* ══════════════════════════════════════════
+   LIVE NIMBUS TRACKING
+══════════════════════════════════════════ */
 function LiveNimbusTracking({ awb }) {
   const [tracking, setTracking] = useState(null);
   const [loading,  setLoading]  = useState(true);
@@ -109,7 +112,6 @@ function LiveNimbusTracking({ awb }) {
         </p>
       ) : tracking ? (
         <div>
-          {/* Current Status Banner */}
           {tracking.current_status && (
             <div style={{
               padding: '14px 16px',
@@ -131,7 +133,6 @@ function LiveNimbusTracking({ awb }) {
             </div>
           )}
 
-          {/* Tracking Events Timeline */}
           {tracking.tracking_data?.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {tracking.tracking_data.map((event, i) => (
@@ -183,13 +184,21 @@ function LiveNimbusTracking({ awb }) {
   );
 }
 
+/* ══════════════════════════════════════════
+   MAIN COMPONENT
+══════════════════════════════════════════ */
 export default function OrderDetailClient({ id }) {
+  const searchParams = useSearchParams();
+  const showPaymentFailedNotice = searchParams.get('paymentFailed') === 'true';
+
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showReturnModal, setShowReturnModal] = useState(false);
   const [showRefundModal, setShowRefundModal] = useState(false);
   const [openSection, setOpenSection] = useState('items');
+  const [retrying, setRetrying] = useState(false);
+  const [downloadingInvoice, setDownloadingInvoice] = useState(false);
 
   useEffect(() => { fetchOrder(); }, [id]);
 
@@ -206,6 +215,12 @@ export default function OrderDetailClient({ id }) {
     return () => clearInterval(interval);
   }, [order?.refundStatus, order?.returnStatus, order?.exchangeStatus]);
 
+  useEffect(() => {
+    if (showPaymentFailedNotice && order?.paymentStatus === 'failed') {
+      toast.error('Your payment could not be completed. You can retry below.');
+    }
+  }, [showPaymentFailedNotice, order]);
+
   const fetchOrder = () => {
     fetch(`/api/orders/${id}`)
       .then(r => r.json())
@@ -215,6 +230,119 @@ export default function OrderDetailClient({ id }) {
 
   const toggleSection = (section) => {
     setOpenSection(prev => (prev === section ? '' : section));
+  };
+
+  // ✅ Download Invoice Handler
+  const handleDownloadInvoice = async () => {
+    setDownloadingInvoice(true);
+    try {
+      const { generateInvoice } = await import('@/lib/invoiceGenerator');
+      generateInvoice(order);
+      toast.success('📄 Invoice downloaded!');
+    } catch (err) {
+      console.error('Invoice error:', err);
+      toast.error('Failed to generate invoice');
+    } finally {
+      setDownloadingInvoice(false);
+    }
+  };
+
+  // ✅ Retry Payment Handler
+  const handleRetryPayment = async () => {
+    setRetrying(true);
+    try {
+      if (!window.Razorpay) {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          script.onload = resolve;
+          script.onerror = reject;
+          document.body.appendChild(script);
+        });
+      }
+
+      const res = await fetch(`/api/orders/${order.id}/retry-payment`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: data.razorpayOrder.amount,
+        currency: 'INR',
+        name: 'Arunas Baby World',
+        description: `Retry payment for ${fmtOrderNum(order)}`,
+        order_id: data.razorpayOrder.id,
+
+        handler: async (response) => {
+          try {
+            const verifyRes = await fetch('/api/payment/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                razorpayOrderId: response.razorpay_order_id,
+                razorpayPaymentId: response.razorpay_payment_id,
+                razorpaySignature: response.razorpay_signature,
+                orderId: order.id,
+              }),
+            });
+            const verifyData = await verifyRes.json();
+            if (verifyData.success) {
+              toast.success('🎉 Payment successful!');
+              window.location.href = `/orders/${order.id}`;
+            } else {
+              toast.error('Verification failed');
+              setRetrying(false);
+            }
+          } catch (err) {
+            toast.error('Verification error');
+            setRetrying(false);
+          }
+        },
+
+        prefill: {
+          name: order.user?.name,
+          email: order.user?.email,
+          contact: order.shippingAddress?.phone,
+        },
+        theme: { color: '#ff6b9d' },
+
+        modal: {
+          ondismiss: async () => {
+            setRetrying(false);
+            await fetch(`/api/orders/${order.id}/payment-failed`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ reason: 'Retry cancelled by user' }),
+            });
+            toast.error('Payment cancelled');
+            fetchOrder();
+          },
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', async (response) => {
+        await fetch(`/api/orders/${order.id}/payment-failed`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            reason: response.error?.description || 'Payment failed',
+            errorCode: response.error?.code,
+          }),
+        });
+        toast.error('Payment failed. Try again.');
+        setRetrying(false);
+        fetchOrder();
+      });
+      rzp.open();
+
+    } catch (err) {
+      toast.error(err.message);
+      setRetrying(false);
+    }
   };
 
   if (loading) return (
@@ -256,6 +384,10 @@ export default function OrderDetailClient({ id }) {
   const canCancel         = !isCancelled && !isReturnRequested;
   const canReturn         = (order.orderStatus === 'Delivered' || order.isDelivered) && !isReturnRequested && !isCancelled;
   const statusColor       = STATUS_COLOR[order.orderStatus] || '#6b7280';
+  const isPaymentFailed   = order.paymentStatus === 'failed' && !order.isPaid && !isCancelled;
+
+  // ✅ Show invoice button only for paid orders or COD orders (not for failed payments)
+  const canDownloadInvoice = order.isPaid || order.paymentMethod === 'COD';
 
   const accordionCard = (title, icon, section, content) => (
     <div style={{
@@ -336,6 +468,44 @@ export default function OrderDetailClient({ id }) {
             {STATUS_EMOJI[order.orderStatus]} {order.orderStatus?.replace('_', ' ')}
           </span>
 
+          {/* ✅ Download Invoice Button */}
+          {canDownloadInvoice && (
+            <button
+              onClick={handleDownloadInvoice}
+              disabled={downloadingInvoice}
+              style={{
+                padding: '10px 18px',
+                background: downloadingInvoice
+                  ? '#F3F4F6'
+                  : 'linear-gradient(135deg, #10B981, #059669)',
+                color: downloadingInvoice ? '#9CA3AF' : 'white',
+                border: 'none',
+                borderRadius: '12px',
+                fontWeight: '800',
+                fontSize: '0.88rem',
+                cursor: downloadingInvoice ? 'not-allowed' : 'pointer',
+                fontFamily: 'Nunito, sans-serif',
+                boxShadow: downloadingInvoice ? 'none' : '0 4px 12px rgba(16,185,129,0.25)',
+                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                transition: 'all 0.2s',
+              }}
+              onMouseEnter={e => {
+                if (!downloadingInvoice) {
+                  e.currentTarget.style.transform = 'translateY(-1px)';
+                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(16,185,129,0.35)';
+                }
+              }}
+              onMouseLeave={e => {
+                if (!downloadingInvoice) {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(16,185,129,0.25)';
+                }
+              }}
+            >
+              {downloadingInvoice ? '⏳ Generating...' : '📄 Download Invoice'}
+            </button>
+          )}
+
           {canReturn && (
             <button
               onClick={() => setShowReturnModal(true)}
@@ -404,7 +574,7 @@ export default function OrderDetailClient({ id }) {
             </span>
           )}
 
-          {canCancel && (
+          {canCancel && !isPaymentFailed && (
             <button
               onClick={() => setShowCancelModal(true)}
               style={{
@@ -429,6 +599,109 @@ export default function OrderDetailClient({ id }) {
           </Link>
         </div>
       </div>
+
+      {/* ✅ PAYMENT FAILED BANNER */}
+      {isPaymentFailed && (
+        <div style={{
+          background: 'linear-gradient(135deg, #FEF2F2, #FEE2E2)',
+          border: '2px solid #EF4444',
+          borderRadius: '20px',
+          padding: '24px',
+          marginBottom: '24px',
+          boxShadow: '0 8px 24px rgba(239,68,68,0.15)',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
+            <div style={{
+              width: '56px', height: '56px', borderRadius: '14px',
+              background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              fontSize: '1.8rem', flexShrink: 0,
+              animation: 'shake 2s ease-in-out infinite',
+            }}>
+              ❌
+            </div>
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <h3 style={{ margin: '0 0 6px', color: '#991B1B', fontSize: '1.2rem', fontWeight: '900' }}>
+                Payment Failed
+              </h3>
+              <p style={{ margin: 0, color: '#7F1D1D', fontSize: '0.9rem', fontWeight: '600', lineHeight: 1.5 }}>
+                Your payment couldn't be completed. Your order is saved and reserved.
+                You can retry payment or cancel the order.
+              </p>
+              <div style={{
+                margin: '10px 0 0',
+                display: 'inline-block',
+                padding: '6px 12px',
+                background: 'white',
+                border: '1.5px solid #FCA5A5',
+                borderRadius: '8px',
+              }}>
+                <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#6B7280' }}>Amount: </span>
+                <strong style={{ fontSize: '0.92rem', color: '#DC2626' }}>
+                  ₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}
+                </strong>
+              </div>
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+            <button
+              onClick={handleRetryPayment}
+              disabled={retrying}
+              style={{
+                flex: '1 1 200px',
+                padding: '14px 20px',
+                background: retrying
+                  ? '#F3F4F6'
+                  : 'linear-gradient(135deg, #10B981, #059669)',
+                color: retrying ? '#9CA3AF' : 'white',
+                border: 'none',
+                borderRadius: '12px',
+                fontWeight: '900',
+                fontSize: '0.95rem',
+                cursor: retrying ? 'not-allowed' : 'pointer',
+                fontFamily: 'Nunito, sans-serif',
+                boxShadow: retrying ? 'none' : '0 4px 14px rgba(16,185,129,0.30)',
+                transition: 'all 0.2s',
+              }}
+            >
+              {retrying ? '⏳ Opening Payment...' : `🔄 Retry Payment ₹${Math.round(order.totalPrice)?.toLocaleString('en-IN')}`}
+            </button>
+            <button
+              onClick={() => setShowCancelModal(true)}
+              style={{
+                flex: '1 1 150px',
+                padding: '14px 20px',
+                background: 'white',
+                color: '#EF4444',
+                border: '2px solid #FCA5A5',
+                borderRadius: '12px',
+                fontWeight: '800',
+                fontSize: '0.90rem',
+                cursor: 'pointer',
+                fontFamily: 'Nunito, sans-serif',
+              }}
+            >
+              ❌ Cancel Order
+            </button>
+          </div>
+
+          {order.notes && (
+            <p style={{
+              margin: '14px 0 0',
+              padding: '10px 14px',
+              background: 'white',
+              border: '1px solid #FCA5A5',
+              borderRadius: '8px',
+              fontSize: '0.78rem',
+              color: '#991B1B',
+              fontWeight: '600',
+            }}>
+              ℹ️ {order.notes}
+            </p>
+          )}
+        </div>
+      )}
 
       {/* EXCHANGE BANNER */}
       {hasExchange && (
@@ -510,7 +783,7 @@ export default function OrderDetailClient({ id }) {
       )}
 
       {/* LIVE ORDER TRACKING */}
-      {!isCancelled && !isReturnRequested && (
+      {!isCancelled && !isReturnRequested && !isPaymentFailed && (
         <div style={{
           background: 'white', borderRadius: '24px',
           padding: 'clamp(20px,3vw,36px)',
@@ -602,7 +875,7 @@ export default function OrderDetailClient({ id }) {
         </div>
       )}
 
-      {/* ✅ Nimbus Post Live Tracking — shown when shipped */}
+      {/* NIMBUS TRACKING */}
       {order.awbNumber && !isCancelled && (
         <LiveNimbusTracking awb={order.awbNumber} />
       )}
@@ -689,8 +962,22 @@ export default function OrderDetailClient({ id }) {
                 { label: 'Payment Method', value: order.paymentMethod },
                 {
                   label: 'Payment Status',
-                  value: order.isPaid ? '✅ Paid' : '⏳ Pending',
-                  color: order.isPaid ? '#10B981' : '#F59E0B',
+                  value: order.isPaid
+                    ? '✅ Paid'
+                    : order.paymentStatus === 'failed'
+                      ? '❌ Failed'
+                      : order.paymentStatus === 'cancelled'
+                        ? '🚫 Cancelled'
+                        : order.paymentStatus === 'not_applicable'
+                          ? '💵 Cash on Delivery'
+                          : '⏳ Pending',
+                  color: order.isPaid
+                    ? '#10B981'
+                    : order.paymentStatus === 'failed'
+                      ? '#EF4444'
+                      : order.paymentStatus === 'cancelled'
+                        ? '#EF4444'
+                        : '#F59E0B',
                 },
                 ...(order.isPaid && order.paidAt
                   ? [{ label: 'Paid On', value: new Date(order.paidAt).toLocaleDateString('en-IN') }]
@@ -870,6 +1157,11 @@ export default function OrderDetailClient({ id }) {
         @keyframes liveBlip {
           0%, 100% { transform: scale(1); opacity: 1; }
           50%       { transform: scale(1.4); opacity: 0.6; }
+        }
+        @keyframes shake {
+          0%, 100% { transform: translateX(0); }
+          25%      { transform: translateX(-3px); }
+          75%      { transform: translateX(3px); }
         }
         @media (max-width: 768px) {
           div[style*="grid-template-columns: minmax"] {
@@ -1584,10 +1876,13 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
     'Wrong product selected',
     'Quality issue',
     'No longer need it',
+    'Payment failed / cannot pay',
     'Other',
   ];
 
   const getRefundMessage = () => {
+    if (order.paymentStatus === 'failed' && !order.isPaid)
+      return { type: 'info', icon: 'ℹ️', title: 'No refund needed', message: "You haven't paid yet — no refund required." };
     if (order.paymentMethod === 'COD' && !order.isDelivered)
       return { type: 'info', icon: 'ℹ️', title: 'No refund needed', message: "You haven't paid yet (Cash on Delivery)." };
     if (order.paymentMethod === 'Razorpay' && order.isPaid)

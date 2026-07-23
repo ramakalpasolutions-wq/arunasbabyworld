@@ -15,7 +15,7 @@ async function getNextOrderNumber() {
     return counter.value;
   } catch (err) {
     console.error('Counter error:', err);
-    return null; // ✅ Don't crash if counter fails
+    return null;
   }
 }
 
@@ -27,13 +27,15 @@ export async function GET(request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const status = searchParams.get('status');
-    const page   = parseInt(searchParams.get('page')  || '1');
-    const limit  = parseInt(searchParams.get('limit') || '10');
+    const status         = searchParams.get('status');
+    const paymentStatus  = searchParams.get('paymentStatus');
+    const page           = parseInt(searchParams.get('page')  || '1');
+    const limit          = parseInt(searchParams.get('limit') || '10');
 
     const where = {};
     if (session.user.role !== 'admin') where.userId = session.user.id;
     if (status) where.orderStatus = status;
+    if (paymentStatus) where.paymentStatus = paymentStatus;
 
     const total  = await prisma.order.count({ where });
     const orders = await prisma.order.findMany({
@@ -71,7 +73,6 @@ export async function POST(request) {
 
     const data = await request.json();
 
-    // ✅ Validate required fields
     if (!data.orderItems || data.orderItems.length === 0) {
       return NextResponse.json(
         { error: 'Order items are required' },
@@ -86,10 +87,8 @@ export async function POST(request) {
       );
     }
 
-    // ✅ Get order number (safe — won't crash if fails)
     const orderNumber = await getNextOrderNumber();
 
-    // ✅ Clean data — remove any undefined/null userId from body
     const {
       orderItems,
       shippingAddress,
@@ -103,12 +102,13 @@ export async function POST(request) {
       isPaid,
       paidAt,
       orderStatus,
+      paymentStatus,   // ✅ NEW
     } = data;
 
     const order = await prisma.order.create({
       data: {
         orderNumber:     orderNumber ?? undefined,
-        userId:          session.user.id,   // ✅ Always from session
+        userId:          session.user.id,
         orderItems:      orderItems || [],
         shippingAddress: shippingAddress,
         paymentMethod:   paymentMethod || 'Razorpay',
@@ -121,24 +121,27 @@ export async function POST(request) {
         isPaid:          isPaid        || false,
         paidAt:          paidAt        || null,
         orderStatus:     orderStatus   || 'Pending',
+        paymentStatus:   paymentStatus || (paymentMethod === 'COD' ? 'not_applicable' : 'pending'),
       },
       include: {
         user: { select: { name: true, email: true } },
       },
     });
 
-    console.log('✅ Order created:', order.id, 'Number:', orderNumber);
+    console.log('✅ Order created:', order.id, 'Number:', orderNumber, 'PaymentStatus:', order.paymentStatus);
 
-    // ✅ Send confirmation email (don't crash if email fails)
-    try {
-      await sendOrderConfirmation(
-        order,
-        session.user.email,
-        session.user.name
-      );
-      console.log('✅ Email sent to:', session.user.email);
-    } catch (emailErr) {
-      console.error('❌ Email error (non-fatal):', emailErr);
+    // ✅ Only send email if COD (Razorpay email sent after payment verified)
+    if (paymentMethod === 'COD') {
+      try {
+        await sendOrderConfirmation(
+          order,
+          session.user.email,
+          session.user.name
+        );
+        console.log('✅ Email sent to:', session.user.email);
+      } catch (emailErr) {
+        console.error('❌ Email error (non-fatal):', emailErr);
+      }
     }
 
     return NextResponse.json({ order }, { status: 201 });
@@ -148,7 +151,6 @@ export async function POST(request) {
     console.error('Error details:', error.message);
     console.error('Error code:', error.code);
 
-    // ✅ Better error messages
     if (error.code === 'P2002') {
       return NextResponse.json(
         { error: 'Duplicate order detected' },

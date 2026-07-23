@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import crypto from 'crypto';
 import prisma from '@/lib/prisma';
+import { sendOrderConfirmation } from '@/lib/nodemailer';
 
 export async function POST(request) {
   try {
@@ -21,7 +22,6 @@ export async function POST(request) {
       orderId,
     } = body;
 
-    // ✅ Check orderId exists
     if (!orderId) {
       console.error('orderId is missing from request body');
       return NextResponse.json(
@@ -38,19 +38,30 @@ export async function POST(request) {
       .digest('hex');
 
     if (expectedSignature !== razorpaySignature) {
+      // ✅ Mark payment as failed on signature mismatch
+      await prisma.order.update({
+        where: { id: orderId },
+        data: {
+          paymentStatus: 'failed',
+          isPaid: false,
+          notes: 'Invalid payment signature',
+        },
+      });
+
       return NextResponse.json(
         { error: 'Invalid payment signature' },
         { status: 400 }
       );
     }
 
-    // ✅ Update order
+    // ✅ Update existing order — mark as PAID and CONFIRMED
     const order = await prisma.order.update({
       where: { id: orderId },
       data: {
-        isPaid: true,
-        paidAt: new Date(),
-        orderStatus: 'Confirmed',
+        isPaid:        true,
+        paidAt:        new Date(),
+        paymentStatus: 'success',
+        orderStatus:   'Confirmed',
         paymentResult: {
           id: razorpayPaymentId,
           status: 'completed',
@@ -60,9 +71,27 @@ export async function POST(request) {
           razorpaySignature,
         },
       },
+      include: {
+        user: { select: { name: true, email: true } },
+      },
     });
 
+    console.log('✅ Payment verified for order:', orderId);
+
+    // ✅ Send confirmation email now (after payment success)
+    try {
+      await sendOrderConfirmation(
+        order,
+        order.user?.email || session.user.email,
+        order.user?.name  || session.user.name
+      );
+      console.log('✅ Confirmation email sent');
+    } catch (emailErr) {
+      console.error('❌ Email error (non-fatal):', emailErr);
+    }
+
     return NextResponse.json({ success: true, order });
+
   } catch (error) {
     console.error('Payment verify error:', error);
     return NextResponse.json(
