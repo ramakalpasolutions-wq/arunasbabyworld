@@ -13,7 +13,6 @@ const CATEGORY_ORDER = [
   'toys', 'cradles-cribs', 'electric-vehicles', 'food',
 ];
 
-// ✅ Trending searches — customize as needed
 const TRENDING_SEARCHES = [
   'Diapers', 'Baby food', 'Walker', 'Cradle',
   'Toys', 'Baby clothes', 'Feeding bottle', 'Stroller',
@@ -36,6 +35,7 @@ export default function Header() {
 
   // ✅ SEARCH STATES
   const [searchOpen,        setSearchOpen]        = useState(false);
+  const [mobileSearchOpen,  setMobileSearchOpen]  = useState(false);
   const [searchResults,     setSearchResults]     = useState([]);
   const [searchLoading,     setSearchLoading]     = useState(false);
   const [recentSearches,    setRecentSearches]    = useState([]);
@@ -45,6 +45,7 @@ export default function Header() {
   const profileRef  = useRef(null);
   const searchRef   = useRef(null);
   const searchInputRef = useRef(null);
+  const mobileSearchInputRef = useRef(null);
   const debounceRef = useRef(null);
 
   // ✅ Fetch categories
@@ -133,18 +134,22 @@ export default function Header() {
   }, []);
 
   // ✅ Close mobile menu on route change
-  useEffect(() => { setMobileOpen(false); }, [router]);
+  useEffect(() => { setMobileOpen(false); setMobileSearchOpen(false); }, [router]);
 
-  // ✅ Lock body scroll
+  // ✅ Lock body scroll (mobile menu OR mobile search)
   useEffect(() => {
-    document.body.style.overflow = mobileOpen ? 'hidden' : '';
+    document.body.style.overflow = (mobileOpen || mobileSearchOpen) ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
-  }, [mobileOpen]);
+  }, [mobileOpen, mobileSearchOpen]);
 
   // ✅ ESC key handling
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === 'Escape') {
+        if (mobileSearchOpen) {
+          setMobileSearchOpen(false);
+          setSearchQuery('');
+        }
         if (searchOpen) {
           setSearchOpen(false);
           setSelectedIndex(-1);
@@ -155,9 +160,15 @@ export default function Header() {
     };
     document.addEventListener('keydown', handleEsc);
     return () => document.removeEventListener('keydown', handleEsc);
-  }, [mobileOpen, searchOpen]);
+  }, [mobileOpen, searchOpen, mobileSearchOpen]);
 
-  // ✅ Save to recent searches
+  // ✅ Focus mobile search input when opened
+  useEffect(() => {
+    if (mobileSearchOpen) {
+      setTimeout(() => mobileSearchInputRef.current?.focus(), 100);
+    }
+  }, [mobileSearchOpen]);
+
   const saveRecentSearch = (query) => {
     if (!query.trim()) return;
     const updated = [
@@ -182,13 +193,14 @@ export default function Header() {
       router.push('/products?search=' + encodeURIComponent(query.trim()));
       setSearchQuery('');
       setSearchOpen(false);
+      setMobileSearchOpen(false);
       setSelectedIndex(-1);
       setMobileOpen(false);
       searchInputRef.current?.blur();
+      mobileSearchInputRef.current?.blur();
     }
   };
 
-  // ✅ Keyboard navigation
   const handleKeyDown = (e) => {
     const totalItems = searchResults.length + (searchResults.length === 0 && !searchQuery ? recentSearches.length + TRENDING_SEARCHES.length : 0);
 
@@ -218,7 +230,7 @@ export default function Header() {
   const isLoadingSession = status === 'loading';
   const isLoggedIn = status === 'authenticated' && session && session.user;
 
-  // ✅ Search Dropdown Component
+  // ✅ Search Dropdown (Desktop)
   const SearchDropdown = () => (
     <div style={{
       position: 'absolute',
@@ -234,14 +246,10 @@ export default function Header() {
       zIndex: 999,
       animation: 'searchFadeIn 0.2s ease-out',
     }}>
-      {/* Loading */}
       {searchLoading && (
         <div style={{
-          padding: '20px',
-          textAlign: 'center',
-          color: '#0369A1',
-          fontSize: '0.86rem',
-          fontWeight: '600',
+          padding: '20px', textAlign: 'center',
+          color: '#0369A1', fontSize: '0.86rem', fontWeight: '600',
         }}>
           <div style={{
             display: 'inline-block',
@@ -256,18 +264,14 @@ export default function Header() {
         </div>
       )}
 
-      {/* Live Search Results */}
       {!searchLoading && searchQuery && searchResults.length > 0 && (
         <div>
           <div style={{
             padding: '10px 16px',
             background: 'linear-gradient(90deg, #F0F9FF, #E0F2FE)',
             borderBottom: '1px solid #BAE6FD',
-            fontSize: '0.72rem',
-            fontWeight: '800',
-            color: '#0369A1',
-            textTransform: 'uppercase',
-            letterSpacing: '0.5px',
+            fontSize: '0.72rem', fontWeight: '800',
+            color: '#0369A1', textTransform: 'uppercase', letterSpacing: '0.5px',
           }}>
             🎯 {searchResults.length} Products Found
           </div>
@@ -282,12 +286,8 @@ export default function Header() {
                 setSelectedIndex(-1);
               }}
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px',
-                padding: '10px 14px',
-                textDecoration: 'none',
-                color: 'inherit',
+                display: 'flex', alignItems: 'center', gap: '12px',
+                padding: '10px 14px', textDecoration: 'none', color: 'inherit',
                 background: selectedIndex === i ? '#F0F9FF' : 'white',
                 borderBottom: i < searchResults.length - 1 ? '1px solid #F1F5F9' : 'none',
                 transition: 'background 0.15s',
@@ -299,48 +299,29 @@ export default function Header() {
                 src={product.images?.[0]?.url || 'https://via.placeholder.com/48'}
                 alt={product.name}
                 style={{
-                  width: '48px', height: '48px',
-                  borderRadius: '8px', objectFit: 'cover',
-                  flexShrink: 0, border: '1px solid #E5E7EB',
+                  width: '48px', height: '48px', borderRadius: '8px',
+                  objectFit: 'cover', flexShrink: 0, border: '1px solid #E5E7EB',
                 }}
               />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{
-                  margin: 0,
-                  fontSize: '0.86rem',
-                  fontWeight: '700',
-                  color: '#0F172A',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  whiteSpace: 'nowrap',
+                  margin: 0, fontSize: '0.86rem', fontWeight: '700', color: '#0F172A',
+                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
                   {product.name}
                 </p>
-                <p style={{
-                  margin: '2px 0 0',
-                  fontSize: '0.74rem',
-                  color: '#64748B',
-                  fontWeight: '600',
-                }}>
+                <p style={{ margin: '2px 0 0', fontSize: '0.74rem', color: '#64748B', fontWeight: '600' }}>
                   {product.brand || 'Baby Care'}
                 </p>
               </div>
               <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <p style={{
-                  margin: 0,
-                  fontSize: '0.90rem',
-                  fontWeight: '800',
-                  color: '#0369A1',
-                }}>
+                <p style={{ margin: 0, fontSize: '0.90rem', fontWeight: '800', color: '#0369A1' }}>
                   ₹{Math.round(product.discountPrice || product.price)?.toLocaleString('en-IN')}
                 </p>
                 {product.discountPrice && product.discountPrice < product.price && (
                   <p style={{
-                    margin: '2px 0 0',
-                    fontSize: '0.68rem',
-                    color: '#94A3B8',
-                    textDecoration: 'line-through',
-                    fontWeight: '600',
+                    margin: '2px 0 0', fontSize: '0.68rem', color: '#94A3B8',
+                    textDecoration: 'line-through', fontWeight: '600',
                   }}>
                     ₹{Math.round(product.price)?.toLocaleString('en-IN')}
                   </p>
@@ -349,23 +330,16 @@ export default function Header() {
             </Link>
           ))}
 
-          {/* View all results */}
           <button
             onClick={() => handleSearch()}
             style={{
-              width: '100%',
-              padding: '12px 16px',
+              width: '100%', padding: '12px 16px',
               background: 'linear-gradient(135deg, #38BDF8, #0369A1)',
-              color: 'white',
-              border: 'none',
-              fontSize: '0.84rem',
-              fontWeight: '800',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              gap: '6px',
-              borderRadius: '0 0 14px 14px',
+              color: 'white', border: 'none',
+              fontSize: '0.84rem', fontWeight: '800',
+              cursor: 'pointer', display: 'flex',
+              alignItems: 'center', justifyContent: 'center',
+              gap: '6px', borderRadius: '0 0 14px 14px',
             }}
           >
             🔍 View All Results for "{searchQuery}" →
@@ -373,7 +347,6 @@ export default function Header() {
         </div>
       )}
 
-      {/* No results */}
       {!searchLoading && searchQuery.length >= 2 && searchResults.length === 0 && (
         <div style={{ padding: '30px 20px', textAlign: 'center' }}>
           <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🔍</div>
@@ -387,14 +360,10 @@ export default function Header() {
             href="/products"
             onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
             style={{
-              display: 'inline-block',
-              padding: '8px 20px',
-              background: '#38BDF8',
-              color: 'white',
-              borderRadius: '8px',
-              textDecoration: 'none',
-              fontSize: '0.80rem',
-              fontWeight: '700',
+              display: 'inline-block', padding: '8px 20px',
+              background: '#38BDF8', color: 'white',
+              borderRadius: '8px', textDecoration: 'none',
+              fontSize: '0.80rem', fontWeight: '700',
             }}
           >
             Browse All Products
@@ -402,36 +371,26 @@ export default function Header() {
         </div>
       )}
 
-      {/* Recent + Trending (when no query) */}
       {!searchQuery && (
         <div>
-          {/* Recent Searches */}
           {recentSearches.length > 0 && (
             <div>
               <div style={{
-                padding: '12px 16px 8px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
+                padding: '12px 16px 8px', display: 'flex',
+                alignItems: 'center', justifyContent: 'space-between',
               }}>
                 <span style={{
-                  fontSize: '0.72rem',
-                  fontWeight: '800',
-                  color: '#64748B',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
+                  fontSize: '0.72rem', fontWeight: '800', color: '#64748B',
+                  textTransform: 'uppercase', letterSpacing: '0.5px',
                 }}>
                   🕐 Recent Searches
                 </span>
                 <button
                   onClick={clearRecentSearches}
                   style={{
-                    background: 'none',
-                    border: 'none',
-                    color: '#EF4444',
-                    fontSize: '0.72rem',
-                    fontWeight: '700',
-                    cursor: 'pointer',
+                    background: 'none', border: 'none',
+                    color: '#EF4444', fontSize: '0.72rem',
+                    fontWeight: '700', cursor: 'pointer',
                   }}
                 >
                   Clear
@@ -443,20 +402,13 @@ export default function Header() {
                     key={i}
                     onClick={() => handleSearch(null, search)}
                     style={{
-                      width: '100%',
-                      padding: '9px 12px',
-                      background: 'transparent',
-                      border: '1px solid #E5E7EB',
-                      borderRadius: '8px',
-                      textAlign: 'left',
-                      cursor: 'pointer',
-                      fontSize: '0.84rem',
-                      color: '#334155',
-                      fontWeight: '600',
-                      marginBottom: '5px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
+                      width: '100%', padding: '9px 12px',
+                      background: 'transparent', border: '1px solid #E5E7EB',
+                      borderRadius: '8px', textAlign: 'left',
+                      cursor: 'pointer', fontSize: '0.84rem',
+                      color: '#334155', fontWeight: '600',
+                      marginBottom: '5px', display: 'flex',
+                      alignItems: 'center', gap: '10px',
                       transition: 'all 0.15s',
                     }}
                     onMouseEnter={e => {
@@ -477,26 +429,20 @@ export default function Header() {
             </div>
           )}
 
-          {/* Trending */}
           <div style={{
             padding: '12px 16px 8px',
             borderTop: recentSearches.length > 0 ? '1px solid #F1F5F9' : 'none',
           }}>
             <span style={{
-              fontSize: '0.72rem',
-              fontWeight: '800',
-              color: '#0369A1',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
+              fontSize: '0.72rem', fontWeight: '800', color: '#0369A1',
+              textTransform: 'uppercase', letterSpacing: '0.5px',
             }}>
               🔥 Trending Searches
             </span>
           </div>
           <div style={{
-            padding: '0 16px 16px',
-            display: 'flex',
-            flexWrap: 'wrap',
-            gap: '6px',
+            padding: '0 16px 16px', display: 'flex',
+            flexWrap: 'wrap', gap: '6px',
           }}>
             {TRENDING_SEARCHES.map((trend, i) => (
               <button
@@ -505,13 +451,9 @@ export default function Header() {
                 style={{
                   padding: '6px 12px',
                   background: 'linear-gradient(135deg, #F0F9FF, #E0F2FE)',
-                  border: '1px solid #BAE6FD',
-                  borderRadius: '999px',
-                  cursor: 'pointer',
-                  fontSize: '0.78rem',
-                  color: '#0369A1',
-                  fontWeight: '700',
-                  transition: 'all 0.15s',
+                  border: '1px solid #BAE6FD', borderRadius: '999px',
+                  cursor: 'pointer', fontSize: '0.78rem',
+                  color: '#0369A1', fontWeight: '700', transition: 'all 0.15s',
                 }}
                 onMouseEnter={e => {
                   e.currentTarget.style.background = 'linear-gradient(135deg, #38BDF8, #0369A1)';
@@ -527,20 +469,13 @@ export default function Header() {
             ))}
           </div>
 
-          {/* Category shortcuts */}
           <div style={{
-            padding: '12px 16px',
-            background: '#F8FAFC',
-            borderTop: '1px solid #F1F5F9',
-            borderRadius: '0 0 14px 14px',
+            padding: '12px 16px', background: '#F8FAFC',
+            borderTop: '1px solid #F1F5F9', borderRadius: '0 0 14px 14px',
           }}>
             <p style={{
-              margin: '0 0 8px',
-              fontSize: '0.72rem',
-              fontWeight: '800',
-              color: '#64748B',
-              textTransform: 'uppercase',
-              letterSpacing: '0.5px',
+              margin: '0 0 8px', fontSize: '0.72rem', fontWeight: '800',
+              color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px',
             }}>
               🎯 Quick Categories
             </p>
@@ -551,14 +486,10 @@ export default function Header() {
                   href={`/products?category=${cat.id}`}
                   onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
                   style={{
-                    padding: '5px 10px',
-                    background: 'white',
-                    border: '1px solid #E5E7EB',
-                    borderRadius: '6px',
-                    fontSize: '0.74rem',
-                    color: '#334155',
-                    fontWeight: '700',
-                    textDecoration: 'none',
+                    padding: '5px 10px', background: 'white',
+                    border: '1px solid #E5E7EB', borderRadius: '6px',
+                    fontSize: '0.74rem', color: '#334155',
+                    fontWeight: '700', textDecoration: 'none',
                     transition: 'all 0.15s',
                   }}
                   onMouseEnter={e => { e.currentTarget.style.borderColor = '#38BDF8'; e.currentTarget.style.color = '#0369A1'; }}
@@ -593,8 +524,8 @@ export default function Header() {
             />
           </Link>
 
-          {/* ✅ SMART SEARCH */}
-          <div ref={searchRef} style={{ flex: 1, maxWidth: 600, margin: '0 20px', position: 'relative' }}>
+          {/* ✅ SMART SEARCH (Desktop only) */}
+          <div ref={searchRef} className={styles.searchWrap}>
             <form onSubmit={handleSearch} className={styles.searchForm}>
               <div className={styles.searchBox}>
                 <span className={styles.searchIcon}>🔍</span>
@@ -617,14 +548,10 @@ export default function Header() {
                       searchInputRef.current?.focus();
                     }}
                     style={{
-                      background: 'transparent',
-                      border: 'none',
-                      color: '#94A3B8',
-                      cursor: 'pointer',
-                      fontSize: '1rem',
-                      padding: '0 8px',
-                      display: 'flex',
-                      alignItems: 'center',
+                      background: 'transparent', border: 'none',
+                      color: '#94A3B8', cursor: 'pointer',
+                      fontSize: '1rem', padding: '0 8px',
+                      display: 'flex', alignItems: 'center',
                     }}
                     aria-label="Clear search"
                   >
@@ -635,12 +562,20 @@ export default function Header() {
               </div>
             </form>
 
-            {/* ✅ SEARCH DROPDOWN */}
             {searchOpen && <SearchDropdown />}
           </div>
 
           {/* Actions */}
           <div className={styles.actions}>
+
+            {/* ✅ Mobile Search Icon (only visible on mobile) */}
+            <button
+              className={styles.mobileSearchBtn}
+              onClick={() => setMobileSearchOpen(true)}
+              aria-label="Open search"
+            >
+              <span className={styles.actionIcon}>🔍</span>
+            </button>
 
             {/* Wishlist */}
             <Link href="/wishlist" className={styles.actionBtn}>
@@ -665,7 +600,6 @@ export default function Header() {
               <span className={styles.actionLabel}>Cart</span>
             </Link>
 
-            {/* Profile / Login / Loading */}
             {isLoadingSession ? (
               <div className={styles.actionBtn} style={{ opacity: 0.6 }}>
                 <div
@@ -806,7 +740,191 @@ export default function Header() {
         </div>
       </nav>
 
-      {/* MOBILE OVERLAY */}
+      {/* ✅ MOBILE SEARCH FULLSCREEN OVERLAY */}
+      {mobileSearchOpen && (
+        <div className={styles.mobileSearchOverlay}>
+          <div className={styles.mobileSearchTopbar}>
+            <button
+              onClick={() => {
+                setMobileSearchOpen(false);
+                setSearchQuery('');
+              }}
+              className={styles.mobileSearchBack}
+              aria-label="Close search"
+            >
+              ←
+            </button>
+
+            <div className={styles.mobileSearchInputWrap}>
+              <span className={styles.mobileSearchInputIcon}>🔍</span>
+              <input
+                ref={mobileSearchInputRef}
+                type="text"
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                onKeyDown={e => {
+                  if (e.key === 'Enter' && searchQuery.trim()) {
+                    handleSearch(e);
+                  }
+                }}
+                placeholder="Search products, brands..."
+                className={styles.mobileSearchInput}
+                autoComplete="off"
+              />
+              {searchQuery && (
+                <button
+                  onClick={() => setSearchQuery('')}
+                  className={styles.mobileSearchClear}
+                  aria-label="Clear"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+          </div>
+
+          <div className={styles.mobileSearchContent}>
+            {searchLoading && (
+              <div className={styles.mobileSearchLoading}>
+                <div className={styles.mobileSearchSpinner} />
+                <p>Searching...</p>
+              </div>
+            )}
+
+            {!searchLoading && searchQuery.length >= 2 && searchResults.length > 0 && (
+              <div>
+                <p className={styles.mobileSearchLabel}>
+                  🎯 {searchResults.length} Products Found
+                </p>
+                <div className={styles.mobileResultsList}>
+                  {searchResults.map(product => (
+                    <Link
+                      key={product.id}
+                      href={`/products/${product.slug || product.id}`}
+                      onClick={() => {
+                        saveRecentSearch(searchQuery);
+                        setMobileSearchOpen(false);
+                        setSearchQuery('');
+                      }}
+                      className={styles.mobileResultItem}
+                    >
+                      <img
+                        src={product.images?.[0]?.url || 'https://via.placeholder.com/50'}
+                        alt={product.name}
+                        className={styles.mobileResultImg}
+                      />
+                      <div className={styles.mobileResultInfo}>
+                        <p className={styles.mobileResultName}>{product.name}</p>
+                        <p className={styles.mobileResultPrice}>
+                          ₹{Math.round(product.discountPrice || product.price)?.toLocaleString('en-IN')}
+                          {product.discountPrice && product.discountPrice < product.price && (
+                            <span className={styles.mobileResultOldPrice}>
+                              ₹{Math.round(product.price)?.toLocaleString('en-IN')}
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                      <span className={styles.mobileResultArrow}>›</span>
+                    </Link>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => handleSearch()}
+                  className={styles.mobileViewAllBtn}
+                >
+                  🔍 View All Results
+                </button>
+              </div>
+            )}
+
+            {!searchLoading && searchQuery.length >= 2 && searchResults.length === 0 && (
+              <div className={styles.mobileNoResults}>
+                <div className={styles.mobileNoResultsIcon}>🔍</div>
+                <p className={styles.mobileNoResultsTitle}>No products found</p>
+                <p className={styles.mobileNoResultsSub}>Try different keywords</p>
+                <Link
+                  href="/products"
+                  onClick={() => { setMobileSearchOpen(false); setSearchQuery(''); }}
+                  className={styles.mobileNoResultsBtn}
+                >
+                  Browse All Products
+                </Link>
+              </div>
+            )}
+
+            {!searchQuery && (
+              <div>
+                {recentSearches.length > 0 && (
+                  <div className={styles.mobileSearchSection}>
+                    <div className={styles.mobileSearchSectionHead}>
+                      <span className={styles.mobileSearchSectionLabel}>
+                        🕐 Recent Searches
+                      </span>
+                      <button
+                        onClick={clearRecentSearches}
+                        className={styles.mobileSearchClearBtn}
+                      >
+                        Clear
+                      </button>
+                    </div>
+                    <div className={styles.mobileRecentList}>
+                      {recentSearches.map((search, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleSearch(null, search)}
+                          className={styles.mobileRecentItem}
+                        >
+                          <span className={styles.mobileRecentIcon}>🕐</span>
+                          <span className={styles.mobileRecentText}>{search}</span>
+                          <span className={styles.mobileRecentArrow}>↗</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <div className={styles.mobileSearchSection}>
+                  <p className={styles.mobileSearchSectionLabel}>
+                    🔥 Trending Searches
+                  </p>
+                  <div className={styles.mobileTrendingList}>
+                    {TRENDING_SEARCHES.map((trend, i) => (
+                      <button
+                        key={i}
+                        onClick={() => handleSearch(null, trend)}
+                        className={styles.mobileTrendingItem}
+                      >
+                        {trend}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className={styles.mobileSearchSection}>
+                  <p className={styles.mobileSearchSectionLabel}>
+                    🎯 Shop by Category
+                  </p>
+                  <div className={styles.mobileCategoryGrid}>
+                    {navCategories.slice(0, 8).map(cat => (
+                      <Link
+                        key={cat.id}
+                        href={`/products?category=${cat.id}`}
+                        onClick={() => { setMobileSearchOpen(false); setSearchQuery(''); }}
+                        className={styles.mobileCategoryItem}
+                      >
+                        {cat.name}
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* MOBILE OVERLAY (for menu) */}
       {mobileOpen && (
         <div
           onClick={closeMobile}
@@ -822,7 +940,6 @@ export default function Header() {
       {mobileOpen && (
         <div className={styles.mobileMenu}>
 
-          {/* Top Bar */}
           <div className={styles.mobileMenuTop}>
             <button
               className={styles.mobileBackBtn}
@@ -840,96 +957,6 @@ export default function Header() {
             >
               ✕
             </button>
-          </div>
-
-          {/* ✅ Mobile Search with Smart Suggestions */}
-          <div className={styles.mobileSearch} style={{ position: 'relative' }}>
-            <form onSubmit={handleSearch}>
-              <div className={styles.searchBox}>
-                <span className={styles.searchIcon}>🔍</span>
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchQuery}
-                  onChange={e => setSearchQuery(e.target.value)}
-                  onFocus={() => setSearchOpen(true)}
-                  className={styles.searchInput}
-                  autoComplete="off"
-                />
-                {searchQuery && (
-                  <button
-                    type="button"
-                    onClick={() => setSearchQuery('')}
-                    style={{
-                      background: 'transparent', border: 'none',
-                      color: '#94A3B8', cursor: 'pointer',
-                      fontSize: '1rem', padding: '0 8px',
-                    }}
-                  >
-                    ✕
-                  </button>
-                )}
-                <button type="submit" className={styles.searchBtn}>Go</button>
-              </div>
-            </form>
-
-            {searchOpen && searchQuery.length >= 2 && searchResults.length > 0 && (
-              <div style={{
-                marginTop: '10px',
-                background: 'white',
-                border: '1.5px solid #38BDF8',
-                borderRadius: '12px',
-                overflow: 'hidden',
-                maxHeight: '400px',
-                overflowY: 'auto',
-              }}>
-                {searchResults.map((product) => (
-                  <Link
-                    key={product.id}
-                    href={`/products/${product.slug || product.id}`}
-                    onClick={() => {
-                      saveRecentSearch(searchQuery);
-                      setSearchOpen(false);
-                      setSearchQuery('');
-                      closeMobile();
-                    }}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      padding: '10px 12px',
-                      textDecoration: 'none',
-                      color: 'inherit',
-                      borderBottom: '1px solid #F1F5F9',
-                    }}
-                  >
-                    <img
-                      src={product.images?.[0]?.url || 'https://via.placeholder.com/40'}
-                      alt={product.name}
-                      style={{
-                        width: '40px', height: '40px',
-                        borderRadius: '6px', objectFit: 'cover',
-                        flexShrink: 0,
-                      }}
-                    />
-                    <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{
-                        margin: 0, fontSize: '0.82rem', fontWeight: '700',
-                        color: '#0F172A', overflow: 'hidden', textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}>
-                        {product.name}
-                      </p>
-                      <p style={{
-                        margin: 0, fontSize: '0.78rem', fontWeight: '800', color: '#0369A1',
-                      }}>
-                        ₹{Math.round(product.discountPrice || product.price)?.toLocaleString('en-IN')}
-                      </p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            )}
           </div>
 
           <div className={styles.mobileLinks}>
@@ -1060,7 +1087,6 @@ export default function Header() {
         </div>
       )}
 
-      {/* Animations */}
       <style jsx>{`
         @keyframes pulse {
           0%, 100% { opacity: 1; }
