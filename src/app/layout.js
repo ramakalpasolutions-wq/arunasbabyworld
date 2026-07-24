@@ -35,16 +35,75 @@ export default async function RootLayout({ children }) {
           <CartProvider>
             <WishlistProvider>
               {children}
+
+              {/* ✅ Bottom-center Toast — mobile safe + auto-close */}
               <Toaster
-                position="top-right"
+                position="bottom-center"
+                reverseOrder={false}
+                gutter={12}
+                containerStyle={{
+                  bottom: 'calc(env(safe-area-inset-bottom, 20px) + 20px)',
+                  left: 16,
+                  right: 16,
+                }}
                 toastOptions={{
+                  // ✅ Default duration — auto-close after 3 seconds
                   duration: 3000,
+
+                  // ✅ Default style
                   style: {
-                    fontFamily: 'Nunito, sans-serif',
-                    fontWeight: '700',
-                    borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #1F2937, #111827)',
+                    color: '#fff',
+                    padding: '14px 20px',
+                    borderRadius: '14px',
                     fontSize: '14px',
-                    boxShadow: '0 10px 40px rgba(0,0,0,0.12)',
+                    fontWeight: '700',
+                    fontFamily: 'Nunito, sans-serif',
+                    maxWidth: '92vw',
+                    boxShadow: '0 12px 32px rgba(0, 0, 0, 0.25)',
+                    minWidth: '220px',
+                  },
+
+                  // ✅ Success — Sky Blue theme
+                  success: {
+                    duration: 3000,
+                    style: {
+                      background: 'linear-gradient(135deg, #10B981, #059669)',
+                      color: '#fff',
+                      border: '1.5px solid rgba(255,255,255,0.15)',
+                    },
+                    iconTheme: {
+                      primary: '#fff',
+                      secondary: '#10B981',
+                    },
+                  },
+
+                  // ✅ Error
+                  error: {
+                    duration: 4000,
+                    style: {
+                      background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+                      color: '#fff',
+                      border: '1.5px solid rgba(255,255,255,0.15)',
+                    },
+                    iconTheme: {
+                      primary: '#fff',
+                      secondary: '#EF4444',
+                    },
+                  },
+
+                  // ✅ Loading toast (spinner)
+                  loading: {
+                    duration: Infinity,
+                    style: {
+                      background: 'linear-gradient(135deg, #38BDF8, #0369A1)',
+                      color: '#fff',
+                    },
+                  },
+
+                  // ✅ Blank/custom toast
+                  blank: {
+                    duration: 3000,
                   },
                 }}
               />
