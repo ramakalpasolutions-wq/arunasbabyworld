@@ -6,10 +6,14 @@ import styles from './ProductsClient.module.css';
 import React from 'react';
 
 const SORT_OPTIONS = [
-  { value: 'createdAt-desc', label: 'Newest First'       },
-  { value: 'price-asc',      label: 'Price: Low to High' },
-  { value: 'price-desc',     label: 'Price: High to Low' },
-  { value: 'rating-desc',    label: 'Top Rated'          },
+  { value: 'createdAt-desc',       label: '✨ Newest First',          icon: '✨' },
+  { value: 'createdAt-asc',        label: '📅 Oldest First',          icon: '📅' },
+  { value: 'price-asc',            label: '💰 Price: Low to High',    icon: '⬆️' },
+  { value: 'price-desc',           label: '💰 Price: High to Low',    icon: '⬇️' },
+  { value: 'discountPercent-desc', label: '🔥 Discount: High to Low', icon: '🎯' },
+  { value: 'rating-desc',          label: '⭐ Top Rated',              icon: '⭐' },
+  { value: 'name-asc',             label: '🔤 Name: A to Z',          icon: '🔤' },
+  { value: 'name-desc',            label: '🔤 Name: Z to A',          icon: '🔠' },
 ];
 
 const CATEGORY_ORDER = [
@@ -18,18 +22,31 @@ const CATEGORY_ORDER = [
 ];
 
 const CATEGORY_ICONS = {
-  'all':               '',
-  'clothing':          '',
-  'personal-care':     '',
-  'health-care':       '',
-  'baby-gear':         '',
-  'walkers':           '',
-  'toys':              '',
-  'cradles-cribs':     '',
-  'electric-vehicles': '',
-  'food':              '',
-  'default':           '',
+  'all':               '🌟',
+  'clothing':          '👗',
+  'personal-care':     '🧴',
+  'health-care':       '💊',
+  'baby-gear':         '🎒',
+  'walkers':           '🚶',
+  'toys':              '🎠',
+  'cradles-cribs':     '🛏️',
+  'electric-vehicles': '🚗',
+  'food':              '🍎',
+  'default':           '📦',
 };
+
+const DISCOUNT_TIERS = [
+  { value: '10', label: '10% or more', color: '#F59E0B' },
+  { value: '20', label: '20% or more', color: '#F97316' },
+  { value: '30', label: '30% or more', color: '#EF4444' },
+  { value: '50', label: '50% or more', color: '#DC2626' },
+];
+
+const RATING_OPTIONS = [
+  { value: '4', label: '4★ & above', stars: '⭐⭐⭐⭐' },
+  { value: '3', label: '3★ & above', stars: '⭐⭐⭐' },
+  { value: '2', label: '2★ & above', stars: '⭐⭐' },
+];
 
 const EXCLUDED_SLUGS = ['maternity', 'nursery'];
 
@@ -79,10 +96,8 @@ function RevealCard({ children, delay = 0 }) {
 
 /* ============================================================
    AUTO SCROLL CATEGORY BAR
-   ============================================================ */
-function AutoScrollCatBar({
-  categories, filters, handleCategoryClick, catLoading,
-}) {
+============================================================ */
+function AutoScrollCatBar({ categories, filters, handleCategoryClick, catLoading }) {
   const trackRef = useRef(null);
   const isPaused = useRef(false);
   const posRef   = useRef(0);
@@ -90,7 +105,7 @@ function AutoScrollCatBar({
   const SPEED    = 0.5;
 
   const allItems = [
-    { id: '', slug: 'all', name: 'All', icon: '', productCount: 0 },
+    { id: '', slug: 'all', name: 'All', icon: '🌟', productCount: 0 },
     ...categories,
   ];
 
@@ -146,9 +161,7 @@ function AutoScrollCatBar({
           {doubled.map((cat, i) => (
             <button
               key={`${cat.id || 'all'}-${i}`}
-              className={`${styles.mobileCatPill} ${
-                isCatActive(cat) ? styles.mobileCatPillActive : ''
-              }`}
+              className={`${styles.mobileCatPill} ${isCatActive(cat) ? styles.mobileCatPillActive : ''}`}
               onClick={() => handleCategoryClick(cat.id)}
             >
               <span className={styles.mobileCatIcon}>
@@ -169,18 +182,20 @@ function AutoScrollCatBar({
 
 /* ============================================================
    MAIN COMPONENT
-   ============================================================ */
+============================================================ */
 export default function ProductsClient() {
   const searchParams = useSearchParams();
 
-  const [products,    setProducts]    = useState([]);
-  const [categories,  setCategories]  = useState([]);
-  const [loading,     setLoading]     = useState(true);
-  const [catLoading,  setCatLoading]  = useState(true);
-  const [pagination,  setPagination]  = useState({ page: 1, pages: 1, total: 0 });
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [activeQuick, setActiveQuick] = useState('all');
-  const [priceError,  setPriceError]  = useState('');
+  const [products,      setProducts]      = useState([]);
+  const [categories,    setCategories]    = useState([]);
+  const [brands,        setBrands]        = useState([]);
+  const [brandsLoading, setBrandsLoading] = useState(false);
+  const [loading,       setLoading]       = useState(true);
+  const [catLoading,    setCatLoading]    = useState(true);
+  const [pagination,    setPagination]    = useState({ page: 1, pages: 1, total: 0 });
+  const [sidebarOpen,   setSidebarOpen]   = useState(false);
+  const [activeQuick,   setActiveQuick]   = useState('all');
+  const [priceError,    setPriceError]    = useState('');
 
   const [localMin,   setLocalMin]   = useState('');
   const [localMax,   setLocalMax]   = useState('');
@@ -190,11 +205,15 @@ export default function ProductsClient() {
   const [filters, setFilters] = useState({
     search:   searchParams.get('search')   || '',
     category: searchParams.get('category') || '',
+    brand:    '',
     sort:     'createdAt-desc',
     minPrice: '',
     maxPrice: '',
     featured: searchParams.get('featured') || '',
     trending: searchParams.get('trending') || '',
+    discount: '',
+    rating:   '',
+    inStock:  false,
     page:     1,
   });
 
@@ -220,9 +239,7 @@ export default function ProductsClient() {
       .then(r => r.json())
       .then(d => {
         const allCats = d.categories || [];
-        const filtered = allCats.filter(
-          cat => !EXCLUDED_SLUGS.includes(cat.slug)
-        );
+        const filtered = allCats.filter(cat => !EXCLUDED_SLUGS.includes(cat.slug));
         filtered.sort((a, b) => {
           const aIdx = CATEGORY_ORDER.indexOf(a.slug);
           const bIdx = CATEGORY_ORDER.indexOf(b.slug);
@@ -233,6 +250,75 @@ export default function ProductsClient() {
       .catch(err => console.error('Failed to fetch categories:', err))
       .finally(() => setCatLoading(false));
   }, []);
+
+  /* ── ✅ DYNAMIC BRAND FETCH — Based on category & other filters ── */
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const fetchBrands = async () => {
+      setBrandsLoading(true);
+      try {
+        const paramObj = { limit: '500' };
+
+        // ✅ Only pass filters that affect brand list (NOT brand itself!)
+        if (filters.category)   paramObj.category = filters.category;
+        if (filters.search)     paramObj.search   = filters.search;
+        if (filters.featured)   paramObj.featured = filters.featured;
+        if (filters.trending)   paramObj.trending = filters.trending;
+        if (filters.minPrice)   paramObj.minPrice = filters.minPrice;
+        if (filters.maxPrice)   paramObj.maxPrice = filters.maxPrice;
+        if (filters.discount)   paramObj.discount = filters.discount;
+        if (filters.rating)     paramObj.rating   = filters.rating;
+        if (filters.inStock)    paramObj.inStock  = 'true';
+
+        const url = `/api/products?${new URLSearchParams(paramObj)}`;
+        console.log('🏷️ Fetching brands:', url);
+
+        const res  = await fetch(url, { signal: controller.signal });
+        const data = await res.json();
+
+        const allProducts = data.products || [];
+        console.log(`📦 Got ${allProducts.length} products in scope`);
+
+        const uniqueBrands = [...new Set(
+          allProducts
+            .map(p => p.brand?.trim())
+            .filter(b => b && b !== '')
+        )].sort((a, b) => a.localeCompare(b));
+
+        console.log(`🏷️ Unique brands: ${uniqueBrands.length}`, uniqueBrands);
+
+        setBrands(uniqueBrands);
+
+        // ✅ Auto-clear brand if not available anymore
+        if (filters.brand && !uniqueBrands.includes(filters.brand)) {
+          console.log(`⚠️ Selected brand "${filters.brand}" not available — clearing`);
+          setFilters(prev => ({ ...prev, brand: '', page: 1 }));
+        }
+      } catch (err) {
+        if (err.name !== 'AbortError') {
+          console.error('❌ Brand fetch error:', err);
+          setBrands([]);
+        }
+      } finally {
+        setBrandsLoading(false);
+      }
+    };
+
+    fetchBrands();
+
+    return () => controller.abort();
+  }, [
+    filters.category || '',
+    filters.search   || '',
+    filters.featured || '',
+    filters.trending || '',
+    filters.minPrice || '',
+    filters.maxPrice || '',
+    filters.discount || '',
+    filters.rating   || '',
+    !!filters.inStock,
+  ]);
 
   /* ── Sync URL params ── */
   useEffect(() => {
@@ -263,18 +349,16 @@ export default function ProductsClient() {
         order: sortOrder,
       };
 
-      if (filters.search   && filters.search.trim())
-        paramObj.search   = filters.search.trim();
-      if (filters.category)
-        paramObj.category = filters.category;
-      if (filters.featured)
-        paramObj.featured = filters.featured;
-      if (filters.trending)
-        paramObj.trending = filters.trending;
-      if (minP !== null)
-        paramObj.minPrice = String(minP);
-      if (maxP !== null)
-        paramObj.maxPrice = String(maxP);
+      if (filters.search && filters.search.trim())  paramObj.search   = filters.search.trim();
+      if (filters.category)                          paramObj.category = filters.category;
+      if (filters.brand)                             paramObj.brand    = filters.brand;
+      if (filters.featured)                          paramObj.featured = filters.featured;
+      if (filters.trending)                          paramObj.trending = filters.trending;
+      if (filters.discount)                          paramObj.discount = filters.discount;
+      if (filters.rating)                            paramObj.rating   = filters.rating;
+      if (filters.inStock)                           paramObj.inStock  = 'true';
+      if (minP !== null)                             paramObj.minPrice = String(minP);
+      if (maxP !== null)                             paramObj.maxPrice = String(maxP);
 
       const res  = await fetch(`/api/products?${new URLSearchParams(paramObj)}`);
       const data = await res.json();
@@ -337,13 +421,14 @@ export default function ProductsClient() {
     setAppliedMin(''); setAppliedMax('');
     setActiveQuick('all');
     setFilters({
-      search: '', category: '', sort: 'createdAt-desc',
-      minPrice: '', maxPrice: '', featured: '', trending: '', page: 1,
+      search: '', category: '', brand: '', sort: 'createdAt-desc',
+      minPrice: '', maxPrice: '', featured: '', trending: '',
+      discount: '', rating: '', inStock: false, page: 1,
     });
   };
 
   const handleCategoryClick = useCallback((categoryId) => {
-    setFilters(prev => ({ ...prev, category: categoryId, page: 1 }));
+    setFilters(prev => ({ ...prev, category: categoryId, brand: '', page: 1 }));
     setSidebarOpen(false);
     setActiveQuick('all');
   }, []);
@@ -359,47 +444,446 @@ export default function ProductsClient() {
     : selectedCategoryName || 'All Products';
 
   const quickFilters = [
-    {
-      key: 'all', label: 'All', icon: '',
+    { key: 'all', label: 'All', icon: '🌟',
       action: () => { clearAll(); setActiveQuick('all'); },
     },
-    {
-      key: 'trending', label: 'Trending', icon: '🔥',
+    { key: 'trending', label: 'Trending', icon: '🔥',
       action: () => {
-        setFilters(prev => ({
-          ...prev, trending: 'true', featured: '', page: 1,
-        }));
+        setFilters(prev => ({ ...prev, trending: 'true', featured: '', page: 1 }));
         setActiveQuick('trending');
       },
     },
-    {
-      key: 'featured', label: 'Featured', icon: '⭐',
+    { key: 'featured', label: 'Featured', icon: '⭐',
       action: () => {
-        setFilters(prev => ({
-          ...prev, featured: 'true', trending: '', page: 1,
-        }));
+        setFilters(prev => ({ ...prev, featured: 'true', trending: '', page: 1 }));
         setActiveQuick('featured');
       },
     },
-    {
-      key: 'new', label: 'New Arrivals', icon: '✨',
+    { key: 'new', label: 'New Arrivals', icon: '✨',
       action: () => {
-        setFilters(prev => ({
-          ...prev, sort: 'createdAt-desc', page: 1,
-        }));
+        setFilters(prev => ({ ...prev, sort: 'createdAt-desc', page: 1 }));
         setActiveQuick('new');
+      },
+    },
+    { key: 'discount', label: 'Best Deals', icon: '💰',
+      action: () => {
+        setFilters(prev => ({ ...prev, discount: '20', sort: 'discountPercent-desc', page: 1 }));
+        setActiveQuick('discount');
       },
     },
   ];
 
   const hasActiveFilters = !!(
-    filters.category || filters.minPrice || filters.maxPrice ||
-    filters.featured || filters.trending
+    filters.category || filters.brand || filters.minPrice || filters.maxPrice ||
+    filters.featured || filters.trending || filters.discount ||
+    filters.rating || filters.inStock
+  );
+
+  const activeFilterCount = [
+    filters.category, filters.brand, filters.minPrice || filters.maxPrice,
+    filters.featured, filters.trending, filters.discount, filters.rating,
+    filters.inStock ? 'stock' : '',
+  ].filter(Boolean).length;
+
+  /* ============================================================
+     FILTER SIDEBAR CONTENT
+  ============================================================ */
+  const FilterContent = () => (
+    <>
+      {/* Category */}
+      <div className={`${styles.filterBlock} ${styles.desktopCatBlock}`}>
+        <div className={styles.filterBlockTitle}>
+          <span className={styles.filterBlockIcon}>📂</span>
+          Category
+        </div>
+        {catLoading ? (
+          <div className={styles.catList}>
+            {[...Array(8)].map((_, i) => (
+              <div key={i} className={styles.catSkeleton} />
+            ))}
+          </div>
+        ) : (
+          <div className={styles.catList}>
+            <button
+              className={`${styles.catBtn} ${!filters.category ? styles.catBtnActive : ''}`}
+              onClick={() => handleCategoryClick('')}
+            >
+              <span className={styles.catIcon}>🌟</span>
+              <span className={styles.catName}>All Categories</span>
+            </button>
+            {categories.map(cat => (
+              <button
+                key={cat.id}
+                className={`${styles.catBtn} ${isCategoryActive(cat) ? styles.catBtnActive : ''}`}
+                onClick={() => handleCategoryClick(cat.id)}
+              >
+                <span className={styles.catIcon}>
+                  {cat.icon || CATEGORY_ICONS[cat.slug] || CATEGORY_ICONS.default}
+                </span>
+                <span className={styles.catName}>{cat.name}</span>
+                {cat.productCount > 0 && (
+                  <span className={styles.catCount}>{cat.productCount}</span>
+                )}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+
+      {/* Price Range */}
+      <div className={styles.filterBlock}>
+        <div className={styles.filterBlockTitle}>
+          <span className={styles.filterBlockIcon}>💰</span>
+          Price Range (₹)
+        </div>
+        <div className={styles.priceInputWrap}>
+          <label className={styles.priceLabel}>Min Price ₹</label>
+          <input
+            type="number"
+            value={localMin}
+            onChange={e => { setLocalMin(e.target.value); setPriceError(''); }}
+            onKeyDown={e => e.key === 'Enter' && handleApplyPrice()}
+            placeholder="e.g. 100"
+            min="0"
+            className={styles.priceInput}
+          />
+        </div>
+        <div className={styles.priceInputWrap}>
+          <label className={styles.priceLabel}>Max Price ₹</label>
+          <input
+            type="number"
+            value={localMax}
+            onChange={e => { setLocalMax(e.target.value); setPriceError(''); }}
+            onKeyDown={e => e.key === 'Enter' && handleApplyPrice()}
+            placeholder="e.g. 999"
+            min="0"
+            className={styles.priceInput}
+          />
+        </div>
+        {priceError && <div className={styles.priceError}>{priceError}</div>}
+        <button className={styles.applyPriceBtn} onClick={handleApplyPrice}>
+          🔍 Apply Price Filter
+        </button>
+        {(appliedMin || appliedMax) && (
+          <div className={styles.appliedPrice}>
+            <span>✅ ₹{appliedMin || '0'} — ₹{appliedMax || '∞'}</span>
+            <button className={styles.clearPriceBtn} onClick={handleClearPrice}>Clear</button>
+          </div>
+        )}
+
+        <div style={{ marginTop: '12px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+          {[
+            { label: 'Under ₹500', min: '0',    max: '500'  },
+            { label: '₹500-1000',  min: '500',  max: '1000' },
+            { label: '₹1000-2000', min: '1000', max: '2000' },
+            { label: 'Above ₹2000',min: '2000', max: ''     },
+          ].map((r, i) => (
+            <button
+              key={i}
+              onClick={() => {
+                setLocalMin(r.min); setLocalMax(r.max);
+                setAppliedMin(r.min); setAppliedMax(r.max);
+                setFilters(prev => ({ ...prev, minPrice: r.min, maxPrice: r.max, page: 1 }));
+              }}
+              style={{
+                padding: '5px 10px',
+                background: (appliedMin === r.min && appliedMax === r.max) ? 'linear-gradient(135deg, #38BDF8, #0369A1)' : '#F1F5F9',
+                color: (appliedMin === r.min && appliedMax === r.max) ? 'white' : '#475569',
+                border: 'none',
+                borderRadius: '999px',
+                fontSize: '0.72rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                transition: 'all 0.2s',
+              }}
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* ✅ DYNAMIC Brand Filter */}
+      <div className={styles.filterBlock}>
+        <div className={styles.filterBlockTitle}>
+          <span className={styles.filterBlockIcon}>🏷️</span>
+          Brand
+          {!brandsLoading && brands.length > 0 && (
+            <span style={{
+              marginLeft: 'auto',
+              fontSize: '0.68rem',
+              color: '#64748B',
+              fontWeight: '700',
+              background: '#F1F5F9',
+              padding: '2px 8px',
+              borderRadius: '999px',
+            }}>
+              {brands.length}
+            </span>
+          )}
+        </div>
+
+        {brandsLoading ? (
+          <div style={{ padding: '10px 0', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            {[...Array(4)].map((_, i) => (
+              <div key={i} style={{
+                height: '36px',
+                background: 'linear-gradient(90deg, #F1F5F9 25%, #E2E8F0 50%, #F1F5F9 75%)',
+                backgroundSize: '200% 100%',
+                animation: 'shimmer 1.5s infinite',
+                borderRadius: '8px',
+              }} />
+            ))}
+            <style>{`
+              @keyframes shimmer {
+                0%   { background-position: -200% 0; }
+                100% { background-position:  200% 0; }
+              }
+            `}</style>
+          </div>
+        ) : brands.length > 0 ? (
+          <>
+            {(filters.category || filters.search) && (
+              <div style={{
+                padding: '8px 10px',
+                background: 'linear-gradient(135deg, #F0F9FF, #E0F2FE)',
+                border: '1px solid #BAE6FD',
+                borderRadius: '8px',
+                marginBottom: '8px',
+                fontSize: '0.72rem',
+                color: '#0369A1',
+                fontWeight: '700',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+              }}>
+                <span>ℹ️</span>
+                <span>
+                  {filters.category
+                    ? `${brands.length} brand${brands.length > 1 ? 's' : ''} in this category`
+                    : `${brands.length} matching brand${brands.length > 1 ? 's' : ''}`}
+                </span>
+              </div>
+            )}
+
+            <div style={{
+              maxHeight: '240px',
+              overflowY: 'auto',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+              paddingRight: '4px',
+            }}>
+              <button
+                onClick={() => updateFilter('brand', '')}
+                style={{
+                  padding: '8px 12px',
+                  textAlign: 'left',
+                  background: !filters.brand ? 'linear-gradient(135deg, #38BDF8, #0369A1)' : 'white',
+                  color: !filters.brand ? 'white' : '#334155',
+                  border: '1.5px solid ' + (!filters.brand ? '#38BDF8' : '#E5E7EB'),
+                  borderRadius: '8px',
+                  fontSize: '0.84rem',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.2s',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                }}
+              >
+                <span>All Brands</span>
+                <span style={{
+                  fontSize: '0.68rem',
+                  padding: '2px 6px',
+                  background: !filters.brand ? 'rgba(255,255,255,0.2)' : '#F1F5F9',
+                  borderRadius: '999px',
+                  fontWeight: '800',
+                }}>
+                  {brands.length}
+                </span>
+              </button>
+
+              {brands.map(brand => (
+                <button
+                  key={brand}
+                  onClick={() => updateFilter('brand', brand === filters.brand ? '' : brand)}
+                  style={{
+                    padding: '8px 12px',
+                    textAlign: 'left',
+                    background: filters.brand === brand ? 'linear-gradient(135deg, #38BDF8, #0369A1)' : 'white',
+                    color: filters.brand === brand ? 'white' : '#334155',
+                    border: '1.5px solid ' + (filters.brand === brand ? '#38BDF8' : '#E5E7EB'),
+                    borderRadius: '8px',
+                    fontSize: '0.82rem',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '8px',
+                  }}
+                  onMouseEnter={e => {
+                    if (filters.brand !== brand) {
+                      e.currentTarget.style.background = '#F0F9FF';
+                      e.currentTarget.style.borderColor = '#38BDF8';
+                    }
+                  }}
+                  onMouseLeave={e => {
+                    if (filters.brand !== brand) {
+                      e.currentTarget.style.background = 'white';
+                      e.currentTarget.style.borderColor = '#E5E7EB';
+                    }
+                  }}
+                >
+                  <span style={{
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {brand}
+                  </span>
+                  {filters.brand === brand && (
+                    <span style={{ fontSize: '0.86rem', flexShrink: 0 }}>✓</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          </>
+        ) : (
+          <div style={{
+            padding: '20px',
+            textAlign: 'center',
+            background: '#F8FAFC',
+            borderRadius: '10px',
+            border: '1px dashed #CBD5E1',
+          }}>
+            <div style={{ fontSize: '2rem', marginBottom: '6px' }}>🏷️</div>
+            <p style={{
+              margin: 0,
+              fontSize: '0.80rem',
+              fontWeight: '700',
+              color: '#64748B',
+            }}>
+              No brands available
+            </p>
+            <p style={{
+              margin: '4px 0 0',
+              fontSize: '0.72rem',
+              color: '#94A3B8',
+              fontWeight: '600',
+            }}>
+              {filters.category
+                ? 'No brands in this category'
+                : 'Products don\'t have brand info'}
+            </p>
+          </div>
+        )}
+      </div>
+
+      {/* Discount Filter */}
+      <div className={styles.filterBlock}>
+        <div className={styles.filterBlockTitle}>
+          <span className={styles.filterBlockIcon}>🔥</span>
+          Discount
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {DISCOUNT_TIERS.map(tier => (
+            <button
+              key={tier.value}
+              onClick={() => updateFilter('discount', tier.value === filters.discount ? '' : tier.value)}
+              style={{
+                padding: '9px 12px',
+                textAlign: 'left',
+                background: filters.discount === tier.value ? tier.color : 'white',
+                color: filters.discount === tier.value ? 'white' : '#334155',
+                border: '1.5px solid ' + (filters.discount === tier.value ? tier.color : '#E5E7EB'),
+                borderRadius: '8px',
+                fontSize: '0.84rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                transition: 'all 0.2s',
+              }}
+            >
+              <span>{tier.label}</span>
+              {filters.discount === tier.value && <span>✓</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Rating Filter */}
+      <div className={styles.filterBlock}>
+        <div className={styles.filterBlockTitle}>
+          <span className={styles.filterBlockIcon}>⭐</span>
+          Customer Rating
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          {RATING_OPTIONS.map(opt => (
+            <button
+              key={opt.value}
+              onClick={() => updateFilter('rating', opt.value === filters.rating ? '' : opt.value)}
+              style={{
+                padding: '9px 12px',
+                textAlign: 'left',
+                background: filters.rating === opt.value ? 'linear-gradient(135deg, #FBBF24, #F59E0B)' : 'white',
+                color: filters.rating === opt.value ? 'white' : '#334155',
+                border: '1.5px solid ' + (filters.rating === opt.value ? '#F59E0B' : '#E5E7EB'),
+                borderRadius: '8px',
+                fontSize: '0.84rem',
+                fontWeight: '700',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                transition: 'all 0.2s',
+              }}
+            >
+              <span>{opt.stars} & above</span>
+              {filters.rating === opt.value && <span>✓</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Quick Toggles */}
+      <div className={styles.filterBlock}>
+        <div className={styles.filterBlockTitle}>
+          <span className={styles.filterBlockIcon}>⚡</span>
+          Quick Filters
+        </div>
+        <label className={styles.toggleRow}>
+          <span>✅ In Stock Only</span>
+          <div
+            className={`${styles.toggle} ${filters.inStock ? styles.toggleOn : ''}`}
+            onClick={() => updateFilter('inStock', !filters.inStock)}
+          />
+        </label>
+        <label className={styles.toggleRow}>
+          <span>⭐ Featured Only</span>
+          <div
+            className={`${styles.toggle} ${filters.featured === 'true' ? styles.toggleOn : ''}`}
+            onClick={() => updateFilter('featured', filters.featured === 'true' ? '' : 'true')}
+          />
+        </label>
+        <label className={styles.toggleRow}>
+          <span>🔥 Trending Only</span>
+          <div
+            className={`${styles.toggle} ${filters.trending === 'true' ? styles.toggleOn : ''}`}
+            onClick={() => updateFilter('trending', filters.trending === 'true' ? '' : 'true')}
+          />
+        </label>
+      </div>
+    </>
   );
 
   /* ============================================================
      RENDER
-     ============================================================ */
+  ============================================================ */
   return (
     <div className={styles.pageRoot}>
 
@@ -413,21 +897,15 @@ export default function ProductsClient() {
         ))}
       </div>
 
-      {/* ══ HERO STRIP ══ */}
+      {/* HERO STRIP */}
       <div className={styles.heroStrip}>
         <div className={styles.heroStripInner}>
           <div className={styles.heroStripLeft}>
             <span className={styles.heroCrumb}>Home › Products</span>
             <h1 className={styles.heroTitle}>
-              {filters.featured === 'true' && (
-                <span className={styles.heroEmoji}>⭐</span>
-              )}
-              {filters.trending === 'true' && (
-                <span className={styles.heroEmoji}>🔥</span>
-              )}
-              {!filters.featured && !filters.trending && (
-                <span className={styles.heroEmoji}></span>
-              )}
+              {filters.featured === 'true' && <span className={styles.heroEmoji}>⭐</span>}
+              {filters.trending === 'true' && <span className={styles.heroEmoji}>🔥</span>}
+              {!filters.featured && !filters.trending && <span className={styles.heroEmoji}>🛍️</span>}
               <span>{pageTitle}</span>
             </h1>
             <p className={styles.heroSub}>
@@ -444,9 +922,7 @@ export default function ProductsClient() {
               {quickFilters.map(q => (
                 <button
                   key={q.key}
-                  className={`${styles.quickPill} ${
-                    activeQuick === q.key ? styles.quickPillActive : ''
-                  }`}
+                  className={`${styles.quickPill} ${activeQuick === q.key ? styles.quickPillActive : ''}`}
                   onClick={q.action}
                 >
                   <span>{q.icon}</span>
@@ -460,7 +936,7 @@ export default function ProductsClient() {
         <div className={styles.heroDecor2} />
       </div>
 
-      {/* ══ TOOLBAR ══ */}
+      {/* TOOLBAR */}
       <div className={styles.toolbar}>
         <div className={styles.toolbarInner}>
 
@@ -496,20 +972,11 @@ export default function ProductsClient() {
             </div>
 
             <button
-              className={`${styles.filterToggle} ${
-                hasActiveFilters ? styles.filterToggleActive : ''
-              }`}
+              className={`${styles.filterToggle} ${hasActiveFilters ? styles.filterToggleActive : ''}`}
               onClick={() => setSidebarOpen(prev => !prev)}
               aria-label="Toggle filters"
             >
-              <svg
-                width="15" height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2.5"
-                strokeLinecap="round"
-              >
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                 <line x1="4"  y1="6"  x2="20" y2="6"  />
                 <line x1="8"  y1="12" x2="20" y2="12" />
                 <line x1="12" y1="18" x2="20" y2="18" />
@@ -518,7 +985,19 @@ export default function ProductsClient() {
                 <circle cx="12" cy="18" r="2" fill="currentColor" stroke="none" />
               </svg>
               <span className={styles.filterToggleText}>Filter</span>
-              {hasActiveFilters && <span className={styles.filterBadge} />}
+              {activeFilterCount > 0 && (
+                <span style={{
+                  marginLeft: '6px',
+                  padding: '2px 8px',
+                  background: '#EF4444',
+                  color: 'white',
+                  borderRadius: '999px',
+                  fontSize: '0.68rem',
+                  fontWeight: '900',
+                }}>
+                  {activeFilterCount}
+                </span>
+              )}
             </button>
           </div>
         </div>
@@ -532,6 +1011,12 @@ export default function ProductsClient() {
                   <button onClick={() => handleCategoryClick('')}>✕</button>
                 </span>
               )}
+              {filters.brand && (
+                <span className={styles.activeTag}>
+                  🏷️ {filters.brand}
+                  <button onClick={() => updateFilter('brand', '')}>✕</button>
+                </span>
+              )}
               {filters.featured === 'true' && (
                 <span className={styles.activeTag}>
                   ⭐ Featured
@@ -542,6 +1027,24 @@ export default function ProductsClient() {
                 <span className={styles.activeTag}>
                   🔥 Trending
                   <button onClick={() => updateFilter('trending', '')}>✕</button>
+                </span>
+              )}
+              {filters.discount && (
+                <span className={styles.activeTag}>
+                  💰 {filters.discount}%+ off
+                  <button onClick={() => updateFilter('discount', '')}>✕</button>
+                </span>
+              )}
+              {filters.rating && (
+                <span className={styles.activeTag}>
+                  ⭐ {filters.rating}★ & above
+                  <button onClick={() => updateFilter('rating', '')}>✕</button>
+                </span>
+              )}
+              {filters.inStock && (
+                <span className={styles.activeTag}>
+                  ✅ In Stock
+                  <button onClick={() => updateFilter('inStock', false)}>✕</button>
                 </span>
               )}
               {(appliedMin || appliedMax) && (
@@ -558,7 +1061,7 @@ export default function ProductsClient() {
         )}
       </div>
 
-      {/* ✅ MOBILE CATEGORY BAR — Auto scroll */}
+      {/* MOBILE CATEGORY BAR */}
       <div className={styles.mobileCatBar}>
         <AutoScrollCatBar
           categories={categories}
@@ -580,11 +1083,11 @@ export default function ProductsClient() {
         )}
       </div>
 
-      {/* ══ MAIN LAYOUT ══ */}
+      {/* MAIN LAYOUT */}
       <div className={styles.container}>
         <div className={styles.layout}>
 
-          {/* ✅ DESKTOP SIDEBAR — LEFT SIDE (renders first) */}
+          {/* DESKTOP SIDEBAR */}
           <aside className={`${styles.sidebar} ${styles.sidebarDesktop}`}>
             <div className={styles.sidebarTop}>
               <div className={styles.sidebarTitle}>
@@ -596,112 +1099,13 @@ export default function ProductsClient() {
               </button>
             </div>
 
-            <div className={`${styles.filterBlock} ${styles.desktopCatBlock}`}>
-              <div className={styles.filterBlockTitle}>
-                <span className={styles.filterBlockIcon}></span>
-                Category
-              </div>
-              {catLoading ? (
-                <div className={styles.catList}>
-                  {[...Array(8)].map((_, i) => (
-                    <div key={i} className={styles.catSkeleton} />
-                  ))}
-                </div>
-              ) : (
-                <div className={styles.catList}>
-                  <button
-                    className={`${styles.catBtn} ${!filters.category ? styles.catBtnActive : ''}`}
-                    onClick={() => handleCategoryClick('')}
-                  >
-                    <span className={styles.catIcon}></span>
-                    <span className={styles.catName}>All Categories</span>
-                  </button>
-                  {categories.map(cat => (
-                    <button
-                      key={cat.id}
-                      className={`${styles.catBtn} ${isCategoryActive(cat) ? styles.catBtnActive : ''}`}
-                      onClick={() => handleCategoryClick(cat.id)}
-                    >
-                      <span className={styles.catIcon}>
-                        {cat.icon || CATEGORY_ICONS[cat.slug] || CATEGORY_ICONS.default}
-                      </span>
-                      <span className={styles.catName}>{cat.name}</span>
-                      {cat.productCount > 0 && (
-                        <span className={styles.catCount}>{cat.productCount}</span>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <div className={styles.filterBlock}>
-              <div className={styles.filterBlockTitle}>
-                <span className={styles.filterBlockIcon}>💰</span>
-                Price Range (₹)
-              </div>
-              <div className={styles.priceInputWrap}>
-                <label className={styles.priceLabel}>Min Price ₹</label>
-                <input
-                  type="number"
-                  value={localMin}
-                  onChange={e => { setLocalMin(e.target.value); setPriceError(''); }}
-                  onKeyDown={e => e.key === 'Enter' && handleApplyPrice()}
-                  placeholder="e.g. 100"
-                  min="0"
-                  className={styles.priceInput}
-                />
-              </div>
-              <div className={styles.priceInputWrap}>
-                <label className={styles.priceLabel}>Max Price ₹</label>
-                <input
-                  type="number"
-                  value={localMax}
-                  onChange={e => { setLocalMax(e.target.value); setPriceError(''); }}
-                  onKeyDown={e => e.key === 'Enter' && handleApplyPrice()}
-                  placeholder="e.g. 999"
-                  min="0"
-                  className={styles.priceInput}
-                />
-              </div>
-              {priceError && <div className={styles.priceError}>{priceError}</div>}
-              <button className={styles.applyPriceBtn} onClick={handleApplyPrice}>
-                🔍 Apply Price Filter
-              </button>
-              {(appliedMin || appliedMax) && (
-                <div className={styles.appliedPrice}>
-                  <span>✅ ₹{appliedMin || '0'} — ₹{appliedMax || '∞'}</span>
-                  <button className={styles.clearPriceBtn} onClick={handleClearPrice}>Clear</button>
-                </div>
-              )}
-            </div>
-
-            <div className={styles.filterBlock}>
-              <div className={styles.filterBlockTitle}>
-                <span className={styles.filterBlockIcon}>⚡</span>
-                Quick Filters
-              </div>
-              <label className={styles.toggleRow}>
-                <span>⭐ Featured Only</span>
-                <div
-                  className={`${styles.toggle} ${filters.featured === 'true' ? styles.toggleOn : ''}`}
-                  onClick={() => updateFilter('featured', filters.featured === 'true' ? '' : 'true')}
-                />
-              </label>
-              <label className={styles.toggleRow}>
-                <span>🔥 Trending Only</span>
-                <div
-                  className={`${styles.toggle} ${filters.trending === 'true' ? styles.toggleOn : ''}`}
-                  onClick={() => updateFilter('trending', filters.trending === 'true' ? '' : 'true')}
-                />
-              </label>
-            </div>
+            <FilterContent />
 
             <div className={styles.sidebarBlob1} />
             <div className={styles.sidebarBlob2} />
           </aside>
 
-          {/* ══ PRODUCTS GRID — RIGHT SIDE (renders after sidebar) ══ */}
+          {/* PRODUCTS GRID */}
           <main className={styles.main}>
             {loading ? (
               <div className={styles.skeletonGrid}>
@@ -747,9 +1151,7 @@ export default function ProductsClient() {
                               <span className={styles.pageDots}>…</span>
                             )}
                             <button
-                              className={`${styles.pageBtn} ${
-                                p === pagination.page ? styles.pageBtnActive : ''
-                              }`}
+                              className={`${styles.pageBtn} ${p === pagination.page ? styles.pageBtnActive : ''}`}
                               onClick={() => updateFilter('page', p)}
                             >{p}</button>
                           </React.Fragment>
@@ -785,7 +1187,7 @@ export default function ProductsClient() {
         </div>
       </div>
 
-      {/* ✅ MOBILE DRAWER — Rendered OUTSIDE layout, at root level */}
+      {/* MOBILE DRAWER */}
       {sidebarOpen && (
         <>
           <div
@@ -797,6 +1199,19 @@ export default function ProductsClient() {
               <div className={styles.sidebarTitle}>
                 <span>🎛️</span>
                 <span>Filters</span>
+                {activeFilterCount > 0 && (
+                  <span style={{
+                    padding: '2px 8px',
+                    background: '#EF4444',
+                    color: 'white',
+                    borderRadius: '999px',
+                    fontSize: '0.68rem',
+                    fontWeight: '900',
+                    marginLeft: '4px',
+                  }}>
+                    {activeFilterCount}
+                  </span>
+                )}
               </div>
               <button className={styles.clearAllBtn} onClick={clearAll}>
                 Clear all
@@ -807,67 +1222,7 @@ export default function ProductsClient() {
               >✕</button>
             </div>
 
-            <div className={styles.filterBlock}>
-              <div className={styles.filterBlockTitle}>
-                <span className={styles.filterBlockIcon}>💰</span>
-                Price Range (₹)
-              </div>
-              <div className={styles.priceInputWrap}>
-                <label className={styles.priceLabel}>Min Price ₹</label>
-                <input
-                  type="number"
-                  value={localMin}
-                  onChange={e => { setLocalMin(e.target.value); setPriceError(''); }}
-                  onKeyDown={e => e.key === 'Enter' && handleApplyPrice()}
-                  placeholder="e.g. 100"
-                  min="0"
-                  className={styles.priceInput}
-                />
-              </div>
-              <div className={styles.priceInputWrap}>
-                <label className={styles.priceLabel}>Max Price ₹</label>
-                <input
-                  type="number"
-                  value={localMax}
-                  onChange={e => { setLocalMax(e.target.value); setPriceError(''); }}
-                  onKeyDown={e => e.key === 'Enter' && handleApplyPrice()}
-                  placeholder="e.g. 999"
-                  min="0"
-                  className={styles.priceInput}
-                />
-              </div>
-              {priceError && <div className={styles.priceError}>{priceError}</div>}
-              <button className={styles.applyPriceBtn} onClick={handleApplyPrice}>
-                🔍 Apply Price Filter
-              </button>
-              {(appliedMin || appliedMax) && (
-                <div className={styles.appliedPrice}>
-                  <span>✅ ₹{appliedMin || '0'} — ₹{appliedMax || '∞'}</span>
-                  <button className={styles.clearPriceBtn} onClick={handleClearPrice}>Clear</button>
-                </div>
-              )}
-            </div>
-
-            <div className={styles.filterBlock}>
-              <div className={styles.filterBlockTitle}>
-                <span className={styles.filterBlockIcon}>⚡</span>
-                Quick Filters
-              </div>
-              <label className={styles.toggleRow}>
-                <span>⭐ Featured Only</span>
-                <div
-                  className={`${styles.toggle} ${filters.featured === 'true' ? styles.toggleOn : ''}`}
-                  onClick={() => updateFilter('featured', filters.featured === 'true' ? '' : 'true')}
-                />
-              </label>
-              <label className={styles.toggleRow}>
-                <span>🔥 Trending Only</span>
-                <div
-                  className={`${styles.toggle} ${filters.trending === 'true' ? styles.toggleOn : ''}`}
-                  onClick={() => updateFilter('trending', filters.trending === 'true' ? '' : 'true')}
-                />
-              </label>
-            </div>
+            <FilterContent />
           </aside>
         </>
       )}

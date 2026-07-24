@@ -6,14 +6,14 @@ import prisma from '@/lib/prisma';
 // ✅ Calculate search relevance score
 function calculateRelevance(product, searchLower, matchingCategoryIds) {
   let score = 0;
-  const nameLower       = (product.name || '').toLowerCase();
-  const brandLower      = (product.brand || '').toLowerCase();
-  const descLower       = (product.description || '').toLowerCase();
-  const shortDescLower  = (product.shortDescription || '').toLowerCase();
-  const categoryNameLower = (product.category?.name || '').toLowerCase();
-  const categorySlugLower = (product.category?.slug || '').toLowerCase();
+  const nameLower         = (product.name             || '').toLowerCase();
+  const brandLower        = (product.brand            || '').toLowerCase();
+  const descLower         = (product.description      || '').toLowerCase();
+  const shortDescLower    = (product.shortDescription || '').toLowerCase();
+  const categoryNameLower = (product.category?.name   || '').toLowerCase();
+  const categorySlugLower = (product.category?.slug   || '').toLowerCase();
 
-  // 🥇 HIGHEST — Product is in matching category (main category match)
+  // 🥇 HIGHEST — Product is in matching category
   if (matchingCategoryIds.includes(product.categoryId)) {
     score += 10000;
   }
@@ -28,46 +28,29 @@ function calculateRelevance(product, searchLower, matchingCategoryIds) {
 
   // 🥉 Exact product name match
   if (nameLower === searchLower) score += 3000;
-
-  // Name starts with search
   if (nameLower.startsWith(searchLower)) score += 1500;
 
-  // Name contains search as whole word
   const nameWords = nameLower.split(/\s+/);
   if (nameWords.includes(searchLower)) score += 1200;
-
-  // Name contains search (substring)
   if (nameLower.includes(searchLower)) score += 800;
 
-  // Brand exact match
+  // Brand match
   if (brandLower === searchLower) score += 700;
-
-  // Brand contains search
   if (brandLower.includes(searchLower)) score += 400;
 
-  // Tags exact match
+  // Tags match
   if (product.tags?.some(t => t.toLowerCase() === searchLower)) score += 600;
-
-  // Tags contains
   if (product.tags?.some(t => t.toLowerCase().includes(searchLower))) score += 300;
 
-  // Short description match
+  // Description match (lowest)
   if (shortDescLower.includes(searchLower)) score += 100;
+  if (descLower.includes(searchLower))       score += 20;
 
-  // Description match (LOWEST priority — least relevant)
-  if (descLower.includes(searchLower)) score += 20;
-
-  // 🎁 BOOST: Featured products
-  if (product.isFeatured) score += 50;
-
-  // 🎁 BOOST: Trending products
-  if (product.isTrending) score += 40;
-
-  // 🎁 BOOST: In stock
-  if ((product.stock || 0) > 0) score += 10;
-
-  // 🎁 BOOST: Higher rated
-  if (product.rating > 4) score += 15;
+  // 🎁 BOOSTS
+  if (product.isFeatured)          score += 50;
+  if (product.isTrending)          score += 40;
+  if ((product.stock || 0) > 0)    score += 10;
+  if (product.rating > 4)          score += 15;
 
   return score;
 }
@@ -85,6 +68,12 @@ export async function GET(request) {
     const featured = searchParams.get('featured');
     const trending = searchParams.get('trending');
 
+    // ✅ NEW FILTERS
+    const brand    = searchParams.get('brand');
+    const discount = searchParams.get('discount');
+    const rating   = searchParams.get('rating');
+    const inStock  = searchParams.get('inStock');
+
     let minPrice = searchParams.get('minPrice')
       ? parseFloat(searchParams.get('minPrice'))
       : null;
@@ -98,9 +87,36 @@ export async function GET(request) {
 
     const where = { isActive: true };
 
-    if (featured === 'true') where.isFeatured = true;
-    if (trending === 'true') where.isTrending = true;
+    if (featured === 'true')  where.isFeatured = true;
+    if (trending === 'true')  where.isTrending = true;
 
+    // ✅ Brand filter (case-insensitive)
+    if (brand && brand.trim()) {
+      where.brand = { equals: brand.trim(), mode: 'insensitive' };
+    }
+
+    // ✅ Discount filter (min discount %)
+    if (discount) {
+      const discountVal = parseFloat(discount);
+      if (!isNaN(discountVal) && discountVal > 0) {
+        where.discountPercent = { gte: discountVal };
+      }
+    }
+
+    // ✅ Rating filter
+    if (rating) {
+      const ratingVal = parseFloat(rating);
+      if (!isNaN(ratingVal) && ratingVal > 0) {
+        where.rating = { gte: ratingVal };
+      }
+    }
+
+    // ✅ In-stock only filter
+    if (inStock === 'true') {
+      where.stock = { gt: 0 };
+    }
+
+    // ✅ Price range filter
     if (minPrice !== null || maxPrice !== null) {
       where.OR = [
         {
@@ -126,7 +142,6 @@ export async function GET(request) {
     if (search && search.trim()) {
       const s = search.trim();
 
-      // STEP 1: Find matching categories
       const matchingCategories = await prisma.category.findMany({
         where: {
           OR: [
@@ -141,28 +156,16 @@ export async function GET(request) {
       matchingCategoryIds = matchingCategories.map(c => c.id);
       console.log(`🔍 Search "${s}" → Found ${matchingCategoryIds.length} matching categories:`, matchingCategories.map(c => c.name));
 
-      // STEP 2: Build search conditions — category match gets priority in WHERE
       const searchConditions = [
-        // 1. Products in matching categories (highest priority)
         ...(matchingCategoryIds.length > 0
           ? [{ categoryId: { in: matchingCategoryIds } }]
           : []),
-
-        // 2. Product name match
-        { name: { contains: s, mode: 'insensitive' } },
-
-        // 3. Brand match
-        { brand: { contains: s, mode: 'insensitive' } },
-
-        // 4. Tags match
-        { tags: { has: s } },
-        { tags: { has: s.toLowerCase() } },
-
-        // 5. Short description
+        { name:             { contains: s, mode: 'insensitive' } },
+        { brand:            { contains: s, mode: 'insensitive' } },
+        { tags:             { has: s } },
+        { tags:             { has: s.toLowerCase() } },
         { shortDescription: { contains: s, mode: 'insensitive' } },
-
-        // 6. Full description (lowest)
-        { description: { contains: s, mode: 'insensitive' } },
+        { description:      { contains: s, mode: 'insensitive' } },
       ];
 
       if (where.OR) {
@@ -173,7 +176,7 @@ export async function GET(request) {
       }
     }
 
-    // ✅ Direct category filter (e.g., ?category=xxx)
+    // ✅ Direct category filter
     if (category) {
       const isObjectId = /^[a-f\d]{24}$/i.test(category);
       if (isObjectId) {
@@ -193,14 +196,27 @@ export async function GET(request) {
 
     const total = await prisma.product.count({ where });
 
+    // ✅ Determine sort field — special handling for discount
+    let orderBy;
+    if (sort === 'discountPercent') {
+      orderBy = [
+        { discountPercent: order },
+        { createdAt: 'desc' },
+      ];
+    } else if (sort === 'price') {
+      // Sort by price (discountPrice if available, else price)
+      orderBy = [{ price: order }];
+    } else {
+      orderBy = { [sort]: order };
+    }
+
     // ✅ Fetch products
     let products = await prisma.product.findMany({
       where,
       include: {
         category: { select: { id: true, name: true, slug: true } },
       },
-      orderBy: { [sort]: order },
-      // ⚠️ When searching, fetch more results for relevance sorting
+      orderBy,
       skip: search ? 0 : (page - 1) * limit,
       take: search ? Math.min(total, 200) : limit,
     });
@@ -217,7 +233,6 @@ export async function GET(request) {
         .sort((a, b) => b.score - a.score)
         .map(item => item.product);
 
-      // Apply pagination AFTER sorting by relevance
       const startIndex = (page - 1) * limit;
       products = products.slice(startIndex, startIndex + limit);
 
@@ -295,7 +310,6 @@ export async function POST(request) {
       discountPercent = Math.round(((data.price - data.discountPrice) / data.price) * 100);
     }
 
-    // ✅ Handle color variants
     const hasVariants = Array.isArray(data.colorVariants) && data.colorVariants.length > 0;
     let colorVariants = [];
     let totalStock = parseInt(data.stock) || 0;
@@ -312,7 +326,6 @@ export async function POST(request) {
         sku:           v.sku || `${sku}-${(v.colorName || 'C').toUpperCase().slice(0,3)}`,
       }));
 
-      // ✅ Total stock = sum of all variant stocks
       totalStock = colorVariants.reduce((sum, v) => sum + (v.stock || 0), 0);
     }
 
@@ -338,11 +351,8 @@ export async function POST(request) {
         gender:           data.gender   || null,
         color:            data.color    || null,
         material:         data.material || null,
-
-        // ✅ Color variants
         hasVariants,
         colorVariants,
-
         slug: productSlug,
         sku,
       },
