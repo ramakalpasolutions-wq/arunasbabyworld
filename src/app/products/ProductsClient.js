@@ -197,25 +197,25 @@ export default function ProductsClient() {
   const [activeQuick,   setActiveQuick]   = useState('all');
   const [priceError,    setPriceError]    = useState('');
 
-  const [localMin,   setLocalMin]   = useState('');
-  const [localMax,   setLocalMax]   = useState('');
-  const [appliedMin, setAppliedMin] = useState('');
-  const [appliedMax, setAppliedMax] = useState('');
+const [localMin,   setLocalMin]   = useState(searchParams.get('minPrice') || '');
+const [localMax,   setLocalMax]   = useState(searchParams.get('maxPrice') || '');
+const [appliedMin, setAppliedMin] = useState(searchParams.get('minPrice') || '');
+const [appliedMax, setAppliedMax] = useState(searchParams.get('maxPrice') || '');
 
-  const [filters, setFilters] = useState({
-    search:   searchParams.get('search')   || '',
-    category: searchParams.get('category') || '',
-    brand:    '',
-    sort:     'createdAt-desc',
-    minPrice: '',
-    maxPrice: '',
-    featured: searchParams.get('featured') || '',
-    trending: searchParams.get('trending') || '',
-    discount: '',
-    rating:   '',
-    inStock:  false,
-    page:     1,
-  });
+const [filters, setFilters] = useState({
+  search:   searchParams.get('search')   || '',
+  category: searchParams.get('category') || '',
+  brand:    '',
+  sort:     'createdAt-desc',
+  minPrice: searchParams.get('minPrice') || '',  // ✅ ADD
+  maxPrice: searchParams.get('maxPrice') || '',  // ✅ ADD
+  featured: searchParams.get('featured') || '',
+  trending: searchParams.get('trending') || '',
+  discount: '',
+  rating:   '',
+  inStock:  false,
+  page:     1,
+});
 
   /* ── Body scroll lock ── */
   useEffect(() => {
@@ -321,16 +321,27 @@ export default function ProductsClient() {
   ]);
 
   /* ── Sync URL params ── */
-  useEffect(() => {
-    setFilters(prev => ({
-      ...prev,
-      category: searchParams.get('category') || '',
-      search:   searchParams.get('search')   || '',
-      featured: searchParams.get('featured') || '',
-      trending: searchParams.get('trending') || '',
-      page:     1,
-    }));
-  }, [searchParams]);
+useEffect(() => {
+  const urlMinPrice = searchParams.get('minPrice') || '';
+  const urlMaxPrice = searchParams.get('maxPrice') || '';
+
+  setFilters(prev => ({
+    ...prev,
+    category: searchParams.get('category') || '',
+    search:   searchParams.get('search')   || '',
+    featured: searchParams.get('featured') || '',
+    trending: searchParams.get('trending') || '',
+    minPrice: urlMinPrice,   // ✅ ADD
+    maxPrice: urlMaxPrice,   // ✅ ADD
+    page:     1,
+  }));
+
+  // ✅ Also sync price display fields
+  setLocalMin(urlMinPrice);
+  setLocalMax(urlMaxPrice);
+  setAppliedMin(urlMinPrice);
+  setAppliedMax(urlMaxPrice);
+}, [searchParams]);
 
   /* ── Fetch products ── */
   const fetchProducts = useCallback(async () => {
