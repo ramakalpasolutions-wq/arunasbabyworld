@@ -336,7 +336,6 @@ useEffect(() => {
     page:     1,
   }));
 
-  // ✅ Also sync price display fields
   setLocalMin(urlMinPrice);
   setLocalMax(urlMaxPrice);
   setAppliedMin(urlMinPrice);
@@ -1177,23 +1176,25 @@ useEffect(() => {
                   </div>
                 )}
               </>
-            ) : (
-              <div className={styles.emptyState}>
-                <div className={styles.emptyOrb} />
-                <span className={styles.emptyEmoji}>🔍</span>
-                <h3>No products found</h3>
-                <p>
-                  {filters.search
-                    ? `No results for "${filters.search}"`
-                    : selectedCategoryName
-                      ? `No products in "${selectedCategoryName}" yet`
-                      : 'Try adjusting your filters 🧸'}
-                </p>
-                <button className={styles.emptyBtn} onClick={clearAll}>
-                  Clear All Filters
-                </button>
-              </div>
-            )}
+           ) : (
+  <div className={styles.emptyState}>
+    <div className={styles.emptyOrb} />
+    <span className={styles.emptyEmoji}>🔍</span>
+    <h3>No products found</h3>
+    <p>
+      {filters.search
+        ? `No results for "${filters.search}"`
+        : filters.category && !selectedCategoryName
+          ? `Category "${searchParams.get('category')}" not found. Try browsing all products.`
+          : selectedCategoryName
+            ? `No products in "${selectedCategoryName}" yet`
+            : 'Try adjusting your filters 🧸'}
+    </p>
+    <button className={styles.emptyBtn} onClick={clearAll}>
+      Clear All Filters
+    </button>
+  </div>
+)}
           </main>
         </div>
       </div>

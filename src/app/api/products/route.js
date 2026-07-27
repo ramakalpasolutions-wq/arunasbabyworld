@@ -177,22 +177,84 @@ export async function GET(request) {
     }
 
     // ✅ Direct category filter
-    if (category) {
-      const isObjectId = /^[a-f\d]{24}$/i.test(category);
-      if (isObjectId) {
-        where.categoryId = category;
-      } else {
-        const catBySlug = await prisma.category.findFirst({ where: { slug: category } });
-        if (catBySlug) {
-          where.categoryId = catBySlug.id;
-        } else {
-          const catByPartial = await prisma.category.findFirst({
-            where: { slug: { contains: category, mode: 'insensitive' } },
-          });
-          if (catByPartial) where.categoryId = catByPartial.id;
-        }
+// ✅ Smart Category filter — handles typos, spaces, capitals, abbreviations
+if (category) {
+  const isObjectId = /^[a-f\d]{24}$/i.test(category);
+
+  if (isObjectId) {
+    where.categoryId = category;
+  } else {
+    const rawCategory = category.trim();
+
+    // Normalize: "Electric vachiles" → "electric-vachiles"
+    const normalized = rawCategory
+      .toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
+
+    let catFound = null;
+
+    // 1️⃣ Exact slug match
+    catFound = await prisma.category.findFirst({
+      where: { slug: normalized, isActive: true },
+    });
+
+    // 2️⃣ Exact name match (case-insensitive)
+    if (!catFound) {
+      catFound = await prisma.category.findFirst({
+        where: {
+          name:     { equals: rawCategory, mode: 'insensitive' },
+          isActive: true,
+        },
+      });
+    }
+
+    // 3️⃣ Partial slug match
+    if (!catFound) {
+      catFound = await prisma.category.findFirst({
+        where: {
+          slug:     { contains: normalized, mode: 'insensitive' },
+          isActive: true,
+        },
+      });
+    }
+
+    // 4️⃣ Partial name match
+    if (!catFound) {
+      catFound = await prisma.category.findFirst({
+        where: {
+          name:     { contains: rawCategory, mode: 'insensitive' },
+          isActive: true,
+        },
+      });
+    }
+
+    // 5️⃣ Fuzzy match — use first meaningful word (e.g. "electric" from "Electric vachiles")
+    if (!catFound) {
+      const firstWord = rawCategory.split(/\s+/)[0]?.toLowerCase();
+      if (firstWord && firstWord.length >= 4) {
+        catFound = await prisma.category.findFirst({
+          where: {
+            OR: [
+              { slug: { contains: firstWord, mode: 'insensitive' } },
+              { name: { contains: firstWord, mode: 'insensitive' } },
+            ],
+            isActive: true,
+          },
+        });
       }
     }
+
+    if (catFound) {
+      where.categoryId = catFound.id;
+      console.log(`✅ Category "${rawCategory}" → matched: ${catFound.name} (${catFound.slug})`);
+    } else {
+      console.log(`⚠️ Category "${rawCategory}" → NOT FOUND — returning 0 results`);
+      // Force empty results if category not found (better than showing all!)
+      where.categoryId = '000000000000000000000000';
+    }
+  }
+}
 
     const total = await prisma.product.count({ where });
 
