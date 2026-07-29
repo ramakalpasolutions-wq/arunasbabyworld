@@ -16,12 +16,16 @@ export async function POST(request) {
       return NextResponse.json({ error: 'orderId required' }, { status: 400 });
     }
 
-    const order = await prisma.order.findUnique({ where: { id: orderId } });
+    const order = await prisma.order.findUnique({
+      where: { id: orderId },
+      include: { user: { select: { name: true, email: true } } },
+    });
+
     if (!order) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    // ✅ MANUAL AWB — primary flow
+    // ✅ MANUAL AWB — Save without API call
     if (manualAwb) {
       const updated = await prisma.order.update({
         where: { id: orderId },
@@ -43,13 +47,13 @@ export async function POST(request) {
       });
     }
 
-    // ✅ Auto via Nimbus API — will work once activated
+    // ✅ AUTO CREATE via NimbusPost V2 API
     try {
       const { createShipment } = await import('@/lib/nimbuspost');
       const shipment = await createShipment(order);
 
       if (!shipment.awb) {
-        throw new Error('No AWB returned from Nimbus Post');
+        throw new Error('No AWB returned from NimbusPost');
       }
 
       const updated = await prisma.order.update({
@@ -75,7 +79,7 @@ export async function POST(request) {
       console.error('Nimbus API failed:', nimbusError.message);
       return NextResponse.json({
         error:      nimbusError.message,
-        suggestion: 'Nimbus API not ready. Create shipment on Nimbus dashboard and enter AWB manually.',
+        suggestion: 'Enter AWB manually below',
       }, { status: 500 });
     }
 
