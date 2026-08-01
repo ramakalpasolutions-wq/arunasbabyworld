@@ -7,7 +7,6 @@ import { useWishlist } from '@/context/WishlistContext';
 import toast from 'react-hot-toast';
 import styles from './ProductCard.module.css';
 
-/* ── baby accent per category — all 9 required categories ── */
 const CATEGORY_ACCENTS = {
   'clothing':          { color: '#FF6B35', emoji: '👗', pastel: '#FFF2EB' },
   'personal-care':     { color: '#7B2FBE', emoji: '🧴', pastel: '#F3E8FF' },
@@ -29,18 +28,14 @@ const CATEGORY_ACCENTS = {
   'default':           { color: '#FF6B35', emoji: '🎁', pastel: '#FFF2EB' },
 };
 
-/* ── Get accent by slug first, then name ── */
 function getCategoryAccent(categoryName = '', categorySlug = '') {
-  // Try exact slug match first
   if (categorySlug) {
     if (CATEGORY_ACCENTS[categorySlug]) return CATEGORY_ACCENTS[categorySlug];
-    // Try partial slug match
     for (const [k, v] of Object.entries(CATEGORY_ACCENTS)) {
       if (k === 'default') continue;
       if (categorySlug.includes(k) || k.includes(categorySlug)) return v;
     }
   }
-  // Try name match
   if (categoryName) {
     const key = categoryName.toLowerCase().replace(/\s+/g, '-');
     if (CATEGORY_ACCENTS[key]) return CATEGORY_ACCENTS[key];
@@ -52,7 +47,6 @@ function getCategoryAccent(categoryName = '', categorySlug = '') {
   return CATEGORY_ACCENTS.default;
 }
 
-/* ── Skeleton loader ── */
 export function ProductCardSkeleton() {
   return (
     <div className={styles.skeleton}>
@@ -80,22 +74,46 @@ export default function ProductCard({ product }) {
 
   if (!product) return null;
 
-  // Support both isWishlisted and isInWishlist
   const inWishlist = isWishlisted
     ? isWishlisted(product.id)
     : isInWishlist
       ? isInWishlist(product.id)
       : false;
 
-  const imageUrl = product.images?.[0]?.url || null;
+  // ✅ FIXED — Smart image resolver (checks color variants too)
+  const getProductImage = () => {
+    if (product.images?.[0]?.url) return product.images[0].url;
+    if (product.hasVariants && product.colorVariants?.length > 0) {
+      for (const variant of product.colorVariants) {
+        if (variant.images?.[0]?.url) return variant.images[0].url;
+      }
+    }
+    return null;
+  };
 
-  // ✅ Use slug first, then name
+  // ✅ FIXED — Smart price resolver (uses variant price if no main price)
+  const getProductPrice = () => {
+    if (product.hasVariants && product.colorVariants?.length > 0) {
+      const firstVariant = product.colorVariants[0];
+      return {
+        price:         firstVariant.price         ?? product.price,
+        discountPrice: firstVariant.discountPrice ?? product.discountPrice,
+      };
+    }
+    return {
+      price:         product.price,
+      discountPrice: product.discountPrice,
+    };
+  };
+
+  const imageUrl = getProductImage();
+  const { price: displayPrice, discountPrice: displayDiscountPrice } = getProductPrice();
+
   const accent = getCategoryAccent(
     product.category?.name || '',
     product.category?.slug || ''
   );
 
-  /* ── 3D tilt handler ── */
   const handleMouseMove = (e) => {
     const card = cardRef.current;
     if (!card) return;
@@ -114,17 +132,13 @@ export default function ProductCard({ product }) {
     setImgParallax({ x: 0, y: 0 });
   };
 
-  /* ── Add to cart ── */
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
-
     if (cartAdding || product.stock === 0) return;
     setCartAdding(true);
-
     const addFn = addItem || addToCart;
     addFn({ ...product, quantity: 1 });
-
     toast.success(
       <span>Added to cart! 🛒</span>,
       {
@@ -143,13 +157,10 @@ export default function ProductCard({ product }) {
     setTimeout(() => setCartAdding(false), 1200);
   };
 
-  /* ── Wishlist ── */
   const handleWishlist = (e) => {
     e.preventDefault();
     e.stopPropagation();
-
     toggle(product);
-
     if (inWishlist) {
       toast('Removed from wishlist 💔', { duration: 1500 });
     } else {
@@ -168,8 +179,8 @@ export default function ProductCard({ product }) {
 
   const discount = product.discountPercent > 0
     ? product.discountPercent
-    : product.discountPrice && product.price
-      ? Math.round((1 - product.discountPrice / product.price) * 100)
+    : displayDiscountPrice && displayPrice
+      ? Math.round((1 - displayDiscountPrice / displayPrice) * 100)
       : 0;
 
   return (
@@ -188,14 +199,9 @@ export default function ProductCard({ product }) {
           : 'perspective(900px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1)',
       }}
     >
-      {/* Gloss layer */}
       <div className={styles.gloss} />
 
-      {/* ── IMAGE AREA ── */}
-      <div
-        className={styles.imageWrap}
-        style={{ background: accent.pastel }}
-      >
+      <div className={styles.imageWrap} style={{ background: accent.pastel }}>
         <div className={styles.dotPattern} />
 
         <div
@@ -231,10 +237,8 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
-        {/* Shine sweep */}
         <div className={`${styles.shine} ${isHovered ? styles.shineActive : ''}`} />
 
-        {/* Badges */}
         <div className={styles.badges}>
           {discount > 0 && (
             <span className={styles.badgeDiscount}>-{discount}%</span>
@@ -245,9 +249,20 @@ export default function ProductCard({ product }) {
           {product.isFeatured && (
             <span className={styles.badgeFeatured}>⭐ Top Pick</span>
           )}
+          {product.hasVariants && product.colorVariants?.length > 1 && (
+            <span style={{
+              background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)',
+              color: 'white',
+              padding: '3px 8px',
+              borderRadius: '6px',
+              fontSize: '0.65rem',
+              fontWeight: '800',
+            }}>
+              🎨 {product.colorVariants.length} Colors
+            </span>
+          )}
         </div>
 
-        {/* Wishlist button */}
         <button
           className={`${styles.wishBtn} ${inWishlist ? styles.wishActive : ''}`}
           onClick={handleWishlist}
@@ -258,26 +273,21 @@ export default function ProductCard({ product }) {
           <span className={styles.wishRipple} />
         </button>
 
-        {/* Out of stock overlay */}
         {product.stock === 0 && (
           <div className={styles.oos}>
             <span>Out of Stock</span>
           </div>
         )}
 
-        {/* Category emoji */}
         <span className={styles.catEmoji}>{accent.emoji}</span>
 
-        {/* Accent glow */}
         <div
           className={`${styles.imgGlow} ${isHovered ? styles.imgGlowActive : ''}`}
           style={{ '--accent': accent.color }}
         />
       </div>
 
-      {/* ── INFO AREA ── */}
       <div className={styles.info}>
-        {/* Gradient separator */}
         <div
           className={styles.separator}
           style={{
@@ -285,30 +295,26 @@ export default function ProductCard({ product }) {
           }}
         />
 
-        {/* Category label */}
         <p className={styles.category} style={{ color: accent.color }}>
           {product.category?.name || 'Baby Products'}
         </p>
 
-        {/* Product name */}
         <h3 className={styles.name}>{product.name}</h3>
 
-        {/* Short description */}
         {product.shortDescription && (
           <p className={styles.desc}>{product.shortDescription}</p>
         )}
 
-        {/* Price row */}
         <div className={styles.priceRow}>
           <span
             className={styles.price}
             style={{ '--accent': accent.color, '--purple': '#7B2FBE' }}
           >
-            ₹{product.discountPrice || product.price}
+            ₹{displayDiscountPrice || displayPrice}
           </span>
 
-          {product.discountPrice && product.discountPrice < product.price && (
-            <span className={styles.priceOld}>₹{product.price}</span>
+          {displayDiscountPrice && displayDiscountPrice < displayPrice && (
+            <span className={styles.priceOld}>₹{displayPrice}</span>
           )}
 
           {discount > 0 && (
@@ -316,7 +322,6 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
-        {/* Rating */}
         {product.rating > 0 && (
           <div className={styles.ratingRow}>
             <div className={styles.stars}>
@@ -339,14 +344,12 @@ export default function ProductCard({ product }) {
           </div>
         )}
 
-        {/* Low stock warning */}
         {product.stock > 0 && product.stock <= 10 && (
           <p className={styles.lowStock}>
             Only {product.stock} left!
           </p>
         )}
 
-        {/* Add to Cart button */}
         <button
           className={`
             ${styles.cartBtn}
@@ -369,18 +372,10 @@ export default function ProductCard({ product }) {
             <span
               className={`${styles.cartIcon} ${cartAdding ? styles.cartIconSpin : ''}`}
             >
-              {cartAdding
-                ? '✓'
-                : product.stock === 0
-                  ? '✕'
-                  : '🛒'}
+              {cartAdding ? '✓' : product.stock === 0 ? '✕' : '🛒'}
             </span>
             <span className={styles.cartLabel}>
-              {cartAdding
-                ? 'Added!'
-                : product.stock === 0
-                  ? 'Out of Stock'
-                  : 'Add to Cart'}
+              {cartAdding ? 'Added!' : product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
             </span>
           </span>
           <span
