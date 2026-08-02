@@ -848,7 +848,7 @@ export default function ProductForm({ id }) {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      fd.append('folder', 'firstcry/products');
+      fd.append('folder', 'arunas/products');
       const res  = await fetch('/api/upload', { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Upload failed');
@@ -889,7 +889,7 @@ export default function ProductForm({ id }) {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      fd.append('folder', 'firstcry/products');
+      fd.append('folder', 'arunas/products');
       const res  = await fetch('/api/upload', { method: 'POST', body: fd });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Upload failed');

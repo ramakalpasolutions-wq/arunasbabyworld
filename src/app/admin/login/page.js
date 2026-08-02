@@ -433,7 +433,7 @@ export default function AdminLoginPage() {
                 fontSize: '0.72rem',
                 color: 'rgba(255,255,255,0.28)',
                 fontWeight: '500',
-              }}>admin@firstcry.com / admin123</span>
+              }}>admin@arunas.com / admin123</span>
             </div>
             <button
               type="button"

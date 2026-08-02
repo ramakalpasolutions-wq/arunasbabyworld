@@ -87,7 +87,7 @@ export default function BulkUploadClient() {
         if (file.size > 5 * 1024 * 1024) { toast.error(`${file.name} too large`); continue; }
         fd.append('file', file);
       }
-      fd.append('folder', 'firstcry/products');
+      fd.append('folder', 'arunas/products');
 
       const res  = await fetch('/api/upload', { method: 'POST', body: fd });
       const data = await res.json();
@@ -134,7 +134,7 @@ export default function BulkUploadClient() {
     try {
       const fd = new FormData();
       fd.append('file', file);
-      fd.append('folder', 'firstcry/products');
+      fd.append('folder', 'arunas/products');
 
       const res  = await fetch('/api/upload', { method: 'POST', body: fd });
       const data = await res.json();

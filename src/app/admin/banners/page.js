@@ -344,7 +344,7 @@ function BrandsTab() {
   if (!file) return;
   setUploading(true);
   try {
-    const result = await uploadFileToR2(file, 'firstcry/brands');
+    const result = await uploadFileToR2(file, 'arunas/brands');
     setForm(f => ({
       ...f,
       logo: { url: result.url, publicId: result.publicId },
@@ -539,7 +539,7 @@ function CareGridManager({ type, title, accentColor, layout }) {
   const k = `${slotIndex}-${side}`;
   setUploading(prev => ({ ...prev, [k]: true }));
   try {
-    const result = await uploadFileToR2(file, `firstcry/banners/${type}`);
+    const result = await uploadFileToR2(file, `arunas/banners/${type}`);
     const imgObj = { url: result.url, publicId: result.publicId };
     setBanners(prev => {
       const u = [...prev];
@@ -834,7 +834,7 @@ export default function AdminBanners() {
   if (!file) return;
   setUploading(true);
   try {
-    const result = await uploadFileToR2(file, `firstcry/banners/${form.type}`);
+    const result = await uploadFileToR2(file, `arunas/banners/${form.type}`);
     setForm(f => ({
       ...f,
       image: {
@@ -856,7 +856,7 @@ export default function AdminBanners() {
   if (!file) return;
   setUploadingMobile(true);
   try {
-    const result = await uploadFileToR2(file, 'firstcry/banners/mobile');
+    const result = await uploadFileToR2(file, 'arunas/banners/mobile');
     setForm(f => ({
       ...f,
       mobileImage: { url: result.url, publicId: result.publicId },
@@ -874,7 +874,7 @@ export default function AdminBanners() {
   if (!file) return;
   setUploadingHero(true);
   try {
-    const result = await uploadFileToR2(file, 'firstcry/banners/hero');
+    const result = await uploadFileToR2(file, 'arunas/banners/hero');
     setForm(f => {
       const panels = [...(f.panels || PANEL_DEFAULTS)];
       panels[0] = {

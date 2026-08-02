@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, usePathname } from 'next/navigation';
 import ProductCard from '@/components/products/ProductCard';
 import styles from './ProductsClient.module.css';
 import React from 'react';
@@ -185,6 +185,7 @@ function AutoScrollCatBar({ categories, filters, handleCategoryClick, catLoading
 ============================================================ */
 export default function ProductsClient() {
   const searchParams = useSearchParams();
+  const pathname     = usePathname();
 
   const [products,      setProducts]      = useState([]);
   const [categories,    setCategories]    = useState([]);
@@ -197,25 +198,25 @@ export default function ProductsClient() {
   const [activeQuick,   setActiveQuick]   = useState('all');
   const [priceError,    setPriceError]    = useState('');
 
-const [localMin,   setLocalMin]   = useState(searchParams.get('minPrice') || '');
-const [localMax,   setLocalMax]   = useState(searchParams.get('maxPrice') || '');
-const [appliedMin, setAppliedMin] = useState(searchParams.get('minPrice') || '');
-const [appliedMax, setAppliedMax] = useState(searchParams.get('maxPrice') || '');
+  const [localMin,   setLocalMin]   = useState(searchParams.get('minPrice') || '');
+  const [localMax,   setLocalMax]   = useState(searchParams.get('maxPrice') || '');
+  const [appliedMin, setAppliedMin] = useState(searchParams.get('minPrice') || '');
+  const [appliedMax, setAppliedMax] = useState(searchParams.get('maxPrice') || '');
 
-const [filters, setFilters] = useState({
-  search:   searchParams.get('search')   || '',
-  category: searchParams.get('category') || '',
-  brand:    '',
-  sort:     'createdAt-desc',
-  minPrice: searchParams.get('minPrice') || '',  // ✅ ADD
-  maxPrice: searchParams.get('maxPrice') || '',  // ✅ ADD
-  featured: searchParams.get('featured') || '',
-  trending: searchParams.get('trending') || '',
-  discount: '',
-  rating:   '',
-  inStock:  false,
-  page:     1,
-});
+  const [filters, setFilters] = useState({
+    search:   searchParams.get('search')   || '',
+    category: searchParams.get('category') || '',
+    brand:    searchParams.get('brand')    || '',
+    sort:     searchParams.get('sort')     || 'createdAt-desc',
+    minPrice: searchParams.get('minPrice') || '',
+    maxPrice: searchParams.get('maxPrice') || '',
+    featured: searchParams.get('featured') || '',
+    trending: searchParams.get('trending') || '',
+    discount: searchParams.get('discount') || '',
+    rating:   searchParams.get('rating')   || '',
+    inStock:  searchParams.get('inStock') === 'true',
+    page:     parseInt(searchParams.get('page')) || 1,
+  });
 
   /* ── Body scroll lock ── */
   useEffect(() => {
@@ -320,27 +321,75 @@ const [filters, setFilters] = useState({
     !!filters.inStock,
   ]);
 
-  /* ── Sync URL params ── */
-useEffect(() => {
-  const urlMinPrice = searchParams.get('minPrice') || '';
-  const urlMaxPrice = searchParams.get('maxPrice') || '';
+  /* ── Sync URL params → filters (on browser back/forward) ── */
+  useEffect(() => {
+    const urlMinPrice = searchParams.get('minPrice') || '';
+    const urlMaxPrice = searchParams.get('maxPrice') || '';
 
-  setFilters(prev => ({
-    ...prev,
-    category: searchParams.get('category') || '',
-    search:   searchParams.get('search')   || '',
-    featured: searchParams.get('featured') || '',
-    trending: searchParams.get('trending') || '',
-    minPrice: urlMinPrice,   // ✅ ADD
-    maxPrice: urlMaxPrice,   // ✅ ADD
-    page:     1,
-  }));
+    setFilters(prev => ({
+      ...prev,
+      category: searchParams.get('category') || '',
+      search:   searchParams.get('search')   || '',
+      brand:    searchParams.get('brand')    || '',
+      featured: searchParams.get('featured') || '',
+      trending: searchParams.get('trending') || '',
+      discount: searchParams.get('discount') || '',
+      rating:   searchParams.get('rating')   || '',
+      inStock:  searchParams.get('inStock') === 'true',
+      sort:     searchParams.get('sort')     || 'createdAt-desc',
+      minPrice: urlMinPrice,
+      maxPrice: urlMaxPrice,
+      page:     parseInt(searchParams.get('page')) || 1,
+    }));
 
-  setLocalMin(urlMinPrice);
-  setLocalMax(urlMaxPrice);
-  setAppliedMin(urlMinPrice);
-  setAppliedMax(urlMaxPrice);
-}, [searchParams]);
+    setLocalMin(urlMinPrice);
+    setLocalMax(urlMaxPrice);
+    setAppliedMin(urlMinPrice);
+    setAppliedMax(urlMaxPrice);
+  }, [searchParams]);
+
+  /* ── ✅ SYNC filters → URL (updates URL when any filter changes) ── */
+  useEffect(() => {
+    const params = new URLSearchParams();
+
+    if (filters.category)                 params.set('category', filters.category);
+    if (filters.search && filters.search.trim())
+                                          params.set('search', filters.search.trim());
+    if (filters.brand)                    params.set('brand', filters.brand);
+    if (filters.minPrice)                 params.set('minPrice', filters.minPrice);
+    if (filters.maxPrice)                 params.set('maxPrice', filters.maxPrice);
+    if (filters.featured === 'true')      params.set('featured', 'true');
+    if (filters.trending === 'true')      params.set('trending', 'true');
+    if (filters.discount)                 params.set('discount', filters.discount);
+    if (filters.rating)                   params.set('rating', filters.rating);
+    if (filters.inStock)                  params.set('inStock', 'true');
+    if (filters.sort && filters.sort !== 'createdAt-desc')
+                                          params.set('sort', filters.sort);
+    if (filters.page > 1)                 params.set('page', String(filters.page));
+
+    const queryString = params.toString();
+    const newUrl = queryString ? `${pathname}?${queryString}` : pathname;
+
+    // ✅ Update URL without reloading (uses browser History API)
+    const currentUrl = window.location.pathname + window.location.search;
+    if (currentUrl !== newUrl) {
+      window.history.replaceState({}, '', newUrl);
+    }
+  }, [
+    filters.category,
+    filters.search,
+    filters.brand,
+    filters.minPrice,
+    filters.maxPrice,
+    filters.featured,
+    filters.trending,
+    filters.discount,
+    filters.rating,
+    filters.inStock,
+    filters.sort,
+    filters.page,
+    pathname,
+  ]);
 
   /* ── Fetch products ── */
   const fetchProducts = useCallback(async () => {
@@ -1176,25 +1225,25 @@ useEffect(() => {
                   </div>
                 )}
               </>
-           ) : (
-  <div className={styles.emptyState}>
-    <div className={styles.emptyOrb} />
-    <span className={styles.emptyEmoji}>🔍</span>
-    <h3>No products found</h3>
-    <p>
-      {filters.search
-        ? `No results for "${filters.search}"`
-        : filters.category && !selectedCategoryName
-          ? `Category "${searchParams.get('category')}" not found. Try browsing all products.`
-          : selectedCategoryName
-            ? `No products in "${selectedCategoryName}" yet`
-            : 'Try adjusting your filters 🧸'}
-    </p>
-    <button className={styles.emptyBtn} onClick={clearAll}>
-      Clear All Filters
-    </button>
-  </div>
-)}
+            ) : (
+              <div className={styles.emptyState}>
+                <div className={styles.emptyOrb} />
+                <span className={styles.emptyEmoji}>🔍</span>
+                <h3>No products found</h3>
+                <p>
+                  {filters.search
+                    ? `No results for "${filters.search}"`
+                    : filters.category && !selectedCategoryName
+                      ? `Category "${searchParams.get('category')}" not found. Try browsing all products.`
+                      : selectedCategoryName
+                        ? `No products in "${selectedCategoryName}" yet`
+                        : 'Try adjusting your filters 🧸'}
+                </p>
+                <button className={styles.emptyBtn} onClick={clearAll}>
+                  Clear All Filters
+                </button>
+              </div>
+            )}
           </main>
         </div>
       </div>

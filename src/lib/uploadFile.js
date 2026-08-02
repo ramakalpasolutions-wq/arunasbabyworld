@@ -6,7 +6,7 @@
  * Works for files up to 50 MB
  *
  * @param {File} file - The file to upload (from input.files[0])
- * @param {string} folder - R2 folder path (e.g., 'firstcry/banners/hero')
+ * @param {string} folder - R2 folder path (e.g., 'arunas/banners/hero')
  * @param {(percent: number) => void} onProgress - Optional progress callback
  * @returns {Promise<{url: string, publicId: string, type: 'image'|'video'}>}
  */
