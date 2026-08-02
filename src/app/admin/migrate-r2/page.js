@@ -3,10 +3,17 @@ import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
 export default function MigrateR2Page() {
-  const [status, setStatus]   = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [action, setAction]   = useState('');
-  const [results, setResults] = useState(null);
+  const [status, setStatus]     = useState(null);
+  const [loading, setLoading]   = useState(false);
+  const [running, setRunning]   = useState(false);
+  const [progress, setProgress] = useState('');
+  const [totals,   setTotals]   = useState({
+    filesCopied:      0,
+    fileErrors:       0,
+    productsUpdated:  0,
+    bannersUpdated:   0,
+    brandsUpdated:    0,
+  });
 
   const fetchStatus = async () => {
     setLoading(true);
@@ -24,88 +31,247 @@ export default function MigrateR2Page() {
 
   useEffect(() => { fetchStatus(); }, []);
 
-  const runMigration = async (actionType) => {
-    const messages = {
-      'copy-files': `Copy ${status?.r2?.oldFolderFiles || 0} files from ${status?.config?.oldPrefix}/ to ${status?.config?.newPrefix}/?`,
-      'update-db':  `Update ${status?.database?.productsWithOldUrls || 0} products + banners + brands DB URLs?`,
-      'full':       `Run FULL migration: Copy files + Update DB?\n\nThis is safe — original files won't be deleted.`,
-    };
+  // ✅ CHUNKED FILE COPY
+  const copyFiles = async () => {
+    if (!confirm('Copy files in chunks? This may take several minutes.')) return;
 
-    if (!confirm(messages[actionType])) return;
-
-    setLoading(true);
-    setAction(actionType);
-    setResults(null);
+    setRunning(true);
+    let totalCopied = 0;
+    let totalErrors = 0;
+    let continuationToken = null;
+    let chunkNum = 0;
 
     try {
-      const res = await fetch('/api/migrate-r2', {
+      while (true) {
+        chunkNum++;
+        setProgress(`📁 Copying chunk ${chunkNum}... (${totalCopied} files done so far)`);
+
+        const res = await fetch('/api/migrate-r2', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({
+            action: 'copy-chunk',
+            continuationToken,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        totalCopied += data.copied;
+        totalErrors += data.errors;
+
+        setTotals(prev => ({
+          ...prev,
+          filesCopied: totalCopied,
+          fileErrors:  totalErrors,
+        }));
+
+        if (!data.hasMore) break;
+        continuationToken = data.nextToken;
+
+        // Small delay to prevent overwhelming
+        await new Promise(r => setTimeout(r, 500));
+      }
+
+      setProgress(`✅ File copy complete! ${totalCopied} files copied, ${totalErrors} errors.`);
+      toast.success(`✅ Copied ${totalCopied} files!`);
+    } catch (err) {
+      setProgress(`❌ Error: ${err.message}`);
+      toast.error(err.message);
+    } finally {
+      setRunning(false);
+      await fetchStatus();
+    }
+  };
+
+  // ✅ CHUNKED DB UPDATE
+  const updateDatabase = async () => {
+    if (!confirm('Update all database URLs? This is safe.')) return;
+
+    setRunning(true);
+    let productsUpdated = 0;
+    let bannersUpdated  = 0;
+    let brandsUpdated   = 0;
+    let dbSkip = 0;
+    let chunkNum = 0;
+
+    try {
+      // Update products in chunks
+      while (true) {
+        chunkNum++;
+        setProgress(`📦 Updating products chunk ${chunkNum}... (${productsUpdated} updated)`);
+
+        const res = await fetch('/api/migrate-r2', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify({
+            action: 'update-products-chunk',
+            dbSkip,
+          }),
+        });
+
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error);
+
+        productsUpdated += data.updated;
+        setTotals(prev => ({ ...prev, productsUpdated }));
+
+        if (!data.hasMore) break;
+        dbSkip = data.nextSkip;
+
+        await new Promise(r => setTimeout(r, 300));
+      }
+
+      // Update banners (one shot)
+      setProgress(`🖼️ Updating banners...`);
+      const banRes = await fetch('/api/migrate-r2', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ action: actionType }),
+        body:    JSON.stringify({ action: 'update-banners' }),
       });
+      const banData = await banRes.json();
+      if (banRes.ok) {
+        bannersUpdated = banData.updated;
+        setTotals(prev => ({ ...prev, bannersUpdated }));
+      }
 
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error);
+      // Update brands (one shot)
+      setProgress(`🏷️ Updating brands...`);
+      const brRes = await fetch('/api/migrate-r2', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ action: 'update-brands' }),
+      });
+      const brData = await brRes.json();
+      if (brRes.ok) {
+        brandsUpdated = brData.updated;
+        setTotals(prev => ({ ...prev, brandsUpdated }));
+      }
 
-      setResults(data.results);
-      toast.success('✅ Migration completed!');
-      await fetchStatus();
+      setProgress(`✅ DB update complete! Products: ${productsUpdated}, Banners: ${bannersUpdated}, Brands: ${brandsUpdated}`);
+      toast.success('✅ Database updated!');
     } catch (err) {
-      toast.error('❌ ' + err.message);
+      setProgress(`❌ Error: ${err.message}`);
+      toast.error(err.message);
     } finally {
-      setLoading(false);
-      setAction('');
+      setRunning(false);
+      await fetchStatus();
     }
+  };
+
+  // ✅ FULL MIGRATION
+  const runFullMigration = async () => {
+    if (!confirm('Run FULL migration?\n\n1. Copy all files\n2. Update all DB URLs\n\nThis may take 10-15 minutes.')) return;
+    await copyFiles();
+    await new Promise(r => setTimeout(r, 1000));
+    await updateDatabase();
   };
 
   return (
     <div style={{
-      padding:      '20px',
-      fontFamily:   'Nunito, sans-serif',
-      maxWidth:     '900px',
-      margin:       '0 auto',
+      padding: '20px',
+      fontFamily: 'Nunito, sans-serif',
+      maxWidth: '900px',
+      margin: '0 auto',
     }}>
-      <h1 style={{
-        fontSize: '1.8rem',
-        fontWeight: '900',
-        color: '#2D1A4A',
-        marginBottom: '8px',
-      }}>
+      <h1 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#2D1A4A', marginBottom: '8px' }}>
         🚀 R2 Migration
       </h1>
       <p style={{ color: '#6B7280', fontSize: '14px', marginBottom: '24px' }}>
         {status?.config?.oldPrefix} → {status?.config?.newPrefix}
       </p>
 
+      {/* Warning */}
       <div style={{
-        background:    '#FEF3C7',
-        border:        '2px solid #FDE68A',
-        borderRadius:  '12px',
-        padding:       '14px 18px',
-        marginBottom:  '20px',
+        background: '#FEF3C7',
+        border: '2px solid #FDE68A',
+        borderRadius: '12px',
+        padding: '14px 18px',
+        marginBottom: '20px',
       }}>
         <p style={{ margin: 0, fontSize: '13px', color: '#92400E', fontWeight: '700', lineHeight: 1.6 }}>
-          ⚠️ <strong>IMPORTANT:</strong><br />
-          1. This migration is <strong>SAFE</strong> — original files stay intact<br />
-          2. Files are COPIED (not moved)<br />
-          3. Database URLs are UPDATED<br />
-          4. Old URLs still work if anything breaks<br />
-          5. After 1 week of testing, you can manually delete old folder
+          ⚠️ <strong>NOTES:</strong><br />
+          • Migration runs in CHUNKS (200 files per request)<br />
+          • DON'T close the browser tab while running<br />
+          • Original files stay intact (safe)<br />
+          • Refresh count may show "1000+" (means more than 1000)
         </p>
       </div>
 
+      {/* Progress Bar */}
+      {running && (
+        <div style={{
+          background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)',
+          border: '2px solid #3B82F6',
+          borderRadius: '12px',
+          padding: '16px 20px',
+          marginBottom: '20px',
+        }}>
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            marginBottom: '10px',
+          }}>
+            <div style={{
+              width: '24px',
+              height: '24px',
+              border: '3px solid #3B82F6',
+              borderTopColor: 'transparent',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite',
+            }} />
+            <p style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#1E40AF' }}>
+              Migration in progress...
+            </p>
+          </div>
+          <p style={{ margin: 0, fontSize: '13px', color: '#1E3A8A', fontWeight: '600' }}>
+            {progress}
+          </p>
+          <style>{`
+            @keyframes spin {
+              to { transform: rotate(360deg); }
+            }
+          `}</style>
+        </div>
+      )}
+
+      {/* Progress Totals */}
+      {(totals.filesCopied > 0 || totals.productsUpdated > 0) && (
+        <div style={{
+          background: '#F0FDF4',
+          border: '2px solid #86EFAC',
+          borderRadius: '12px',
+          padding: '14px 18px',
+          marginBottom: '20px',
+        }}>
+          <p style={{ margin: '0 0 8px', fontSize: '13px', fontWeight: '800', color: '#166534' }}>
+            ✅ Migration Progress
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', fontSize: '12px', color: '#166534' }}>
+            <div>📁 Files copied: <strong>{totals.filesCopied}</strong></div>
+            <div>⚠️ File errors: <strong>{totals.fileErrors}</strong></div>
+            <div>📦 Products updated: <strong>{totals.productsUpdated}</strong></div>
+            <div>🖼️ Banners updated: <strong>{totals.bannersUpdated}</strong></div>
+            <div>🏷️ Brands updated: <strong>{totals.brandsUpdated}</strong></div>
+          </div>
+        </div>
+      )}
+
+      {/* Status */}
       {loading && !status ? (
         <div style={{ textAlign: 'center', padding: '40px' }}>
           <div style={{ fontSize: '2rem' }}>⏳</div>
-          <p>Loading status...</p>
+          <p>Loading...</p>
         </div>
       ) : status ? (
         <>
           <div style={{
-            background:   'white',
-            border:       '2px solid #EDD9FF',
+            background: 'white',
+            border: '2px solid #EDD9FF',
             borderRadius: '14px',
-            padding:      '20px',
+            padding: '20px',
             marginBottom: '20px',
           }}>
             <h3 style={{ margin: '0 0 16px', fontSize: '1rem', color: '#2D1A4A', fontWeight: '800' }}>
@@ -119,22 +285,12 @@ export default function MigrateR2Page() {
                 border: '1.5px solid #FCA5A5',
                 borderRadius: '10px',
               }}>
-                <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: '800', color: '#DC2626', textTransform: 'uppercase' }}>
-                  📁 R2 Bucket Files
+                <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: '800', color: '#DC2626' }}>
+                  📁 R2 FILES
                 </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                    <span>{status.config.oldPrefix}/ files:</span>
-                    <strong style={{ color: '#DC2626' }}>{status.r2.oldFolderFiles}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                    <span>{status.config.newPrefix}/ files:</span>
-                    <strong style={{ color: '#059669' }}>{status.r2.newFolderFiles}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', borderTop: '1px dashed #DDD', paddingTop: '6px' }}>
-                    <span>Total:</span>
-                    <strong>{status.r2.totalFiles}</strong>
-                  </div>
+                <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div>{status.config.oldPrefix}/: <strong style={{ color: '#DC2626' }}>{status.r2.oldFolderFiles}</strong></div>
+                  <div>{status.config.newPrefix}/: <strong style={{ color: '#059669' }}>{status.r2.newFolderFiles}</strong></div>
                 </div>
               </div>
 
@@ -144,158 +300,89 @@ export default function MigrateR2Page() {
                 border: '1.5px solid #86EFAC',
                 borderRadius: '10px',
               }}>
-                <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: '800', color: '#166534', textTransform: 'uppercase' }}>
-                  💾 Database URLs
+                <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: '800', color: '#166534' }}>
+                  💾 DATABASE
                 </p>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                    <span>Products with old URLs:</span>
-                    <strong style={{ color: '#DC2626' }}>{status.database.productsWithOldUrls}/{status.database.totalProducts}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                    <span>Banners with old URLs:</span>
-                    <strong style={{ color: '#DC2626' }}>{status.database.bannersWithOldUrls}/{status.database.totalBanners}</strong>
-                  </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                    <span>Brands with old URLs:</span>
-                    <strong style={{ color: '#DC2626' }}>{status.database.brandsWithOldUrls}/{status.database.totalBrands}</strong>
-                  </div>
+                <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                  <div>Products: <strong>{status.database.totalProducts}</strong></div>
+                  <div>Banners: <strong>{status.database.totalBanners}</strong></div>
+                  <div>Brands: <strong>{status.database.totalBrands}</strong></div>
                 </div>
               </div>
             </div>
           </div>
 
+          {/* Actions */}
           <div style={{
-            background:   'white',
-            border:       '2px solid #EDD9FF',
+            background: 'white',
+            border: '2px solid #EDD9FF',
             borderRadius: '14px',
-            padding:      '20px',
-            marginBottom: '20px',
+            padding: '20px',
           }}>
             <h3 style={{ margin: '0 0 16px', fontSize: '1rem', color: '#2D1A4A', fontWeight: '800' }}>
-              ⚡ Migration Actions
+              ⚡ Actions
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <div style={{
-                padding: '14px 18px',
-                background: '#FFFBEB',
-                border: '1.5px solid #FDE68A',
-                borderRadius: '10px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '12px',
-              }}>
-                <div>
-                  <p style={{ margin: 0, fontSize: '13px', fontWeight: '800', color: '#92400E' }}>
-                    Step 1: Copy files (R2)
-                  </p>
-                  <p style={{ margin: '3px 0 0', fontSize: '11px', color: '#78350F' }}>
-                    Copies {status.r2.oldFolderFiles} files
-                  </p>
-                </div>
-                <button
-                  onClick={() => runMigration('copy-files')}
-                  disabled={loading || status.r2.oldFolderFiles === 0}
-                  style={{
-                    padding: '10px 20px',
-                    background: loading && action === 'copy-files' ? '#ccc' : 'linear-gradient(135deg,#F59E0B,#D97706)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontWeight: '800',
-                    fontSize: '13px',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    fontFamily: 'inherit',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {loading && action === 'copy-files' ? '⏳ Copying...' : '📁 Copy Files'}
-                </button>
-              </div>
+              <button
+                onClick={copyFiles}
+                disabled={running}
+                style={{
+                  padding: '12px 20px',
+                  background: running ? '#ccc' : 'linear-gradient(135deg,#F59E0B,#D97706)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontWeight: '800',
+                  fontSize: '13px',
+                  cursor: running ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                📁 Step 1: Copy R2 Files (Chunked)
+              </button>
 
-              <div style={{
-                padding: '14px 18px',
-                background: '#EFF6FF',
-                border: '1.5px solid #BFDBFE',
-                borderRadius: '10px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '12px',
-              }}>
-                <div>
-                  <p style={{ margin: 0, fontSize: '13px', fontWeight: '800', color: '#1E40AF' }}>
-                    Step 2: Update Database URLs
-                  </p>
-                  <p style={{ margin: '3px 0 0', fontSize: '11px', color: '#1E3A8A' }}>
-                    Updates Products, Banners, Brands
-                  </p>
-                </div>
-                <button
-                  onClick={() => runMigration('update-db')}
-                  disabled={loading}
-                  style={{
-                    padding: '10px 20px',
-                    background: loading && action === 'update-db' ? '#ccc' : 'linear-gradient(135deg,#3B82F6,#1E40AF)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontWeight: '800',
-                    fontSize: '13px',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    fontFamily: 'inherit',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  {loading && action === 'update-db' ? '⏳ Updating...' : '💾 Update DB'}
-                </button>
-              </div>
+              <button
+                onClick={updateDatabase}
+                disabled={running}
+                style={{
+                  padding: '12px 20px',
+                  background: running ? '#ccc' : 'linear-gradient(135deg,#3B82F6,#1E40AF)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontWeight: '800',
+                  fontSize: '13px',
+                  cursor: running ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                💾 Step 2: Update Database URLs
+              </button>
 
-              <div style={{
-                padding: '14px 18px',
-                background: 'linear-gradient(135deg,#F0FDF4,#DCFCE7)',
-                border: '2px solid #86EFAC',
-                borderRadius: '10px',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                gap: '12px',
-              }}>
-                <div>
-                  <p style={{ margin: 0, fontSize: '13px', fontWeight: '800', color: '#166534' }}>
-                    🚀 FULL MIGRATION (Recommended)
-                  </p>
-                  <p style={{ margin: '3px 0 0', fontSize: '11px', color: '#15803D' }}>
-                    Runs Step 1 + Step 2 together
-                  </p>
-                </div>
-                <button
-                  onClick={() => runMigration('full')}
-                  disabled={loading}
-                  style={{
-                    padding: '12px 26px',
-                    background: loading && action === 'full' ? '#ccc' : 'linear-gradient(135deg,#10B981,#059669)',
-                    color: 'white',
-                    border: 'none',
-                    borderRadius: '8px',
-                    fontWeight: '900',
-                    fontSize: '14px',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    fontFamily: 'inherit',
-                    whiteSpace: 'nowrap',
-                    boxShadow: '0 6px 20px rgba(16,185,129,0.35)',
-                  }}
-                >
-                  {loading && action === 'full' ? '⏳ Migrating...' : '🚀 Run Full Migration'}
-                </button>
-              </div>
+              <button
+                onClick={runFullMigration}
+                disabled={running}
+                style={{
+                  padding: '14px 20px',
+                  background: running ? '#ccc' : 'linear-gradient(135deg,#10B981,#059669)',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '10px',
+                  fontWeight: '900',
+                  fontSize: '14px',
+                  cursor: running ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit',
+                  boxShadow: running ? 'none' : '0 6px 20px rgba(16,185,129,0.35)',
+                }}
+              >
+                🚀 Run Full Migration
+              </button>
             </div>
 
             <button
               onClick={fetchStatus}
-              disabled={loading}
+              disabled={running}
               style={{
                 marginTop: '14px',
                 width: '100%',
@@ -306,71 +393,13 @@ export default function MigrateR2Page() {
                 fontSize: '12px',
                 fontWeight: '700',
                 color: '#374151',
-                cursor: 'pointer',
+                cursor: running ? 'not-allowed' : 'pointer',
                 fontFamily: 'inherit',
               }}
             >
               🔄 Refresh Status
             </button>
           </div>
-
-          {results && (
-            <div style={{
-              background:   '#F0FDF4',
-              border:       '2px solid #86EFAC',
-              borderRadius: '14px',
-              padding:      '20px',
-            }}>
-              <h3 style={{ margin: '0 0 12px', fontSize: '1rem', color: '#166534', fontWeight: '800' }}>
-                ✅ Migration Results
-              </h3>
-
-              {results.copyResults && (
-                <div style={{
-                  padding: '12px',
-                  background: 'white',
-                  borderRadius: '8px',
-                  marginBottom: '10px',
-                }}>
-                  <p style={{ margin: '0 0 8px', fontWeight: '800', fontSize: '13px', color: '#1F2937' }}>
-                    📁 File Copy Results
-                  </p>
-                  <div style={{ fontSize: '12px', color: '#4B5563', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div>✅ Copied: <strong style={{ color: '#059669' }}>{results.copyResults.copied}</strong></div>
-                    <div>⚠️ Errors: <strong style={{ color: '#DC2626' }}>{results.copyResults.errors}</strong></div>
-                  </div>
-                  {results.copyResults.errorList?.length > 0 && (
-                    <details style={{ marginTop: '8px' }}>
-                      <summary style={{ cursor: 'pointer', fontSize: '11px', color: '#DC2626', fontWeight: '700' }}>
-                        Show error details ({results.copyResults.errorList.length})
-                      </summary>
-                      <pre style={{ fontSize: '10px', background: '#FEE2E2', padding: '8px', borderRadius: '6px', marginTop: '6px', maxHeight: '200px', overflow: 'auto' }}>
-                        {JSON.stringify(results.copyResults.errorList, null, 2)}
-                      </pre>
-                    </details>
-                  )}
-                </div>
-              )}
-
-              {results.dbResults && (
-                <div style={{
-                  padding: '12px',
-                  background: 'white',
-                  borderRadius: '8px',
-                }}>
-                  <p style={{ margin: '0 0 8px', fontWeight: '800', fontSize: '13px', color: '#1F2937' }}>
-                    💾 Database Update Results
-                  </p>
-                  <div style={{ fontSize: '12px', color: '#4B5563', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                    <div>📦 Products updated: <strong style={{ color: '#059669' }}>{results.dbResults.productsUpdated}</strong></div>
-                    <div>🖼️ Banners updated: <strong style={{ color: '#059669' }}>{results.dbResults.bannersUpdated}</strong></div>
-                    <div>🏷️ Brands updated: <strong style={{ color: '#059669' }}>{results.dbResults.brandsUpdated}</strong></div>
-                    <div>⚠️ Errors: <strong style={{ color: '#DC2626' }}>{results.dbResults.errors?.length || 0}</strong></div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
         </>
       ) : null}
     </div>

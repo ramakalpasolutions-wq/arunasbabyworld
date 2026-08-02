@@ -4,6 +4,10 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
 import { S3Client, ListObjectsV2Command, CopyObjectCommand } from '@aws-sdk/client-s3';
 
+// ✅ Vercel timeout config — Pro users get 60s
+export const maxDuration = 60;   // seconds
+export const dynamic     = 'force-dynamic';
+
 const R2 = new S3Client({
   region: 'auto',
   endpoint: `https://${process.env.CLOUDFLARE_R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
@@ -14,126 +18,77 @@ const R2 = new S3Client({
 });
 
 const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME;
-
-// ✅ Use different variable names to avoid replacement issues
-const OLD_PREFIX = 'first' + 'cry';   // becomes "firstcry" but won't be replaced
+const OLD_PREFIX = 'first' + 'cry';
 const NEW_PREFIX = 'arunas';
 
+// ✅ Chunk size — process only this many files per request
+const COPY_CHUNK_SIZE = 200;
+const DB_CHUNK_SIZE   = 100;
+
 /* ============================================================
-   GET — Check migration status
+   GET — Quick status check (FAST version)
    ============================================================ */
-export async function GET() {
+export async function GET(request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== 'admin') {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
-    // Count files in R2
+    const { searchParams } = new URL(request.url);
+    const skipCount = searchParams.get('skipCount') === 'true';
+
     let oldFolderFiles = 0;
     let newFolderFiles = 0;
-    let continuationToken;
 
-    // Count OLD prefix files
-    do {
-      const cmd = new ListObjectsV2Command({
-        Bucket: BUCKET_NAME,
-        Prefix: `${OLD_PREFIX}/`,
-        ContinuationToken: continuationToken,
-      });
-      const res = await R2.send(cmd);
-      oldFolderFiles += (res.Contents?.length || 0);
-      continuationToken = res.NextContinuationToken;
-    } while (continuationToken);
-
-    // Count NEW prefix files
-    continuationToken = undefined;
-    do {
-      const cmd = new ListObjectsV2Command({
-        Bucket: BUCKET_NAME,
-        Prefix: `${NEW_PREFIX}/`,
-        ContinuationToken: continuationToken,
-      });
-      const res = await R2.send(cmd);
-      newFolderFiles += (res.Contents?.length || 0);
-      continuationToken = res.NextContinuationToken;
-    } while (continuationToken);
-
-    // Count DB records with old URLs
-    const products = await prisma.product.findMany({
-      select: { id: true, images: true, colorVariants: true },
-    });
-
-    let productsWithOldUrls = 0;
-    let productImagesWithOldUrls = 0;
-    let variantImagesWithOldUrls = 0;
-
-    const oldPattern = `/${OLD_PREFIX}/`;
-
-    products.forEach(p => {
-      let hasOld = false;
-      p.images?.forEach(img => {
-        if (img?.url?.includes(oldPattern)) {
-          productImagesWithOldUrls++;
-          hasOld = true;
-        }
-      });
-      p.colorVariants?.forEach(v => {
-        v.images?.forEach(img => {
-          if (img?.url?.includes(oldPattern)) {
-            variantImagesWithOldUrls++;
-            hasOld = true;
-          }
+    if (!skipCount) {
+      // ✅ Quick count with limit (avoids timeout)
+      try {
+        const oldCmd = new ListObjectsV2Command({
+          Bucket: BUCKET_NAME,
+          Prefix: `${OLD_PREFIX}/`,
+          MaxKeys: 1000,
         });
-      });
-      if (hasOld) productsWithOldUrls++;
-    });
+        const oldRes = await R2.send(oldCmd);
+        oldFolderFiles = oldRes.KeyCount || 0;
+        if (oldRes.IsTruncated) oldFolderFiles = `${oldFolderFiles}+`;
 
-    const banners = await prisma.banner.findMany({
-      select: { id: true, image: true, mobileImage: true, panels: true, gridImages: true },
-    });
+        const newCmd = new ListObjectsV2Command({
+          Bucket: BUCKET_NAME,
+          Prefix: `${NEW_PREFIX}/`,
+          MaxKeys: 1000,
+        });
+        const newRes = await R2.send(newCmd);
+        newFolderFiles = newRes.KeyCount || 0;
+        if (newRes.IsTruncated) newFolderFiles = `${newFolderFiles}+`;
+      } catch (err) {
+        console.error('R2 count error:', err);
+      }
+    }
 
-    let bannersWithOldUrls = 0;
-    banners.forEach(b => {
-      let hasOld = false;
-      if (b.image?.url?.includes(oldPattern)) hasOld = true;
-      if (b.mobileImage?.url?.includes(oldPattern)) hasOld = true;
-      b.panels?.forEach(p => {
-        if (p?.url?.includes(oldPattern)) hasOld = true;
-      });
-      b.gridImages?.forEach(g => {
-        if (g?.url?.includes(oldPattern)) hasOld = true;
-      });
-      if (hasOld) bannersWithOldUrls++;
-    });
-
-    const brands = await prisma.brand.findMany({
-      select: { id: true, logo: true },
-    });
-    const brandsWithOldUrls = brands.filter(b =>
-      b.logo?.url?.includes(oldPattern)
-    ).length;
+    // ✅ Quick DB counts (no full scan)
+    const [totalProducts, totalBanners, totalBrands] = await Promise.all([
+      prisma.product.count(),
+      prisma.banner.count(),
+      prisma.brand.count(),
+    ]);
 
     return NextResponse.json({
       r2: {
         oldFolderFiles,
         newFolderFiles,
-        totalFiles: oldFolderFiles + newFolderFiles,
       },
       database: {
-        totalProducts:            products.length,
-        productsWithOldUrls,
-        productImagesWithOldUrls,
-        variantImagesWithOldUrls,
-        totalBanners:             banners.length,
-        bannersWithOldUrls,
-        totalBrands:              brands.length,
-        brandsWithOldUrls,
+        totalProducts,
+        totalBanners,
+        totalBrands,
       },
       config: {
-        bucket:    BUCKET_NAME,
-        oldPrefix: OLD_PREFIX,
-        newPrefix: NEW_PREFIX,
+        bucket:         BUCKET_NAME,
+        oldPrefix:      OLD_PREFIX,
+        newPrefix:      NEW_PREFIX,
+        copyChunkSize:  COPY_CHUNK_SIZE,
+        dbChunkSize:    DB_CHUNK_SIZE,
       },
     });
 
@@ -144,7 +99,7 @@ export async function GET() {
 }
 
 /* ============================================================
-   POST — Run migration
+   POST — Run migration in CHUNKS
    ============================================================ */
 export async function POST(request) {
   try {
@@ -153,25 +108,29 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
-    const { action } = await request.json();
+    const { action, continuationToken, dbSkip } = await request.json();
 
-    const results = {
-      copyResults: null,
-      dbResults: null,
-    };
-
-    if (action === 'copy-files' || action === 'full') {
-      results.copyResults = await copyR2Files();
+    if (action === 'copy-chunk') {
+      const result = await copyR2FilesChunk(continuationToken);
+      return NextResponse.json(result);
     }
 
-    if (action === 'update-db' || action === 'full') {
-      results.dbResults = await updateDatabaseUrls();
+    if (action === 'update-products-chunk') {
+      const result = await updateProductsChunk(dbSkip || 0);
+      return NextResponse.json(result);
     }
 
-    return NextResponse.json({
-      success: true,
-      results,
-    });
+    if (action === 'update-banners') {
+      const result = await updateBanners();
+      return NextResponse.json(result);
+    }
+
+    if (action === 'update-brands') {
+      const result = await updateBrands();
+      return NextResponse.json(result);
+    }
+
+    return NextResponse.json({ error: 'Unknown action' }, { status: 400 });
 
   } catch (error) {
     console.error('Migration error:', error);
@@ -180,78 +139,74 @@ export async function POST(request) {
 }
 
 /* ============================================================
-   COPY R2 FILES
+   COPY CHUNK OF R2 FILES
    ============================================================ */
-async function copyR2Files() {
+async function copyR2FilesChunk(continuationToken) {
   let copied = 0;
   let errors = 0;
-  let continuationToken;
   const errorList = [];
 
-  do {
-    const listCmd = new ListObjectsV2Command({
-      Bucket: BUCKET_NAME,
-      Prefix: `${OLD_PREFIX}/`,
-      ContinuationToken: continuationToken,
-    });
+  const listCmd = new ListObjectsV2Command({
+    Bucket: BUCKET_NAME,
+    Prefix: `${OLD_PREFIX}/`,
+    MaxKeys: COPY_CHUNK_SIZE,
+    ContinuationToken: continuationToken,
+  });
 
-    const listRes = await R2.send(listCmd);
-    const files = listRes.Contents || [];
+  const listRes = await R2.send(listCmd);
+  const files = listRes.Contents || [];
 
-    for (const file of files) {
-      const oldKey = file.Key;
-      const newKey = oldKey.replace(`${OLD_PREFIX}/`, `${NEW_PREFIX}/`);
+  // ✅ Parallel copy — 20 at a time for speed
+  const BATCH_SIZE = 20;
+  for (let i = 0; i < files.length; i += BATCH_SIZE) {
+    const batch = files.slice(i, i + BATCH_SIZE);
+    await Promise.all(
+      batch.map(async (file) => {
+        const oldKey = file.Key;
+        const newKey = oldKey.replace(`${OLD_PREFIX}/`, `${NEW_PREFIX}/`);
 
-      try {
-        const copyCmd = new CopyObjectCommand({
-          Bucket:     BUCKET_NAME,
-          CopySource: `${BUCKET_NAME}/${encodeURIComponent(oldKey)}`,
-          Key:        newKey,
-        });
-        await R2.send(copyCmd);
-        copied++;
-
-        if (copied % 100 === 0) {
-          console.log(`✅ Copied ${copied} files...`);
+        try {
+          const copyCmd = new CopyObjectCommand({
+            Bucket:     BUCKET_NAME,
+            CopySource: `${BUCKET_NAME}/${encodeURIComponent(oldKey)}`,
+            Key:        newKey,
+          });
+          await R2.send(copyCmd);
+          copied++;
+        } catch (err) {
+          errors++;
+          errorList.push({ file: oldKey, error: err.message });
         }
-      } catch (err) {
-        errors++;
-        errorList.push({ file: oldKey, error: err.message });
-        console.error(`❌ Failed to copy ${oldKey}:`, err.message);
-      }
-    }
-
-    continuationToken = listRes.NextContinuationToken;
-  } while (continuationToken);
-
-  console.log(`\n🎉 Copy complete: ${copied} copied, ${errors} errors`);
+      })
+    );
+  }
 
   return {
     copied,
     errors,
-    errorList: errorList.slice(0, 20),
+    errorList: errorList.slice(0, 10),
+    hasMore: listRes.IsTruncated || false,
+    nextToken: listRes.NextContinuationToken || null,
+    processedCount: files.length,
   };
 }
 
 /* ============================================================
-   UPDATE DATABASE URLs
+   UPDATE PRODUCTS CHUNK
    ============================================================ */
-async function updateDatabaseUrls() {
-  const results = {
-    productsUpdated: 0,
-    bannersUpdated:  0,
-    brandsUpdated:   0,
-    errors:          [],
-  };
-
+async function updateProductsChunk(skip = 0) {
   const oldPattern = `/${OLD_PREFIX}/`;
   const newPattern = `/${NEW_PREFIX}/`;
   const oldKeyPattern = `${OLD_PREFIX}/`;
   const newKeyPattern = `${NEW_PREFIX}/`;
 
-  // ✅ Update Products
-  console.log('📦 Updating Products...');
-  const products = await prisma.product.findMany();
+  const products = await prisma.product.findMany({
+    skip,
+    take: DB_CHUNK_SIZE,
+  });
+
+  let updated = 0;
+  const errors = [];
 
   for (const product of products) {
     let modified = false;
@@ -290,7 +245,7 @@ async function updateDatabaseUrls() {
         }
         return v;
       });
-      updateData.colorVariants = newVariants;
+      if (modified) updateData.colorVariants = newVariants;
     }
 
     if (modified) {
@@ -299,20 +254,34 @@ async function updateDatabaseUrls() {
           where: { id: product.id },
           data:  updateData,
         });
-        results.productsUpdated++;
+        updated++;
       } catch (err) {
-        results.errors.push({
-          type: 'product',
-          id:   product.id,
-          error: err.message,
-        });
+        errors.push({ id: product.id, error: err.message });
       }
     }
   }
 
-  // ✅ Update Banners
-  console.log('🖼️ Updating Banners...');
+  return {
+    updated,
+    processedCount: products.length,
+    errors: errors.slice(0, 10),
+    hasMore: products.length === DB_CHUNK_SIZE,
+    nextSkip: skip + DB_CHUNK_SIZE,
+  };
+}
+
+/* ============================================================
+   UPDATE ALL BANNERS (small number, do in one shot)
+   ============================================================ */
+async function updateBanners() {
+  const oldPattern = `/${OLD_PREFIX}/`;
+  const newPattern = `/${NEW_PREFIX}/`;
+  const oldKeyPattern = `${OLD_PREFIX}/`;
+  const newKeyPattern = `${NEW_PREFIX}/`;
+
   const banners = await prisma.banner.findMany();
+  let updated = 0;
+  const errors = [];
 
   for (const banner of banners) {
     let modified = false;
@@ -372,20 +341,28 @@ async function updateDatabaseUrls() {
           where: { id: banner.id },
           data:  updateData,
         });
-        results.bannersUpdated++;
+        updated++;
       } catch (err) {
-        results.errors.push({
-          type: 'banner',
-          id:   banner.id,
-          error: err.message,
-        });
+        errors.push({ id: banner.id, error: err.message });
       }
     }
   }
 
-  // ✅ Update Brands
-  console.log('🏷️ Updating Brands...');
+  return { updated, total: banners.length, errors };
+}
+
+/* ============================================================
+   UPDATE ALL BRANDS
+   ============================================================ */
+async function updateBrands() {
+  const oldPattern = `/${OLD_PREFIX}/`;
+  const newPattern = `/${NEW_PREFIX}/`;
+  const oldKeyPattern = `${OLD_PREFIX}/`;
+  const newKeyPattern = `${NEW_PREFIX}/`;
+
   const brands = await prisma.brand.findMany();
+  let updated = 0;
+  const errors = [];
 
   for (const brand of brands) {
     if (brand.logo?.url?.includes(oldPattern)) {
@@ -400,21 +377,12 @@ async function updateDatabaseUrls() {
             },
           },
         });
-        results.brandsUpdated++;
+        updated++;
       } catch (err) {
-        results.errors.push({
-          type: 'brand',
-          id:   brand.id,
-          error: err.message,
-        });
+        errors.push({ id: brand.id, error: err.message });
       }
     }
   }
 
-  console.log(`\n🎉 DB update complete!`);
-  console.log(`   Products: ${results.productsUpdated}`);
-  console.log(`   Banners:  ${results.bannersUpdated}`);
-  console.log(`   Brands:   ${results.brandsUpdated}`);
-
-  return results;
+  return { updated, total: brands.length, errors };
 }
