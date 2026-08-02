@@ -6,7 +6,6 @@ const CartContext = createContext();
 const cartReducer = (state, action) => {
   switch (action.type) {
     case 'ADD_ITEM': {
-      // ✅ Support both id and _id
       const itemId = action.payload.id || action.payload._id;
       const existing = state.items.find((i) => (i.id || i._id) === itemId);
       if (existing) {
@@ -49,14 +48,46 @@ const cartReducer = (state, action) => {
       return { ...state, coupon: action.payload };
     case 'REMOVE_COUPON':
       return { ...state, coupon: null };
+
+    // ✅ NEW: Address actions
+    case 'SET_ADDRESSES':
+      return { ...state, addresses: action.payload };
+    case 'ADD_ADDRESS':
+      return { ...state, addresses: [...(state.addresses || []), action.payload] };
+    case 'UPDATE_ADDRESS':
+      return {
+        ...state,
+        addresses: (state.addresses || []).map((a, i) =>
+          i === action.payload.index ? action.payload.address : a
+        ),
+      };
+    case 'DELETE_ADDRESS':
+      return {
+        ...state,
+        addresses: (state.addresses || []).filter((_, i) => i !== action.payload),
+        selectedAddressIndex:
+          state.selectedAddressIndex === action.payload
+            ? null
+            : state.selectedAddressIndex > action.payload
+              ? state.selectedAddressIndex - 1
+              : state.selectedAddressIndex,
+      };
+    case 'SELECT_ADDRESS':
+      return { ...state, selectedAddressIndex: action.payload };
+
     case 'HYDRATE':
-      return action.payload;
+      return { ...initialState, ...action.payload };
     default:
       return state;
   }
 };
 
-const initialState = { items: [], coupon: null };
+const initialState = {
+  items: [],
+  coupon: null,
+  addresses: [],
+  selectedAddressIndex: null,
+};
 
 export function CartProvider({ children }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
@@ -79,9 +110,15 @@ export function CartProvider({ children }) {
   );
   const shippingPrice = itemsPrice > 499 ? 0 : 49;
   const taxPrice = 0;
-const discountAmount = state.coupon ? state.coupon.discountAmount || 0 : 0;
-const totalPrice = Math.round(itemsPrice + shippingPrice - discountAmount);
+  const discountAmount = state.coupon ? state.coupon.discountAmount || 0 : 0;
+  const totalPrice = Math.round(itemsPrice + shippingPrice - discountAmount);
   const totalItems = state.items.reduce((acc, i) => acc + i.quantity, 0);
+
+  // ✅ Get selected address object
+  const selectedAddress =
+    state.selectedAddressIndex !== null && state.addresses?.[state.selectedAddressIndex]
+      ? state.addresses[state.selectedAddressIndex]
+      : null;
 
   return (
     <CartContext.Provider
@@ -107,6 +144,17 @@ const totalPrice = Math.round(itemsPrice + shippingPrice - discountAmount);
         clearCart: () => dispatch({ type: 'CLEAR_CART' }),
         setCoupon: (coupon) => dispatch({ type: 'SET_COUPON', payload: coupon }),
         removeCoupon: () => dispatch({ type: 'REMOVE_COUPON' }),
+
+        // ✅ Address helpers
+        addresses: state.addresses || [],
+        selectedAddressIndex: state.selectedAddressIndex,
+        selectedAddress,
+        addAddress: (address) => dispatch({ type: 'ADD_ADDRESS', payload: address }),
+        updateAddress: (index, address) =>
+          dispatch({ type: 'UPDATE_ADDRESS', payload: { index, address } }),
+        deleteAddress: (index) => dispatch({ type: 'DELETE_ADDRESS', payload: index }),
+        selectAddress: (index) => dispatch({ type: 'SELECT_ADDRESS', payload: index }),
+        setAddresses: (addresses) => dispatch({ type: 'SET_ADDRESSES', payload: addresses }),
       }}
     >
       {children}
