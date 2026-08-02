@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useCart } from '@/context/CartContext';
@@ -26,7 +26,8 @@ export default function CheckoutClient() {
 
   const [step, setStep] = useState(0);
   const [loading, setLoading] = useState(false);
-  const [paymentMethod, setPaymentMethod] = useState('Razorpay');
+  const [paymentMethod, setPaymentMethod] = useState('');
+  const [showPaymentPanel, setShowPaymentPanel] = useState(false);
   const [address, setAddress] = useState({
     name: '',
     phone: '',
@@ -35,6 +36,12 @@ export default function CheckoutClient() {
     state: '',
     pincode: '',
   });
+
+  // Lock body scroll when panel open
+  useEffect(() => {
+    document.body.style.overflow = showPaymentPanel ? 'hidden' : '';
+    return () => { document.body.style.overflow = ''; };
+  }, [showPaymentPanel]);
 
   if (!session) return (
     <div className={`container ${styles.authWall}`}>
@@ -75,7 +82,6 @@ export default function CheckoutClient() {
     });
   };
 
-  // ✅ Handle COD order
   const handleCODOrder = async () => {
     setLoading(true);
     try {
@@ -121,7 +127,6 @@ export default function CheckoutClient() {
     }
   };
 
-  // ✅ Handle Razorpay payment — Create Order FIRST, then open Razorpay
   const handleRazorpayPayment = async () => {
     setLoading(true);
     try {
@@ -132,7 +137,6 @@ export default function CheckoutClient() {
         return;
       }
 
-      // ✅ STEP 1: Create DB order FIRST with paymentStatus: 'pending'
       const dbOrderRes = await fetch('/api/orders', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -163,7 +167,6 @@ export default function CheckoutClient() {
       const createdOrderId = dbOrder.order?.id || dbOrder.order?._id;
       if (!createdOrderId) throw new Error('Order ID not found');
 
-      // ✅ STEP 2: Create Razorpay order
       const orderRes = await fetch('/api/payment/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -172,10 +175,8 @@ export default function CheckoutClient() {
       const orderData = await orderRes.json();
       if (!orderRes.ok) throw new Error(orderData.error);
 
-      // ✅ STEP 3: Clear cart NOW (order already saved)
       clearCart();
 
-      // ✅ STEP 4: Open Razorpay
       const options = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderData.order.amount,
@@ -230,7 +231,6 @@ export default function CheckoutClient() {
         theme: { color: '#ff6b9d' },
 
         modal: {
-          // ✅ USER CANCELLED / CLOSED THE MODAL
           ondismiss: async () => {
             setLoading(false);
             try {
@@ -250,7 +250,6 @@ export default function CheckoutClient() {
 
       const razorpay = new window.Razorpay(options);
 
-      // ✅ Handle payment failure event
       razorpay.on('payment.failed', async (response) => {
         console.error('Payment failed:', response.error);
         await fetch(`/api/orders/${createdOrderId}/payment-failed`, {
@@ -274,14 +273,69 @@ export default function CheckoutClient() {
     }
   };
 
-  // ✅ Master handler
-  const handlePayment = () => {
-    if (paymentMethod === 'COD') {
-      handleCODOrder();
-    } else {
-      handleRazorpayPayment();
-    }
+  // ✅ Handle payment method selection from panel
+  const handlePaymentMethodSelect = (method) => {
+    setPaymentMethod(method);
+    setShowPaymentPanel(false);
+
+    // Auto-trigger payment based on method
+    setTimeout(() => {
+      if (method === 'COD') {
+        handleCODOrder();
+      } else {
+        // Card, UPI, NetBanking, EMI → all go through Razorpay
+        handleRazorpayPayment();
+      }
+    }, 300);
   };
+
+  // ✅ Payment options
+  const PAYMENT_OPTIONS = [
+    {
+      id: 'card',
+      icon: '💳',
+      title: 'Credit/Debit Card',
+      subtitle: 'Visa, Mastercard, RuPay',
+      color: '#3B82F6',
+      method: 'Razorpay',
+    },
+    {
+      id: 'upi',
+      icon: '📱',
+      title: 'UPI',
+      subtitle: 'GPay, PhonePe, Paytm',
+      color: '#10B981',
+      badge: 'Paytm',
+      method: 'Razorpay',
+      recommended: true,
+    },
+    {
+      id: 'netbanking',
+      icon: '🏦',
+      title: 'Net Banking',
+      subtitle: 'Available on orders above ₹2000',
+      color: '#F59E0B',
+      method: 'Razorpay',
+      disabled: totalPrice < 2000,
+    },
+    {
+      id: 'emi',
+      icon: '📊',
+      title: 'EMI',
+      subtitle: 'Available on orders above ₹3000',
+      color: '#8B5CF6',
+      method: 'Razorpay',
+      disabled: totalPrice < 3000,
+    },
+    {
+      id: 'cod',
+      icon: '💵',
+      title: 'Cash on Delivery',
+      subtitle: 'Pay when you receive',
+      color: '#EF4444',
+      method: 'COD',
+    },
+  ];
 
   return (
     <div className={`container ${styles.page}`}>
@@ -439,127 +493,29 @@ export default function CheckoutClient() {
             </div>
           )}
 
-          {/* ===== STEP 2: PAYMENT ===== */}
+          {/* ===== STEP 2: PAYMENT — FirstCry-style ===== */}
           {step === 2 && (
             <div className={styles.card}>
-              <h2 className={styles.cardTitle}>💳 Choose Payment Method</h2>
+              <h2 className={styles.cardTitle}>💳 Ready to Pay</h2>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '20px' }}>
-
-                {/* Razorpay Option */}
-                <label style={{
-                  display: 'flex', alignItems: 'center', gap: '14px',
-                  padding: '18px 20px',
-                  background: paymentMethod === 'Razorpay' ? 'linear-gradient(135deg, #FFF5F7, #F3E8FF)' : 'white',
-                  border: `2.5px solid ${paymentMethod === 'Razorpay' ? '#FF6B9D' : '#E5E7EB'}`,
-                  borderRadius: '14px', cursor: 'pointer',
-                  transition: 'all 0.25s ease',
-                  boxShadow: paymentMethod === 'Razorpay' ? '0 6px 18px rgba(255,107,157,0.15)' : 'none',
-                }}>
-                  <input
-                    type="radio" name="payment" value="Razorpay"
-                    checked={paymentMethod === 'Razorpay'}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    style={{ width: '20px', height: '20px', accentColor: '#FF6B9D', cursor: 'pointer', flexShrink: 0 }}
-                  />
-                  <div style={{
-                    width: '52px', height: '52px', borderRadius: '12px',
-                    background: 'linear-gradient(135deg, #FF6B9D, #7B2FBE)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '1.8rem', flexShrink: 0,
-                    boxShadow: '0 4px 12px rgba(255,107,157,0.30)',
-                  }}>
-                    💳
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: 0, fontSize: '1rem', fontWeight: '800', color: '#1F2937', fontFamily: 'Nunito, sans-serif' }}>
-                      Razorpay Online Payment
-                    </p>
-                    <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#6B7280', fontWeight: '600', fontFamily: 'Nunito, sans-serif' }}>
-                      UPI, Cards, NetBanking, Wallets
-                    </p>
-                    {paymentMethod === 'Razorpay' && (
-                      <div style={{ display: 'flex', gap: '6px', marginTop: '8px', flexWrap: 'wrap' }}>
-                        {['UPI', 'Visa', 'MasterCard', 'Paytm', 'PhonePe'].map(p => (
-                          <span key={p} style={{
-                            padding: '2px 8px', background: 'white',
-                            border: '1px solid #FCA5A5', borderRadius: '6px',
-                            fontSize: '0.68rem', fontWeight: '700', color: '#7B2FBE',
-                          }}>{p}</span>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <div style={{
-                    padding: '4px 10px', background: '#10B981', color: 'white',
-                    borderRadius: '999px', fontSize: '0.68rem', fontWeight: '800',
-                    fontFamily: 'Nunito, sans-serif',
-                  }}>
-                    🔒 SECURE
-                  </div>
-                </label>
-
-                {/* COD Option */}
-                <label style={{
-                  display: 'flex', alignItems: 'center', gap: '14px',
-                  padding: '18px 20px',
-                  background: paymentMethod === 'COD' ? 'linear-gradient(135deg, #FFFBEB, #FEF3C7)' : 'white',
-                  border: `2.5px solid ${paymentMethod === 'COD' ? '#F59E0B' : '#E5E7EB'}`,
-                  borderRadius: '14px', cursor: 'pointer',
-                  transition: 'all 0.25s ease',
-                  boxShadow: paymentMethod === 'COD' ? '0 6px 18px rgba(245,158,11,0.15)' : 'none',
-                }}>
-                  <input
-                    type="radio" name="payment" value="COD"
-                    checked={paymentMethod === 'COD'}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    style={{ width: '20px', height: '20px', accentColor: '#F59E0B', cursor: 'pointer', flexShrink: 0 }}
-                  />
-                  <div style={{
-                    width: '52px', height: '52px', borderRadius: '12px',
-                    background: 'linear-gradient(135deg, #F59E0B, #D97706)',
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    fontSize: '1.8rem', flexShrink: 0,
-                    boxShadow: '0 4px 12px rgba(245,158,11,0.30)',
-                  }}>
-                    💵
-                  </div>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ margin: 0, fontSize: '1rem', fontWeight: '800', color: '#1F2937', fontFamily: 'Nunito, sans-serif' }}>
-                      Cash on Delivery (COD)
-                    </p>
-                    <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#6B7280', fontWeight: '600', fontFamily: 'Nunito, sans-serif' }}>
-                      Pay with cash when order arrives
-                    </p>
-                    {paymentMethod === 'COD' && (
-                      <p style={{ margin: '8px 0 0', fontSize: '0.76rem', color: '#92400E', fontWeight: '700', fontFamily: 'Nunito, sans-serif' }}>
-                        💡 No advance payment required
-                      </p>
-                    )}
-                  </div>
-                  <div style={{
-                    padding: '4px 10px', background: '#F59E0B', color: 'white',
-                    borderRadius: '999px', fontSize: '0.68rem', fontWeight: '800',
-                    fontFamily: 'Nunito, sans-serif',
-                  }}>
-                    💵 EASY
-                  </div>
-                </label>
-              </div>
-
-              {/* Security note */}
               <div style={{
-                padding: '12px 14px',
-                background: paymentMethod === 'Razorpay' ? '#F0FDF4' : '#EFF6FF',
-                border: `1.5px solid ${paymentMethod === 'Razorpay' ? '#BBF7D0' : '#BFDBFE'}`,
-                borderRadius: '10px', marginBottom: '20px',
-                fontSize: '0.82rem',
-                color: paymentMethod === 'Razorpay' ? '#166534' : '#1E40AF',
-                fontWeight: '600', fontFamily: 'Nunito, sans-serif',
+                padding: '20px',
+                background: 'linear-gradient(135deg, #FFF5F7, #F3E8FF)',
+                borderRadius: '14px',
+                border: '2px solid #FFE4EC',
+                marginBottom: '20px',
+                textAlign: 'center',
               }}>
-                {paymentMethod === 'Razorpay'
-                  ? '🔒 Your payment is secured by Razorpay encryption'
-                  : 'ℹ️ Please keep exact change ready. Pay only after receiving your order.'}
+                <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🛍️</div>
+                <p style={{ margin: 0, fontSize: '0.92rem', color: '#6B4E8A', fontWeight: '700', fontFamily: 'Nunito, sans-serif' }}>
+                  Total Amount to Pay
+                </p>
+                <p style={{ margin: '6px 0 0', fontSize: '2rem', fontWeight: '900', color: '#BE185D', fontFamily: 'Nunito, sans-serif' }}>
+                  ₹{fmt(totalPrice)}
+                </p>
+                <p style={{ margin: '8px 0 0', fontSize: '0.78rem', color: '#9585B0', fontWeight: '600', fontFamily: 'Nunito, sans-serif' }}>
+                  {items.reduce((a, i) => a + i.quantity, 0)} items · Delivery to {address.city}
+                </p>
               </div>
 
               <div className={styles.reviewActions}>
@@ -567,22 +523,27 @@ export default function CheckoutClient() {
                   ← Back
                 </button>
                 <button
-                  className="btn btn-primary"
-                  onClick={handlePayment}
+                  onClick={() => setShowPaymentPanel(true)}
                   disabled={loading}
                   style={{
-                    minWidth: 200,
-                    background: paymentMethod === 'COD'
-                      ? 'linear-gradient(135deg, #F59E0B, #D97706)'
-                      : 'linear-gradient(135deg, #FF6B9D, #7B2FBE)',
+                    flex: 1,
+                    padding: '14px 24px',
+                    background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontSize: '1rem',
+                    fontWeight: '800',
+                    fontFamily: 'Nunito, sans-serif',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    boxShadow: '0 6px 20px rgba(255,107,53,0.30)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '8px',
                   }}
                 >
-                  {loading
-                    ? '⏳ Processing...'
-                    : paymentMethod === 'COD'
-                      ? `📦 Place Order ₹${fmt(totalPrice)}`
-                      : `💳 Pay ₹${fmt(totalPrice)}`
-                  }
+                  {loading ? '⏳ Processing...' : `💳 Select Payment Method · ₹${fmt(totalPrice)}`}
                 </button>
               </div>
             </div>
@@ -619,27 +580,420 @@ export default function CheckoutClient() {
               🎉 You save ₹{fmt(discountAmount)} on this order!
             </div>
           )}
-
-          {step === 2 && (
-            <div style={{
-              marginTop: '16px', padding: '12px 14px',
-              background: paymentMethod === 'COD' ? '#FFFBEB' : '#FFF5F7',
-              border: `1.5px solid ${paymentMethod === 'COD' ? '#FDE68A' : '#FCA5A5'}`,
-              borderRadius: '10px', fontFamily: 'Nunito, sans-serif',
-            }}>
-              <p style={{ margin: 0, fontSize: '0.74rem', fontWeight: '700', color: '#6B7280', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-                Payment Method
-              </p>
-              <p style={{
-                margin: '4px 0 0', fontSize: '0.88rem', fontWeight: '800',
-                color: paymentMethod === 'COD' ? '#92400E' : '#BE185D',
-              }}>
-                {paymentMethod === 'COD' ? '💵 Cash on Delivery' : '💳 Razorpay'}
-              </p>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* ═══════════════════════════════════════
+          🎨 SLIDE-IN PAYMENT PANEL (FirstCry-style)
+          ═══════════════════════════════════════ */}
+      {showPaymentPanel && (
+        <>
+          {/* Overlay */}
+          <div
+            onClick={() => setShowPaymentPanel(false)}
+            style={{
+              position: 'fixed',
+              inset: 0,
+              background: 'rgba(0,0,0,0.5)',
+              zIndex: 9998,
+              animation: 'fadeIn 0.3s ease',
+            }}
+          />
+
+          {/* Panel */}
+          <div style={{
+            position: 'fixed',
+            top: 0,
+            right: 0,
+            bottom: 0,
+            width: '100%',
+            maxWidth: '460px',
+            background: 'white',
+            zIndex: 9999,
+            display: 'flex',
+            flexDirection: 'column',
+            boxShadow: '-10px 0 40px rgba(0,0,0,0.15)',
+            animation: 'slideInRight 0.35s cubic-bezier(0.4, 0, 0.2, 1)',
+            overflow: 'hidden',
+          }}>
+
+            {/* HEADER */}
+            <div style={{
+              padding: '18px 22px',
+              borderBottom: '1.5px solid #E5E7EB',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '14px',
+              background: 'white',
+              flexShrink: 0,
+            }}>
+              <button
+                onClick={() => setShowPaymentPanel(false)}
+                style={{
+                  background: '#F3F4F6',
+                  border: 'none',
+                  borderRadius: '10px',
+                  width: '38px',
+                  height: '38px',
+                  cursor: 'pointer',
+                  fontSize: '1.1rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontWeight: '800',
+                  color: '#1F2937',
+                  flexShrink: 0,
+                }}
+              >
+                ←
+              </button>
+              <h2 style={{
+                margin: 0,
+                fontSize: '1.15rem',
+                fontWeight: '800',
+                color: '#1F2937',
+                fontFamily: 'Nunito, sans-serif',
+              }}>
+                Payment Method
+              </h2>
+            </div>
+
+            {/* SCROLLABLE CONTENT */}
+            <div style={{
+              flex: 1,
+              overflowY: 'auto',
+              padding: '18px 22px',
+            }}>
+              {/* Delivery Address */}
+              <div style={{
+                padding: '14px 16px',
+                background: '#F9FAFB',
+                border: '1.5px solid #E5E7EB',
+                borderRadius: '12px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'flex-start',
+                gap: '10px',
+                marginBottom: '18px',
+              }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{
+                    margin: 0,
+                    fontSize: '0.85rem',
+                    fontWeight: '800',
+                    color: '#1F2937',
+                    fontFamily: 'Nunito, sans-serif',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}>
+                    📍 Deliver to <span style={{ color: '#FF6B35' }}>{address.name}</span>, {address.pincode}
+                  </p>
+                  <p style={{
+                    margin: '4px 0 0',
+                    fontSize: '0.76rem',
+                    color: '#6B7280',
+                    fontWeight: '600',
+                    fontFamily: 'Nunito, sans-serif',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
+                    {address.address}
+                  </p>
+                </div>
+                <button
+                  onClick={() => { setShowPaymentPanel(false); setStep(0); }}
+                  style={{
+                    padding: '5px 12px',
+                    background: 'white',
+                    border: '1.5px solid #FF6B35',
+                    borderRadius: '6px',
+                    fontSize: '0.72rem',
+                    fontWeight: '800',
+                    color: '#FF6B35',
+                    cursor: 'pointer',
+                    fontFamily: 'Nunito, sans-serif',
+                    letterSpacing: '0.5px',
+                    flexShrink: 0,
+                  }}
+                >
+                  CHANGE
+                </button>
+              </div>
+
+              {/* Bank Offer Banner (Optional) */}
+              <div style={{
+                padding: '10px 14px',
+                background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)',
+                border: '1.5px solid #BFDBFE',
+                borderRadius: '10px',
+                marginBottom: '18px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+              }}>
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '6px',
+                  background: 'white',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '1rem',
+                  border: '1px solid #BFDBFE',
+                  flexShrink: 0,
+                }}>
+                  🏦
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{
+                    margin: 0,
+                    fontSize: '0.80rem',
+                    fontWeight: '800',
+                    color: '#1E40AF',
+                    fontFamily: 'Nunito, sans-serif',
+                  }}>
+                    5% Off upto ₹500
+                  </p>
+                  <p style={{
+                    margin: '2px 0 0',
+                    fontSize: '0.68rem',
+                    color: '#3B82F6',
+                    fontWeight: '600',
+                    fontFamily: 'Nunito, sans-serif',
+                  }}>
+                    On Federal Bank Cards | Over ₹1,999
+                  </p>
+                </div>
+                <span style={{
+                  fontSize: '0.68rem',
+                  fontWeight: '800',
+                  color: '#1E40AF',
+                  background: 'white',
+                  padding: '3px 8px',
+                  borderRadius: '999px',
+                  border: '1px solid #BFDBFE',
+                  flexShrink: 0,
+                }}>
+                  1/4
+                </span>
+              </div>
+
+              {/* Section Title */}
+              <h3 style={{
+                margin: '0 0 14px',
+                fontSize: '1rem',
+                fontWeight: '800',
+                color: '#1F2937',
+                fontFamily: 'Nunito, sans-serif',
+              }}>
+                Payment Options
+              </h3>
+
+              {/* Payment Options List */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {PAYMENT_OPTIONS.map((opt) => (
+                  <button
+                    key={opt.id}
+                    onClick={() => !opt.disabled && handlePaymentMethodSelect(opt.method)}
+                    disabled={opt.disabled || loading}
+                    style={{
+                      padding: '16px 18px',
+                      background: 'white',
+                      border: '1.5px solid #E5E7EB',
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '14px',
+                      cursor: opt.disabled ? 'not-allowed' : 'pointer',
+                      opacity: opt.disabled ? 0.55 : 1,
+                      transition: 'all 0.2s ease',
+                      fontFamily: 'Nunito, sans-serif',
+                      textAlign: 'left',
+                      width: '100%',
+                      position: 'relative',
+                    }}
+                    onMouseEnter={(e) => {
+                      if (!opt.disabled) {
+                        e.currentTarget.style.borderColor = opt.color;
+                        e.currentTarget.style.background = `${opt.color}08`;
+                        e.currentTarget.style.transform = 'translateY(-2px)';
+                        e.currentTarget.style.boxShadow = `0 6px 16px ${opt.color}20`;
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!opt.disabled) {
+                        e.currentTarget.style.borderColor = '#E5E7EB';
+                        e.currentTarget.style.background = 'white';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }
+                    }}
+                  >
+                    {/* Icon */}
+                    <div style={{
+                      width: '42px',
+                      height: '42px',
+                      borderRadius: '10px',
+                      background: `${opt.color}15`,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '1.4rem',
+                      flexShrink: 0,
+                    }}>
+                      {opt.icon}
+                    </div>
+
+                    {/* Text */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <p style={{
+                          margin: 0,
+                          fontSize: '0.95rem',
+                          fontWeight: '800',
+                          color: '#1F2937',
+                        }}>
+                          {opt.title}
+                        </p>
+                        {opt.badge && (
+                          <span style={{
+                            padding: '2px 8px',
+                            background: '#F3F4F6',
+                            borderRadius: '4px',
+                            fontSize: '0.62rem',
+                            fontWeight: '800',
+                            color: '#6B7280',
+                            border: '1px solid #E5E7EB',
+                          }}>
+                            {opt.badge}
+                          </span>
+                        )}
+                      </div>
+                      <p style={{
+                        margin: '3px 0 0',
+                        fontSize: '0.76rem',
+                        color: opt.disabled ? '#EF4444' : '#6B7280',
+                        fontWeight: '600',
+                      }}>
+                        {opt.subtitle}
+                      </p>
+                    </div>
+
+                    {/* Arrow */}
+                    <span style={{
+                      fontSize: '1.3rem',
+                      color: '#9CA3AF',
+                      fontWeight: '800',
+                      flexShrink: 0,
+                    }}>
+                      ›
+                    </span>
+
+                    {/* Recommended Ribbon */}
+                    {opt.recommended && (
+                      <div style={{
+                        position: 'absolute',
+                        top: '-8px',
+                        right: '12px',
+                        padding: '2px 10px',
+                        background: 'linear-gradient(135deg, #10B981, #059669)',
+                        color: 'white',
+                        borderRadius: '999px',
+                        fontSize: '0.62rem',
+                        fontWeight: '800',
+                        letterSpacing: '0.4px',
+                        boxShadow: '0 3px 8px rgba(16,185,129,0.35)',
+                      }}>
+                        ⭐ RECOMMENDED
+                      </div>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* Trust Message */}
+              <div style={{
+                marginTop: '18px',
+                padding: '10px 14px',
+                background: '#F0FDF4',
+                border: '1.5px solid #BBF7D0',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}>
+                <span style={{ fontSize: '1.1rem' }}>🛡️</span>
+                <p style={{
+                  margin: 0,
+                  fontSize: '0.78rem',
+                  fontWeight: '700',
+                  color: '#166534',
+                  fontFamily: 'Nunito, sans-serif',
+                }}>
+                  Most parents prefer: Instant Payments & Refunds
+                </p>
+              </div>
+            </div>
+
+            {/* FOOTER — Security Badges */}
+            <div style={{
+              padding: '14px 22px',
+              borderTop: '1.5px solid #E5E7EB',
+              background: '#FAFAFA',
+              flexShrink: 0,
+            }}>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(4, 1fr)',
+                gap: '8px',
+                textAlign: 'center',
+              }}>
+                {[
+                  { icon: '🛡️', title: 'Quick &', line2: 'Secure', line3: 'Payments' },
+                  { icon: '↩️', title: 'Easy Returns', line2: '& Refunds' },
+                  { icon: '🔒', title: 'Encrypted', line2: 'User data' },
+                  { icon: '✓', title: 'PCI', line2: 'Certified' },
+                ].map((b, i) => (
+                  <div key={i}>
+                    <div style={{
+                      fontSize: '1.3rem',
+                      marginBottom: '3px',
+                    }}>
+                      {b.icon}
+                    </div>
+                    <p style={{
+                      margin: 0,
+                      fontSize: '0.62rem',
+                      fontWeight: '700',
+                      color: '#6B7280',
+                      lineHeight: 1.3,
+                      fontFamily: 'Nunito, sans-serif',
+                    }}>
+                      {b.title}<br />
+                      {b.line2}
+                      {b.line3 && <><br />{b.line3}</>}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <style>{`
+            @keyframes slideInRight {
+              from { transform: translateX(100%); }
+              to   { transform: translateX(0);    }
+            }
+            @keyframes fadeIn {
+              from { opacity: 0; }
+              to   { opacity: 1; }
+            }
+          `}</style>
+        </>
+      )}
     </div>
   );
 }
