@@ -26,7 +26,7 @@ export default function MigrateR2Page() {
 
   const runMigration = async (actionType) => {
     const messages = {
-      'copy-files': `Copy ${status?.r2?.arunasFiles || 0} files from arunas/ to arunas/?`,
+      'copy-files': `Copy ${status?.r2?.oldFolderFiles || 0} files from ${status?.config?.oldPrefix}/ to ${status?.config?.newPrefix}/?`,
       'update-db':  `Update ${status?.database?.productsWithOldUrls || 0} products + banners + brands DB URLs?`,
       'full':       `Run FULL migration: Copy files + Update DB?\n\nThis is safe — original files won't be deleted.`,
     };
@@ -71,13 +71,12 @@ export default function MigrateR2Page() {
         color: '#2D1A4A',
         marginBottom: '8px',
       }}>
-        🚀 R2 Migration: arunas → arunas
+        🚀 R2 Migration
       </h1>
       <p style={{ color: '#6B7280', fontSize: '14px', marginBottom: '24px' }}>
-        Safely migrate all files and update database URLs
+        {status?.config?.oldPrefix} → {status?.config?.newPrefix}
       </p>
 
-      {/* Warning banner */}
       <div style={{
         background:    '#FEF3C7',
         border:        '2px solid #FDE68A',
@@ -87,15 +86,14 @@ export default function MigrateR2Page() {
       }}>
         <p style={{ margin: 0, fontSize: '13px', color: '#92400E', fontWeight: '700', lineHeight: 1.6 }}>
           ⚠️ <strong>IMPORTANT:</strong><br />
-          1. This migration is <strong>SAFE</strong> — original arunas/ files stay intact<br />
-          2. Files are COPIED (not moved) to arunas/<br />
-          3. Database URLs are UPDATED to point to arunas/<br />
-          4. If anything breaks, old URLs still work<br />
-          5. After 1 week of testing, you can manually delete arunas/ folder
+          1. This migration is <strong>SAFE</strong> — original files stay intact<br />
+          2. Files are COPIED (not moved)<br />
+          3. Database URLs are UPDATED<br />
+          4. Old URLs still work if anything breaks<br />
+          5. After 1 week of testing, you can manually delete old folder
         </p>
       </div>
 
-      {/* Status Card */}
       {loading && !status ? (
         <div style={{ textAlign: 'center', padding: '40px' }}>
           <div style={{ fontSize: '2rem' }}>⏳</div>
@@ -115,7 +113,6 @@ export default function MigrateR2Page() {
             </h3>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
-              {/* R2 Files */}
               <div style={{
                 padding: '14px',
                 background: '#FFF5F7',
@@ -127,12 +124,12 @@ export default function MigrateR2Page() {
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                    <span>arunas/ files:</span>
-                    <strong style={{ color: '#DC2626' }}>{status.r2.arunasFiles}</strong>
+                    <span>{status.config.oldPrefix}/ files:</span>
+                    <strong style={{ color: '#DC2626' }}>{status.r2.oldFolderFiles}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px' }}>
-                    <span>arunas/ files:</span>
-                    <strong style={{ color: '#059669' }}>{status.r2.arunasFiles}</strong>
+                    <span>{status.config.newPrefix}/ files:</span>
+                    <strong style={{ color: '#059669' }}>{status.r2.newFolderFiles}</strong>
                   </div>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13px', borderTop: '1px dashed #DDD', paddingTop: '6px' }}>
                     <span>Total:</span>
@@ -141,7 +138,6 @@ export default function MigrateR2Page() {
                 </div>
               </div>
 
-              {/* Database */}
               <div style={{
                 padding: '14px',
                 background: '#F0FDF4',
@@ -169,7 +165,6 @@ export default function MigrateR2Page() {
             </div>
           </div>
 
-          {/* Action Buttons */}
           <div style={{
             background:   'white',
             border:       '2px solid #EDD9FF',
@@ -182,7 +177,6 @@ export default function MigrateR2Page() {
             </h3>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {/* Step 1 */}
               <div style={{
                 padding: '14px 18px',
                 background: '#FFFBEB',
@@ -198,12 +192,12 @@ export default function MigrateR2Page() {
                     Step 1: Copy files (R2)
                   </p>
                   <p style={{ margin: '3px 0 0', fontSize: '11px', color: '#78350F' }}>
-                    Copies {status.r2.arunasFiles} files from arunas/ to arunas/
+                    Copies {status.r2.oldFolderFiles} files
                   </p>
                 </div>
                 <button
                   onClick={() => runMigration('copy-files')}
-                  disabled={loading || status.r2.arunasFiles === 0}
+                  disabled={loading || status.r2.oldFolderFiles === 0}
                   style={{
                     padding: '10px 20px',
                     background: loading && action === 'copy-files' ? '#ccc' : 'linear-gradient(135deg,#F59E0B,#D97706)',
@@ -221,7 +215,6 @@ export default function MigrateR2Page() {
                 </button>
               </div>
 
-              {/* Step 2 */}
               <div style={{
                 padding: '14px 18px',
                 background: '#EFF6FF',
@@ -237,7 +230,7 @@ export default function MigrateR2Page() {
                     Step 2: Update Database URLs
                   </p>
                   <p style={{ margin: '3px 0 0', fontSize: '11px', color: '#1E3A8A' }}>
-                    Updates URLs in Products, Banners, and Brands tables
+                    Updates Products, Banners, Brands
                   </p>
                 </div>
                 <button
@@ -260,7 +253,6 @@ export default function MigrateR2Page() {
                 </button>
               </div>
 
-              {/* FULL Migration */}
               <div style={{
                 padding: '14px 18px',
                 background: 'linear-gradient(135deg,#F0FDF4,#DCFCE7)',
@@ -276,7 +268,7 @@ export default function MigrateR2Page() {
                     🚀 FULL MIGRATION (Recommended)
                   </p>
                   <p style={{ margin: '3px 0 0', fontSize: '11px', color: '#15803D' }}>
-                    Runs Step 1 + Step 2 together (safest option)
+                    Runs Step 1 + Step 2 together
                   </p>
                 </div>
                 <button
@@ -322,14 +314,12 @@ export default function MigrateR2Page() {
             </button>
           </div>
 
-          {/* Results */}
           {results && (
             <div style={{
-              background:   'white',
+              background:   '#F0FDF4',
               border:       '2px solid #86EFAC',
               borderRadius: '14px',
               padding:      '20px',
-              background:   '#F0FDF4',
             }}>
               <h3 style={{ margin: '0 0 12px', fontSize: '1rem', color: '#166534', fontWeight: '800' }}>
                 ✅ Migration Results

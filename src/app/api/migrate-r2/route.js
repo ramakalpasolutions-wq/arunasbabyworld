@@ -14,11 +14,13 @@ const R2 = new S3Client({
 });
 
 const BUCKET_NAME = process.env.CLOUDFLARE_R2_BUCKET_NAME;
-const OLD_PREFIX  = 'arunas';
-const NEW_PREFIX  = 'arunas';
+
+// ✅ Use different variable names to avoid replacement issues
+const OLD_PREFIX = 'first' + 'cry';   // becomes "firstcry" but won't be replaced
+const NEW_PREFIX = 'arunas';
 
 /* ============================================================
-   GET — Check migration status (how many files, how many URLs)
+   GET — Check migration status
    ============================================================ */
 export async function GET() {
   try {
@@ -28,11 +30,11 @@ export async function GET() {
     }
 
     // Count files in R2
-    let arunasFiles = 0;
-    let arunasFiles = 0;
+    let oldFolderFiles = 0;
+    let newFolderFiles = 0;
     let continuationToken;
 
-    // Count arunas files
+    // Count OLD prefix files
     do {
       const cmd = new ListObjectsV2Command({
         Bucket: BUCKET_NAME,
@@ -40,11 +42,11 @@ export async function GET() {
         ContinuationToken: continuationToken,
       });
       const res = await R2.send(cmd);
-      arunasFiles += (res.Contents?.length || 0);
+      oldFolderFiles += (res.Contents?.length || 0);
       continuationToken = res.NextContinuationToken;
     } while (continuationToken);
 
-    // Count arunas files
+    // Count NEW prefix files
     continuationToken = undefined;
     do {
       const cmd = new ListObjectsV2Command({
@@ -53,7 +55,7 @@ export async function GET() {
         ContinuationToken: continuationToken,
       });
       const res = await R2.send(cmd);
-      arunasFiles += (res.Contents?.length || 0);
+      newFolderFiles += (res.Contents?.length || 0);
       continuationToken = res.NextContinuationToken;
     } while (continuationToken);
 
@@ -66,17 +68,19 @@ export async function GET() {
     let productImagesWithOldUrls = 0;
     let variantImagesWithOldUrls = 0;
 
+    const oldPattern = `/${OLD_PREFIX}/`;
+
     products.forEach(p => {
       let hasOld = false;
       p.images?.forEach(img => {
-        if (img?.url?.includes(`/${OLD_PREFIX}/`)) {
+        if (img?.url?.includes(oldPattern)) {
           productImagesWithOldUrls++;
           hasOld = true;
         }
       });
       p.colorVariants?.forEach(v => {
         v.images?.forEach(img => {
-          if (img?.url?.includes(`/${OLD_PREFIX}/`)) {
+          if (img?.url?.includes(oldPattern)) {
             variantImagesWithOldUrls++;
             hasOld = true;
           }
@@ -92,13 +96,13 @@ export async function GET() {
     let bannersWithOldUrls = 0;
     banners.forEach(b => {
       let hasOld = false;
-      if (b.image?.url?.includes(`/${OLD_PREFIX}/`)) hasOld = true;
-      if (b.mobileImage?.url?.includes(`/${OLD_PREFIX}/`)) hasOld = true;
+      if (b.image?.url?.includes(oldPattern)) hasOld = true;
+      if (b.mobileImage?.url?.includes(oldPattern)) hasOld = true;
       b.panels?.forEach(p => {
-        if (p?.url?.includes(`/${OLD_PREFIX}/`)) hasOld = true;
+        if (p?.url?.includes(oldPattern)) hasOld = true;
       });
       b.gridImages?.forEach(g => {
-        if (g?.url?.includes(`/${OLD_PREFIX}/`)) hasOld = true;
+        if (g?.url?.includes(oldPattern)) hasOld = true;
       });
       if (hasOld) bannersWithOldUrls++;
     });
@@ -107,14 +111,14 @@ export async function GET() {
       select: { id: true, logo: true },
     });
     const brandsWithOldUrls = brands.filter(b =>
-      b.logo?.url?.includes(`/${OLD_PREFIX}/`)
+      b.logo?.url?.includes(oldPattern)
     ).length;
 
     return NextResponse.json({
       r2: {
-        arunasFiles,
-        arunasFiles,
-        totalFiles: arunasFiles + arunasFiles,
+        oldFolderFiles,
+        newFolderFiles,
+        totalFiles: oldFolderFiles + newFolderFiles,
       },
       database: {
         totalProducts:            products.length,
@@ -141,7 +145,6 @@ export async function GET() {
 
 /* ============================================================
    POST — Run migration
-   Body: { action: 'copy-files' | 'update-db' | 'full' }
    ============================================================ */
 export async function POST(request) {
   try {
@@ -177,11 +180,10 @@ export async function POST(request) {
 }
 
 /* ============================================================
-   COPY R2 FILES: arunas/ → arunas/
+   COPY R2 FILES
    ============================================================ */
 async function copyR2Files() {
   let copied = 0;
-  let skipped = 0;
   let errors = 0;
   let continuationToken;
   const errorList = [];
@@ -201,7 +203,6 @@ async function copyR2Files() {
       const newKey = oldKey.replace(`${OLD_PREFIX}/`, `${NEW_PREFIX}/`);
 
       try {
-        // Copy object
         const copyCmd = new CopyObjectCommand({
           Bucket:     BUCKET_NAME,
           CopySource: `${BUCKET_NAME}/${encodeURIComponent(oldKey)}`,
@@ -227,9 +228,8 @@ async function copyR2Files() {
 
   return {
     copied,
-    skipped,
     errors,
-    errorList: errorList.slice(0, 20), // Show first 20 errors
+    errorList: errorList.slice(0, 20),
   };
 }
 
@@ -246,6 +246,8 @@ async function updateDatabaseUrls() {
 
   const oldPattern = `/${OLD_PREFIX}/`;
   const newPattern = `/${NEW_PREFIX}/`;
+  const oldKeyPattern = `${OLD_PREFIX}/`;
+  const newKeyPattern = `${NEW_PREFIX}/`;
 
   // ✅ Update Products
   console.log('📦 Updating Products...');
@@ -255,7 +257,6 @@ async function updateDatabaseUrls() {
     let modified = false;
     const updateData = {};
 
-    // Update images array
     if (product.images?.length > 0) {
       const newImages = product.images.map(img => {
         if (img?.url?.includes(oldPattern)) {
@@ -263,7 +264,7 @@ async function updateDatabaseUrls() {
           return {
             ...img,
             url:      img.url.replace(oldPattern, newPattern),
-            publicId: img.publicId?.replace(`${OLD_PREFIX}/`, `${NEW_PREFIX}/`) || img.publicId,
+            publicId: img.publicId?.replace(oldKeyPattern, newKeyPattern) || img.publicId,
           };
         }
         return img;
@@ -271,7 +272,6 @@ async function updateDatabaseUrls() {
       updateData.images = newImages;
     }
 
-    // Update colorVariants
     if (product.colorVariants?.length > 0) {
       const newVariants = product.colorVariants.map(v => {
         if (v.images?.length > 0) {
@@ -281,7 +281,7 @@ async function updateDatabaseUrls() {
               return {
                 ...img,
                 url:      img.url.replace(oldPattern, newPattern),
-                publicId: img.publicId?.replace(`${OLD_PREFIX}/`, `${NEW_PREFIX}/`) || img.publicId,
+                publicId: img.publicId?.replace(oldKeyPattern, newKeyPattern) || img.publicId,
               };
             }
             return img;
@@ -322,7 +322,7 @@ async function updateDatabaseUrls() {
       updateData.image = {
         ...banner.image,
         url:      banner.image.url.replace(oldPattern, newPattern),
-        publicId: banner.image.publicId?.replace(`${OLD_PREFIX}/`, `${NEW_PREFIX}/`) || banner.image.publicId,
+        publicId: banner.image.publicId?.replace(oldKeyPattern, newKeyPattern) || banner.image.publicId,
       };
       modified = true;
     }
@@ -331,7 +331,7 @@ async function updateDatabaseUrls() {
       updateData.mobileImage = {
         ...banner.mobileImage,
         url:      banner.mobileImage.url.replace(oldPattern, newPattern),
-        publicId: banner.mobileImage.publicId?.replace(`${OLD_PREFIX}/`, `${NEW_PREFIX}/`) || banner.mobileImage.publicId,
+        publicId: banner.mobileImage.publicId?.replace(oldKeyPattern, newKeyPattern) || banner.mobileImage.publicId,
       };
       modified = true;
     }
@@ -343,7 +343,7 @@ async function updateDatabaseUrls() {
           return {
             ...p,
             url:      p.url.replace(oldPattern, newPattern),
-            publicId: p.publicId?.replace(`${OLD_PREFIX}/`, `${NEW_PREFIX}/`) || p.publicId,
+            publicId: p.publicId?.replace(oldKeyPattern, newKeyPattern) || p.publicId,
           };
         }
         return p;
@@ -358,7 +358,7 @@ async function updateDatabaseUrls() {
           return {
             ...g,
             url:      g.url.replace(oldPattern, newPattern),
-            publicId: g.publicId?.replace(`${OLD_PREFIX}/`, `${NEW_PREFIX}/`) || g.publicId,
+            publicId: g.publicId?.replace(oldKeyPattern, newKeyPattern) || g.publicId,
           };
         }
         return g;
@@ -396,7 +396,7 @@ async function updateDatabaseUrls() {
             logo: {
               ...brand.logo,
               url:      brand.logo.url.replace(oldPattern, newPattern),
-              publicId: brand.logo.publicId?.replace(`${OLD_PREFIX}/`, `${NEW_PREFIX}/`) || brand.logo.publicId,
+              publicId: brand.logo.publicId?.replace(oldKeyPattern, newKeyPattern) || brand.logo.publicId,
             },
           },
         });
