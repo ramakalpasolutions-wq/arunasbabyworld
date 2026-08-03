@@ -20,8 +20,11 @@ export async function GET(request) {
       [minPrice, maxPrice] = [maxPrice, minPrice];
     }
 
-    // ✅ Build where clause (same as products API, but without brand filter)
-    const where = { isActive: true, brand: { not: null } };
+    // ✅ Build where clause
+    const where = {
+      isActive: true,
+      brand: { not: null },
+    };
 
     if (featured === 'true') where.isFeatured = true;
     if (trending === 'true') where.isTrending = true;
@@ -63,7 +66,7 @@ export async function GET(request) {
       ];
     }
 
-    // ✅ Search filter
+    // Search filter
     if (search && search.trim()) {
       const s = search.trim();
 
@@ -100,7 +103,7 @@ export async function GET(request) {
       }
     }
 
-    // ✅ Category filter — smart matching
+    // Category filter — smart matching
     if (category) {
       const isObjectId = /^[a-f\d]{24}$/i.test(category);
 
@@ -145,25 +148,45 @@ export async function GET(request) {
       }
     }
 
-    // ✅ FAST: Get distinct brands using MongoDB aggregation
+    // ✅ FETCH ALL PRODUCTS with just brand field (much faster than full data)
+    console.log('🔍 Fetching brands with where clause...');
+
     const products = await prisma.product.findMany({
       where,
       select: { brand: true },
-      distinct: ['brand'],
     });
 
-    // Extract unique brand names, trim, filter empty, sort
-    const uniqueBrands = [...new Set(
-      products
-        .map(p => p.brand?.trim())
-        .filter(b => b && b !== '')
-    )].sort((a, b) => a.localeCompare(b));
+    console.log(`📦 Found ${products.length} products with brands`);
 
-    console.log(`🏷️ Found ${uniqueBrands.length} unique brands`);
+    // ✅ Extract unique brands manually (case-insensitive dedup, keep original casing)
+    const brandMap = new Map();
+
+    products.forEach(p => {
+      const brand = p.brand?.trim();
+      if (!brand) return;
+
+      const lowerKey = brand.toLowerCase();
+      // Keep first occurrence's original casing
+      if (!brandMap.has(lowerKey)) {
+        brandMap.set(lowerKey, brand);
+      }
+    });
+
+    // Sort alphabetically
+    const uniqueBrands = [...brandMap.values()].sort((a, b) =>
+      a.localeCompare(b, undefined, { sensitivity: 'base' })
+    );
+
+    console.log(`🏷️ Returning ${uniqueBrands.length} unique brands`);
+    console.log('First 10:', uniqueBrands.slice(0, 10));
 
     return NextResponse.json({
       brands: uniqueBrands,
       total: uniqueBrands.length,
+      debug: {
+        totalProducts: products.length,
+        uniqueBrandsCount: uniqueBrands.length,
+      },
     });
 
   } catch (error) {
