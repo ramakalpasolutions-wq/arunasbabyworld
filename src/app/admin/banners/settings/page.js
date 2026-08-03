@@ -57,7 +57,8 @@ function BrandsManager() {
   const [saving,    setSaving]    = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  const emptyForm = { name: '', color: '#FF6B35', link: '/products', isActive: true, order: 0, logo: null };
+  // ✅ Empty link by default — auto-filters by name
+  const emptyForm = { name: '', color: '#FF6B35', link: '', isActive: true, order: 0, logo: null };
   const [form, setForm] = useState(emptyForm);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -84,7 +85,7 @@ function BrandsManager() {
     setForm({
       name:     brand.name     || '',
       color:    brand.color    || '#FF6B35',
-      link:     brand.link     || '/products',
+      link:     brand.link     || '',
       isActive: brand.isActive,
       order:    brand.order    || 0,
       logo:     brand.logo     || null,
@@ -117,12 +118,18 @@ function BrandsManager() {
     if (!form.name) { toast.error('Brand name required'); return; }
     setSaving(true);
     try {
+      // ✅ Auto-set link if empty
+      const payload = {
+        ...form,
+        link: form.link || `/products?brand=${encodeURIComponent(form.name)}`,
+      };
+
       const url    = editing ? `/api/brands/${editing.id}` : '/api/brands';
       const method = editing ? 'PUT' : 'POST';
       const res    = await fetch(url, {
         method,
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify(form),
+        body:    JSON.stringify(payload),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -165,6 +172,9 @@ function BrandsManager() {
     textTransform: 'uppercase', letterSpacing: '0.6px',
   };
 
+  // ✅ Preview auto-generated link
+  const previewLink = form.link || (form.name ? `/products?brand=${encodeURIComponent(form.name)}` : '/products');
+
   return (
     <div>
       {/* Header */}
@@ -174,7 +184,7 @@ function BrandsManager() {
             🏷️ Brand Names Management
           </h3>
           <p style={{ fontSize: '12px', color: '#9585B0', margin: 0, fontWeight: '600' }}>
-            Add, edit or remove brands shown in the auto-scroll strip
+            Click on brand in scroll → filters products by brand automatically
           </p>
         </div>
         <button onClick={openAdd} style={{
@@ -186,6 +196,20 @@ function BrandsManager() {
         }}>
           + Add Brand
         </button>
+      </div>
+
+      {/* ✅ Info banner */}
+      <div style={{
+        padding: '10px 14px',
+        background: 'linear-gradient(135deg, #F0FDF4, #DBEAFE)',
+        border: '1.5px solid #BFDBFE',
+        borderRadius: '10px',
+        marginBottom: '14px',
+        fontSize: '12px',
+        color: '#1E40AF',
+        fontWeight: '700',
+      }}>
+        💡 <strong>How it works:</strong> When users click a brand name in the home page scroll, they'll be taken to <code style={{ background: 'white', padding: '1px 6px', borderRadius: '4px' }}>/products?brand=BrandName</code> — showing only that brand's products.
       </div>
 
       {/* Brand cards grid */}
@@ -201,57 +225,80 @@ function BrandsManager() {
           }}>+ Add First Brand</button>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: '10px' }}>
-          {brands.map(brand => (
-            <div key={brand.id} style={{
-              background:   'white',
-              borderRadius: '12px',
-              border:       `2px solid ${brand.isActive ? brand.color + '40' : '#f0f0f0'}`,
-              padding:      '12px',
-              opacity:      brand.isActive ? 1 : 0.6,
-              transition:   'all 0.2s',
-            }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                {brand.logo?.url ? (
-                  <img src={brand.logo.url} alt={brand.name}
-                    style={{ width: '32px', height: '32px', objectFit: 'contain', borderRadius: '6px', flexShrink: 0 }} />
-                ) : (
-                  <div style={{
-                    width: '32px', height: '32px', borderRadius: '6px',
-                    background: `${brand.color}20`, border: `2px solid ${brand.color}40`,
-                    display: 'flex', alignItems: 'center', justifyContent: 'center',
-                    flexShrink: 0,
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
+          {brands.map(brand => {
+            const brandLink = brand.link && brand.link !== '/products'
+              ? brand.link
+              : `/products?brand=${encodeURIComponent(brand.name)}`;
+            return (
+              <div key={brand.id} style={{
+                background:   'white',
+                borderRadius: '12px',
+                border:       `2px solid ${brand.isActive ? brand.color + '40' : '#f0f0f0'}`,
+                padding:      '12px',
+                opacity:      brand.isActive ? 1 : 0.6,
+                transition:   'all 0.2s',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  {brand.logo?.url ? (
+                    <img src={brand.logo.url} alt={brand.name}
+                      style={{ width: '32px', height: '32px', objectFit: 'contain', borderRadius: '6px', flexShrink: 0 }} />
+                  ) : (
+                    <div style={{
+                      width: '32px', height: '32px', borderRadius: '6px',
+                      background: `${brand.color}20`, border: `2px solid ${brand.color}40`,
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      flexShrink: 0,
+                    }}>
+                      <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: brand.color }} />
+                    </div>
+                  )}
+                  <span style={{ fontSize: '0.90rem', fontWeight: '800', color: brand.color, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {brand.name}
+                  </span>
+                </div>
+
+                {/* ✅ Show link preview */}
+                <div style={{
+                  padding: '4px 8px',
+                  background: '#F9FAFB',
+                  border: '1px solid #E5E7EB',
+                  borderRadius: '5px',
+                  fontSize: '10px',
+                  color: '#6B7280',
+                  fontFamily: 'monospace',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                  marginBottom: '8px',
+                }} title={brandLink}>
+                  🔗 {brandLink}
+                </div>
+
+                <div style={{ display: 'flex', gap: '5px' }}>
+                  <button onClick={() => openEdit(brand)} style={{
+                    flex: 1, padding: '6px', background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)',
+                    color: 'white', border: 'none', borderRadius: '7px',
+                    fontSize: '11px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit',
+                  }}>✏️ Edit</button>
+                  <button onClick={() => toggleActive(brand)} style={{
+                    padding: '6px 9px',
+                    background: brand.isActive ? '#d1fae5' : '#f3f4f6',
+                    color: brand.isActive ? '#059669' : '#666',
+                    border: `1.5px solid ${brand.isActive ? '#6ee7b7' : '#ddd'}`,
+                    borderRadius: '7px', fontSize: '11px', cursor: 'pointer', fontFamily: 'inherit',
                   }}>
-                    <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: brand.color }} />
-                  </div>
-                )}
-                <span style={{ fontSize: '0.90rem', fontWeight: '800', color: brand.color, flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  {brand.name}
-                </span>
+                    {brand.isActive ? '✅' : '⭕'}
+                  </button>
+                  <button onClick={() => handleDelete(brand.id)} style={{
+                    padding: '6px 9px', background: '#fee2e2', color: '#dc2626',
+                    border: '1.5px solid #fca5a5', borderRadius: '7px',
+                    fontSize: '11px', cursor: 'pointer', fontFamily: 'inherit',
+                  }}>🗑️</button>
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: '5px' }}>
-                <button onClick={() => openEdit(brand)} style={{
-                  flex: 1, padding: '6px', background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)',
-                  color: 'white', border: 'none', borderRadius: '7px',
-                  fontSize: '11px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit',
-                }}>✏️ Edit</button>
-                <button onClick={() => toggleActive(brand)} style={{
-                  padding: '6px 9px',
-                  background: brand.isActive ? '#d1fae5' : '#f3f4f6',
-                  color: brand.isActive ? '#059669' : '#666',
-                  border: `1.5px solid ${brand.isActive ? '#6ee7b7' : '#ddd'}`,
-                  borderRadius: '7px', fontSize: '11px', cursor: 'pointer', fontFamily: 'inherit',
-                }}>
-                  {brand.isActive ? '✅' : '⭕'}
-                </button>
-                <button onClick={() => handleDelete(brand.id)} style={{
-                  padding: '6px 9px', background: '#fee2e2', color: '#dc2626',
-                  border: '1.5px solid #fca5a5', borderRadius: '7px',
-                  fontSize: '11px', cursor: 'pointer', fontFamily: 'inherit',
-                }}>🗑️</button>
-              </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
 
@@ -294,6 +341,9 @@ function BrandsManager() {
                 <input type="text" value={form.name}
                   onChange={e => set('name', e.target.value)}
                   placeholder="e.g. Mothercare" required style={inp} />
+                <p style={{ margin: '4px 0 0', fontSize: '10px', color: '#9585B0', fontWeight: '600' }}>
+                  💡 Must exactly match brand name in products for filtering
+                </p>
               </div>
 
               {/* Color */}
@@ -318,12 +368,37 @@ function BrandsManager() {
                 </div>
               </div>
 
-              {/* Link */}
+              {/* ✅ Auto-generated Link Preview */}
               <div>
-                <label style={lbl}>Brand Page Link</label>
+                <label style={lbl}>Brand Page Link (optional)</label>
                 <input type="text" value={form.link}
                   onChange={e => set('link', e.target.value)}
-                  placeholder="/products?brand=mothercare" style={inp} />
+                  placeholder={form.name ? `/products?brand=${encodeURIComponent(form.name)}` : '/products?brand=BrandName'}
+                  style={inp} />
+                <div style={{
+                  marginTop: '6px',
+                  padding: '8px 12px',
+                  background: 'linear-gradient(135deg, #F0FDF4, #DBEAFE)',
+                  border: '1.5px solid #BFDBFE',
+                  borderRadius: '8px',
+                }}>
+                  <p style={{ margin: 0, fontSize: '10px', fontWeight: '800', color: '#1E40AF', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    🔗 Will redirect to:
+                  </p>
+                  <p style={{
+                    margin: '3px 0 0',
+                    fontSize: '11px',
+                    fontFamily: 'monospace',
+                    color: '#059669',
+                    fontWeight: '800',
+                    wordBreak: 'break-all',
+                  }}>
+                    {previewLink}
+                  </p>
+                </div>
+                <p style={{ margin: '4px 0 0', fontSize: '10px', color: '#9585B0', fontWeight: '600' }}>
+                  💡 Leave empty — will auto-filter products by brand name
+                </p>
               </div>
 
               {/* Logo upload */}
@@ -555,7 +630,6 @@ export default function SectionSettingsPage() {
                 justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  {/* Section number */}
                   <div style={{
                     width: '28px', height: '28px', borderRadius: '50%',
                     background: section.color, color: 'white',

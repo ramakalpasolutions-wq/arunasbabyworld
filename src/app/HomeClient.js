@@ -114,7 +114,7 @@ function FlipCard({ children, sceneClassName = '', href }) {
 }
 
 /* ═══════════════════════════════════════
-   1. BRANDS
+   1. BRANDS (✅ FIXED - Click filters by brand)
 ═══════════════════════════════════════ */
 function BrandsSection({ brands, sectionSettings = {} }) {
   const s        = sectionSettings['brands'] || {};
@@ -123,6 +123,20 @@ function BrandsSection({ brands, sectionSettings = {} }) {
 
   const displayBrands = brands?.length > 0 ? brands : DEFAULT_BRANDS;
   const items = [...displayBrands, ...displayBrands, ...displayBrands];
+
+  // ✅ Smart brand link builder
+  const buildBrandLink = (brand) => {
+    // Priority 1: If admin set explicit link (not default), use it
+    if (brand.link && brand.link !== '/products') {
+      return brand.link;
+    }
+    // Priority 2: If brand has name, filter products by brand
+    if (brand.name) {
+      return `/products?brand=${encodeURIComponent(brand.name)}`;
+    }
+    // Fallback
+    return '/products';
+  };
 
   return (
     <section style={{ background: 'white', borderTop: '7px solid #F3E8FF', borderBottom: '1px solid #F3E8FF', overflow: 'hidden', padding: '0' }}>
@@ -145,24 +159,30 @@ function BrandsSection({ brands, sectionSettings = {} }) {
           onTouchStart={e => e.currentTarget.style.animationPlayState = 'paused'}
           onTouchEnd={e => e.currentTarget.style.animationPlayState = 'running'}
         >
-          {items.map((brand, i) => (
-            <Link
-              key={`${brand.id}-${i}`}
-              href={brand.link || '/products'}
-              style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', textDecoration: 'none', padding: '7px 16px', borderRadius: '999px', border: `1.5px solid ${brand.color}25`, background: `${brand.color}08`, flexShrink: 0, whiteSpace: 'nowrap', transition: 'all 0.2s ease' }}
-              onMouseEnter={e => { e.currentTarget.style.background = `${brand.color}18`; e.currentTarget.style.borderColor = brand.color; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = `${brand.color}08`; e.currentTarget.style.borderColor = `${brand.color}25`; e.currentTarget.style.transform = 'translateY(0)'; }}
-            >
-              {brand.logo?.url ? (
-                <img src={brand.logo.url} alt={brand.name || 'Brand'} style={{ width: brand.name ? '32px' : '80px', height: brand.name ? '49px' : '47px', objectFit: 'contain', borderRadius: '4px', flexShrink: 0 }} />
-              ) : (
-                <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: brand.color, flexShrink: 0 }} />
-              )}
-              {brand.name && (
-                <span style={{ fontSize: '0.84rem', fontWeight: '800', color: brand.color, fontFamily: 'Nunito, sans-serif' }}>{brand.name}</span>
-              )}
-            </Link>
-          ))}
+          {items.map((brand, i) => {
+            // ✅ Build correct link for each brand
+            const brandLink = buildBrandLink(brand);
+
+            return (
+              <Link
+                key={`${brand.id}-${i}`}
+                href={brandLink}
+                title={brand.name ? `Shop ${brand.name} products` : 'Shop products'}
+                style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', textDecoration: 'none', padding: '7px 16px', borderRadius: '999px', border: `1.5px solid ${brand.color}25`, background: `${brand.color}08`, flexShrink: 0, whiteSpace: 'nowrap', transition: 'all 0.2s ease' }}
+                onMouseEnter={e => { e.currentTarget.style.background = `${brand.color}18`; e.currentTarget.style.borderColor = brand.color; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                onMouseLeave={e => { e.currentTarget.style.background = `${brand.color}08`; e.currentTarget.style.borderColor = `${brand.color}25`; e.currentTarget.style.transform = 'translateY(0)'; }}
+              >
+                {brand.logo?.url ? (
+                  <img src={brand.logo.url} alt={brand.name || 'Brand'} style={{ width: brand.name ? '32px' : '80px', height: brand.name ? '49px' : '47px', objectFit: 'contain', borderRadius: '4px', flexShrink: 0 }} />
+                ) : (
+                  <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: brand.color, flexShrink: 0 }} />
+                )}
+                {brand.name && (
+                  <span style={{ fontSize: '0.84rem', fontWeight: '800', color: brand.color, fontFamily: 'Nunito, sans-serif' }}>{brand.name}</span>
+                )}
+              </Link>
+            );
+          })}
         </div>
       </div>
 
@@ -409,6 +429,15 @@ function SeasonBanner({ banners, sectionSettings = {} }) {
     </section>
   );
 }
+
+/* ═══════════════════════════════════════
+   REST OF SECTIONS (Gender, Budget, Sunny, Promo, Category, BabyFood, Toys, Care, EV, Trending, CTA)
+   These are UNCHANGED — same as your original file
+═══════════════════════════════════════ */
+
+/* Copy your existing GenderSection, BudgetSection, SunnySection, PromoSection, 
+   CategorySection, BabyFoodSection, ToysSection, CareSection, EVSection, 
+   TrendingFeaturedSection, CTASection, and default export MainClient from your original file */
 /* ═══════════════════════════════════════
    6. GENDER (HER & HIM Style)
 ═══════════════════════════════════════ */

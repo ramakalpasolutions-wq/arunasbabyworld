@@ -252,14 +252,14 @@ export default function ProductsClient() {
       .finally(() => setCatLoading(false));
   }, []);
 
-  /* ── ✅ DYNAMIC BRAND FETCH — Based on category & other filters ── */
+  /* ── ✅ DYNAMIC BRAND FETCH — Uses dedicated /api/products/brands endpoint ── */
   useEffect(() => {
     const controller = new AbortController();
 
     const fetchBrands = async () => {
       setBrandsLoading(true);
       try {
-        const paramObj = { limit: '500' };
+        const paramObj = {};
 
         // ✅ Only pass filters that affect brand list (NOT brand itself!)
         if (filters.category)   paramObj.category = filters.category;
@@ -272,22 +272,15 @@ export default function ProductsClient() {
         if (filters.rating)     paramObj.rating   = filters.rating;
         if (filters.inStock)    paramObj.inStock  = 'true';
 
-        const url = `/api/products?${new URLSearchParams(paramObj)}`;
+        // ✅ Use dedicated endpoint that returns ALL unique brands
+        const url = `/api/products/brands?${new URLSearchParams(paramObj)}`;
         console.log('🏷️ Fetching brands:', url);
 
         const res  = await fetch(url, { signal: controller.signal });
         const data = await res.json();
 
-        const allProducts = data.products || [];
-        console.log(`📦 Got ${allProducts.length} products in scope`);
-
-        const uniqueBrands = [...new Set(
-          allProducts
-            .map(p => p.brand?.trim())
-            .filter(b => b && b !== '')
-        )].sort((a, b) => a.localeCompare(b));
-
-        console.log(`🏷️ Unique brands: ${uniqueBrands.length}`, uniqueBrands);
+        const uniqueBrands = data.brands || [];
+        console.log(`🏷️ Got ${uniqueBrands.length} unique brands`);
 
         setBrands(uniqueBrands);
 
@@ -720,13 +713,13 @@ export default function ProductsClient() {
                 <span>
                   {filters.category
                     ? `${brands.length} brand${brands.length > 1 ? 's' : ''} in this category`
-                    : `${brands.length} matching brand${brands.length > 1 ? 's' : ''}`}
+                    : `${brands.length} brand${brands.length > 1 ? 's' : ''} available`}
                 </span>
               </div>
             )}
 
             <div style={{
-              maxHeight: '240px',
+              maxHeight: '320px',
               overflowY: 'auto',
               display: 'flex',
               flexDirection: 'column',
