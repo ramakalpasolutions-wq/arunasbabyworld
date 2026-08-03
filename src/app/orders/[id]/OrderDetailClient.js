@@ -2,8 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import { uploadFileToR2 } from '@/lib/uploadFile';
 
 function fmtOrderNum(order) {
   return order?.orderNumber
@@ -65,40 +67,65 @@ function LiveNimbusTracking({ awb }) {
 
   return (
     <div style={{
-      background: 'white',
-      borderRadius: '20px',
-      padding: '24px',
-      boxShadow: '0 4px 20px rgba(3,105,161,0.08)',
-      border: '1.5px solid #E0F2FE',
-      marginBottom: '24px',
+      background: 'linear-gradient(135deg, #FFFFFF 0%, #F8FAFF 100%)',
+      borderRadius: '24px',
+      padding: '28px',
+      boxShadow: '0 10px 40px rgba(3,105,161,0.08)',
+      border: '1px solid #E0F2FE',
+      marginBottom: '20px',
+      position: 'relative',
+      overflow: 'hidden',
     }}>
+      <div style={{
+        position: 'absolute',
+        top: '-40px',
+        right: '-40px',
+        width: '160px',
+        height: '160px',
+        borderRadius: '50%',
+        background: 'radial-gradient(circle, rgba(14,165,233,0.08) 0%, transparent 70%)',
+        pointerEvents: 'none',
+      }} />
+
       <div style={{
         display: 'flex', alignItems: 'center',
         justifyContent: 'space-between',
-        marginBottom: '16px', flexWrap: 'wrap', gap: '10px',
+        marginBottom: '20px', flexWrap: 'wrap', gap: '10px',
+        position: 'relative',
       }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{
-            width: '10px', height: '10px', borderRadius: '50%',
-            background: '#0369A1', animation: 'liveBlip 1.5s ease-in-out infinite',
-          }} />
-          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '800', color: '#0369A1' }}>
-            🚚 Shipment Tracking
-          </h3>
+            width: '44px', height: '44px', borderRadius: '12px',
+            background: 'linear-gradient(135deg, #0EA5E9, #0369A1)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '1.4rem', boxShadow: '0 4px 12px rgba(3,105,161,0.30)',
+          }}>
+            🚚
+          </div>
+          <div>
+            <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '900', color: '#0369A1' }}>
+              Shipment Tracking
+            </h3>
+            <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: '#0891B2', fontWeight: '700' }}>
+              Live • Updates every 60s
+            </p>
+          </div>
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
           <code style={{
-            fontSize: '0.86rem', fontWeight: '800', color: '#0369A1',
-            background: '#E0F2FE', padding: '4px 10px', borderRadius: '8px',
+            fontSize: '0.82rem', fontWeight: '800', color: '#0369A1',
+            background: '#E0F2FE', padding: '6px 12px', borderRadius: '8px',
+            border: '1.5px solid #BAE6FD',
           }}>
-            AWB: {awb}
+            {awb}
           </code>
           <button
             onClick={() => { navigator.clipboard.writeText(awb); toast.success('AWB copied!'); }}
             style={{
-              padding: '4px 10px', background: '#0369A1', color: 'white',
-              border: 'none', borderRadius: '6px', fontSize: '0.72rem',
-              fontWeight: '700', cursor: 'pointer', fontFamily: 'Nunito, sans-serif',
+              padding: '6px 12px', background: 'linear-gradient(135deg, #0EA5E9, #0369A1)', color: 'white',
+              border: 'none', borderRadius: '8px', fontSize: '0.72rem',
+              fontWeight: '800', cursor: 'pointer', fontFamily: 'Nunito, sans-serif',
+              boxShadow: '0 3px 8px rgba(3,105,161,0.25)',
             }}
           >
             📋 Copy
@@ -107,25 +134,32 @@ function LiveNimbusTracking({ awb }) {
       </div>
 
       {loading ? (
-        <p style={{ color: '#9CA3AF', fontSize: '0.88rem', textAlign: 'center', padding: '16px 0' }}>
-          Loading tracking info...
+        <p style={{ color: '#9CA3AF', fontSize: '0.88rem', textAlign: 'center', padding: '20px 0' }}>
+          ⏳ Loading tracking info...
         </p>
       ) : tracking ? (
         <div>
           {tracking.current_status && (
             <div style={{
-              padding: '14px 16px',
-              background: 'linear-gradient(135deg, #E0F2FE, #EDE9FE)',
-              borderRadius: '12px', marginBottom: '16px',
-              display: 'flex', alignItems: 'center', gap: '12px',
+              padding: '16px 18px',
+              background: 'linear-gradient(135deg, #E0F2FE 0%, #EDE9FE 100%)',
+              borderRadius: '14px', marginBottom: '18px',
+              display: 'flex', alignItems: 'center', gap: '14px',
+              border: '1.5px solid rgba(3,105,161,0.15)',
             }}>
-              <span style={{ fontSize: '1.8rem' }}>📦</span>
+              <div style={{
+                width: '48px', height: '48px', borderRadius: '12px',
+                background: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '1.8rem', boxShadow: '0 2px 8px rgba(0,0,0,0.05)',
+              }}>
+                📦
+              </div>
               <div>
-                <p style={{ margin: 0, fontWeight: '800', color: '#0369A1', fontSize: '0.96rem' }}>
+                <p style={{ margin: 0, fontWeight: '900', color: '#0369A1', fontSize: '1rem' }}>
                   {tracking.current_status}
                 </p>
                 {tracking.current_timestamp && (
-                  <p style={{ margin: '3px 0 0', fontSize: '0.78rem', color: '#6B7280', fontWeight: '600' }}>
+                  <p style={{ margin: '3px 0 0', fontSize: '0.76rem', color: '#6B7280', fontWeight: '700' }}>
                     🕒 {new Date(tracking.current_timestamp).toLocaleString('en-IN')}
                   </p>
                 )}
@@ -136,32 +170,35 @@ function LiveNimbusTracking({ awb }) {
           {tracking.tracking_data?.length > 0 ? (
             <div style={{ display: 'flex', flexDirection: 'column' }}>
               {tracking.tracking_data.map((event, i) => (
-                <div key={i} style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
+                <div key={i} style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
                     <div style={{
-                      width: '12px', height: '12px', borderRadius: '50%',
-                      background: i === 0 ? '#0369A1' : '#CBD5E1',
+                      width: '14px', height: '14px', borderRadius: '50%',
+                      background: i === 0
+                        ? 'linear-gradient(135deg, #0EA5E9, #0369A1)'
+                        : '#CBD5E1',
                       marginTop: '4px', flexShrink: 0,
+                      boxShadow: i === 0 ? '0 0 0 4px rgba(3,105,161,0.15)' : 'none',
                     }} />
                     {i < tracking.tracking_data.length - 1 && (
-                      <div style={{ width: '2px', height: '32px', background: '#E2E8F0' }} />
+                      <div style={{ width: '2px', height: '36px', background: '#E2E8F0', margin: '2px 0' }} />
                     )}
                   </div>
-                  <div style={{ paddingBottom: '12px', flex: 1 }}>
+                  <div style={{ paddingBottom: '14px', flex: 1 }}>
                     <p style={{
-                      margin: 0, fontSize: '0.86rem',
+                      margin: 0, fontSize: '0.88rem',
                       fontWeight: i === 0 ? '800' : '600',
                       color: i === 0 ? '#0F172A' : '#6B7280',
                     }}>
                       {event.status || event.activity}
                     </p>
                     {event.location && (
-                      <p style={{ margin: '2px 0 0', fontSize: '0.76rem', color: '#94A3B8', fontWeight: '600' }}>
+                      <p style={{ margin: '3px 0 0', fontSize: '0.76rem', color: '#94A3B8', fontWeight: '600' }}>
                         📍 {event.location}
                       </p>
                     )}
                     {event.timestamp && (
-                      <p style={{ margin: '2px 0 0', fontSize: '0.74rem', color: '#94A3B8' }}>
+                      <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: '#94A3B8' }}>
                         🕒 {new Date(event.timestamp).toLocaleString('en-IN')}
                       </p>
                     )}
@@ -170,13 +207,13 @@ function LiveNimbusTracking({ awb }) {
               ))}
             </div>
           ) : (
-            <p style={{ color: '#9CA3AF', fontSize: '0.88rem', textAlign: 'center', padding: '16px 0' }}>
+            <p style={{ color: '#9CA3AF', fontSize: '0.88rem', textAlign: 'center', padding: '20px 0' }}>
               Tracking updates will appear here once the shipment is picked up.
             </p>
           )}
         </div>
       ) : (
-        <p style={{ color: '#9CA3AF', fontSize: '0.88rem', textAlign: 'center', padding: '16px 0' }}>
+        <p style={{ color: '#9CA3AF', fontSize: '0.88rem', textAlign: 'center', padding: '20px 0' }}>
           Tracking info not yet available. Check back in a few hours.
         </p>
       )}
@@ -194,9 +231,6 @@ export default function OrderDetailClient({ id }) {
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showCancelModal, setShowCancelModal] = useState(false);
-  const [showReturnModal, setShowReturnModal] = useState(false);
-  const [showRefundModal, setShowRefundModal] = useState(false);
-  const [openSection, setOpenSection] = useState('items');
   const [retrying, setRetrying] = useState(false);
   const [downloadingInvoice, setDownloadingInvoice] = useState(false);
 
@@ -208,12 +242,11 @@ export default function OrderDetailClient({ id }) {
       order.refundStatus === 'pending' ||
       order.refundStatus === 'processing' ||
       order.refundStatus === 'scheduled' ||
-      order.returnStatus === 'Pending' ||
       (order.exchangeId && !['completed', 'rejected', 'cancelled'].includes(order.exchangeStatus));
     if (!needsRefresh) return;
     const interval = setInterval(() => { fetchOrder(); }, 10000);
     return () => clearInterval(interval);
-  }, [order?.refundStatus, order?.returnStatus, order?.exchangeStatus]);
+  }, [order?.refundStatus, order?.exchangeStatus]);
 
   useEffect(() => {
     if (showPaymentFailedNotice && order?.paymentStatus === 'failed') {
@@ -228,26 +261,20 @@ export default function OrderDetailClient({ id }) {
       .catch(() => setLoading(false));
   };
 
-  const toggleSection = (section) => {
-    setOpenSection(prev => (prev === section ? '' : section));
+  const handleDownloadInvoice = async () => {
+    setDownloadingInvoice(true);
+    try {
+      const { generateInvoice } = await import('@/lib/invoiceGenerator');
+      await generateInvoice(order);
+      toast.success('📄 Invoice downloaded!');
+    } catch (err) {
+      console.error('Invoice error:', err);
+      toast.error('Failed to generate invoice');
+    } finally {
+      setDownloadingInvoice(false);
+    }
   };
 
-  // ✅ Download Invoice Handler
-  const handleDownloadInvoice = async () => {
-  setDownloadingInvoice(true);
-  try {
-    const { generateInvoice } = await import('@/lib/invoiceGenerator');
-    await generateInvoice(order);  // ✅ Added await
-    toast.success('📄 Invoice downloaded!');
-  } catch (err) {
-    console.error('Invoice error:', err);
-    toast.error('Failed to generate invoice');
-  } finally {
-    setDownloadingInvoice(false);
-  }
-};
-
-  // ✅ Retry Payment Handler
   const handleRetryPayment = async () => {
     setRetrying(true);
     try {
@@ -275,7 +302,6 @@ export default function OrderDetailClient({ id }) {
         name: 'Arunas Baby World',
         description: `Retry payment for ${fmtOrderNum(order)}`,
         order_id: data.razorpayOrder.id,
-
         handler: async (response) => {
           try {
             const verifyRes = await fetch('/api/payment/verify', {
@@ -301,14 +327,12 @@ export default function OrderDetailClient({ id }) {
             setRetrying(false);
           }
         },
-
         prefill: {
           name: order.user?.name,
           email: order.user?.email,
           contact: order.shippingAddress?.phone,
         },
         theme: { color: '#ff6b9d' },
-
         modal: {
           ondismiss: async () => {
             setRetrying(false);
@@ -338,7 +362,6 @@ export default function OrderDetailClient({ id }) {
         fetchOrder();
       });
       rzp.open();
-
     } catch (err) {
       toast.error(err.message);
       setRetrying(false);
@@ -348,14 +371,14 @@ export default function OrderDetailClient({ id }) {
   if (loading) return (
     <div style={{
       display: 'flex', alignItems: 'center', justifyContent: 'center',
-      minHeight: '50vh', flexDirection: 'column', gap: '16px',
+      minHeight: '60vh', flexDirection: 'column', gap: '20px',
     }}>
       <div style={{
-        width: '44px', height: '44px',
+        width: '60px', height: '60px',
         border: '4px solid #F3E8FF', borderTop: '4px solid #7B2FBE',
         borderRadius: '50%', animation: 'spin 0.8s linear infinite',
       }} />
-      <p style={{ color: '#9585B0', fontFamily: 'Nunito, sans-serif', fontWeight: '600' }}>
+      <p style={{ color: '#9585B0', fontFamily: 'Nunito, sans-serif', fontWeight: '700', fontSize: '1rem' }}>
         Loading your order...
       </p>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -363,14 +386,15 @@ export default function OrderDetailClient({ id }) {
   );
 
   if (!order) return (
-    <div style={{ textAlign: 'center', padding: '80px 20px' }}>
-      <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📦</div>
-      <h2 style={{ fontFamily: 'Nunito, sans-serif', color: '#2D1A4A' }}>Order not found</h2>
+    <div style={{ textAlign: 'center', padding: '100px 20px' }}>
+      <div style={{ fontSize: '4rem', marginBottom: '20px' }}>📦</div>
+      <h2 style={{ fontFamily: 'Nunito, sans-serif', color: '#2D1A4A', margin: '0 0 20px' }}>Order not found</h2>
       <Link href="/" style={{
-        display: 'inline-block', marginTop: '16px', padding: '12px 28px',
+        display: 'inline-block', padding: '14px 32px',
         background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
-        color: 'white', borderRadius: '12px', textDecoration: 'none',
+        color: 'white', borderRadius: '14px', textDecoration: 'none',
         fontWeight: '800', fontFamily: 'Nunito, sans-serif',
+        boxShadow: '0 6px 20px rgba(255,107,53,0.30)',
       }}>
         Go Home
       </Link>
@@ -379,797 +403,1408 @@ export default function OrderDetailClient({ id }) {
 
   const currentStep       = STATUS_STEPS.indexOf(order.orderStatus);
   const isCancelled       = order.orderStatus === 'Cancelled' || order.orderStatus === 'Refunded';
-  const isReturnRequested = order.orderStatus === 'Return_Requested' || !!order.returnRequest;
   const hasExchange       = !!order.exchangeId;
-  const canCancel         = !isCancelled && !isReturnRequested;
-  const canReturn         = (order.orderStatus === 'Delivered' || order.isDelivered) && !isReturnRequested && !isCancelled;
   const statusColor       = STATUS_COLOR[order.orderStatus] || '#6b7280';
   const isPaymentFailed   = order.paymentStatus === 'failed' && !order.isPaid && !isCancelled;
-
-  // ✅ Show invoice button only for paid orders or COD orders (not for failed payments)
   const canDownloadInvoice = order.isPaid || order.paymentMethod === 'COD';
+  const isDelivered        = order.orderStatus === 'Delivered' || order.isDelivered;
+  const totalItems         = order.orderItems?.reduce((sum, i) => sum + (i.quantity || 1), 0) || 0;
 
-  const accordionCard = (title, icon, section, content) => (
-    <div style={{
-      background: 'white', borderRadius: '20px', padding: '24px',
-      boxShadow: '0 4px 20px rgba(123,47,190,0.07)',
-      border: '1.5px solid #F3E8FF', cursor: 'pointer',
-    }} onClick={() => toggleSection(section)}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-        <h3 style={{ fontSize: '1rem', fontWeight: '800', color: '#2D1A4A', margin: 0 }}>
-          {icon} {title}
-        </h3>
-        <span style={{ color: '#7B2FBE', fontWeight: '800', fontSize: '1.2rem' }}>
-          {openSection === section ? '−' : '+'}
-        </span>
-      </div>
-      {openSection === section && (
-        <div style={{ marginTop: '16px' }}>{content}</div>
-      )}
-    </div>
-  );
+  // ✅ NEW BUSINESS RULES:
+  // Cancel: Only BEFORE shipping (Pending, Confirmed, Processing)
+  const canCancel = !isCancelled && !isPaymentFailed &&
+                    ['Pending', 'Confirmed', 'Processing'].includes(order.orderStatus);
+
+  // Exchange: Only for delivered orders (within 3 days, no active exchange)
+  const canExchange = isDelivered && !isCancelled;
 
   return (
     <div style={{
-      maxWidth: '1100px', margin: '0 auto',
-      padding: 'clamp(24px,4vw,48px) 20px',
+      minHeight: '100vh',
+      background: 'linear-gradient(180deg, #FAFBFF 0%, #FFF5F7 100%)',
       fontFamily: 'Nunito, sans-serif',
     }}>
-
-      {/* ── HEADER ── */}
       <div style={{
-        display: 'flex', alignItems: 'flex-start',
-        justifyContent: 'space-between', flexWrap: 'wrap',
-        gap: '16px', marginBottom: '32px',
+        maxWidth: '1200px', margin: '0 auto',
+        padding: 'clamp(20px,3vw,32px) 20px',
       }}>
-        <div>
-          <h1 style={{
-            fontSize: 'clamp(1.4rem,2.5vw,2rem)',
-            fontWeight: '800', color: '#2D1A4A', margin: '0 0 8px',
-          }}>
-            Order Details
-          </h1>
+
+        {/* ══ TOP HEADER CARD ══ */}
+        <div style={{
+          background: 'white',
+          borderRadius: '24px',
+          padding: 'clamp(20px, 3vw, 32px)',
+          boxShadow: '0 8px 32px rgba(123,47,190,0.10)',
+          marginBottom: '20px',
+          border: '1px solid rgba(123,47,190,0.08)',
+          position: 'relative',
+          overflow: 'hidden',
+        }}>
           <div style={{
-            display: 'inline-flex', alignItems: 'center', gap: '8px',
-            padding: '6px 14px',
-            background: 'linear-gradient(135deg, #FFF5EE, #F5EDFF)',
-            border: '1.5px solid #E9D5FF',
-            borderRadius: '10px', marginBottom: '8px',
-          }}>
-            <span style={{ fontSize: '0.72rem', fontWeight: '800', color: '#9585B0', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
-              Order ID
-            </span>
-            <span style={{
-              fontFamily: 'monospace', fontWeight: '900', fontSize: '1rem',
-              background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}>
-              {fmtOrderNum(order)}
-            </span>
-          </div>
-          <p style={{ color: '#9585B0', margin: 0, fontWeight: '600', fontSize: '0.85rem' }}>
-            📅 Placed on {new Date(order.createdAt).toLocaleDateString('en-IN', {
-              year: 'numeric', month: 'long', day: 'numeric',
-            })}
-          </p>
-        </div>
+            position: 'absolute',
+            top: '-80px',
+            right: '-80px',
+            width: '240px',
+            height: '240px',
+            borderRadius: '50%',
+            background: 'radial-gradient(circle, rgba(255,107,53,0.10) 0%, transparent 70%)',
+            pointerEvents: 'none',
+          }} />
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-          <span style={{
-            display: 'inline-flex', alignItems: 'center', gap: '6px',
-            padding: '8px 18px',
-            background: `${statusColor}15`,
-            border: `2px solid ${statusColor}35`,
-            borderRadius: '999px', color: statusColor,
-            fontWeight: '800', fontSize: '0.92rem',
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr auto',
+            gap: '20px',
+            alignItems: 'flex-start',
+            flexWrap: 'wrap',
+            position: 'relative',
           }}>
-            {STATUS_EMOJI[order.orderStatus]} {order.orderStatus?.replace('_', ' ')}
-          </span>
-
-          {/* ✅ Download Invoice Button */}
-          {canDownloadInvoice && (
-            <button
-              onClick={handleDownloadInvoice}
-              disabled={downloadingInvoice}
-              style={{
-                padding: '10px 18px',
-                background: downloadingInvoice
-                  ? '#F3F4F6'
-                  : 'linear-gradient(135deg, #10B981, #059669)',
-                color: downloadingInvoice ? '#9CA3AF' : 'white',
-                border: 'none',
-                borderRadius: '12px',
+            <div>
+              <Link href="/orders" style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                color: '#7B2FBE',
+                textDecoration: 'none',
+                fontSize: '0.82rem',
                 fontWeight: '800',
-                fontSize: '0.88rem',
-                cursor: downloadingInvoice ? 'not-allowed' : 'pointer',
-                fontFamily: 'Nunito, sans-serif',
-                boxShadow: downloadingInvoice ? 'none' : '0 4px 12px rgba(16,185,129,0.25)',
-                display: 'inline-flex', alignItems: 'center', gap: '6px',
+                marginBottom: '12px',
+                padding: '6px 12px',
+                background: '#F3E8FF',
+                borderRadius: '999px',
+                border: '1.5px solid #E9D5FF',
                 transition: 'all 0.2s',
-              }}
-              onMouseEnter={e => {
-                if (!downloadingInvoice) {
-                  e.currentTarget.style.transform = 'translateY(-1px)';
-                  e.currentTarget.style.boxShadow = '0 6px 16px rgba(16,185,129,0.35)';
-                }
-              }}
-              onMouseLeave={e => {
-                if (!downloadingInvoice) {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 12px rgba(16,185,129,0.25)';
-                }
-              }}
-            >
-              {downloadingInvoice ? '⏳ Generating...' : '📄 Download Invoice'}
-            </button>
-          )}
+              }}>
+                ← Back to Orders
+              </Link>
 
-          {canReturn && (
-            <button
-              onClick={() => setShowReturnModal(true)}
-              style={{
-                padding: '10px 18px', background: 'white',
-                color: '#f97316', border: '2px solid #fed7aa',
-                borderRadius: '12px', fontWeight: '800', fontSize: '0.88rem',
-                fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#fff7ed'; e.currentTarget.style.borderColor = '#f97316'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#fed7aa'; }}
-            >
-              🔄 Return Item
-            </button>
-          )}
+              <h1 style={{
+                fontSize: 'clamp(1.5rem, 3vw, 2.2rem)',
+                fontWeight: '900',
+                color: '#1F0F3A',
+                margin: '0 0 10px',
+                lineHeight: 1.2,
+              }}>
+                Order Details
+              </h1>
 
-          {canReturn && (
-            <Link
-              href={`/orders/${order.id}/refund`}
-              style={{
-                padding: '10px 18px', background: 'white',
-                color: '#7B2FBE', border: '2px solid #EDD9FF',
-                borderRadius: '12px', fontWeight: '800', fontSize: '0.88rem',
-                fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
-                textDecoration: 'none', display: 'inline-block',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#F5EDFF'; e.currentTarget.style.borderColor = '#7B2FBE'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#EDD9FF'; }}
-            >
-              💰 Refund
-            </Link>
-          )}
+              <div style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '10px',
+                flexWrap: 'wrap',
+                marginBottom: '10px',
+              }}>
+                <div style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 16px',
+                  background: 'linear-gradient(135deg, #FFF5EE, #F5EDFF)',
+                  border: '1.5px solid #E9D5FF',
+                  borderRadius: '12px',
+                }}>
+                  <span style={{
+                    fontSize: '0.68rem',
+                    fontWeight: '900',
+                    color: '#9585B0',
+                    textTransform: 'uppercase',
+                    letterSpacing: '1px',
+                  }}>
+                    Order
+                  </span>
+                  <span style={{
+                    fontFamily: 'monospace',
+                    fontWeight: '900',
+                    fontSize: '1rem',
+                    background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                  }}>
+                    {fmtOrderNum(order)}
+                  </span>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(fmtOrderNum(order)); toast.success('Copied!'); }}
+                    style={{
+                      background: 'none', border: 'none', cursor: 'pointer',
+                      fontSize: '0.9rem', padding: '2px', color: '#7B2FBE',
+                    }}
+                  >
+                    📋
+                  </button>
+                </div>
 
-          {canReturn && (() => {
-            const deliveredAt  = order.deliveredAt ? new Date(order.deliveredAt) : new Date(order.updatedAt);
-            const daysSince    = Math.floor((new Date() - deliveredAt) / (1000 * 60 * 60 * 24));
-            const within3Days  = daysSince <= 3;
-            const noActiveExchange = !order.exchangeId || ['rejected', 'completed', 'cancelled'].includes(order.exchangeStatus);
-            if (!within3Days || !noActiveExchange) return null;
-            return (
-              <Link
-                href={`/orders/${order.id}/exchange`}
+                <span style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  padding: '8px 16px',
+                  background: `linear-gradient(135deg, ${statusColor}15, ${statusColor}25)`,
+                  border: `1.5px solid ${statusColor}40`,
+                  borderRadius: '12px', color: statusColor,
+                  fontWeight: '800', fontSize: '0.86rem',
+                }}>
+                  {STATUS_EMOJI[order.orderStatus]} {order.orderStatus?.replace('_', ' ')}
+                </span>
+              </div>
+
+              <p style={{
+                color: '#7B7898',
+                margin: 0,
+                fontWeight: '600',
+                fontSize: '0.85rem',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}>
+                📅 Placed on {new Date(order.createdAt).toLocaleDateString('en-IN', {
+                  year: 'numeric', month: 'long', day: 'numeric',
+                })} · 📦 {totalItems} item{totalItems > 1 ? 's' : ''}
+              </p>
+            </div>
+
+            <div style={{
+              padding: '20px 24px',
+              background: 'linear-gradient(135deg, #FF6B35 0%, #7B2FBE 100%)',
+              borderRadius: '20px',
+              color: 'white',
+              textAlign: 'right',
+              boxShadow: '0 8px 24px rgba(123,47,190,0.30)',
+              minWidth: '180px',
+            }}>
+              <p style={{
+                margin: 0,
+                fontSize: '0.7rem',
+                fontWeight: '800',
+                opacity: 0.9,
+                textTransform: 'uppercase',
+                letterSpacing: '1px',
+              }}>
+                Total Amount
+              </p>
+              <p style={{
+                margin: '6px 0 0',
+                fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+                fontWeight: '900',
+                lineHeight: 1,
+              }}>
+                ₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}
+              </p>
+              <p style={{
+                margin: '6px 0 0',
+                fontSize: '0.72rem',
+                fontWeight: '700',
+                opacity: 0.85,
+              }}>
+                {order.isPaid ? '✅ Paid' : order.paymentMethod === 'COD' ? '💵 COD' : '⏳ Pending'}
+              </p>
+            </div>
+          </div>
+
+          {/* ✅ ACTION BUTTONS — NEW BUSINESS LOGIC */}
+          <div style={{
+            display: 'flex',
+            gap: '10px',
+            marginTop: '20px',
+            flexWrap: 'wrap',
+            position: 'relative',
+          }}>
+            {canDownloadInvoice && (
+              <button
+                onClick={handleDownloadInvoice}
+                disabled={downloadingInvoice}
+                style={{
+                  padding: '10px 18px',
+                  background: downloadingInvoice
+                    ? '#F3F4F6'
+                    : 'linear-gradient(135deg, #10B981, #059669)',
+                  color: downloadingInvoice ? '#9CA3AF' : 'white',
+                  border: 'none',
+                  borderRadius: '12px',
+                  fontWeight: '800',
+                  fontSize: '0.85rem',
+                  cursor: downloadingInvoice ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit',
+                  boxShadow: downloadingInvoice ? 'none' : '0 4px 12px rgba(16,185,129,0.25)',
+                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  transition: 'transform 0.2s',
+                }}
+                onMouseEnter={e => !downloadingInvoice && (e.currentTarget.style.transform = 'translateY(-2px)')}
+                onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
+              >
+                {downloadingInvoice ? '⏳ Generating...' : '📄 Invoice'}
+              </button>
+            )}
+
+            {/* ✅ EXCHANGE — Only for Delivered orders (within 3 days) */}
+            {canExchange && (() => {
+              const deliveredAt  = order.deliveredAt ? new Date(order.deliveredAt) : new Date(order.updatedAt);
+              const daysSince    = Math.floor((new Date() - deliveredAt) / (1000 * 60 * 60 * 24));
+              const within3Days  = daysSince <= 3;
+              const noActiveExchange = !order.exchangeId || ['rejected', 'completed', 'cancelled'].includes(order.exchangeStatus);
+              if (!within3Days || !noActiveExchange) return null;
+              return (
+                <Link
+                  href={`/orders/${order.id}/exchange`}
+                  style={{
+                    padding: '10px 18px',
+                    background: 'linear-gradient(135deg, #FF6B35, #EA580C)',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '12px',
+                    fontWeight: '800', fontSize: '0.85rem',
+                    fontFamily: 'inherit', textDecoration: 'none',
+                    boxShadow: '0 4px 12px rgba(255,107,53,0.30)',
+                    display: 'inline-flex', alignItems: 'center', gap: '6px',
+                  }}
+                >
+                  🔄 Exchange Item
+                </Link>
+              );
+            })()}
+
+            {/* ✅ CANCEL — Only BEFORE shipping */}
+            {canCancel && (
+              <button
+                onClick={() => setShowCancelModal(true)}
                 style={{
                   padding: '10px 18px', background: 'white',
-                  color: '#FF6B35', border: '2px solid #FFD4B8',
-                  borderRadius: '12px', fontWeight: '800', fontSize: '0.88rem',
-                  fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
-                  textDecoration: 'none', display: 'inline-block',
+                  color: '#EF4444', border: '2px solid #FECACA',
+                  borderRadius: '12px', fontWeight: '800', fontSize: '0.85rem',
+                  fontFamily: 'inherit', cursor: 'pointer',
                 }}
-                onMouseEnter={e => { e.currentTarget.style.background = '#FFF3E8'; e.currentTarget.style.borderColor = '#FF6B35'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#FFD4B8'; }}
               >
-                🔄 Exchange
-              </Link>
-            );
-          })()}
+                ❌ Cancel Order
+              </button>
+            )}
 
-          {isReturnRequested && (
-            <span style={{
-              display: 'inline-flex', alignItems: 'center', gap: '6px',
-              padding: '8px 18px', background: '#fff7ed',
-              border: '2px solid #fed7aa', borderRadius: '999px',
-              color: '#f97316', fontWeight: '800', fontSize: '0.88rem',
-            }}>
-              🔄 Return Requested
-            </span>
-          )}
-
-          {canCancel && !isPaymentFailed && (
-            <button
-              onClick={() => setShowCancelModal(true)}
-              style={{
-                padding: '10px 18px', background: 'white',
-                color: '#EF4444', border: '2px solid #FCA5A5',
-                borderRadius: '12px', fontWeight: '800', fontSize: '0.88rem',
-                fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
-              }}
-              onMouseEnter={e => { e.currentTarget.style.background = '#FEF2F2'; e.currentTarget.style.borderColor = '#EF4444'; }}
-              onMouseLeave={e => { e.currentTarget.style.background = 'white'; e.currentTarget.style.borderColor = '#FCA5A5'; }}
-            >
-              ❌ Cancel Order
-            </button>
-          )}
-
-          <Link href="/products" style={{
-            padding: '10px 18px', border: '2px solid #EDD9FF',
-            borderRadius: '12px', color: '#7B2FBE', textDecoration: 'none',
-            fontWeight: '700', fontSize: '0.88rem', background: 'white',
-          }}>
-            Continue Shopping
-          </Link>
-        </div>
-      </div>
-
-      {/* ✅ PAYMENT FAILED BANNER */}
-      {isPaymentFailed && (
-        <div style={{
-          background: 'linear-gradient(135deg, #FEF2F2, #FEE2E2)',
-          border: '2px solid #EF4444',
-          borderRadius: '20px',
-          padding: '24px',
-          marginBottom: '24px',
-          boxShadow: '0 8px 24px rgba(239,68,68,0.15)',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
-            <div style={{
-              width: '56px', height: '56px', borderRadius: '14px',
-              background: 'linear-gradient(135deg, #EF4444, #DC2626)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: '1.8rem', flexShrink: 0,
-              animation: 'shake 2s ease-in-out infinite',
-            }}>
-              ❌
-            </div>
-            <div style={{ flex: 1, minWidth: 0 }}>
-              <h3 style={{ margin: '0 0 6px', color: '#991B1B', fontSize: '1.2rem', fontWeight: '900' }}>
-                Payment Failed
-              </h3>
-              <p style={{ margin: 0, color: '#7F1D1D', fontSize: '0.9rem', fontWeight: '600', lineHeight: 1.5 }}>
-                Your payment couldn't be completed. Your order is saved and reserved.
-                You can retry payment or cancel the order.
-              </p>
+            {/* ℹ️ Info: Can't cancel after shipping */}
+            {order.orderStatus === 'Shipped' && (
               <div style={{
-                margin: '10px 0 0',
-                display: 'inline-block',
-                padding: '6px 12px',
-                background: 'white',
-                border: '1.5px solid #FCA5A5',
-                borderRadius: '8px',
+                padding: '10px 18px',
+                background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)',
+                border: '1.5px solid #BFDBFE',
+                borderRadius: '12px',
+                fontSize: '0.82rem',
+                fontWeight: '700',
+                color: '#1E40AF',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
               }}>
-                <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#6B7280' }}>Amount: </span>
-                <strong style={{ fontSize: '0.92rem', color: '#DC2626' }}>
-                  ₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}
-                </strong>
+                🚚 Cannot cancel after shipping
+              </div>
+            )}
+
+            <Link href="/products" style={{
+              padding: '10px 18px', border: '2px solid #E5E7EB',
+              borderRadius: '12px', color: '#6B7280', textDecoration: 'none',
+              fontWeight: '700', fontSize: '0.85rem', background: 'white',
+              marginLeft: 'auto',
+            }}>
+              🛍️ Continue Shopping
+            </Link>
+          </div>
+        </div>
+
+        {/* PAYMENT FAILED BANNER */}
+        {isPaymentFailed && (
+          <div style={{
+            background: 'linear-gradient(135deg, #FEF2F2, #FEE2E2)',
+            border: '2px solid #EF4444',
+            borderRadius: '24px',
+            padding: '24px',
+            marginBottom: '20px',
+            boxShadow: '0 8px 24px rgba(239,68,68,0.15)',
+          }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
+              <div style={{
+                width: '56px', height: '56px', borderRadius: '14px',
+                background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                fontSize: '1.8rem', flexShrink: 0,
+                animation: 'shake 2s ease-in-out infinite',
+                boxShadow: '0 6px 16px rgba(239,68,68,0.35)',
+              }}>
+                ❌
+              </div>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <h3 style={{ margin: '0 0 6px', color: '#991B1B', fontSize: '1.2rem', fontWeight: '900' }}>
+                  Payment Failed
+                </h3>
+                <p style={{ margin: 0, color: '#7F1D1D', fontSize: '0.9rem', fontWeight: '600', lineHeight: 1.5 }}>
+                  Your payment couldn't be completed. Your order is saved and reserved.
+                </p>
               </div>
             </div>
+
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+              <button
+                onClick={handleRetryPayment}
+                disabled={retrying}
+                style={{
+                  flex: '1 1 200px',
+                  padding: '14px 20px',
+                  background: retrying ? '#F3F4F6' : 'linear-gradient(135deg, #10B981, #059669)',
+                  color: retrying ? '#9CA3AF' : 'white',
+                  border: 'none', borderRadius: '12px',
+                  fontWeight: '900', fontSize: '0.95rem',
+                  cursor: retrying ? 'not-allowed' : 'pointer',
+                  fontFamily: 'inherit',
+                  boxShadow: retrying ? 'none' : '0 4px 14px rgba(16,185,129,0.30)',
+                }}
+              >
+                {retrying ? '⏳ Opening...' : `🔄 Retry Payment ₹${Math.round(order.totalPrice)?.toLocaleString('en-IN')}`}
+              </button>
+              {/* Can cancel if payment failed */}
+              <button
+                onClick={() => setShowCancelModal(true)}
+                style={{
+                  flex: '1 1 150px', padding: '14px 20px',
+                  background: 'white', color: '#EF4444',
+                  border: '2px solid #FCA5A5', borderRadius: '12px',
+                  fontWeight: '800', fontSize: '0.9rem', cursor: 'pointer',
+                  fontFamily: 'inherit',
+                }}
+              >
+                ❌ Cancel Order
+              </button>
+            </div>
           </div>
+        )}
 
-          <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-            <button
-              onClick={handleRetryPayment}
-              disabled={retrying}
-              style={{
-                flex: '1 1 200px',
-                padding: '14px 20px',
-                background: retrying
-                  ? '#F3F4F6'
-                  : 'linear-gradient(135deg, #10B981, #059669)',
-                color: retrying ? '#9CA3AF' : 'white',
-                border: 'none',
-                borderRadius: '12px',
-                fontWeight: '900',
-                fontSize: '0.95rem',
-                cursor: retrying ? 'not-allowed' : 'pointer',
-                fontFamily: 'Nunito, sans-serif',
-                boxShadow: retrying ? 'none' : '0 4px 14px rgba(16,185,129,0.30)',
-                transition: 'all 0.2s',
-              }}
-            >
-              {retrying ? '⏳ Opening Payment...' : `🔄 Retry Payment ₹${Math.round(order.totalPrice)?.toLocaleString('en-IN')}`}
-            </button>
-            <button
-              onClick={() => setShowCancelModal(true)}
-              style={{
-                flex: '1 1 150px',
-                padding: '14px 20px',
-                background: 'white',
-                color: '#EF4444',
-                border: '2px solid #FCA5A5',
-                borderRadius: '12px',
-                fontWeight: '800',
-                fontSize: '0.90rem',
-                cursor: 'pointer',
-                fontFamily: 'Nunito, sans-serif',
-              }}
-            >
-              ❌ Cancel Order
-            </button>
-          </div>
+        {/* EXCHANGE BANNER */}
+        {hasExchange && (
+          <ExchangeStatusBanner orderId={order.id} exchangeId={order.exchangeId} />
+        )}
 
-          {order.notes && (
-            <p style={{
-              margin: '14px 0 0',
-              padding: '10px 14px',
-              background: 'white',
-              border: '1px solid #FCA5A5',
-              borderRadius: '8px',
-              fontSize: '0.78rem',
-              color: '#991B1B',
-              fontWeight: '600',
-            }}>
-              ℹ️ {order.notes}
-            </p>
-          )}
-        </div>
-      )}
-
-      {/* EXCHANGE BANNER */}
-      {hasExchange && (
-        <ExchangeStatusBanner orderId={order.id} exchangeId={order.exchangeId} />
-      )}
-
-      {/* RETURN REQUEST BANNER */}
-      {isReturnRequested && order.returnRequest && (
+        {/* ═══ MAIN CONTENT GRID ═══ */}
         <div style={{
-          background: order.refundStatus === 'completed' ? '#ECFDF5' : '#fff7ed',
-          border: `1.5px solid ${order.refundStatus === 'completed' ? '#10B981' : '#fed7aa'}`,
-          borderRadius: '20px', padding: '20px 24px',
-          display: 'flex', gap: '16px', alignItems: 'flex-start',
-          marginBottom: '24px',
-        }}>
-          <span style={{ fontSize: '2rem' }}>
-            {order.refundStatus === 'completed' ? '✅' : '🔄'}
-          </span>
-          <div style={{ flex: 1 }}>
-            <strong style={{
-              color: order.refundStatus === 'completed' ? '#065F46' : '#f97316',
-              fontSize: '1rem', display: 'block', marginBottom: '4px',
+          display: 'grid',
+          gridTemplateColumns: 'minmax(0, 1.4fr) minmax(0, 1fr)',
+          gap: '20px',
+        }} className="orderGrid">
+
+          {/* LEFT COLUMN */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+            {/* LIVE ORDER TRACKING */}
+            {!isCancelled && !isPaymentFailed && (
+              <div style={{
+                background: 'white', borderRadius: '24px',
+                padding: 'clamp(20px, 3vw, 28px)',
+                boxShadow: '0 8px 32px rgba(123,47,190,0.08)',
+                border: '1px solid rgba(123,47,190,0.08)',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
+                  <div style={{
+                    width: '44px', height: '44px', borderRadius: '12px',
+                    background: `linear-gradient(135deg, ${statusColor}, ${statusColor}CC)`,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '1.4rem',
+                    boxShadow: `0 4px 12px ${statusColor}40`,
+                  }}>
+                    🎯
+                  </div>
+                  <div>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: '900', color: '#1F0F3A', margin: 0 }}>
+                      Order Progress
+                    </h3>
+                    <p style={{ margin: '2px 0 0', fontSize: '0.76rem', color: '#7B7898', fontWeight: '600' }}>
+                      Track your order in real-time
+                    </p>
+                  </div>
+                </div>
+
+                <div style={{ display: 'flex', flexDirection: 'column' }}>
+                  {STATUS_STEPS.map((step, i) => {
+                    const isDone    = i < currentStep;
+                    const isCurrent = i === currentStep;
+                    return (
+                      <div key={step} style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
+                          <div style={{
+                            width: '52px', height: '52px', borderRadius: '50%',
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            fontSize: isCurrent ? '1.4rem' : '1.1rem',
+                            background: isDone
+                              ? 'linear-gradient(135deg, #10B981, #059669)'
+                              : isCurrent
+                                ? `linear-gradient(135deg, ${statusColor}, ${statusColor}DD)`
+                                : '#F3F4F6',
+                            color: isDone || isCurrent ? 'white' : '#9CA3AF',
+                            boxShadow: isCurrent
+                              ? `0 0 0 6px ${statusColor}20, 0 8px 20px ${statusColor}40`
+                              : isDone ? '0 4px 12px rgba(16,185,129,0.25)' : 'none',
+                            fontWeight: '900', transition: 'all 0.3s ease',
+                            border: '3px solid white',
+                          }}>
+                            {isDone ? '✓' : STATUS_EMOJI[step]}
+                          </div>
+                          {i < STATUS_STEPS.length - 1 && (
+                            <div style={{
+                              width: '3px', height: '36px',
+                              background: isDone
+                                ? 'linear-gradient(to bottom, #10B981, #059669)'
+                                : '#E5E7EB',
+                              margin: '4px 0', borderRadius: '999px',
+                            }} />
+                          )}
+                        </div>
+                        <div style={{
+                          paddingTop: '14px',
+                          paddingBottom: i < STATUS_STEPS.length - 1 ? '20px' : '0',
+                          flex: 1,
+                        }}>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                            <p style={{
+                              fontSize: '1rem',
+                              fontWeight: isCurrent ? '900' : isDone ? '800' : '700',
+                              color: isCurrent ? statusColor : isDone ? '#10B981' : '#9CA3AF',
+                              margin: 0,
+                            }}>
+                              {step}
+                            </p>
+                            {isCurrent && (
+                              <span style={{
+                                fontSize: '0.68rem', fontWeight: '900',
+                                background: `${statusColor}15`, color: statusColor,
+                                border: `1.5px solid ${statusColor}40`,
+                                padding: '3px 10px', borderRadius: '999px',
+                                display: 'inline-flex', alignItems: 'center', gap: '4px',
+                              }}>
+                                <span style={{
+                                  width: '6px', height: '6px', borderRadius: '50%',
+                                  background: statusColor,
+                                  animation: 'blip 1.2s ease-in-out infinite',
+                                }} />
+                                LIVE
+                              </span>
+                            )}
+                            {isDone && (
+                              <span style={{ fontSize: '0.72rem', fontWeight: '800', color: '#10B981' }}>
+                                ✓ Completed
+                              </span>
+                            )}
+                          </div>
+                          <p style={{ fontSize: '0.78rem', color: '#9CA3AF', margin: '4px 0 0', fontWeight: '500' }}>
+                            {isDone ? 'This step is complete' : isCurrent ? 'Currently in progress...' : 'Waiting to start'}
+                          </p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* NIMBUS TRACKING */}
+            {order.awbNumber && !isCancelled && (
+              <LiveNimbusTracking awb={order.awbNumber} />
+            )}
+
+            {/* ORDERED ITEMS */}
+            <div style={{
+              background: 'white', borderRadius: '24px',
+              padding: 'clamp(20px, 3vw, 28px)',
+              boxShadow: '0 8px 32px rgba(123,47,190,0.08)',
+              border: '1px solid rgba(123,47,190,0.08)',
             }}>
-              {order.refundStatus === 'completed'
-                ? '✅ Refund Completed Successfully!'
-                : 'Return Request Submitted'}
-            </strong>
-            <p style={{
-              margin: 0, fontSize: '0.85rem',
-              color: order.refundStatus === 'completed' ? '#047857' : '#9a3412',
-              lineHeight: 1.7, fontWeight: '600',
-            }}>
-              Reason: {order.returnRequest.reason}
-              <br />
-              Refund via:{' '}
-              {order.returnRequest.refundMethod === 'upi'
-                ? `UPI — ${order.returnRequest.upiId}`
-                : `Bank Transfer — ${order.returnRequest.bankName || 'Bank Account'}`}
-              <br />
-              {order.refundStatus === 'completed' && (
-                <span style={{ color: '#10B981', fontWeight: '800' }}>
-                  ✅ Refund Completed — ₹
-                  {Math.round(order.refundAmount || order.totalPrice)?.toLocaleString('en-IN')}{' '}
-                  credited to your account
-                </span>
-              )}
-              {order.refundStatus === 'processing' && (
-                <span style={{ color: '#3B82F6', fontWeight: '800' }}>
-                  ⚙️ Refund Processing — Money will reach you in 2-3 hours
-                </span>
-              )}
-              {order.refundStatus === 'scheduled' && (
-                <span style={{ color: '#F97316', fontWeight: '800' }}>
-                  ⏱️ Refund Scheduled — Auto-processing soon
-                </span>
-              )}
-              {(!order.refundStatus || order.refundStatus === 'pending') && (
-                <span style={{ color: '#f97316', fontWeight: '700' }}>
-                  Status: {order.returnRequest.status || 'Under Review'} — Refund within 5–7 business days after pickup.
-                </span>
-              )}
-              {order.refundStatus === 'failed' && (
-                <span style={{ color: '#EF4444', fontWeight: '800' }}>
-                  ❌ Refund Failed — Please contact support
-                </span>
-              )}
-            </p>
-            {order.refundStatus === 'completed' && order.refundedAt && (
-              <p style={{ margin: '8px 0 0', fontSize: '0.78rem', color: '#047857', fontWeight: '700' }}>
-                🕒 Refunded on{' '}
-                {new Date(order.refundedAt).toLocaleDateString('en-IN', {
-                  day: 'numeric', month: 'long', year: 'numeric',
-                  hour: '2-digit', minute: '2-digit',
-                })}
-              </p>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
+                <div style={{
+                  width: '44px', height: '44px', borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '1.4rem',
+                  boxShadow: '0 4px 12px rgba(123,47,190,0.30)',
+                }}>
+                  🛍️
+                </div>
+                <div>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: '900', color: '#1F0F3A', margin: 0 }}>
+                    Ordered Items
+                  </h3>
+                  <p style={{ margin: '2px 0 0', fontSize: '0.76rem', color: '#7B7898', fontWeight: '600' }}>
+                    {order.orderItems?.length} product{order.orderItems?.length !== 1 ? 's' : ''} · {totalItems} unit{totalItems !== 1 ? 's' : ''}
+                  </p>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {order.orderItems?.map((item, i) => (
+                  <OrderItemCard
+                    key={i}
+                    item={item}
+                    isDelivered={isDelivered}
+                  />
+                ))}
+              </div>
+            </div>
+
+            {/* CANCELLED / REFUNDED */}
+            {isCancelled && (
+              <div style={{
+                background: order.orderStatus === 'Refunded'
+                  ? 'linear-gradient(135deg, #ECFDF5, #D1FAE5)'
+                  : 'linear-gradient(135deg, #FEF2F2, #FEE2E2)',
+                border: `2px solid ${order.orderStatus === 'Refunded' ? '#10B981' : '#FCA5A5'}`,
+                borderRadius: '20px', padding: '24px',
+                display: 'flex', gap: '16px', alignItems: 'flex-start',
+              }}>
+                <div style={{
+                  width: '52px', height: '52px', borderRadius: '14px',
+                  background: order.orderStatus === 'Refunded' ? '#10B981' : '#EF4444',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '1.6rem', flexShrink: 0,
+                }}>
+                  {order.orderStatus === 'Refunded' ? '💰' : '❌'}
+                </div>
+                <div style={{ flex: 1 }}>
+                  <strong style={{
+                    color: order.orderStatus === 'Refunded' ? '#065F46' : '#DC2626',
+                    fontSize: '1.05rem',
+                  }}>
+                    {order.orderStatus === 'Refunded' ? '✅ Order Refunded' : `Order ${order.orderStatus}`}
+                  </strong>
+                  <p style={{ margin: '8px 0 0', fontSize: '0.88rem', color: '#6B7280', lineHeight: 1.6 }}>
+                    {order.cancelReason && (<><span>Reason: <strong>{order.cancelReason}</strong></span><br /></>)}
+                    {order.refundStatus === 'completed' && (
+                      <span style={{ color: '#10B981', fontWeight: '800' }}>
+                        ✅ Refund completed — ₹{Math.round(order.refundAmount)?.toLocaleString('en-IN')} credited
+                      </span>
+                    )}
+                  </p>
+                </div>
+              </div>
             )}
           </div>
-        </div>
-      )}
 
-      {/* LIVE ORDER TRACKING */}
-      {!isCancelled && !isReturnRequested && !isPaymentFailed && (
-        <div style={{
-          background: 'white', borderRadius: '24px',
-          padding: 'clamp(20px,3vw,36px)',
-          boxShadow: '0 8px 32px rgba(123,47,190,0.08)',
-          border: '1.5px solid #F3E8FF', marginBottom: '24px',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '28px' }}>
+          {/* RIGHT COLUMN */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+
+            {/* PRICE SUMMARY */}
             <div style={{
-              width: '10px', height: '10px', borderRadius: '50%',
-              background: '#10B981', animation: 'liveBlip 1.5s ease-in-out infinite',
-            }} />
-            <h3 style={{ fontSize: '1rem', fontWeight: '800', color: '#2D1A4A', margin: 0 }}>
-              Live Order Tracking
-            </h3>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column' }}>
-            {STATUS_STEPS.map((step, i) => {
-              const isDone    = i < currentStep;
-              const isCurrent = i === currentStep;
-              return (
-                <div key={step} style={{ display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
-                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', flexShrink: 0 }}>
-                    <div style={{
-                      width: '48px', height: '48px', borderRadius: '50%',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: isCurrent ? '1.3rem' : '1rem',
-                      background: isDone
-                        ? 'linear-gradient(135deg, #10B981, #059669)'
-                        : isCurrent
-                          ? `linear-gradient(135deg, ${statusColor}, ${statusColor}CC)`
-                          : '#F3F4F6',
-                      color: isDone || isCurrent ? 'white' : '#9CA3AF',
-                      boxShadow: isCurrent
-                        ? `0 0 0 5px ${statusColor}22, 0 6px 18px ${statusColor}30`
-                        : isDone ? '0 4px 12px rgba(16,185,129,0.22)' : 'none',
-                      fontWeight: '800', transition: 'all 0.3s ease',
-                    }}>
-                      {isDone ? '✓' : STATUS_EMOJI[step]}
-                    </div>
-                    {i < STATUS_STEPS.length - 1 && (
-                      <div style={{
-                        width: '3px', height: '32px',
-                        background: isDone
-                          ? 'linear-gradient(to bottom, #10B981, #059669)'
-                          : '#E5E7EB',
-                        margin: '3px 0', borderRadius: '999px',
-                      }} />
-                    )}
-                  </div>
-                  <div style={{
-                    paddingTop: '12px',
-                    paddingBottom: i < STATUS_STEPS.length - 1 ? '16px' : '0',
-                    flex: 1,
-                  }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-                      <p style={{
-                        fontSize: '0.96rem',
-                        fontWeight: isCurrent ? '800' : isDone ? '700' : '600',
-                        color: isCurrent ? statusColor : isDone ? '#10B981' : '#9CA3AF',
-                        margin: 0,
-                      }}>
-                        {step}
-                      </p>
-                      {isCurrent && (
-                        <span style={{
-                          fontSize: '0.68rem', fontWeight: '800',
-                          background: `${statusColor}15`, color: statusColor,
-                          border: `1.5px solid ${statusColor}30`,
-                          padding: '2px 10px', borderRadius: '999px',
-                        }}>
-                          ● In Progress
-                        </span>
-                      )}
-                      {isDone && (
-                        <span style={{ fontSize: '0.72rem', fontWeight: '700', color: '#10B981' }}>
-                          ✅ Done
-                        </span>
-                      )}
-                    </div>
-                    <p style={{ fontSize: '0.78rem', color: '#9CA3AF', margin: '3px 0 0', fontWeight: '500' }}>
-                      {isDone ? 'Completed successfully' : isCurrent ? 'Currently being processed...' : 'Waiting...'}
-                    </p>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
-      )}
-
-      {/* NIMBUS TRACKING */}
-      {order.awbNumber && !isCancelled && (
-        <LiveNimbusTracking awb={order.awbNumber} />
-      )}
-
-      {isCancelled && (
-        <div style={{
-          background: order.orderStatus === 'Refunded' ? '#ECFDF5' : '#FEF2F2',
-          border: `1.5px solid ${order.orderStatus === 'Refunded' ? '#10B981' : '#FCA5A5'}`,
-          borderRadius: '20px', padding: '20px 24px',
-          display: 'flex', gap: '14px', alignItems: 'flex-start',
-          marginBottom: '24px',
-        }}>
-          <span style={{ fontSize: '2rem' }}>
-            {order.orderStatus === 'Refunded' ? '💰' : '❌'}
-          </span>
-          <div style={{ flex: 1 }}>
-            <strong style={{
-              color: order.orderStatus === 'Refunded' ? '#065F46' : '#DC2626',
-              fontSize: '1rem',
+              background: 'white', borderRadius: '24px',
+              padding: '24px',
+              boxShadow: '0 8px 32px rgba(123,47,190,0.08)',
+              border: '1px solid rgba(123,47,190,0.08)',
             }}>
-              {order.orderStatus === 'Refunded' ? '✅ Order Refunded' : `Order ${order.orderStatus}`}
-            </strong>
-            <p style={{ margin: '6px 0 0', fontSize: '0.88rem', color: '#6B7280' }}>
-              {order.cancelReason && (<><span>Reason: <strong>{order.cancelReason}</strong></span><br /></>)}
-              {order.cancelledAt && (<><span>Cancelled on: {new Date(order.cancelledAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</span><br /></>)}
-              {order.refundStatus === 'processing' && (
-                <span style={{ color: '#3B82F6', fontWeight: '700' }}>⚙️ Refund Processing — Money will reach you in 2-3 hours</span>
-              )}
-              {order.refundStatus === 'completed' && (
-                <span style={{ color: '#10B981', fontWeight: '800' }}>✅ Refund completed — ₹{Math.round(order.refundAmount)?.toLocaleString('en-IN')} credited</span>
-              )}
-              {order.refundStatus === 'not_required' && (
-                <span style={{ color: '#6B7280', fontWeight: '600' }}>ℹ️ No refund needed (COD order)</span>
-              )}
-            </p>
-          </div>
-        </div>
-      )}
-
-      <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'minmax(0,1.4fr) minmax(0,1fr)',
-        gap: '20px',
-      }}>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {accordionCard(
-            `Ordered Items (${order.orderItems?.length || 0})`,
-            '🛍️', 'items',
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              {order.orderItems?.map((item, i) => (
-                <div key={i} style={{
-                  display: 'flex', alignItems: 'center', gap: '12px',
-                  padding: '12px', background: '#FAFAFA',
-                  borderRadius: '12px', border: '1.5px solid #F3E8FF',
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
+                <div style={{
+                  width: '40px', height: '40px', borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #10B981, #059669)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '1.2rem',
                 }}>
-                  <img
-                    src={item.image || 'https://via.placeholder.com/56'}
-                    alt={item.name}
-                    style={{ width: '56px', height: '56px', objectFit: 'cover', borderRadius: '10px', flexShrink: 0 }}
-                  />
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{
-                      fontSize: '0.90rem', fontWeight: '700', color: '#2D1A4A',
-                      margin: '0 0 4px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                    }}>
-                      {item.name}
-                    </p>
-                    <p style={{ fontSize: '0.78rem', color: '#9585B0', margin: 0, fontWeight: '600' }}>
-                      Qty: {item.quantity} × ₹{item.price?.toLocaleString('en-IN')}
-                    </p>
-                  </div>
-                  <strong style={{ color: '#FF6B35', whiteSpace: 'nowrap' }}>
-                    ₹{Math.round(item.price * item.quantity).toLocaleString('en-IN')}
-                  </strong>
+                  💰
                 </div>
-              ))}
-            </div>
-          )}
+                <h3 style={{ fontSize: '1.05rem', fontWeight: '900', color: '#1F0F3A', margin: 0 }}>
+                  Price Details
+                </h3>
+              </div>
 
-          {accordionCard(
-            'Payment Info', '💳', 'payment',
-            <div>
               {[
-                { label: 'Payment Method', value: order.paymentMethod },
+                { label: 'Items Total', value: `₹${Math.round(order.itemsPrice)?.toLocaleString('en-IN')}`, icon: '🛒' },
                 {
-                  label: 'Payment Status',
-                  value: order.isPaid
-                    ? '✅ Paid'
-                    : order.paymentStatus === 'failed'
-                      ? '❌ Failed'
-                      : order.paymentStatus === 'cancelled'
-                        ? '🚫 Cancelled'
-                        : order.paymentStatus === 'not_applicable'
-                          ? '💵 Cash on Delivery'
-                          : '⏳ Pending',
-                  color: order.isPaid
-                    ? '#10B981'
-                    : order.paymentStatus === 'failed'
-                      ? '#EF4444'
-                      : order.paymentStatus === 'cancelled'
-                        ? '#EF4444'
-                        : '#F59E0B',
+                  label: 'Shipping',
+                  value: order.shippingPrice === 0 ? '🎉 FREE' : `₹${order.shippingPrice}`,
+                  icon: '🚚',
+                  color: order.shippingPrice === 0 ? '#10B981' : undefined,
                 },
-                ...(order.isPaid && order.paidAt
-                  ? [{ label: 'Paid On', value: new Date(order.paidAt).toLocaleDateString('en-IN') }]
-                  : []),
-                ...(order.paymentResult?.razorpayPaymentId
-                  ? [{ label: 'Transaction ID', value: order.paymentResult.razorpayPaymentId, mono: true }]
-                  : []),
-                ...(order.refundAmount > 0
-                  ? [{ label: 'Refund Amount', value: `₹${Math.round(order.refundAmount)?.toLocaleString('en-IN')}`, color: '#10B981' }]
+                ...(order.discountAmount > 0
+                  ? [{ label: `Coupon (${order.couponCode})`, value: `− ₹${Math.round(order.discountAmount)?.toLocaleString('en-IN')}`, icon: '🎟️', color: '#10B981' }]
                   : []),
               ].map((row, i) => (
                 <div key={i} style={{
                   display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                  padding: '10px 0', borderBottom: '1px solid #F3E8FF',
+                  padding: '10px 0', borderBottom: '1px dashed #F3E8FF',
                 }}>
-                  <span style={{ fontSize: '0.85rem', color: '#9585B0', fontWeight: '600' }}>{row.label}</span>
+                  <span style={{ fontSize: '0.85rem', color: '#6B4E8A', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>{row.icon}</span>
+                    {row.label}
+                  </span>
+                  <span style={{ fontSize: '0.90rem', fontWeight: '800', color: row.color || '#2D1A4A' }}>
+                    {row.value}
+                  </span>
+                </div>
+              ))}
+
+              <div style={{
+                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                padding: '16px 14px', marginTop: '10px',
+                background: 'linear-gradient(135deg, #FFF5F7, #F3E8FF)',
+                borderRadius: '14px',
+                border: '1.5px solid #FFE4EC',
+              }}>
+                <span style={{ fontWeight: '900', color: '#2D1A4A', fontSize: '1rem' }}>Total</span>
+                <strong style={{
+                  fontSize: '1.6rem',
+                  background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                  WebkitBackgroundClip: 'text',
+                  WebkitTextFillColor: 'transparent',
+                  backgroundClip: 'text',
+                  fontWeight: '900',
+                }}>
+                  ₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}
+                </strong>
+              </div>
+
+              {order.discountAmount > 0 && (
+                <div style={{
+                  marginTop: '10px', padding: '10px 12px',
+                  background: '#F0FDF4', border: '1px solid #BBF7D0',
+                  borderRadius: '10px', textAlign: 'center',
+                }}>
+                  <p style={{ margin: 0, fontSize: '0.78rem', fontWeight: '800', color: '#059669' }}>
+                    🎉 You saved ₹{Math.round(order.discountAmount).toLocaleString('en-IN')} on this order!
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* DELIVERY ADDRESS */}
+            <div style={{
+              background: 'white', borderRadius: '24px',
+              padding: '24px',
+              boxShadow: '0 8px 32px rgba(123,47,190,0.08)',
+              border: '1px solid rgba(123,47,190,0.08)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
+                <div style={{
+                  width: '40px', height: '40px', borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #0EA5E9, #0369A1)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '1.2rem',
+                }}>
+                  📍
+                </div>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: '900', color: '#1F0F3A', margin: 0 }}>
+                  Delivery Address
+                </h3>
+              </div>
+
+              {order.shippingAddress ? (
+                <div style={{
+                  padding: '16px',
+                  background: 'linear-gradient(135deg, #F0F9FF, #EDE9FE)',
+                  borderRadius: '14px',
+                  border: '1.5px solid #BAE6FD',
+                }}>
+                  <p style={{ fontWeight: '900', color: '#1F0F3A', margin: '0 0 6px', fontSize: '1rem' }}>
+                    {order.shippingAddress.name}
+                  </p>
+                  <p style={{ color: '#5B21B6', margin: '0 0 4px', fontSize: '0.85rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    📞 {order.shippingAddress.phone}
+                  </p>
+                  <p style={{ color: '#6B4E8A', margin: '0 0 4px', fontSize: '0.85rem', fontWeight: '600', lineHeight: 1.6 }}>
+                    🏠 {order.shippingAddress.address}
+                  </p>
+                  <p style={{ color: '#6B4E8A', margin: 0, fontSize: '0.85rem', fontWeight: '600' }}>
+                    {order.shippingAddress.city}, {order.shippingAddress.state} — <strong style={{ color: '#0369A1' }}>{order.shippingAddress.pincode}</strong>
+                  </p>
+                </div>
+              ) : (
+                <p style={{ color: '#9CA3AF' }}>No address on record</p>
+              )}
+            </div>
+
+            {/* PAYMENT INFO */}
+            <div style={{
+              background: 'white', borderRadius: '24px',
+              padding: '24px',
+              boxShadow: '0 8px 32px rgba(123,47,190,0.08)',
+              border: '1px solid rgba(123,47,190,0.08)',
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '18px' }}>
+                <div style={{
+                  width: '40px', height: '40px', borderRadius: '10px',
+                  background: 'linear-gradient(135deg, #8B5CF6, #6D28D9)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '1.2rem',
+                }}>
+                  💳
+                </div>
+                <h3 style={{ fontSize: '1.05rem', fontWeight: '900', color: '#1F0F3A', margin: 0 }}>
+                  Payment Info
+                </h3>
+              </div>
+
+              {[
+                { label: 'Method', value: order.paymentMethod, icon: '💳' },
+                {
+                  label: 'Status',
+                  value: order.isPaid ? '✅ Paid' : order.paymentStatus === 'failed' ? '❌ Failed' : order.paymentStatus === 'not_applicable' ? '💵 COD' : '⏳ Pending',
+                  color: order.isPaid ? '#10B981' : order.paymentStatus === 'failed' ? '#EF4444' : '#F59E0B',
+                  icon: '📊',
+                },
+                ...(order.isPaid && order.paidAt
+                  ? [{ label: 'Paid On', value: new Date(order.paidAt).toLocaleDateString('en-IN'), icon: '📅' }]
+                  : []),
+                ...(order.paymentResult?.razorpayPaymentId
+                  ? [{ label: 'Txn ID', value: order.paymentResult.razorpayPaymentId.slice(-12), mono: true, icon: '🔑' }]
+                  : []),
+              ].map((row, i) => (
+                <div key={i} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  padding: '10px 0', borderBottom: '1px dashed #F3E8FF',
+                }}>
+                  <span style={{ fontSize: '0.82rem', color: '#6B4E8A', fontWeight: '600', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span>{row.icon}</span> {row.label}
+                  </span>
                   <strong style={{
-                    fontSize: '0.88rem', color: row.color || '#2D1A4A',
-                    fontFamily: row.mono ? 'monospace' : 'Nunito, sans-serif',
+                    fontSize: '0.85rem', color: row.color || '#2D1A4A',
+                    fontFamily: row.mono ? 'monospace' : 'inherit',
                   }}>
                     {row.value}
                   </strong>
                 </div>
               ))}
             </div>
-          )}
-        </div>
 
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-          {accordionCard(
-            'Price Summary', '💰', 'price',
-            <div>
-              {[
-                { label: 'Items', value: `₹${Math.round(order.itemsPrice)?.toLocaleString('en-IN')}` },
-                {
-                  label: 'Shipping',
-                  value: order.shippingPrice === 0 ? '🎉 FREE' : `₹${order.shippingPrice}`,
-                  color: order.shippingPrice === 0 ? '#10B981' : undefined,
-                },
-                ...(order.discountAmount > 0
-                  ? [{ label: `Coupon (${order.couponCode})`, value: `− ₹${Math.round(order.discountAmount)?.toLocaleString('en-IN')}`, color: '#10B981' }]
-                  : []),
-              ].map((row, i) => (
-                <div key={i} style={{
-                  display: 'flex', justifyContent: 'space-between',
-                  padding: '8px 0', borderBottom: '1px solid #F3E8FF',
-                }}>
-                  <span style={{ fontSize: '0.85rem', color: '#9585B0', fontWeight: '600' }}>{row.label}</span>
-                  <span style={{ fontSize: '0.88rem', fontWeight: '700', color: row.color || '#2D1A4A' }}>
-                    {row.value}
-                  </span>
+            {/* ✅ Delivered Card — Exchange Only */}
+            {isDelivered && !isCancelled && (
+              <div style={{
+                background: 'linear-gradient(135deg, #F0FDF4, #D1FAE5)',
+                borderRadius: '20px', padding: '20px 22px',
+                border: '2px solid #86EFAC',
+                boxShadow: '0 6px 20px rgba(16,185,129,0.15)',
+              }}>
+                <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', marginBottom: '14px' }}>
+                  <div style={{
+                    width: '48px', height: '48px', borderRadius: '12px',
+                    background: 'linear-gradient(135deg, #10B981, #059669)',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '1.6rem',
+                    boxShadow: '0 4px 12px rgba(16,185,129,0.30)',
+                  }}>
+                    🎉
+                  </div>
+                  <div>
+                    <strong style={{ fontSize: '1.05rem', color: '#065F46' }}>Order Delivered!</strong>
+                    <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#047857', fontWeight: '700' }}>
+                      {order.deliveredAt
+                        ? new Date(order.deliveredAt).toLocaleDateString('en-IN', {
+                            year: 'numeric', month: 'long', day: 'numeric',
+                          })
+                        : ''}
+                    </p>
+                  </div>
                 </div>
-              ))}
-              <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '14px', marginTop: '6px' }}>
-                <span style={{ fontWeight: '800', color: '#2D1A4A' }}>Total</span>
-                <strong style={{ fontSize: '1.2rem', color: '#FF6B35' }}>
-                  ₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}
-                </strong>
-              </div>
-            </div>
-          )}
 
-          {accordionCard(
-            'Delivery Address', '📍', 'address',
-            order.shippingAddress ? (
-              <div style={{ lineHeight: 1.8 }}>
-                <p style={{ fontWeight: '800', color: '#2D1A4A', margin: '0 0 2px', fontSize: '0.95rem' }}>
-                  {order.shippingAddress.name}
-                </p>
-                <p style={{ color: '#6B4E8A', margin: '0 0 2px', fontSize: '0.85rem', fontWeight: '600' }}>
-                  📞 {order.shippingAddress.phone}
-                </p>
-                <p style={{ color: '#6B4E8A', margin: '0 0 2px', fontSize: '0.85rem', fontWeight: '600' }}>
-                  🏠 {order.shippingAddress.address}
-                </p>
-                <p style={{ color: '#6B4E8A', margin: 0, fontSize: '0.85rem', fontWeight: '600' }}>
-                  {order.shippingAddress.city}, {order.shippingAddress.state} — {order.shippingAddress.pincode}
-                </p>
-              </div>
-            ) : (
-              <p style={{ color: '#9CA3AF' }}>No address on record</p>
-            )
-          )}
-
-          {order.isDelivered && !isCancelled && !isReturnRequested && (
-            <div style={{
-              background: 'white', borderRadius: '20px', padding: '20px 24px',
-              border: '1.5px solid #6EE7B7',
-              boxShadow: '0 4px 16px rgba(16,185,129,0.10)',
-            }}>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start', marginBottom: '12px' }}>
-                <span style={{ fontSize: '2rem' }}>🎉</span>
-                <div>
-                  <strong style={{ fontSize: '1rem', color: '#065F46' }}>Order Delivered!</strong>
-                  <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#047857' }}>
-                    {order.deliveredAt
-                      ? new Date(order.deliveredAt).toLocaleDateString('en-IN', {
-                          year: 'numeric', month: 'long', day: 'numeric',
-                        })
-                      : ''}
-                  </p>
-                </div>
-              </div>
-              <p style={{ margin: '0 0 12px', fontSize: '0.82rem', color: '#6B7280', fontWeight: '600' }}>
-                Not happy with your order? You can return the item or request a refund.
-              </p>
-              <div style={{ display: 'flex', gap: '8px' }}>
-                <button
-                  onClick={() => setShowReturnModal(true)}
-                  style={{
-                    flex: 1, padding: '9px 10px', background: 'white',
-                    color: '#f97316', border: '1.5px solid #fed7aa',
-                    borderRadius: '10px', fontWeight: '800', fontSize: '0.82rem',
-                    fontFamily: 'Nunito, sans-serif', cursor: 'pointer', transition: 'all 0.2s',
-                  }}
-                >
-                  🔄 Return Item
-                </button>
-                <Link
-                  href={`/orders/${order.id}/refund`}
-                  style={{
-                    flex: 1, padding: '9px 10px', background: 'white',
-                    color: '#7B2FBE', border: '1.5px solid #EDD9FF',
-                    borderRadius: '10px', fontWeight: '800', fontSize: '0.82rem',
-                    fontFamily: 'Nunito, sans-serif', textDecoration: 'none', textAlign: 'center',
-                  }}
-                >
-                  💰 Refund
-                </Link>
+                {/* ✅ Exchange button — only if within 3 days */}
                 {(() => {
                   const deliveredAt = order.deliveredAt ? new Date(order.deliveredAt) : new Date(order.updatedAt);
                   const daysSince   = Math.floor((new Date() - deliveredAt) / (1000 * 60 * 60 * 24));
-                  if (daysSince > 3) return null;
+                  const within3Days = daysSince <= 3;
+                  const noActiveExchange = !order.exchangeId || ['rejected', 'completed', 'cancelled'].includes(order.exchangeStatus);
+                  const daysLeft = 3 - daysSince;
+
+                  if (!within3Days) {
+                    return (
+                      <div style={{
+                        padding: '14px 16px',
+                        background: 'white',
+                        border: '1.5px solid #E5E7EB',
+                        borderRadius: '12px',
+                        textAlign: 'center',
+                      }}>
+                        <p style={{ margin: 0, fontSize: '0.86rem', color: '#6B7280', fontWeight: '800' }}>
+                          ⏱️ Exchange window expired
+                        </p>
+                        <p style={{ margin: '4px 0 0', fontSize: '0.74rem', color: '#9CA3AF', fontWeight: '600' }}>
+                          Exchange was available for 3 days after delivery
+                        </p>
+                      </div>
+                    );
+                  }
+
+                  if (!noActiveExchange) {
+                    return (
+                      <div style={{
+                        padding: '14px 16px',
+                        background: '#FFF3E8',
+                        border: '1.5px solid #FED7AA',
+                        borderRadius: '12px',
+                        textAlign: 'center',
+                      }}>
+                        <p style={{ margin: 0, fontSize: '0.86rem', color: '#EA580C', fontWeight: '900' }}>
+                          🔄 Exchange in progress
+                        </p>
+                        <p style={{ margin: '4px 0 0', fontSize: '0.74rem', color: '#9A3412', fontWeight: '600' }}>
+                          Check exchange status above
+                        </p>
+                      </div>
+                    );
+                  }
+
                   return (
-                    <Link
-                      href={`/orders/${order.id}/exchange`}
-                      style={{
-                        flex: 1, padding: '9px 10px', background: 'white',
-                        color: '#FF6B35', border: '1.5px solid #FFD4B8',
-                        borderRadius: '10px', fontWeight: '800', fontSize: '0.82rem',
-                        fontFamily: 'Nunito, sans-serif', textDecoration: 'none', textAlign: 'center',
-                      }}
-                    >
-                      🔄 Exchange
-                    </Link>
+                    <>
+                      <p style={{ margin: '0 0 12px', fontSize: '0.82rem', color: '#065F46', fontWeight: '700', textAlign: 'center' }}>
+                        💡 Not happy? You can exchange for another product
+                      </p>
+                      <Link
+                        href={`/orders/${order.id}/exchange`}
+                        style={{
+                          display: 'block',
+                          padding: '14px 20px',
+                          background: 'linear-gradient(135deg, #FF6B35, #EA580C)',
+                          color: 'white',
+                          borderRadius: '12px',
+                          textDecoration: 'none',
+                          fontWeight: '900',
+                          fontSize: '0.95rem',
+                          textAlign: 'center',
+                          fontFamily: 'inherit',
+                          boxShadow: '0 6px 18px rgba(255,107,53,0.35)',
+                          transition: 'transform 0.2s',
+                        }}
+                        onMouseEnter={e => e.currentTarget.style.transform = 'translateY(-2px)'}
+                        onMouseLeave={e => e.currentTarget.style.transform = 'translateY(0)'}
+                      >
+                        🔄 Exchange Item
+                      </Link>
+                      <p style={{
+                        margin: '10px 0 0',
+                        fontSize: '0.74rem',
+                        color: '#047857',
+                        fontWeight: '800',
+                        textAlign: 'center',
+                      }}>
+                        ⏱️ {daysLeft} day{daysLeft !== 1 ? 's' : ''} left to exchange
+                      </p>
+                    </>
                   );
                 })()}
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
+
+        {/* MODALS */}
+        {showCancelModal && (
+          <CancelOrderModal
+            order={order}
+            onClose={() => setShowCancelModal(false)}
+            onSuccess={() => { setShowCancelModal(false); fetchOrder(); }}
+          />
+        )}
+
+        <style>{`
+          @keyframes blip {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50%       { transform: scale(1.4); opacity: 0.6; }
+          }
+          @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25%      { transform: translateX(-3px); }
+            75%      { transform: translateX(3px); }
+          }
+          @media (max-width: 900px) {
+            .orderGrid {
+              grid-template-columns: 1fr !important;
+            }
+          }
+        `}</style>
+      </div>
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════
+   ORDER ITEM CARD (with Review Button)
+══════════════════════════════════════════ */
+function OrderItemCard({ item, isDelivered }) {
+  const { data: session } = useSession();
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [existingReview, setExistingReview]   = useState(null);
+  const [loadingReview,  setLoadingReview]    = useState(false);
+  const [isHovered,      setIsHovered]        = useState(false);
+
+  const productId = item.productId;
+
+  useEffect(() => {
+    if (!isDelivered || !productId || !session) return;
+    setLoadingReview(true);
+    fetch(`/api/reviews/can-review?productId=${productId}`)
+      .then(r => r.json())
+      .then(d => {
+        if (d.reason === 'already-reviewed') {
+          setExistingReview(d.existingReview);
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoadingReview(false));
+  }, [productId, isDelivered, session]);
+
+  const itemTotal = Math.round((item.price || 0) * (item.quantity || 1));
+
+  return (
+    <div style={{
+      background: 'white',
+      borderRadius: '16px',
+      border: `2px solid ${isHovered ? '#7B2FBE' : '#F3E8FF'}`,
+      overflow: 'hidden',
+      transition: 'all 0.25s ease',
+      boxShadow: isHovered ? '0 10px 30px rgba(123,47,190,0.15)' : '0 2px 8px rgba(123,47,190,0.05)',
+      transform: isHovered ? 'translateY(-3px)' : 'translateY(0)',
+    }}>
+      <Link
+        href={productId ? `/products/${productId}` : '#'}
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '14px',
+          padding: '16px 18px',
+          textDecoration: 'none',
+          cursor: productId ? 'pointer' : 'default',
+          background: isHovered ? 'linear-gradient(135deg, #FFFAFC, #FAF7FF)' : 'white',
+          transition: 'background 0.25s ease',
+        }}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+      >
+        <div style={{ position: 'relative', flexShrink: 0 }}>
+          <div style={{
+            width: '84px', height: '84px',
+            borderRadius: '14px', overflow: 'hidden',
+            border: '2px solid #F3E8FF',
+            background: '#FAFAFA',
+            transition: 'transform 0.3s ease',
+            transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+          }}>
+            <img
+              src={item.image || 'https://via.placeholder.com/84'}
+              alt={item.name}
+              style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+            />
+          </div>
+
+          <div style={{
+            position: 'absolute',
+            top: '-6px', right: '-6px',
+            minWidth: '28px', height: '28px',
+            padding: '0 8px', borderRadius: '999px',
+            background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+            color: 'white', fontSize: '0.75rem', fontWeight: '900',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            border: '3px solid white',
+            boxShadow: '0 3px 8px rgba(123,47,190,0.35)',
+          }}>
+            ×{item.quantity}
+          </div>
+        </div>
+
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <p style={{
+            fontSize: '0.95rem',
+            fontWeight: '800',
+            color: isHovered ? '#7B2FBE' : '#1F0F3A',
+            margin: '0 0 6px',
+            lineHeight: 1.3,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            transition: 'color 0.2s',
+          }}>
+            {item.name}
+          </p>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+            <span style={{
+              padding: '3px 10px',
+              background: '#F3E8FF',
+              color: '#7B2FBE',
+              borderRadius: '999px',
+              fontSize: '0.72rem',
+              fontWeight: '800',
+            }}>
+              ₹{item.price?.toLocaleString('en-IN')} each
+            </span>
+            {productId && (
+              <span style={{
+                fontSize: '0.72rem',
+                color: isHovered ? '#7B2FBE' : '#9585B0',
+                fontWeight: '800',
+                marginLeft: 'auto',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '3px',
+                transition: 'all 0.2s',
+              }}>
+                {isHovered ? 'View Product →' : 'View ›'}
+              </span>
+            )}
+          </div>
+        </div>
+
+        <div style={{
+          textAlign: 'right', flexShrink: 0,
+          paddingLeft: '14px',
+          borderLeft: '2px dashed #F3E8FF',
+        }}>
+          <p style={{
+            margin: 0, fontSize: '0.65rem', color: '#9585B0',
+            fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.5px',
+          }}>
+            Subtotal
+          </p>
+          <strong style={{
+            fontSize: '1.2rem',
+            background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+            fontWeight: '900', display: 'block', marginTop: '2px',
+          }}>
+            ₹{itemTotal.toLocaleString('en-IN')}
+          </strong>
+        </div>
+      </Link>
+
+      {isDelivered && productId && (
+        <div style={{
+          padding: '12px 18px',
+          background: existingReview
+            ? 'linear-gradient(135deg, #F0FDF4, #ECFDF5)'
+            : 'linear-gradient(135deg, #FFF9FB, #FFF5F7)',
+          borderTop: `1.5px dashed ${existingReview ? '#86EFAC' : '#F9A8D4'}`,
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          gap: '10px', flexWrap: 'wrap',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
+            {existingReview ? (
+              <>
+                <div style={{
+                  width: '34px', height: '34px', borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #10B981, #059669)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '0.95rem', color: 'white', fontWeight: '900',
+                  flexShrink: 0, boxShadow: '0 3px 8px rgba(16,185,129,0.30)',
+                }}>
+                  ✓
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: '800', color: '#065F46' }}>
+                    Your Review Posted
+                  </p>
+                  <div style={{ display: 'flex', gap: '1px', marginTop: '2px' }}>
+                    {[1,2,3,4,5].map(s => (
+                      <span key={s} style={{
+                        fontSize: '0.85rem',
+                        color: s <= existingReview.rating ? '#FBBF24' : '#E5E7EB',
+                      }}>★</span>
+                    ))}
+                  </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{
+                  width: '34px', height: '34px', borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #FBBF24, #F59E0B)',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                  fontSize: '0.95rem', color: 'white', fontWeight: '900',
+                  flexShrink: 0, boxShadow: '0 3px 8px rgba(245,158,11,0.30)',
+                }}>
+                  ⭐
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: '800', color: '#BE185D' }}>
+                    Share Your Experience
+                  </p>
+                  <p style={{ margin: 0, fontSize: '0.7rem', color: '#9585B0', fontWeight: '600' }}>
+                    Help others make the right choice
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setShowReviewModal(true);
+            }}
+            disabled={loadingReview}
+            style={{
+              padding: '9px 18px',
+              background: existingReview ? 'white' : 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+              color: existingReview ? '#065F46' : 'white',
+              border: existingReview ? '2px solid #10B981' : 'none',
+              borderRadius: '10px',
+              fontSize: '0.78rem', fontWeight: '900',
+              cursor: loadingReview ? 'wait' : 'pointer',
+              fontFamily: 'inherit',
+              boxShadow: existingReview ? 'none' : '0 4px 12px rgba(255,107,53,0.30)',
+              transition: 'all 0.2s',
+              whiteSpace: 'nowrap', flexShrink: 0,
+            }}
+          >
+            {loadingReview ? '⏳' : existingReview ? '✏️ Edit' : '⭐ Review'}
+          </button>
+        </div>
+      )}
+
+      {showReviewModal && (
+        <ReviewModal
+          productId={productId}
+          productName={item.name}
+          productImage={item.image}
+          existingReview={existingReview}
+          onClose={() => setShowReviewModal(false)}
+          onSuccess={(newReview) => {
+            setExistingReview(newReview);
+            setShowReviewModal(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+/* ══════════════════════════════════════════
+   REVIEW MODAL
+══════════════════════════════════════════ */
+function ReviewModal({ productId, productName, productImage, existingReview, onClose, onSuccess }) {
+  const [rating,     setRating]     = useState(existingReview?.rating || 0);
+  const [hover,      setHover]      = useState(0);
+  const [title,      setTitle]      = useState(existingReview?.title || '');
+  const [comment,    setComment]    = useState(existingReview?.comment || '');
+  const [images,     setImages]     = useState(existingReview?.images || []);
+  const [uploading,  setUploading]  = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleImageUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
+    if (images.length + files.length > 5) {
+      toast.error('Maximum 5 images allowed');
+      return;
+    }
+    setUploading(true);
+    try {
+      const uploaded = await Promise.all(files.map(f => uploadFileToR2(f, 'arunas/reviews')));
+      setImages([...images, ...uploaded.map(u => ({ url: u.url, publicId: u.publicId }))]);
+      toast.success(`${uploaded.length} image(s) uploaded`);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removeImage = (idx) => setImages(images.filter((_, i) => i !== idx));
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (rating === 0) { toast.error('Please select rating'); return; }
+    if (comment.trim().length < 10) { toast.error('Comment must be at least 10 characters'); return; }
+
+    setSubmitting(true);
+    try {
+      const url = existingReview ? `/api/reviews/${existingReview.id}` : '/api/reviews';
+      const method = existingReview ? 'PUT' : 'POST';
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ productId, rating, title, comment, images }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      toast.success(existingReview ? '✅ Review updated!' : '🎉 Review posted!');
+      onSuccess(data.review);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <ModalWrapper onClose={onClose}>
+      <div style={{
+        padding: '24px 26px',
+        borderBottom: '1px solid #FFE4EC',
+        background: 'linear-gradient(135deg, #FFF5F7, #F3E8FF)',
+        borderRadius: '20px 20px 0 0',
+        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+      }}>
+        <div>
+          <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900', color: '#BE185D' }}>
+            {existingReview ? '✏️ Edit Review' : '⭐ Write Review'}
+          </h2>
+          <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: '#9D174D', fontWeight: '700' }}>
+            Share your honest experience
+          </p>
+        </div>
+        <CloseBtn onClose={onClose} color="#BE185D" />
       </div>
 
-      {showCancelModal && (
-        <CancelOrderModal
-          order={order}
-          onClose={() => setShowCancelModal(false)}
-          onSuccess={() => { setShowCancelModal(false); fetchOrder(); }}
-        />
-      )}
-      {showReturnModal && (
-        <ReturnModal
-          order={order}
-          onClose={() => setShowReturnModal(false)}
-          onSuccess={() => { setShowReturnModal(false); fetchOrder(); }}
-        />
-      )}
-      {showRefundModal && (
-        <RefundModal
-          order={order}
-          onClose={() => setShowRefundModal(false)}
-          onSuccess={() => { setShowRefundModal(false); fetchOrder(); }}
-        />
-      )}
+      <div style={{ padding: '22px 26px' }}>
+        <div style={{
+          display: 'flex', alignItems: 'center', gap: '14px',
+          padding: '14px 16px', background: '#F9FAFB',
+          border: '1.5px solid #E5E7EB', borderRadius: '14px',
+          marginBottom: '20px',
+        }}>
+          {productImage && (
+            <img src={productImage} alt={productName} style={{
+              width: '56px', height: '56px', objectFit: 'cover',
+              borderRadius: '10px', flexShrink: 0,
+              border: '2px solid #F3E8FF',
+            }} />
+          )}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{
+              margin: 0, fontSize: '0.88rem', fontWeight: '800', color: '#1F2937',
+              overflow: 'hidden', textOverflow: 'ellipsis',
+              display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+            }}>
+              {productName}
+            </p>
+            <span style={{
+              display: 'inline-block', marginTop: '4px',
+              padding: '2px 10px', background: '#D1FAE5',
+              color: '#065F46', borderRadius: '999px',
+              fontSize: '0.65rem', fontWeight: '900',
+            }}>
+              ✓ Verified Purchase
+            </span>
+          </div>
+        </div>
 
-      <style>{`
-        @keyframes liveBlip {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50%       { transform: scale(1.4); opacity: 0.6; }
-        }
-        @keyframes shake {
-          0%, 100% { transform: translateX(0); }
-          25%      { transform: translateX(-3px); }
-          75%      { transform: translateX(3px); }
-        }
-        @media (max-width: 768px) {
-          div[style*="grid-template-columns: minmax"] {
-            grid-template-columns: 1fr !important;
-          }
-        }
-      `}</style>
-    </div>
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label style={{ fontSize: '0.85rem', fontWeight: '900', color: '#6B4E8A', marginBottom: '8px', display: 'block' }}>
+              Your Rating <span style={{ color: '#EF4444' }}>*</span>
+            </label>
+            <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
+              {[1,2,3,4,5].map(s => (
+                <button
+                  key={s} type="button"
+                  onClick={() => setRating(s)}
+                  onMouseEnter={() => setHover(s)}
+                  onMouseLeave={() => setHover(0)}
+                  style={{
+                    background: 'none', border: 'none', cursor: 'pointer',
+                    fontSize: '2.4rem',
+                    color: s <= (hover || rating) ? '#FBBF24' : '#E5E7EB',
+                    transition: 'all 0.15s', padding: '2px', lineHeight: 1,
+                    transform: s <= hover ? 'scale(1.15)' : 'scale(1)',
+                  }}
+                >★</button>
+              ))}
+              <span style={{ marginLeft: '10px', fontSize: '0.9rem', color: '#6B7280', fontWeight: '800' }}>
+                {rating === 0 ? 'Click to rate' : `${rating}/5`}
+              </span>
+            </div>
+          </div>
+
+          <div>
+            <label style={{ fontSize: '0.85rem', fontWeight: '900', color: '#6B4E8A', marginBottom: '8px', display: 'block' }}>
+              Title (optional)
+            </label>
+            <input
+              type="text" value={title} onChange={e => setTitle(e.target.value)}
+              placeholder="e.g. Excellent quality!" maxLength={100}
+              style={{
+                width: '100%', padding: '12px 14px',
+                border: '2px solid #EDD9FF', borderRadius: '10px',
+                fontSize: '0.9rem', outline: 'none',
+                fontFamily: 'inherit', boxSizing: 'border-box',
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{ fontSize: '0.85rem', fontWeight: '900', color: '#6B4E8A', marginBottom: '8px', display: 'block' }}>
+              Your Review <span style={{ color: '#EF4444' }}>*</span>
+            </label>
+            <textarea
+              value={comment} onChange={e => setComment(e.target.value)}
+              placeholder="Share your experience..."
+              rows={4} maxLength={1000} required
+              style={{
+                width: '100%', padding: '12px 14px',
+                border: '2px solid #EDD9FF', borderRadius: '10px',
+                fontSize: '0.9rem', outline: 'none',
+                fontFamily: 'inherit', resize: 'vertical',
+                boxSizing: 'border-box',
+              }}
+            />
+            <p style={{ margin: '4px 0 0', fontSize: '0.72rem', color: '#9CA3AF', textAlign: 'right' }}>
+              {comment.length}/1000 (min 10)
+            </p>
+          </div>
+
+          <div>
+            <label style={{ fontSize: '0.85rem', fontWeight: '900', color: '#6B4E8A', marginBottom: '8px', display: 'block' }}>
+              Add Photos (up to 5)
+            </label>
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+              {images.map((img, i) => (
+                <div key={i} style={{ position: 'relative' }}>
+                  <img src={img.url} alt="" style={{
+                    width: '72px', height: '72px', objectFit: 'cover',
+                    borderRadius: '10px', border: '2px solid #E5E7EB',
+                  }} />
+                  <button
+                    type="button" onClick={() => removeImage(i)}
+                    style={{
+                      position: 'absolute', top: '-6px', right: '-6px',
+                      width: '22px', height: '22px', borderRadius: '50%',
+                      background: '#EF4444', color: 'white',
+                      border: '2px solid white', cursor: 'pointer',
+                      fontSize: '0.72rem', fontWeight: '900',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      boxShadow: '0 2px 6px rgba(239,68,68,0.30)',
+                    }}
+                  >×</button>
+                </div>
+              ))}
+              {images.length < 5 && (
+                <label style={{
+                  width: '72px', height: '72px',
+                  border: '2px dashed #FF6B9D', borderRadius: '10px',
+                  display: 'flex', flexDirection: 'column',
+                  alignItems: 'center', justifyContent: 'center',
+                  cursor: uploading ? 'not-allowed' : 'pointer',
+                  background: '#FFF5F7',
+                }}>
+                  <input type="file" accept="image/*" multiple onChange={handleImageUpload} style={{ display: 'none' }} disabled={uploading} />
+                  {uploading ? '⏳' : (
+                    <>
+                      <span style={{ fontSize: '1.3rem' }}>📷</span>
+                      <span style={{ fontSize: '0.62rem', color: '#FF6B9D', fontWeight: '800' }}>Add</span>
+                    </>
+                  )}
+                </label>
+              )}
+            </div>
+          </div>
+
+          <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+            <button type="button" onClick={onClose} disabled={submitting} style={{
+              padding: '13px 22px', background: 'white',
+              border: '2px solid #E5E7EB', borderRadius: '12px',
+              color: '#6B7280', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit',
+            }}>Cancel</button>
+            <button type="submit" disabled={submitting || uploading} style={{
+              flex: 1, padding: '13px 22px',
+              background: submitting ? '#ccc' : 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+              color: 'white', border: 'none', borderRadius: '12px',
+              fontWeight: '900', cursor: submitting ? 'not-allowed' : 'pointer',
+              fontFamily: 'inherit', fontSize: '0.95rem',
+              boxShadow: '0 6px 18px rgba(255,107,53,0.30)',
+            }}>
+              {submitting ? '⏳ Posting...' : existingReview ? '💾 Update' : '✨ Post Review'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </ModalWrapper>
   );
 }
 
@@ -1210,7 +1845,7 @@ function ExchangeStatusBanner({ orderId, exchangeId }) {
     awaiting_payment: { label: 'Awaiting Payment',   color: '#F97316', icon: '💳', desc: 'Complete payment to continue' },
     ready_to_ship:    { label: 'Ready to Ship',      color: '#10B981', icon: '🎁', desc: 'New product being packed' },
     shipped:          { label: 'Shipped',            color: '#06B6D4', icon: '🚚', desc: 'New product on the way!' },
-    completed:        { label: 'Exchange Completed', color: '#10B981', icon: '🎉', desc: 'Exchange completed successfully!' },
+    completed:        { label: 'Completed',          color: '#10B981', icon: '🎉', desc: 'Exchange completed successfully!' },
     rejected:         { label: 'Rejected',           color: '#EF4444', icon: '❌', desc: 'Exchange request rejected' },
   };
 
@@ -1227,29 +1862,31 @@ function ExchangeStatusBanner({ orderId, exchangeId }) {
           : 'linear-gradient(135deg, #FFF3E8, #FFE4CC)',
       border: `2px solid ${cfg.color}`,
       borderRadius: '20px', padding: '20px 24px',
-      marginBottom: '24px', fontFamily: 'Nunito, sans-serif',
+      marginBottom: '20px', fontFamily: 'Nunito, sans-serif',
+      boxShadow: '0 6px 20px rgba(0,0,0,0.05)',
     }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '16px', flexWrap: 'wrap' }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginBottom: '14px', flexWrap: 'wrap' }}>
         <div style={{
-          width: '50px', height: '50px', borderRadius: '12px',
+          width: '52px', height: '52px', borderRadius: '14px',
           background: cfg.color,
           display: 'flex', alignItems: 'center', justifyContent: 'center',
           fontSize: '1.6rem', flexShrink: 0,
+          boxShadow: `0 6px 16px ${cfg.color}40`,
         }}>
           {cfg.icon}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '900', color: cfg.color }}>
-            🔄 Exchange Request — {cfg.label}
+          <h3 style={{ margin: 0, fontSize: '1.05rem', fontWeight: '900', color: cfg.color }}>
+            🔄 Exchange — {cfg.label}
           </h3>
-          <p style={{ margin: '4px 0 0', fontSize: '0.86rem', color: '#6B4E8A', fontWeight: '600' }}>
+          <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#6B4E8A', fontWeight: '600' }}>
             {cfg.desc}
           </p>
         </div>
         <span style={{
           padding: '6px 14px', background: 'white', color: cfg.color,
           border: `2px solid ${cfg.color}40`,
-          borderRadius: '999px', fontSize: '0.78rem', fontWeight: '800',
+          borderRadius: '999px', fontSize: '0.78rem', fontWeight: '900',
         }}>
           #{exchange.id?.slice(-8).toUpperCase()}
         </span>
@@ -1261,7 +1898,7 @@ function ExchangeStatusBanner({ orderId, exchangeId }) {
       }}>
         <div style={{ padding: '12px', background: 'white', border: '1.5px solid #FCA5A5', borderRadius: '12px', textAlign: 'center' }}>
           <span style={{
-            display: 'inline-block', fontSize: '0.66rem', fontWeight: '800',
+            display: 'inline-block', fontSize: '0.66rem', fontWeight: '900',
             background: '#EF4444', color: 'white',
             padding: '3px 10px', borderRadius: '999px', marginBottom: '8px',
             textTransform: 'uppercase',
@@ -1274,7 +1911,7 @@ function ExchangeStatusBanner({ orderId, exchangeId }) {
             style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', margin: '0 auto 6px', display: 'block' }}
           />
           <p style={{
-            margin: '0 0 4px', fontSize: '0.78rem', fontWeight: '700', color: '#7F1D1D',
+            margin: '0 0 4px', fontSize: '0.78rem', fontWeight: '800', color: '#7F1D1D',
             overflow: 'hidden', textOverflow: 'ellipsis',
             display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
           }}>
@@ -1289,7 +1926,7 @@ function ExchangeStatusBanner({ orderId, exchangeId }) {
 
         <div style={{ padding: '12px', background: 'white', border: '1.5px solid #A7F3D0', borderRadius: '12px', textAlign: 'center' }}>
           <span style={{
-            display: 'inline-block', fontSize: '0.66rem', fontWeight: '800',
+            display: 'inline-block', fontSize: '0.66rem', fontWeight: '900',
             background: '#10B981', color: 'white',
             padding: '3px 10px', borderRadius: '999px', marginBottom: '8px',
             textTransform: 'uppercase',
@@ -1302,7 +1939,7 @@ function ExchangeStatusBanner({ orderId, exchangeId }) {
             style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '8px', margin: '0 auto 6px', display: 'block' }}
           />
           <p style={{
-            margin: '0 0 4px', fontSize: '0.78rem', fontWeight: '700', color: '#065F46',
+            margin: '0 0 4px', fontSize: '0.78rem', fontWeight: '800', color: '#065F46',
             overflow: 'hidden', textOverflow: 'ellipsis',
             display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
           }}>
@@ -1323,7 +1960,7 @@ function ExchangeStatusBanner({ orderId, exchangeId }) {
           flexWrap: 'wrap', gap: '8px',
         }}>
           <div>
-            <p style={{ margin: 0, fontSize: '0.78rem', fontWeight: '800', color: exchange.priceDifference > 0 ? '#92400E' : '#1E40AF' }}>
+            <p style={{ margin: 0, fontSize: '0.78rem', fontWeight: '900', color: exchange.priceDifference > 0 ? '#92400E' : '#1E40AF' }}>
               💰 Price Difference
             </p>
             <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: '#6B7280', fontWeight: '600' }}>
@@ -1340,20 +1977,6 @@ function ExchangeStatusBanner({ orderId, exchangeId }) {
         </div>
       )}
 
-      {exchange.razorpayRefundId && (
-        <div style={{
-          padding: '10px 14px', background: '#ECFDF5',
-          border: '1.5px solid #A7F3D0', borderRadius: '10px', marginBottom: '12px',
-        }}>
-          <p style={{ margin: 0, fontSize: '0.82rem', color: '#065F46', fontWeight: '800' }}>
-            ✅ ₹{Math.abs(exchange.priceDifference)} refunded to your Razorpay account
-          </p>
-          <p style={{ margin: '4px 0 0', fontSize: '0.74rem', color: '#047857', fontWeight: '600', fontFamily: 'monospace' }}>
-            Ref: {exchange.razorpayRefundId}
-          </p>
-        </div>
-      )}
-
       {exchange.status === 'awaiting_payment' && exchange.paymentLinkUrl && (
         <a
           href={exchange.paymentLinkUrl}
@@ -1362,7 +1985,7 @@ function ExchangeStatusBanner({ orderId, exchangeId }) {
             display: 'block', padding: '12px 20px',
             background: 'linear-gradient(135deg, #F97316, #EA580C)',
             color: 'white', borderRadius: '10px', textDecoration: 'none',
-            textAlign: 'center', fontWeight: '800', fontSize: '0.92rem',
+            textAlign: 'center', fontWeight: '900', fontSize: '0.92rem',
             marginBottom: '12px',
           }}
         >
@@ -1370,47 +1993,12 @@ function ExchangeStatusBanner({ orderId, exchangeId }) {
         </a>
       )}
 
-      {(exchange.pickupTracking || exchange.shipmentTracking) && (
-        <div style={{ display: 'grid', gap: '8px', marginBottom: '12px' }}>
-          {exchange.pickupTracking && (
-            <div style={{
-              padding: '10px 14px', background: 'white',
-              border: '1px solid #DDD6FE', borderRadius: '10px',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              flexWrap: 'wrap', gap: '8px',
-            }}>
-              <span style={{ fontSize: '0.76rem', fontWeight: '700', color: '#6D28D9' }}>
-                📦 Pickup Tracking:
-              </span>
-              <code style={{ fontSize: '0.82rem', color: '#5B21B6', fontWeight: '800', fontFamily: 'monospace' }}>
-                {exchange.pickupTracking}
-              </code>
-            </div>
-          )}
-          {exchange.shipmentTracking && (
-            <div style={{
-              padding: '10px 14px', background: 'white',
-              border: '1px solid #A5F3FC', borderRadius: '10px',
-              display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-              flexWrap: 'wrap', gap: '8px',
-            }}>
-              <span style={{ fontSize: '0.76rem', fontWeight: '700', color: '#0E7490' }}>
-                🚚 New Product Tracking:
-              </span>
-              <code style={{ fontSize: '0.82rem', color: '#155E75', fontWeight: '800', fontFamily: 'monospace' }}>
-                {exchange.shipmentTracking}
-              </code>
-            </div>
-          )}
-        </div>
-      )}
-
       {isRejected && exchange.rejectionReason && (
         <div style={{
           padding: '12px 14px', background: '#FEE2E2',
           border: '1.5px solid #FCA5A5', borderRadius: '10px', marginBottom: '12px',
         }}>
-          <p style={{ margin: 0, fontSize: '0.86rem', fontWeight: '800', color: '#991B1B' }}>
+          <p style={{ margin: 0, fontSize: '0.86rem', fontWeight: '900', color: '#991B1B' }}>
             ❌ Reason: {exchange.rejectionReason}
           </p>
         </div>
@@ -1426,13 +2014,6 @@ function ExchangeStatusBanner({ orderId, exchangeId }) {
           <p style={{ margin: 0, fontSize: '1rem', color: '#065F46', fontWeight: '900' }}>
             Exchange Completed Successfully!
           </p>
-          {exchange.completedAt && (
-            <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: '#047857', fontWeight: '700' }}>
-              Completed on {new Date(exchange.completedAt).toLocaleDateString('en-IN', {
-                day: 'numeric', month: 'long', year: 'numeric',
-              })}
-            </p>
-          )}
         </div>
       )}
 
@@ -1440,7 +2021,7 @@ function ExchangeStatusBanner({ orderId, exchangeId }) {
         display: 'block', padding: '10px', background: 'white',
         color: cfg.color, border: `1.5px solid ${cfg.color}40`,
         borderRadius: '10px', textDecoration: 'none',
-        textAlign: 'center', fontWeight: '800', fontSize: '0.86rem',
+        textAlign: 'center', fontWeight: '900', fontSize: '0.86rem',
       }}>
         👁️ View Full Exchange Details →
       </Link>
@@ -1466,9 +2047,8 @@ function ModalWrapper({ children, onClose }) {
     >
       <div style={{
         background: 'white', borderRadius: '20px',
-        width: '100%', maxWidth: '500px', maxHeight: '92vh',
-        overflowY: 'auto', boxShadow: '0 24px 60px rgba(0,0,0,0.18)',
-        border: '1px solid #F3E8FF',
+        width: '100%', maxWidth: '520px', maxHeight: '92vh',
+        overflowY: 'auto', boxShadow: '0 24px 60px rgba(0,0,0,0.20)',
       }}>
         {children}
       </div>
@@ -1482,8 +2062,8 @@ function CloseBtn({ onClose, color = '#6B7280' }) {
       onClick={onClose}
       style={{
         background: 'white', border: '1.5px solid #E5E7EB',
-        width: '34px', height: '34px', borderRadius: '50%',
-        cursor: 'pointer', color, fontSize: '1rem', fontWeight: '700',
+        width: '36px', height: '36px', borderRadius: '50%',
+        cursor: 'pointer', color, fontSize: '1rem', fontWeight: '800',
         display: 'flex', alignItems: 'center', justifyContent: 'center',
         flexShrink: 0,
       }}
@@ -1494,387 +2074,19 @@ function CloseBtn({ onClose, color = '#6B7280' }) {
 }
 
 /* ══════════════════════════════════════════
-   RETURN MODAL
-══════════════════════════════════════════ */
-function ReturnModal({ order, onClose, onSuccess }) {
-  const [returnReason, setReturnReason] = useState('');
-  const [customReason, setCustomReason] = useState('');
-  const [submitting,   setSubmitting]   = useState(false);
-
-  const RETURN_REASONS = [
-    { label: 'Size issue — too big / too small', emoji: '📏' },
-    { label: 'Color mismatch — different from photo', emoji: '🎨' },
-    { label: 'Wrong product received', emoji: '📦' },
-    { label: 'Product damaged / defective', emoji: '💔' },
-    { label: 'Poor quality / not as described', emoji: '⭐' },
-    { label: 'Missing parts / accessories', emoji: '🔧' },
-    { label: 'Other', emoji: '✏️' },
-  ];
-
-  const isValid = returnReason && (returnReason !== 'Other' || customReason.trim());
-
-  const handleSubmit = async () => {
-    setSubmitting(true);
-    try {
-      const res = await fetch(`/api/orders/${order.id}/return`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          reason: returnReason === 'Other' ? customReason : returnReason,
-          refundMethod: 'bank',
-          bankDetails: {
-            accountHolderName: 'Pending',
-            accountNumber: '0000000000',
-            ifscCode: 'PENDING0000',
-            bankName: 'To be provided',
-          },
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed');
-      toast.success('✅ Return request submitted!');
-      setTimeout(() => toast('📞 Our team will contact you within 24–48 hours.', { icon: '📦' }), 600);
-      onSuccess();
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  return (
-    <ModalWrapper onClose={onClose}>
-      <div style={{
-        padding: '20px 24px 18px',
-        borderBottom: '1px solid #FEE8D5',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: 'linear-gradient(135deg, #FFF7ED, #FFEDD5)',
-        borderRadius: '20px 20px 0 0',
-      }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: '#EA580C' }}>
-            🔄 Return Item
-          </h2>
-          <p style={{ margin: '3px 0 0', fontSize: '0.82rem', color: '#9A3412', fontWeight: '700', fontFamily: 'monospace' }}>
-            Order {fmtOrderNum(order)}
-          </p>
-        </div>
-        <CloseBtn onClose={onClose} color="#EA580C" />
-      </div>
-
-      <div style={{ padding: '20px 24px' }}>
-        <div style={{
-          padding: '12px 14px', background: '#FFF7ED',
-          border: '1px solid #FED7AA', borderRadius: '12px', marginBottom: '18px',
-        }}>
-          <p style={{ margin: 0, fontSize: '0.82rem', color: '#9A3412', fontWeight: '600', lineHeight: 1.6 }}>
-            📋 <strong>Return Policy:</strong> Items must be unused and in original packaging.
-            Pickup will be arranged within 2–3 business days. Refund processed after quality check.
-          </p>
-        </div>
-
-        <p style={{ fontSize: '0.88rem', fontWeight: '700', color: '#2D1A4A', margin: '0 0 12px' }}>
-          Why are you returning? <span style={{ color: '#EF4444' }}>*</span>
-        </p>
-
-        <div style={{ display: 'grid', gap: '7px', marginBottom: '16px' }}>
-          {RETURN_REASONS.map(({ label, emoji }) => {
-            const selected = returnReason === label;
-            return (
-              <label key={label} style={{
-                display: 'flex', alignItems: 'center', gap: '10px',
-                padding: '11px 14px',
-                background: selected ? '#FFF7ED' : 'white',
-                border: `1.5px solid ${selected ? '#F97316' : '#E5E7EB'}`,
-                borderRadius: '12px', cursor: 'pointer', transition: 'all 0.15s',
-              }}>
-                <input
-                  type="radio" name="returnReason" value={label}
-                  checked={selected} onChange={e => setReturnReason(e.target.value)}
-                  style={{ display: 'none' }}
-                />
-                <div style={{
-                  width: '18px', height: '18px', borderRadius: '50%',
-                  border: `2px solid ${selected ? '#F97316' : '#D1D5DB'}`,
-                  background: selected ? '#F97316' : 'white',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0, transition: 'all 0.15s',
-                }}>
-                  {selected && <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: 'white' }} />}
-                </div>
-                <span style={{ fontSize: '0.9rem' }}>{emoji}</span>
-                <span style={{
-                  fontSize: '0.86rem',
-                  fontWeight: selected ? '700' : '600',
-                  color: selected ? '#EA580C' : '#374151',
-                }}>
-                  {label}
-                </span>
-              </label>
-            );
-          })}
-        </div>
-
-        {returnReason === 'Other' && (
-          <textarea
-            value={customReason}
-            onChange={e => setCustomReason(e.target.value)}
-            placeholder="Describe your issue in detail..."
-            rows={3}
-            style={{
-              width: '100%', padding: '10px 12px',
-              border: '1.5px solid #E5E7EB', borderRadius: '10px',
-              fontFamily: 'Nunito, sans-serif', fontSize: '0.86rem',
-              resize: 'vertical', outline: 'none', marginBottom: '16px',
-              boxSizing: 'border-box', color: '#1F2937',
-            }}
-          />
-        )}
-
-        <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
-          <button onClick={onClose} style={{
-            flex: 1, padding: '12px', background: 'white',
-            border: '1.5px solid #E5E7EB', borderRadius: '10px',
-            fontWeight: '700', color: '#6B7280',
-            cursor: 'pointer', fontFamily: 'Nunito, sans-serif',
-          }}>
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={!isValid || submitting}
-            style={{
-              flex: 2, padding: '12px',
-              background: isValid && !submitting ? 'linear-gradient(135deg, #F97316, #EA580C)' : '#F3F4F6',
-              color: isValid && !submitting ? 'white' : '#9CA3AF',
-              border: 'none', borderRadius: '10px',
-              fontWeight: '800', fontSize: '0.95rem',
-              fontFamily: 'Nunito, sans-serif',
-              cursor: isValid && !submitting ? 'pointer' : 'not-allowed',
-              transition: 'all 0.2s',
-            }}
-          >
-            {submitting ? '⏳ Submitting...' : '🔄 Submit Return Request'}
-          </button>
-        </div>
-      </div>
-    </ModalWrapper>
-  );
-}
-
-/* ══════════════════════════════════════════
-   REFUND MODAL
-══════════════════════════════════════════ */
-function RefundModal({ order, onClose, onSuccess }) {
-  const [refundMethod, setRefundMethod] = useState('');
-  const [upiId,        setUpiId]        = useState('');
-  const [bankDetails,  setBankDetails]  = useState({
-    accountHolderName: '', accountNumber: '', ifscCode: '', bankName: '',
-  });
-  const [submitting, setSubmitting] = useState(false);
-
-  const isValid = refundMethod === 'upi'
-    ? upiId.trim().length > 3
-    : refundMethod === 'bank'
-      ? bankDetails.accountHolderName.trim() && bankDetails.accountNumber.trim() && bankDetails.ifscCode.trim()
-      : false;
-
-  const handleSubmit = async () => {
-    setSubmitting(true);
-    try {
-      const res = await fetch(`/api/orders/${order.id}/return`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          reason: 'Refund requested by customer',
-          refundMethod,
-          ...(refundMethod === 'upi' ? { upiId } : { bankDetails }),
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed');
-      toast.success('✅ Refund request submitted!');
-      setTimeout(() => toast('💰 Refund will be processed within 5–7 business days.', { icon: '🏦' }), 600);
-      onSuccess();
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const inputStyle = {
-    width: '100%', padding: '11px 13px',
-    border: '1.5px solid #E5E7EB', borderRadius: '10px',
-    fontSize: '0.88rem', fontFamily: 'Nunito, sans-serif',
-    outline: 'none', color: '#1F2937', background: 'white',
-    boxSizing: 'border-box',
-  };
-
-  const labelStyle = {
-    display: 'block', fontSize: '0.75rem', fontWeight: '700',
-    color: '#6B7280', marginBottom: '5px',
-    textTransform: 'uppercase', letterSpacing: '0.4px',
-  };
-
-  return (
-    <ModalWrapper onClose={onClose}>
-      <div style={{
-        padding: '20px 24px 18px',
-        borderBottom: '1px solid #EDE9FE',
-        display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        background: 'linear-gradient(135deg, #F5F3FF, #EDE9FE)',
-        borderRadius: '20px 20px 0 0',
-      }}>
-        <div>
-          <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: '#7B2FBE' }}>
-            💰 Refund Request
-          </h2>
-          <p style={{ margin: '3px 0 0', fontSize: '0.82rem', color: '#6D28D9', fontWeight: '700', fontFamily: 'monospace' }}>
-            Order {fmtOrderNum(order)}
-          </p>
-        </div>
-        <CloseBtn onClose={onClose} color="#7B2FBE" />
-      </div>
-
-      <div style={{ padding: '20px 24px' }}>
-        <div style={{
-          padding: '14px 16px', background: '#F0FDF4',
-          border: '1px solid #BBF7D0', borderRadius: '12px', marginBottom: '20px',
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-        }}>
-          <div>
-            <p style={{ margin: 0, fontSize: '0.74rem', fontWeight: '700', color: '#6B7280', textTransform: 'uppercase' }}>
-              Refund Amount
-            </p>
-            <p style={{ margin: '3px 0 0', fontSize: '1.5rem', fontWeight: '900', color: '#10B981' }}>
-              ₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}
-            </p>
-          </div>
-          <span style={{ fontSize: '2rem' }}>💰</span>
-        </div>
-
-        <p style={{ fontSize: '0.88rem', fontWeight: '700', color: '#2D1A4A', margin: '0 0 12px' }}>
-          Choose refund method <span style={{ color: '#EF4444' }}>*</span>
-        </p>
-
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '20px' }}>
-          {[
-            { id: 'upi', icon: '📱', label: 'UPI ID', sub: '⚡ Faster Refund', color: '#10B981', bg: '#F0FDF4' },
-            { id: 'bank', icon: '🏦', label: 'Bank Account', sub: '5–7 business days', color: '#3B82F6', bg: '#EFF6FF' },
-          ].map(opt => (
-            <div
-              key={opt.id}
-              onClick={() => setRefundMethod(opt.id)}
-              style={{
-                padding: '16px', textAlign: 'center',
-                background: refundMethod === opt.id ? opt.bg : 'white',
-                border: `2px solid ${refundMethod === opt.id ? opt.color : '#E5E7EB'}`,
-                borderRadius: '14px', cursor: 'pointer',
-                transition: 'all 0.2s', position: 'relative',
-              }}
-            >
-              <div style={{ fontSize: '1.8rem', marginBottom: '8px' }}>{opt.icon}</div>
-              <p style={{
-                margin: '0 0 6px', fontSize: '0.90rem', fontWeight: '800',
-                color: refundMethod === opt.id ? opt.color : '#374151',
-              }}>
-                {opt.label}
-              </p>
-              <span style={{ fontSize: '0.64rem', fontWeight: '700', color: '#6B7280' }}>{opt.sub}</span>
-              {refundMethod === opt.id && (
-                <div style={{
-                  position: 'absolute', top: '8px', right: '8px',
-                  width: '20px', height: '20px', borderRadius: '50%',
-                  background: opt.color, color: 'white',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '0.70rem', fontWeight: '900',
-                }}>✓</div>
-              )}
-            </div>
-          ))}
-        </div>
-
-        {refundMethod === 'upi' && (
-          <div style={{ padding: '16px', background: '#F8FAFC', border: '1.5px solid #E2E8F0', borderRadius: '12px', marginBottom: '16px' }}>
-            <label style={labelStyle}>UPI ID <span style={{ color: '#EF4444' }}>*</span></label>
-            <input type="text" value={upiId} onChange={e => setUpiId(e.target.value)} placeholder="yourname@upi" style={inputStyle} />
-          </div>
-        )}
-
-        {refundMethod === 'bank' && (
-          <div style={{ padding: '16px', background: '#F8FAFC', border: '1.5px solid #E2E8F0', borderRadius: '12px', marginBottom: '16px' }}>
-            <div style={{ display: 'grid', gap: '12px' }}>
-              <div>
-                <label style={labelStyle}>Account Holder Name <span style={{ color: '#EF4444' }}>*</span></label>
-                <input type="text" value={bankDetails.accountHolderName} onChange={e => setBankDetails(p => ({ ...p, accountHolderName: e.target.value }))} placeholder="As per bank records" style={inputStyle} />
-              </div>
-              <div>
-                <label style={labelStyle}>Account Number <span style={{ color: '#EF4444' }}>*</span></label>
-                <input type="text" value={bankDetails.accountNumber} onChange={e => setBankDetails(p => ({ ...p, accountNumber: e.target.value.replace(/\D/g, '') }))} placeholder="Enter your account number" maxLength={18} style={inputStyle} />
-              </div>
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                <div>
-                  <label style={labelStyle}>IFSC Code <span style={{ color: '#EF4444' }}>*</span></label>
-                  <input type="text" value={bankDetails.ifscCode} onChange={e => setBankDetails(p => ({ ...p, ifscCode: e.target.value.toUpperCase() }))} placeholder="SBIN0001234" maxLength={11} style={inputStyle} />
-                </div>
-                <div>
-                  <label style={labelStyle}>Bank Name</label>
-                  <input type="text" value={bankDetails.bankName} onChange={e => setBankDetails(p => ({ ...p, bankName: e.target.value }))} placeholder="e.g. SBI, HDFC" style={inputStyle} />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        <div style={{ display: 'flex', gap: '10px' }}>
-          <button onClick={onClose} style={{
-            flex: 1, padding: '12px', background: 'white',
-            border: '1.5px solid #E5E7EB', borderRadius: '10px',
-            fontWeight: '700', color: '#6B7280', cursor: 'pointer', fontFamily: 'Nunito, sans-serif',
-          }}>
-            Cancel
-          </button>
-          <button
-            onClick={handleSubmit}
-            disabled={!isValid || submitting}
-            style={{
-              flex: 2, padding: '12px',
-              background: isValid && !submitting ? 'linear-gradient(135deg, #7B2FBE, #9333EA)' : '#F3F4F6',
-              color: isValid && !submitting ? 'white' : '#9CA3AF',
-              border: 'none', borderRadius: '10px',
-              fontWeight: '800', fontSize: '0.95rem',
-              fontFamily: 'Nunito, sans-serif',
-              cursor: isValid && !submitting ? 'pointer' : 'not-allowed',
-            }}
-          >
-            {submitting ? '⏳ Submitting...' : '💰 Submit Refund Request'}
-          </button>
-        </div>
-      </div>
-    </ModalWrapper>
-  );
-}
-
-/* ══════════════════════════════════════════
    CANCEL MODAL
 ══════════════════════════════════════════ */
 function CancelOrderModal({ order, onClose, onSuccess }) {
   const [reason,       setReason]       = useState('');
   const [customReason, setCustomReason] = useState('');
   const [loading,      setLoading]      = useState(false);
-  const needsBankDetails = order.paymentMethod === 'COD' && order.isDelivered;
-
-  const [bankDetails, setBankDetails] = useState({
-    accountHolderName: '', accountNumber: '', ifscCode: '', bankName: '', upiId: '',
-  });
 
   const CANCEL_REASONS = [
     'Found a better price elsewhere',
     'Ordered by mistake',
     'Delivery taking too long',
     'Wrong product selected',
-    'Quality issue',
+    'Quality concern',
     'No longer need it',
     'Payment failed / cannot pay',
     'Other',
@@ -1883,12 +2095,10 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
   const getRefundMessage = () => {
     if (order.paymentStatus === 'failed' && !order.isPaid)
       return { type: 'info', icon: 'ℹ️', title: 'No refund needed', message: "You haven't paid yet — no refund required." };
-    if (order.paymentMethod === 'COD' && !order.isDelivered)
+    if (order.paymentMethod === 'COD')
       return { type: 'info', icon: 'ℹ️', title: 'No refund needed', message: "You haven't paid yet (Cash on Delivery)." };
     if (order.paymentMethod === 'Razorpay' && order.isPaid)
       return { type: 'success', icon: '💰', title: 'Auto-refund will be initiated', message: `₹${Math.round(order.totalPrice)?.toLocaleString('en-IN')} will be refunded within 5–7 business days.` };
-    if (order.paymentMethod === 'COD' && order.isDelivered)
-      return { type: 'warning', icon: '🏦', title: 'Bank details required', message: `₹${Math.round(order.totalPrice)?.toLocaleString('en-IN')} will be transferred after we receive returned items.` };
     return null;
   };
 
@@ -1896,31 +2106,23 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
 
   const handleSubmit = async () => {
     const finalReason = reason === 'Other' ? customReason : reason;
-    if (!finalReason.trim()) { toast.error('Please select or enter a reason'); return; }
-    if (needsBankDetails) {
-      if (!bankDetails.accountHolderName.trim()) { toast.error('Please enter account holder name'); return; }
-      if (!bankDetails.accountNumber.trim() || bankDetails.accountNumber.length < 9) { toast.error('Please enter a valid account number'); return; }
-      if (!bankDetails.ifscCode.trim() || bankDetails.ifscCode.length !== 11) { toast.error('Please enter a valid IFSC code'); return; }
-    }
+    if (!finalReason.trim()) { toast.error('Please select a reason'); return; }
     setLoading(true);
     try {
       const res = await fetch(`/api/orders/${order.id}/cancel`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          reason: finalReason,
-          bankDetails: needsBankDetails ? bankDetails : null,
-        }),
+        body: JSON.stringify({ reason: finalReason }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to cancel order');
-      toast.success('✅ Order cancelled successfully!', { duration: 4000 });
+      if (!res.ok) throw new Error(data.error);
+      toast.success('✅ Order cancelled!');
       if (data.refundType === 'razorpay') {
         setTimeout(() => toast.success('💰 Refund initiated!', { duration: 5000 }), 500);
       }
       onSuccess();
     } catch (err) {
-      toast.error(err.message || 'Failed to cancel order');
+      toast.error(err.message);
     } finally {
       setLoading(false);
     }
@@ -1929,88 +2131,62 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
   return (
     <ModalWrapper onClose={onClose}>
       <div style={{
-        padding: '20px 24px',
-        borderBottom: '2px solid #FEF2F2',
+        padding: '22px 26px',
         background: 'linear-gradient(135deg, #FEF2F2, #FEE2E2)',
         borderRadius: '20px 20px 0 0',
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
       }}>
         <div>
-          <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800', color: '#DC2626' }}>
+          <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900', color: '#DC2626' }}>
             ❌ Cancel Order
           </h2>
-          <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#7F1D1D', fontWeight: '700', fontFamily: 'monospace' }}>
+          <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#7F1D1D', fontWeight: '800', fontFamily: 'monospace' }}>
             {fmtOrderNum(order)}
           </p>
         </div>
         <CloseBtn onClose={onClose} color="#DC2626" />
       </div>
 
-      <div style={{ padding: '20px 24px' }}>
-        <div style={{
-          padding: '12px 14px', background: '#F9FAFB', borderRadius: '12px',
-          marginBottom: '16px', display: 'flex', alignItems: 'center',
-          justifyContent: 'space-between', gap: '10px', flexWrap: 'wrap',
-        }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            {order.orderItems?.[0]?.image && (
-              <img src={order.orderItems[0].image} alt="" style={{ width: '44px', height: '44px', borderRadius: '8px', objectFit: 'cover' }} />
-            )}
-            <div>
-              <p style={{ fontSize: '0.84rem', fontWeight: '700', color: '#1F2937', margin: 0 }}>
-                {order.orderItems?.length} item{order.orderItems?.length > 1 ? 's' : ''}
-              </p>
-              <p style={{ fontSize: '0.72rem', color: '#6B7280', margin: 0, fontWeight: '600' }}>
-                {order.paymentMethod} · {order.isPaid ? 'Paid' : 'Not paid'}
-              </p>
-            </div>
-          </div>
-          <strong style={{ color: '#FF6B35', fontSize: '1rem' }}>
-            ₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}
-          </strong>
-        </div>
-
+      <div style={{ padding: '22px 26px' }}>
         {refundMsg && (
           <div style={{
             padding: '14px 16px',
-            background: refundMsg.type === 'success' ? '#F0FDF4' : refundMsg.type === 'warning' ? '#FFFBEB' : '#EFF6FF',
-            border: `1.5px solid ${refundMsg.type === 'success' ? '#BBF7D0' : refundMsg.type === 'warning' ? '#FDE68A' : '#BFDBFE'}`,
+            background: refundMsg.type === 'success' ? '#F0FDF4' : '#EFF6FF',
+            border: `1.5px solid ${refundMsg.type === 'success' ? '#BBF7D0' : '#BFDBFE'}`,
             borderRadius: '12px', marginBottom: '16px',
           }}>
             <p style={{
-              margin: 0, fontSize: '0.86rem', fontWeight: '800',
-              color: refundMsg.type === 'success' ? '#166534' : refundMsg.type === 'warning' ? '#92400E' : '#1E40AF',
+              margin: 0, fontSize: '0.86rem', fontWeight: '900',
+              color: refundMsg.type === 'success' ? '#166534' : '#1E40AF',
             }}>
               {refundMsg.icon} {refundMsg.title}
             </p>
             <p style={{
               margin: '4px 0 0', fontSize: '0.80rem', fontWeight: '600', lineHeight: 1.5,
-              color: refundMsg.type === 'success' ? '#047857' : refundMsg.type === 'warning' ? '#A16207' : '#1E40AF',
+              color: refundMsg.type === 'success' ? '#047857' : '#1E40AF',
             }}>
               {refundMsg.message}
             </p>
           </div>
         )}
 
-        <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: '800', color: '#1F2937', marginBottom: '8px' }}>
-          Why are you cancelling? <span style={{ color: '#EF4444' }}>*</span>
+        <label style={{ display: 'block', fontSize: '0.88rem', fontWeight: '900', color: '#1F2937', marginBottom: '10px' }}>
+          Why cancelling? <span style={{ color: '#EF4444' }}>*</span>
         </label>
 
-        <div style={{ display: 'grid', gap: '6px', marginBottom: '12px' }}>
+        <div style={{ display: 'grid', gap: '7px', marginBottom: '14px' }}>
           {CANCEL_REASONS.map(r => (
             <label key={r} style={{
-              display: 'flex', alignItems: 'center', gap: '8px',
-              padding: '10px 12px',
+              display: 'flex', alignItems: 'center', gap: '10px',
+              padding: '11px 14px',
               background: reason === r ? '#FEF2F2' : 'white',
-              border: `1.5px solid ${reason === r ? '#FCA5A5' : '#E5E7EB'}`,
+              border: `2px solid ${reason === r ? '#FCA5A5' : '#E5E7EB'}`,
               borderRadius: '10px', cursor: 'pointer',
-              fontSize: '0.86rem', fontWeight: '600', color: '#1F2937',
+              fontSize: '0.88rem', fontWeight: '600', color: '#1F2937',
             }}>
-              <input
-                type="radio" name="cancelReason" value={r}
+              <input type="radio" name="cancelReason" value={r}
                 checked={reason === r} onChange={e => setReason(e.target.value)}
-                style={{ accentColor: '#EF4444' }}
-              />
+                style={{ accentColor: '#EF4444' }} />
               {r}
             </label>
           ))}
@@ -2019,81 +2195,36 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
         {reason === 'Other' && (
           <textarea
             value={customReason} onChange={e => setCustomReason(e.target.value)}
-            placeholder="Please tell us your reason..."
+            placeholder="Please tell us..."
             rows={2}
             style={{
-              width: '100%', padding: '10px 12px',
-              border: '1.5px solid #E5E7EB', borderRadius: '10px',
-              fontFamily: 'Nunito, sans-serif', fontSize: '0.86rem',
-              resize: 'vertical', outline: 'none', marginBottom: '12px',
+              width: '100%', padding: '11px 13px',
+              border: '2px solid #E5E7EB', borderRadius: '10px',
+              fontFamily: 'inherit', fontSize: '0.86rem',
+              resize: 'vertical', outline: 'none', marginBottom: '14px',
               boxSizing: 'border-box',
             }}
           />
         )}
 
-        {needsBankDetails && (
-          <div style={{
-            padding: '14px', background: '#FFFBEB',
-            border: '1.5px solid #FDE68A', borderRadius: '12px', marginBottom: '16px',
-          }}>
-            <h4 style={{ fontSize: '0.88rem', fontWeight: '800', color: '#92400E', margin: '0 0 10px' }}>
-              🏦 Bank Details for Refund
-            </h4>
-            {[
-              { key: 'accountHolderName', label: 'Account Holder Name *', placeholder: 'As per bank records' },
-              { key: 'accountNumber',     label: 'Account Number *',      placeholder: '12-digit account number' },
-              { key: 'ifscCode',          label: 'IFSC Code *',           placeholder: 'e.g., SBIN0001234', max: 11 },
-              { key: 'bankName',          label: 'Bank Name (optional)',  placeholder: 'e.g., State Bank of India' },
-              { key: 'upiId',             label: 'UPI ID (optional)',     placeholder: 'e.g., yourname@upi' },
-            ].map(field => (
-              <div key={field.key} style={{ marginBottom: '8px' }}>
-                <label style={{ display: 'block', fontSize: '0.72rem', fontWeight: '700', color: '#78350F', marginBottom: '3px' }}>
-                  {field.label}
-                </label>
-                <input
-                  type="text"
-                  value={bankDetails[field.key]}
-                  maxLength={field.max}
-                  onChange={e => setBankDetails(p => ({
-                    ...p,
-                    [field.key]: field.key === 'ifscCode' ? e.target.value.toUpperCase() : e.target.value,
-                  }))}
-                  placeholder={field.placeholder}
-                  style={{
-                    width: '100%', padding: '8px 10px',
-                    border: '1.5px solid #FDE68A', borderRadius: '8px',
-                    fontSize: '0.84rem', fontFamily: 'inherit',
-                    outline: 'none', boxSizing: 'border-box',
-                  }}
-                />
-              </div>
-            ))}
-          </div>
-        )}
-
-        <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+        <div style={{ display: 'flex', gap: '10px' }}>
           <button onClick={onClose} disabled={loading} style={{
-            flex: 1, padding: '12px', background: 'white',
-            border: '1.5px solid #D1D5DB', borderRadius: '10px',
-            fontWeight: '700', color: '#6B7280', cursor: 'pointer', fontFamily: 'Nunito, sans-serif',
+            flex: 1, padding: '13px', background: 'white',
+            border: '2px solid #D1D5DB', borderRadius: '12px',
+            fontWeight: '800', color: '#6B7280', cursor: 'pointer', fontFamily: 'inherit',
           }}>
             Keep Order
           </button>
-          <button
-            onClick={handleSubmit}
-            disabled={loading}
-            style={{
-              flex: 1.5, padding: '12px',
-              background: loading ? '#FCA5A5' : 'linear-gradient(135deg, #EF4444, #DC2626)',
-              color: 'white', border: 'none', borderRadius: '10px',
-              fontWeight: '800', cursor: loading ? 'wait' : 'pointer',
-              fontFamily: 'Nunito, sans-serif',
-              boxShadow: '0 4px 12px rgba(239,68,68,0.25)',
-            }}
-          >
+          <button onClick={handleSubmit} disabled={loading} style={{
+            flex: 1.5, padding: '13px',
+            background: loading ? '#FCA5A5' : 'linear-gradient(135deg, #EF4444, #DC2626)',
+            color: 'white', border: 'none', borderRadius: '12px',
+            fontWeight: '900', cursor: loading ? 'wait' : 'pointer',
+            fontFamily: 'inherit', boxShadow: '0 6px 18px rgba(239,68,68,0.30)',
+          }}>
             {loading ? '⏳ Cancelling...' : '❌ Confirm Cancel'}
           </button>
-        </div>
+               </div>
       </div>
     </ModalWrapper>
   );

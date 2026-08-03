@@ -127,16 +127,35 @@ type VariantImage {
   view     String?
 }
 
+// ============================================================
+// ✅ REVIEW MODEL — Enhanced with images & verification
+// ============================================================
 model Review {
-  id        String   @id @default(auto()) @map("_id") @db.ObjectId
-  productId String   @db.ObjectId
-  product   Product  @relation(fields: [productId], references: [id])
-  userId    String   @db.ObjectId
-  name      String
-  rating    Int
-  comment   String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  productId    String        @db.ObjectId
+  product      Product       @relation(fields: [productId], references: [id])
+  userId       String        @db.ObjectId
+  orderId      String?       @db.ObjectId
+  name         String
+  email        String?
+  rating       Int
+  title        String?
+  comment      String
+  images       ReviewImage[]
+  isVerified   Boolean       @default(false)
+  isApproved   Boolean       @default(true)
+  helpfulCount Int           @default(0)
+  helpfulBy    String[]      @db.ObjectId
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([productId, createdAt])
+  @@index([userId])
+}
+
+type ReviewImage {
+  url      String?
+  publicId String?
 }
 
 model Brand {
@@ -210,11 +229,9 @@ type BannerPanel {
   isBig    Boolean?
 }
 
-// prisma/schema.prisma — add these two models/fields
-
 model Order {
   id              String      @id @default(auto()) @map("_id") @db.ObjectId
-  orderNumber     Int?        // ✅ ADD THIS
+  orderNumber     Int?
   userId          String      @db.ObjectId
   user            User        @relation(fields: [userId], references: [id])
   orderItems      OrderItem[]
@@ -242,19 +259,18 @@ model Order {
   refundAmount    Float?
   refundedAt      DateTime?
   returnRequest   Json?
-    paymentStatus   String?     @default("pending") 
+  paymentStatus   String?     @default("pending")
   returnStatus    String?
   exchangeId      String?     @db.ObjectId
   exchangeStatus  String?
   createdAt       DateTime    @default(now())
   updatedAt       DateTime    @updatedAt
-   awbNumber    String?
-  courierName  String?
-  shipmentId   String?
-  trackingUrl  String?
+  awbNumber       String?
+  courierName     String?
+  shipmentId      String?
+  trackingUrl     String?
 }
 
-// ✅ ADD THIS NEW MODEL at bottom
 model Counter {
   id    String @id @default(auto()) @map("_id") @db.ObjectId
   name  String @unique
@@ -331,53 +347,36 @@ model SectionSetting {
   @@map("section_settings")
 }
 
-// ============================================================
-// ✅ EXCHANGE MODEL
-// ============================================================
 model Exchange {
   id                String   @id @default(auto()) @map("_id") @db.ObjectId
   orderId           String   @db.ObjectId
   userId            String   @db.ObjectId
-
-  // OLD product (what customer is returning)
   oldProductId      String   @db.ObjectId
   oldProductName    String
   oldProductImage   String?
   oldPrice          Float
   oldQuantity       Int      @default(1)
-
-  // NEW product (what customer wants)
   newProductId      String   @db.ObjectId
   newProductName    String
   newProductImage   String?
   newPrice          Float
   newQuantity       Int      @default(1)
-
-  // Price difference
   priceDifference   Float    @default(0)
-
-  // Reason
   reason            String
   description       String?
   images            String[]
-
   status            String   @default("pending")
-
   paymentLinkId     String?
   paymentLinkUrl    String?
   paymentStatus     String?
   paymentPaidAt     DateTime?
-
   razorpayRefundId  String?
   refundAmount      Float?
   refundedAt        DateTime?
-
   pickupTracking    String?
   shipmentTracking  String?
-
   adminNotes        String?
   rejectionReason   String?
-
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
   approvedAt        DateTime?
@@ -391,9 +390,6 @@ model Exchange {
   @@map("exchanges")
 }
 
-// ============================================================
-// ✅ REFUND MODEL — with 2-minute delay system
-// ============================================================
 model Refund {
   id                String          @id @default(auto()) @map("_id") @db.ObjectId
   orderId           String          @db.ObjectId
@@ -401,19 +397,15 @@ model Refund {
   amount            Float
   reason            String?
   refundType        String          @default("razorpay")
-  
   refundStatus      String          @default("pending")
-  
   razorpayRefundId  String?
   razorpayPaymentId String?
   bankDetails       BankDetailsType?
   notes             String?
   processedAt       DateTime?
-
   scheduledAt          DateTime?
   scheduledCancelledAt DateTime?
   scheduledByAdmin     String?
-
   createdAt         DateTime        @default(now())
   updatedAt         DateTime        @updatedAt
 

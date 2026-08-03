@@ -11,6 +11,7 @@ const navItems = [
   { href: '/admin/categories', icon: '🗂️', label: 'Categories' },
   { href: '/admin/banners',    icon: '🖼️', label: 'Banners'    },
   { href: '/admin/orders',     icon: '🛍️', label: 'Orders'     },
+  { label: 'Reviews', icon: '⭐', href: '/admin/reviews' },
   // { href: '/admin/refunds',    icon: '💰', label: 'Refunds'    }, // ✅ NEW
   { href: '/admin/exchanges',  icon: '🔄', label: 'Exchanges'  }, // ✅ NEW
   { href: '/admin/coupons',    icon: '🎟️', label: 'Coupons'    },

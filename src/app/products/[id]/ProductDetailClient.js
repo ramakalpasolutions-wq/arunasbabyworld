@@ -6,6 +6,7 @@ import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
 import toast from 'react-hot-toast';
 import styles from './ProductDetailClient.module.css';
+import ReviewsSection from '@/components/reviews/ReviewsSection';
 
 export default function ProductDetailClient({ id }) {
   const [product,       setProduct]       = useState(null);
@@ -16,11 +17,9 @@ export default function ProductDetailClient({ id }) {
   const [tab,           setTab]           = useState('description');
   const [imgLoaded,     setImgLoaded]     = useState(false);
 
-  // ✅ NEW: Color variant state
   const [selectedColorIdx, setSelectedColorIdx] = useState(0);
   const [selectedSize,     setSelectedSize]     = useState('');
 
-  // ✅ Auto slide states
   const [isHovered, setIsHovered] = useState(false);
   const [progress,  setProgress]  = useState(0);
   const intervalRef = useRef(null);
@@ -43,15 +42,12 @@ export default function ProductDetailClient({ id }) {
         setProduct(d.product);
         setLoading(false);
 
-        // ✅ Auto-select first available size of first color
         if (d.product?.hasVariants && d.product?.colorVariants?.[0]?.sizes?.length > 0) {
           setSelectedSize(d.product.colorVariants[0].sizes[0]);
         }
 
         if (d.product?.categoryId) {
-          fetch(
-            `/api/products?category=${d.product.categoryId}&limit=8&sort=createdAt&order=desc`
-          )
+          fetch(`/api/products?category=${d.product.categoryId}&limit=8&sort=createdAt&order=desc`)
             .then(r => r.json())
             .then(rd => {
               const filtered = (rd.products || []).filter(p => p.id !== d.product.id);
@@ -63,13 +59,9 @@ export default function ProductDetailClient({ id }) {
       .catch(() => setLoading(false));
   }, [id]);
 
-  /* ============================================================
-     ✅ COMPUTED: Current color variant + display data
-     ============================================================ */
   const hasVariants = product?.hasVariants && product?.colorVariants?.length > 0;
   const currentVariant = hasVariants ? product.colorVariants[selectedColorIdx] : null;
 
-  // ✅ Images to display: variant images OR default product images
   const displayImages = useMemo(() => {
     if (hasVariants && currentVariant?.images?.length > 0) {
       return currentVariant.images;
@@ -79,31 +71,17 @@ export default function ProductDetailClient({ id }) {
       : [{ url: `https://via.placeholder.com/500x500?text=${encodeURIComponent(product?.name || '')}` }];
   }, [hasVariants, currentVariant, product]);
 
-  // ✅ Price: variant price OR default product price
-  const currentPrice = hasVariants && currentVariant
-    ? currentVariant.price
-    : product?.price;
-
-  const currentDiscountPrice = hasVariants && currentVariant
-    ? currentVariant.discountPrice
-    : product?.discountPrice;
-
+  const currentPrice = hasVariants && currentVariant ? currentVariant.price : product?.price;
+  const currentDiscountPrice = hasVariants && currentVariant ? currentVariant.discountPrice : product?.discountPrice;
   const finalPrice = currentDiscountPrice || currentPrice;
   const discount = currentDiscountPrice
     ? Math.round(((currentPrice - currentDiscountPrice) / currentPrice) * 100)
     : 0;
+  const savedAmount = currentDiscountPrice ? currentPrice - currentDiscountPrice : 0;
 
-  // ✅ Stock: variant stock OR default product stock
-  const currentStock = hasVariants && currentVariant
-    ? currentVariant.stock
-    : product?.stock;
+  const currentStock = hasVariants && currentVariant ? currentVariant.stock : product?.stock;
+  const currentSizes = hasVariants && currentVariant ? currentVariant.sizes || [] : [];
 
-  // ✅ Sizes for current color
-  const currentSizes = hasVariants && currentVariant
-    ? currentVariant.sizes || []
-    : [];
-
-  /* ── When color changes — reset image, set first size ── */
   const handleColorChange = (idx) => {
     setSelectedColorIdx(idx);
     setSelectedImage(0);
@@ -113,7 +91,6 @@ export default function ProductDetailClient({ id }) {
     clearInterval(intervalRef.current);
     clearInterval(progressRef.current);
 
-    // Auto-select first size of new color
     const newVariant = product?.colorVariants?.[idx];
     if (newVariant?.sizes?.length > 0) {
       setSelectedSize(newVariant.sizes[0]);
@@ -122,7 +99,6 @@ export default function ProductDetailClient({ id }) {
     }
   };
 
-  /* ── Auto slide logic ── */
   useEffect(() => {
     if (!product) return;
     if (displayImages.length <= 1) return;
@@ -155,7 +131,6 @@ export default function ProductDetailClient({ id }) {
     };
   }, [isHovered, product, selectedImage, displayImages.length]);
 
-  /* ── Manual navigation ── */
   const goToSlide = useCallback((index) => {
     setSelectedImage(index);
     setImgLoaded(false);
@@ -164,49 +139,36 @@ export default function ProductDetailClient({ id }) {
     clearInterval(progressRef.current);
   }, []);
 
-  const goPrev = () => {
-    goToSlide((selectedImage - 1 + displayImages.length) % displayImages.length);
-  };
+  const goPrev = () => goToSlide((selectedImage - 1 + displayImages.length) % displayImages.length);
+  const goNext = () => goToSlide((selectedImage + 1) % displayImages.length);
 
-  const goNext = () => {
-    goToSlide((selectedImage + 1) % displayImages.length);
-  };
-
-  /* ── Loading skeleton ── */
   if (loading) return (
-    <div className={`container ${styles.page}`}>
-      <div className={styles.skeletonLayout}>
-        <div className={styles.skeletonLeft}>
-          <div className={`${styles.skeletonBox} ${styles.skeletonMainImg}`} />
-          <div className={styles.skeletonThumbs}>
-            {[1,2,3,4].map(i => (
-              <div key={i} className={`${styles.skeletonBox} ${styles.skeletonThumb}`} />
-            ))}
-          </div>
-        </div>
-        <div className={styles.skeletonRight}>
-          <div className={`${styles.skeletonBox} ${styles.skeletonTitle}`} />
-          <div className={`${styles.skeletonBox} ${styles.skeletonPrice}`} />
-          <div className={`${styles.skeletonBox} ${styles.skeletonDesc}`} />
-          <div className={`${styles.skeletonBox} ${styles.skeletonBtn}`} />
-        </div>
-      </div>
+    <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '20px', fontFamily: 'Nunito, sans-serif' }}>
+      <div style={{
+        width: '60px', height: '60px',
+        border: '4px solid #F3E8FF', borderTop: '4px solid #7B2FBE',
+        borderRadius: '50%', animation: 'spin 0.8s linear infinite',
+      }} />
+      <p style={{ color: '#9585B0', fontWeight: '700' }}>Loading product...</p>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
 
-  /* ── Not found ── */
   if (!product) return (
-    <div className={`container ${styles.notFound}`}>
-      <span>😕</span>
-      <h2>Product not found</h2>
-      <Link href="/products" className="btn btn-primary">Browse Products</Link>
+    <div style={{ textAlign: 'center', padding: '100px 20px', fontFamily: 'Nunito, sans-serif' }}>
+      <div style={{ fontSize: '4rem', marginBottom: '20px' }}>😕</div>
+      <h2 style={{ color: '#2D1A4A', margin: '0 0 20px' }}>Product not found</h2>
+      <Link href="/products" style={{
+        display: 'inline-block', padding: '14px 32px',
+        background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+        color: 'white', borderRadius: '14px', textDecoration: 'none',
+        fontWeight: '800', boxShadow: '0 6px 20px rgba(255,107,53,0.30)',
+      }}>Browse Products</Link>
     </div>
   );
 
   const handleAddToCart = () => {
     if (currentStock === 0) return;
-
-    // ✅ Validate size selection if variant has sizes
     if (hasVariants && currentSizes.length > 0 && !selectedSize) {
       toast.error('Please select a size');
       return;
@@ -215,21 +177,16 @@ export default function ProductDetailClient({ id }) {
     const cartItem = {
       ...product,
       quantity,
-      // ✅ Override with variant-specific data
       ...(hasVariants && currentVariant && {
         price: currentVariant.price,
         discountPrice: currentVariant.discountPrice,
-        selectedColor: {
-          name: currentVariant.colorName,
-          hex:  currentVariant.colorHex,
-        },
+        selectedColor: { name: currentVariant.colorName, hex: currentVariant.colorHex },
         selectedSize: selectedSize || null,
         images: currentVariant.images || product.images,
       }),
     };
 
     addItem(cartItem);
-
     const colorLabel = hasVariants ? ` (${currentVariant.colorName}${selectedSize ? `, ${selectedSize}` : ''})` : '';
     toast.success(`${product.name}${colorLabel} added to cart!`, { icon: '🛒' });
   };
@@ -240,11 +197,6 @@ export default function ProductDetailClient({ id }) {
     toast.success(inWishlist ? 'Removed from wishlist' : 'Added to wishlist! ❤️');
   };
 
-  const isClothing =
-    product.category?.name?.toLowerCase().includes('cloth') ||
-    product.category?.slug?.toLowerCase().includes('cloth') ||
-    product.size || product.gender || product.color || product.material;
-
   const genderDisplay = {
     boy:    { label: 'Boy',    emoji: '👦', color: '#0EA5E9', bg: '#E0F2FE' },
     girl:   { label: 'Girl',   emoji: '👧', color: '#EC4899', bg: '#FDF2F8' },
@@ -252,831 +204,1095 @@ export default function ProductDetailClient({ id }) {
   };
 
   const genderInfo = product.gender
-    ? genderDisplay[product.gender.toLowerCase()] || {
-        label: product.gender, emoji: '🧒', color: '#7B2FBE', bg: '#F3E8FF',
-      }
+    ? genderDisplay[product.gender.toLowerCase()] || { label: product.gender, emoji: '🧒', color: '#7B2FBE', bg: '#F3E8FF' }
     : null;
 
   return (
-    <div className={`container ${styles.page}`}>
+    <div style={{
+      minHeight: '100vh',
+      background: 'linear-gradient(180deg, #FAFBFF 0%, #FFF5F7 100%)',
+      fontFamily: 'Nunito, sans-serif',
+    }}>
+      <div style={{ maxWidth: '1300px', margin: '0 auto', padding: 'clamp(16px, 3vw, 32px) 20px' }}>
 
-      {/* ── BREADCRUMB ── */}
-      <nav className={styles.breadcrumb}>
-        <Link href="/">Home</Link>
-        <span className={styles.breadSep}>/</span>
-        <Link href="/products">Products</Link>
-        {product.category && (
-          <>
-            <span className={styles.breadSep}>/</span>
-            <Link href={`/products?category=${product.category?.id}`}>
-              {product.category.name}
-            </Link>
-          </>
-        )}
-        <span className={styles.breadSep}>/</span>
-        <span className={styles.breadCurrent}>{product.name}</span>
-      </nav>
-
-      {/* ══ MAIN LAYOUT ══ */}
-      <div className={styles.layout}>
-
-        {/* ── IMAGES SECTION — Main image ONLY at TOP, Thumbnails ONLY at BOTTOM ── */}
-<div className={styles.imagesSection}>
-
-  {/* ✅ 1. MAIN IMAGE — TOP */}
-  <div
-    className={styles.mainImageWrap}
-    onMouseEnter={() => setIsHovered(true)}
-    onMouseLeave={() => setIsHovered(false)}
-  >
-    {!imgLoaded && (
-      <div className={styles.imgSkeleton}>
-        <span className={styles.imgSkeletonIcon}>🖼️</span>
-      </div>
-    )}
-
-    <Image
-      src={displayImages[selectedImage]?.url || displayImages[0]?.url}
-      alt={product.name}
-      width={600}
-      height={600}
-      className={`${styles.mainImg} ${imgLoaded ? styles.mainImgVisible : styles.mainImgHidden}`}
-      onLoad={() => setImgLoaded(true)}
-      priority
-    />
-
-    {discount > 0 && <span className={styles.discountTag}>{discount}% OFF</span>}
-    {product.isTrending && <span className={styles.trendingTag}>🔥 Trending</span>}
-
-    {displayImages.length > 1 && (
-      <>
-        <button
-          onClick={goPrev}
-          className={styles.navArrow}
-          style={{ left: '12px' }}
-          aria-label="Previous"
-        >‹</button>
-        <button
-          onClick={goNext}
-          className={styles.navArrow}
-          style={{ right: '12px' }}
-          aria-label="Next"
-        >›</button>
-      </>
-    )}
-
-    {displayImages.length > 1 && (
-      <div className={styles.dots}>
-        {displayImages.map((_, i) => (
-          <button
-            key={i}
-            onClick={() => goToSlide(i)}
-            className={`${styles.dot} ${i === selectedImage ? styles.dotActive : ''}`}
-            aria-label={`Go to image ${i + 1}`}
-          />
-        ))}
-      </div>
-    )}
-
-    {displayImages.length > 1 && !isHovered && (
-      <div className={styles.progressBar}>
-        <div className={styles.progressFill} style={{ width: `${progress}%` }} />
-      </div>
-    )}
-
-    {displayImages.length > 1 && (
-      <div className={styles.imageCounter}>
-        {selectedImage + 1} / {displayImages.length}
-      </div>
-    )}
-  </div>
-
-  {/* ✅ 2. THUMBNAILS — BOTTOM ONLY (no top thumbnails!) */}
-  {displayImages.length > 1 && (
-    <div className={styles.thumbnails} data-count={displayImages.length}>
-      {displayImages.map((img, i) => (
-        <button
-          key={i}
-          className={`${styles.thumb} ${i === selectedImage ? styles.thumbActive : ''}`}
-          onClick={() => goToSlide(i)}
-          aria-label={`View ${i + 1}`}
-        >
-          <Image
-            src={img.url}
-            alt={`${product.name} ${i + 1}`}
-            width={120}
-            height={120}
-            className={styles.thumbImg}
-          />
-        </button>
-      ))}
-    </div>
-  )}
-
-</div>
-
-        {/* ── INFO SECTION ── */}
-        <div className={styles.infoSection}>
-
+        {/* ── BREADCRUMB ── */}
+        <nav style={{
+          display: 'flex', alignItems: 'center', gap: '8px',
+          padding: '10px 16px', background: 'white',
+          border: '1.5px solid #F3E8FF', borderRadius: '12px',
+          marginBottom: '20px', fontSize: '0.82rem',
+          flexWrap: 'wrap', boxShadow: '0 2px 8px rgba(123,47,190,0.05)',
+        }}>
+          <Link href="/" style={{ color: '#7B2FBE', textDecoration: 'none', fontWeight: '700' }}>🏠 Home</Link>
+          <span style={{ color: '#CBD5E1' }}>›</span>
+          <Link href="/products" style={{ color: '#7B2FBE', textDecoration: 'none', fontWeight: '700' }}>Products</Link>
           {product.category && (
-            <Link
-              href={`/products?category=${product.category?.id}`}
-              className={styles.categoryLink}
-            >
-              {product.category.name}
-            </Link>
+            <>
+              <span style={{ color: '#CBD5E1' }}>›</span>
+              <Link href={`/products?category=${product.category?.id}`} style={{ color: '#7B2FBE', textDecoration: 'none', fontWeight: '700' }}>
+                {product.category.name}
+              </Link>
+            </>
           )}
+          <span style={{ color: '#CBD5E1' }}>›</span>
+          <span style={{ color: '#6B7280', fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '200px' }}>
+            {product.name}
+          </span>
+        </nav>
 
-          <h1 className={styles.productName}>{product.name}</h1>
+        {/* ══ MAIN PRODUCT CARD ══ */}
+        <div style={{
+          background: 'white', borderRadius: '24px',
+          padding: 'clamp(16px, 2.5vw, 28px)',
+          boxShadow: '0 10px 40px rgba(123,47,190,0.08)',
+          border: '1px solid rgba(123,47,190,0.06)',
+          marginBottom: '20px',
+        }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)',
+            gap: 'clamp(20px, 4vw, 40px)',
+          }} className="productLayout">
 
-          {product.rating > 0 && (
-            <div className={styles.ratingRow}>
-              <div className={styles.stars}>
-                {[1,2,3,4,5].map(s => (
-                  <span
-                    key={s}
-                    className={s <= Math.round(product.rating)
-                      ? styles.starOn : styles.starOff}
-                  >★</span>
-                ))}
-              </div>
-              <span className={styles.reviewCount}>
-                {product.rating.toFixed(1)} ({product.numReviews} reviews)
-              </span>
-            </div>
-          )}
+            {/* ═══ IMAGES SECTION ═══ */}
+            <div>
+              {/* Main Image */}
+              <div
+                onMouseEnter={() => setIsHovered(true)}
+                onMouseLeave={() => setIsHovered(false)}
+                style={{
+                  position: 'relative',
+                  width: '100%',
+                  aspectRatio: '1 / 1',
+                  background: 'linear-gradient(135deg, #FAFAFA, #F3F4F6)',
+                  borderRadius: '20px',
+                  overflow: 'hidden',
+                  border: '2px solid #F3E8FF',
+                  marginBottom: '16px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
+                }}
+              >
+                {!imgLoaded && (
+                  <div style={{
+                    position: 'absolute', inset: 0,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    fontSize: '4rem', opacity: 0.3,
+                  }}>🖼️</div>
+                )}
 
-         {/* Price */}
-<div className={styles.priceSection}>
-  <span className={styles.currentPrice}>
-    ₹{finalPrice?.toLocaleString('en-IN')}
-  </span>
-  {currentDiscountPrice && (
-    <>
-      <span className={styles.originalPrice}>
-        ₹{currentPrice?.toLocaleString('en-IN')}
-      </span>
-      {/* ✅ Show percentage instead of saved amount */}
-      <span className={styles.saveBadge}>
-        {discount}% OFF
-      </span>
-    </>
-  )}
-</div>
-          {product.shortDescription && (
-            <p className={styles.shortDesc}>{product.shortDescription}</p>
-          )}
+                <Image
+                  src={displayImages[selectedImage]?.url || displayImages[0]?.url}
+                  alt={product.name}
+                  width={600}
+                  height={600}
+                  onLoad={() => setImgLoaded(true)}
+                  priority
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain',
+                    opacity: imgLoaded ? 1 : 0,
+                    transition: 'opacity 0.3s ease',
+                    padding: '20px',
+                  }}
+                />
 
-          {/* ════════════════════════════════════════════════════════
-              ✅ COLOR VARIANTS — Swatch Picker
-              ════════════════════════════════════════════════════════ */}
-          {hasVariants && (
-            <div style={{
-              marginTop: '18px',
-              padding: '16px 18px',
-              background: 'linear-gradient(135deg,#FBF7FF,#FFF)',
-              border: '2px solid #EDD9FF',
-              borderRadius: '14px',
-            }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginBottom: '12px',
-              }}>
-                <span style={{
-                  fontSize: '0.78rem',
-                  fontWeight: '800',
-                  color: '#6B4E8A',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
+                {/* Badges */}
+                <div style={{
+                  position: 'absolute', top: '16px', left: '16px',
+                  display: 'flex', flexDirection: 'column', gap: '6px',
                 }}>
-                  🎨 Color:
-                </span>
-                <span style={{
-                  fontSize: '0.92rem',
-                  fontWeight: '700',
-                  color: currentVariant?.colorHex || '#2D1A4A',
-                }}>
-                  {currentVariant?.colorName}
-                </span>
-                <span style={{
-                  marginLeft: 'auto',
-                  fontSize: '0.74rem',
-                  color: '#9585B0',
-                  fontWeight: '600',
-                }}>
-                  {product.colorVariants.length} colors available
-                </span>
-              </div>
+                  {discount > 0 && (
+                    <span style={{
+                      padding: '6px 14px',
+                      background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+                      color: 'white', borderRadius: '10px',
+                      fontSize: '0.82rem', fontWeight: '900',
+                      boxShadow: '0 4px 12px rgba(239,68,68,0.35)',
+                    }}>
+                      -{discount}% OFF
+                    </span>
+                  )}
+                  {product.isTrending && (
+                    <span style={{
+                      padding: '6px 14px',
+                      background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                      color: 'white', borderRadius: '10px',
+                      fontSize: '0.82rem', fontWeight: '900',
+                      boxShadow: '0 4px 12px rgba(255,107,53,0.35)',
+                    }}>
+                      🔥 Trending
+                    </span>
+                  )}
+                  {product.isFeatured && (
+                    <span style={{
+                      padding: '6px 14px',
+                      background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+                      color: 'white', borderRadius: '10px',
+                      fontSize: '0.82rem', fontWeight: '900',
+                      boxShadow: '0 4px 12px rgba(245,158,11,0.35)',
+                    }}>
+                      ⭐ Featured
+                    </span>
+                  )}
+                </div>
 
-              <div style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '10px',
-              }}>
-                {product.colorVariants.map((variant, idx) => {
-                  const isSelected = idx === selectedColorIdx;
-                  const outOfStock = variant.stock === 0;
-                  return (
-                    <button
-                      key={idx}
-                      type="button"
-                      onClick={() => handleColorChange(idx)}
-                      disabled={outOfStock}
-                      title={`${variant.colorName} - ₹${variant.discountPrice || variant.price}${outOfStock ? ' (Out of Stock)' : ''}`}
-                      style={{
-                        position: 'relative',
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        gap: '4px',
-                        padding: '4px',
-                        background: 'transparent',
-                        border: 'none',
-                        cursor: outOfStock ? 'not-allowed' : 'pointer',
-                        opacity: outOfStock ? 0.5 : 1,
-                        fontFamily: 'inherit',
-                      }}
-                    >
-                      <div style={{
-                        width: '44px',
-                        height: '44px',
-                        borderRadius: '50%',
-                        background: variant.colorHex || '#ccc',
-                        border: `3px solid ${isSelected ? '#7B2FBE' : 'white'}`,
-                        boxShadow: isSelected
-                          ? '0 0 0 2px #7B2FBE, 0 4px 12px rgba(123,47,190,0.3)'
-                          : '0 2px 8px rgba(0,0,0,0.12)',
-                        transition: 'all 0.2s ease',
-                        position: 'relative',
-                      }}>
-                        {isSelected && (
-                          <span style={{
-                            position: 'absolute',
-                            bottom: '-2px',
-                            right: '-2px',
-                            background: '#22C55E',
-                            color: 'white',
-                            width: '18px',
-                            height: '18px',
-                            borderRadius: '50%',
-                            fontSize: '10px',
-                            fontWeight: '800',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            border: '2px solid white',
-                          }}>✓</span>
-                        )}
-                        {outOfStock && (
-                          <div style={{
-                            position: 'absolute',
-                            inset: 0,
-                            borderRadius: '50%',
-                            background: 'rgba(255,255,255,0.7)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            fontSize: '0.65rem',
-                            fontWeight: '800',
-                            color: '#DC2626',
-                          }}>✕</div>
-                        )}
-                      </div>
-                      <span style={{
-                        fontSize: '0.68rem',
-                        fontWeight: '700',
-                        color: isSelected ? '#7B2FBE' : '#6B4E8A',
-                        maxWidth: '60px',
-                        textAlign: 'center',
-                        lineHeight: 1.1,
-                      }}>
-                        {variant.colorName}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
+                {/* Wishlist button on image */}
+                <button
+                  onClick={handleWishlist}
+                  style={{
+                    position: 'absolute', top: '16px', right: '16px',
+                    width: '48px', height: '48px', borderRadius: '50%',
+                    background: 'white', border: 'none',
+                    boxShadow: '0 6px 16px rgba(0,0,0,0.15)',
+                    cursor: 'pointer', fontSize: '1.4rem',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    transition: 'transform 0.2s',
+                  }}
+                  onMouseEnter={e => e.currentTarget.style.transform = 'scale(1.1)'}
+                  onMouseLeave={e => e.currentTarget.style.transform = 'scale(1)'}
+                >
+                  {inWishlist ? '❤️' : '🤍'}
+                </button>
 
-          {/* ════════════════════════════════════════════════════════
-              ✅ SIZE PICKER — Per color
-              ════════════════════════════════════════════════════════ */}
-          {hasVariants && currentSizes.length > 0 && (
-            <div style={{
-              marginTop: '14px',
-              padding: '16px 18px',
-              background: 'linear-gradient(135deg,#FFF3EC,#FFF)',
-              border: '2px solid #FFD4B8',
-              borderRadius: '14px',
-            }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px',
-                marginBottom: '12px',
-              }}>
-                <span style={{
-                  fontSize: '0.78rem',
-                  fontWeight: '800',
-                  color: '#6B4E8A',
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                }}>
-                  📏 Size:
-                </span>
-                {selectedSize && (
-                  <span style={{
-                    fontSize: '0.92rem',
-                    fontWeight: '700',
-                    color: '#FF6B35',
+                {/* Navigation arrows */}
+                {displayImages.length > 1 && (
+                  <>
+                    <button onClick={goPrev} style={{
+                      position: 'absolute', left: '16px', top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '44px', height: '44px', borderRadius: '50%',
+                      background: 'white', border: 'none',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                      cursor: 'pointer', fontSize: '1.4rem', fontWeight: '900',
+                      color: '#7B2FBE',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>‹</button>
+                    <button onClick={goNext} style={{
+                      position: 'absolute', right: '16px', top: '50%',
+                      transform: 'translateY(-50%)',
+                      width: '44px', height: '44px', borderRadius: '50%',
+                      background: 'white', border: 'none',
+                      boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
+                      cursor: 'pointer', fontSize: '1.4rem', fontWeight: '900',
+                      color: '#7B2FBE',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    }}>›</button>
+                  </>
+                )}
+
+                {/* Image counter */}
+                {displayImages.length > 1 && (
+                  <div style={{
+                    position: 'absolute', bottom: '16px', right: '16px',
+                    padding: '6px 12px',
+                    background: 'rgba(0,0,0,0.7)',
+                    color: 'white', borderRadius: '999px',
+                    fontSize: '0.78rem', fontWeight: '800',
+                    backdropFilter: 'blur(4px)',
                   }}>
-                    {selectedSize}
-                  </span>
+                    {selectedImage + 1} / {displayImages.length}
+                  </div>
+                )}
+
+                {/* Progress bar */}
+                {displayImages.length > 1 && !isHovered && (
+                  <div style={{
+                    position: 'absolute', bottom: 0, left: 0, right: 0,
+                    height: '3px', background: 'rgba(0,0,0,0.1)',
+                  }}>
+                    <div style={{
+                      width: `${progress}%`, height: '100%',
+                      background: 'linear-gradient(90deg, #FF6B35, #7B2FBE)',
+                      transition: 'width 0.03s linear',
+                    }} />
+                  </div>
                 )}
               </div>
 
-              <div style={{
-                display: 'flex',
-                flexWrap: 'wrap',
-                gap: '8px',
-              }}>
-                {currentSizes.map(size => {
-                  const isSelected = selectedSize === size;
-                  return (
+              {/* Thumbnails */}
+              {displayImages.length > 1 && (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(${Math.min(displayImages.length, 5)}, 1fr)`,
+                  gap: '10px',
+                }}>
+                  {displayImages.slice(0, 5).map((img, i) => (
                     <button
-                      key={size}
-                      type="button"
-                      onClick={() => setSelectedSize(size)}
+                      key={i}
+                      onClick={() => goToSlide(i)}
                       style={{
-                        padding: '8px 16px',
-                        borderRadius: '10px',
-                        border: '2px solid',
-                        borderColor: isSelected ? '#FF6B35' : '#FFD4B8',
-                        background: isSelected
-                          ? 'linear-gradient(135deg,#FF6B35,#7B2FBE)'
-                          : 'white',
-                        color: isSelected ? 'white' : '#6B4E8A',
-                        fontWeight: '700',
-                        fontSize: '0.82rem',
+                        aspectRatio: '1 / 1',
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                        border: `2.5px solid ${i === selectedImage ? '#7B2FBE' : '#E5E7EB'}`,
+                        background: '#FAFAFA',
                         cursor: 'pointer',
-                        fontFamily: 'inherit',
+                        padding: 0,
                         transition: 'all 0.2s',
-                        minWidth: '50px',
+                        boxShadow: i === selectedImage ? '0 4px 12px rgba(123,47,190,0.25)' : 'none',
+                        transform: i === selectedImage ? 'scale(1.02)' : 'scale(1)',
                       }}
                     >
-                      {size}
+                      <Image
+                        src={img.url}
+                        alt={`${product.name} ${i + 1}`}
+                        width={120}
+                        height={120}
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
                     </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* ── CLOTHING DETAILS (only when NO variants) ── */}
-          {!hasVariants && isClothing && (
-            product.gender || product.size || product.color ||
-            product.material || product.ageGroup
-          ) && (
-            <div className={styles.clothingCard}>
-              <h4 className={styles.clothingTitle}>👗 Clothing Details</h4>
-              <div className={styles.clothingGrid}>
-                {genderInfo && (
-                  <div
-                    className={styles.clothingItem}
-                    style={{
-                      background:  genderInfo.bg,
-                      borderColor: `${genderInfo.color}30`,
-                    }}
-                  >
-                    <span className={styles.clothingLabel}>Gender</span>
-                    <span className={styles.clothingValue} style={{ color: genderInfo.color }}>
-                      {genderInfo.emoji} {genderInfo.label}
-                    </span>
-                  </div>
-                )}
-                {product.size && (
-                  <div className={styles.clothingItem}
-                    style={{ background: '#F3E8FF', borderColor: '#DFC5F830' }}>
-                    <span className={styles.clothingLabel}>Size</span>
-                    <span className={styles.clothingValue} style={{ color: '#7B2FBE' }}>
-                      📏 {product.size}
-                    </span>
-                  </div>
-                )}
-                {product.color && (
-                  <div className={styles.clothingItem}
-                    style={{ background: '#FFF3EC', borderColor: '#FFD4B830' }}>
-                    <span className={styles.clothingLabel}>Color</span>
-                    <span className={styles.clothingValue} style={{ color: '#FF6B35' }}>
-                      🎨 {product.color}
-                    </span>
-                  </div>
-                )}
-                {product.material && (
-                  <div className={styles.clothingItem}
-                    style={{ background: '#F0FDF4', borderColor: '#BBF7D030' }}>
-                    <span className={styles.clothingLabel}>Material</span>
-                    <span className={styles.clothingValue} style={{ color: '#22C55E' }}>
-                      🧵 {product.material}
-                    </span>
-                  </div>
-                )}
-                {product.ageGroup && (
-                  <div
-                    className={styles.clothingItem}
-                    style={{
-                      background:  '#FFFBEB',
-                      borderColor: '#FDE68A30',
-                      gridColumn:  (product.color && product.material) ? 'auto' : 'span 2',
-                    }}
-                  >
-                    <span className={styles.clothingLabel}>Age Group</span>
-                    <span className={styles.clothingValue} style={{ color: '#F59E0B' }}>
-                      👶 {product.ageGroup}
-                    </span>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Stock */}
-          <div className={styles.stockRow}>
-            {currentStock > 0 ? (
-              <span className={styles.inStock}>
-                ✅ In Stock ({currentStock} available{hasVariants ? ` for ${currentVariant?.colorName}` : ''})
-              </span>
-            ) : (
-              <span className={styles.outOfStock}>
-                ❌ Out of Stock{hasVariants ? ` for ${currentVariant?.colorName}` : ''}
-              </span>
-            )}
-            {currentStock > 0 && currentStock <= 10 && (
-              <span className={styles.lowStockWarn}>
-                ⚠️ Only {currentStock} left!
-              </span>
-            )}
-          </div>
-
-          {/* Quantity */}
-          {currentStock > 0 && (
-            <div className={styles.quantityRow}>
-              <span className={styles.quantityLabel}>Quantity:</span>
-              <div className={styles.quantityControl}>
-                <button
-                  className={styles.qtyBtn}
-                  onClick={() => setQuantity(q => Math.max(1, q - 1))}
-                >−</button>
-                <span className={styles.qtyNum}>{quantity}</span>
-                <button
-                  className={styles.qtyBtn}
-                  onClick={() => setQuantity(q => Math.min(currentStock, q + 1))}
-                >+</button>
-              </div>
-            </div>
-          )}
-
-          {/* Action buttons */}
-          <div className={styles.actionBtns}>
-            <button
-              className={styles.cartBtn}
-              onClick={handleAddToCart}
-              disabled={currentStock === 0}
-            >
-              🛒 {currentStock === 0 ? 'Out of Stock' : 'Add to Cart'}
-            </button>
-            <button
-              className={`${styles.wishBtn} ${inWishlist ? styles.wishActive : ''}`}
-              onClick={handleWishlist}
-              aria-label="Toggle wishlist"
-            >
-              {inWishlist ? '❤️' : '🤍'}
-            </button>
-          </div>
-
-          {/* Selection Summary (when variants exist) */}
-          {hasVariants && (currentVariant || selectedSize) && (
-            <div style={{
-              marginTop: '12px',
-              padding: '12px 16px',
-              background: 'linear-gradient(135deg,#F0FDF4,#FBF7FF)',
-              border: '1.5px solid #BBF7D0',
-              borderRadius: '12px',
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '10px',
-              fontSize: '0.84rem',
-              fontWeight: '700',
-              color: '#166534',
-            }}>
-              <span>✅ Your selection:</span>
-              {currentVariant && (
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{
-                    display: 'inline-block',
-                    width: '14px',
-                    height: '14px',
-                    borderRadius: '50%',
-                    background: currentVariant.colorHex,
-                    border: '2px solid white',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
-                  }} />
-                  {currentVariant.colorName}
-                </span>
-              )}
-              {selectedSize && <span>• Size: {selectedSize}</span>}
-              <span>• Qty: {quantity}</span>
-            </div>
-          )}
-
-          {/* Highlights */}
-         {/* Highlights */}
-<div className={styles.highlights}>
-  {[
-    {
-      icon: '🛡️',
-      title: 'Certified &',
-      subtitle: 'Safety Tested',
-      line3: 'Products',
-    },
-    {
-      icon: '💚',
-      title: '1 million +',
-      subtitle: 'Happy Parents',
-      line3: 'Across India',
-    },
-   
-    {
-      icon: '👶',
-      title: 'Safe for',
-      subtitle: 'Newborns',
-      line3: '',
-    },
-  ].map((h, i) => (
-    <div key={i} className={styles.highlightItem}>
-      <div className={styles.highlightIcon}>{h.icon}</div>
-      <div className={styles.highlightText}>
-        <span>{h.title}</span>
-        {h.subtitle && <span>{h.subtitle}</span>}
-        {h.line3 && <span>{h.line3}</span>}
-      </div>
-    </div>
-  ))}
-  {product.brand && (
-    <div className={styles.highlightItem}>
-      <div className={styles.highlightIcon}>🏷️</div>
-      <div className={styles.highlightText}>
-        <span>Brand:</span>
-        <span><strong>{product.brand}</strong></span>
-      </div>
-    </div>
-  )}
-</div>
-        </div>
-      </div>
-
-      {/* ══ TABS ══ */}
-      <div className={styles.tabs}>
-        <div className={styles.tabHeader}>
-          {['description', 'specifications', 'reviews'].map(t => (
-            <button
-              key={t}
-              className={`${styles.tabBtn} ${tab === t ? styles.tabActive : ''}`}
-              onClick={() => setTab(t)}
-            >
-              {t === 'description'    && '📝 '}
-              {t === 'specifications' && '📋 '}
-              {t === 'reviews'        && '⭐ '}
-              {t.charAt(0).toUpperCase() + t.slice(1)}
-            </button>
-          ))}
-        </div>
-
-        <div className={styles.tabContent}>
-          {tab === 'description' && (
-            <div className={styles.descTab}>
-              <p className={styles.descText}>{product.description}</p>
-              {product.features?.length > 0 && (
-                <>
-                  <h4 className={styles.featuresTitle}>✨ Key Features</h4>
-                  <ul className={styles.featuresList}>
-                    {product.features.map((f, i) => (
-                      <li key={i} className={styles.featureItem}>
-                        <span className={styles.featureCheck}>✅</span> {f}
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              )}
-              {product.tags?.length > 0 && (
-                <div className={styles.tags}>
-                  {product.tags.map((tag, i) => (
-                    <span key={i} className={styles.tag}>#{tag}</span>
                   ))}
                 </div>
               )}
             </div>
-          )}
 
-          {tab === 'specifications' && (
-            <div className={styles.specsTab}>
-              <table className={styles.specTable}>
-                <tbody>
-                  {/* ✅ Show variants in specs */}
-                  {hasVariants && (
+            {/* ═══ INFO SECTION ═══ */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+
+              {/* Category + Brand */}
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {product.category && (
+                  <Link
+                    href={`/products?category=${product.category?.id}`}
+                    style={{
+                      padding: '5px 14px',
+                      background: 'linear-gradient(135deg, #F3E8FF, #EDE9FE)',
+                      color: '#7B2FBE', borderRadius: '999px',
+                      textDecoration: 'none', fontSize: '0.75rem',
+                      fontWeight: '800', border: '1.5px solid #E9D5FF',
+                      display: 'inline-flex', alignItems: 'center', gap: '4px',
+                    }}
+                  >
+                    📁 {product.category.name}
+                  </Link>
+                )}
+                {product.brand && (
+                  <span style={{
+                    padding: '5px 14px',
+                    background: 'linear-gradient(135deg, #FFF3EC, #FFE4CC)',
+                    color: '#FF6B35', borderRadius: '999px',
+                    fontSize: '0.75rem', fontWeight: '800',
+                    border: '1.5px solid #FED7AA',
+                    display: 'inline-flex', alignItems: 'center', gap: '4px',
+                  }}>
+                    🏷️ {product.brand}
+                  </span>
+                )}
+              </div>
+
+              {/* Product Name */}
+              <h1 style={{
+                fontSize: 'clamp(1.4rem, 2.5vw, 1.9rem)',
+                fontWeight: '900',
+                color: '#1F0F3A',
+                margin: 0,
+                lineHeight: 1.25,
+              }}>
+                {product.name}
+              </h1>
+
+              {/* Rating */}
+              {product.rating > 0 && (
+                <div style={{
+                  display: 'inline-flex', alignItems: 'center', gap: '10px',
+                  padding: '8px 14px', background: '#FFFBEB',
+                  border: '1.5px solid #FDE68A', borderRadius: '10px',
+                  width: 'fit-content',
+                }}>
+                  <div style={{ display: 'flex', gap: '2px' }}>
+                    {[1,2,3,4,5].map(s => (
+                      <span key={s} style={{
+                        fontSize: '1rem',
+                        color: s <= Math.round(product.rating) ? '#FBBF24' : '#E5E7EB',
+                      }}>★</span>
+                    ))}
+                  </div>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '900', color: '#78350F' }}>
+                    {product.rating.toFixed(1)}
+                  </span>
+                  <span style={{ fontSize: '0.78rem', color: '#92400E', fontWeight: '700' }}>
+                    · {product.numReviews} reviews
+                  </span>
+                </div>
+              )}
+
+              {/* Price Section */}
+              <div style={{
+                padding: '20px',
+                background: 'linear-gradient(135deg, #FFF5F7, #F3E8FF)',
+                borderRadius: '16px',
+                border: '1.5px solid #FFE4EC',
+              }}>
+                <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', flexWrap: 'wrap' }}>
+                  <span style={{
+                    fontSize: 'clamp(1.8rem, 3.5vw, 2.5rem)',
+                    fontWeight: '900',
+                    background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                    WebkitBackgroundClip: 'text',
+                    WebkitTextFillColor: 'transparent',
+                    backgroundClip: 'text',
+                    lineHeight: 1,
+                  }}>
+                    ₹{finalPrice?.toLocaleString('en-IN')}
+                  </span>
+                  {currentDiscountPrice && (
                     <>
-                      <tr>
-                        <td className={styles.specKey}>Available Colors</td>
-                        <td>
-                          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-                            {product.colorVariants.map((v, i) => (
-                              <span key={i} style={{
-                                display: 'inline-flex',
-                                alignItems: 'center',
-                                gap: '6px',
-                                padding: '3px 10px',
-                                background: '#F3E8FF',
-                                borderRadius: '999px',
-                                fontSize: '0.82rem',
-                                fontWeight: '600',
-                              }}>
-                                <span style={{
-                                  display: 'inline-block',
-                                  width: '12px', height: '12px',
-                                  borderRadius: '50%',
-                                  background: v.colorHex,
-                                  border: '1.5px solid #ddd',
-                                }} />
-                                {v.colorName}
-                              </span>
-                            ))}
+                      <span style={{
+                        fontSize: '1.1rem',
+                        color: '#9CA3AF',
+                        textDecoration: 'line-through',
+                        fontWeight: '600',
+                      }}>
+                        ₹{currentPrice?.toLocaleString('en-IN')}
+                      </span>
+                      <span style={{
+                        padding: '4px 12px',
+                        background: 'linear-gradient(135deg, #10B981, #059669)',
+                        color: 'white', borderRadius: '999px',
+                        fontSize: '0.85rem', fontWeight: '900',
+                        boxShadow: '0 3px 8px rgba(16,185,129,0.30)',
+                      }}>
+                        {discount}% OFF
+                      </span>
+                    </>
+                  )}
+                </div>
+                {savedAmount > 0 && (
+                  <p style={{
+                    margin: '8px 0 0',
+                    fontSize: '0.85rem',
+                    color: '#059669',
+                    fontWeight: '800',
+                  }}>
+                    🎉 You save ₹{savedAmount.toLocaleString('en-IN')}
+                  </p>
+                )}
+                <p style={{
+                  margin: '4px 0 0',
+                  fontSize: '0.72rem',
+                  color: '#9585B0',
+                  fontWeight: '600',
+                }}>
+                  Inclusive of all taxes
+                </p>
+              </div>
+
+              {/* Short Description */}
+              {product.shortDescription && (
+                <p style={{
+                  margin: 0,
+                  fontSize: '0.92rem',
+                  color: '#4B5563',
+                  lineHeight: 1.6,
+                  fontWeight: '500',
+                  padding: '14px 16px',
+                  background: '#F9FAFB',
+                  borderRadius: '12px',
+                  borderLeft: '4px solid #7B2FBE',
+                }}>
+                  {product.shortDescription}
+                </p>
+              )}
+
+              {/* Color Variants */}
+              {hasVariants && (
+                <div style={{
+                  padding: '16px 18px',
+                  background: 'linear-gradient(135deg,#FBF7FF,#FFF)',
+                  border: '2px solid #EDD9FF',
+                  borderRadius: '14px',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
+                    <span style={{ fontSize: '0.78rem', fontWeight: '900', color: '#6B4E8A', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      🎨 Color:
+                    </span>
+                    <span style={{ fontSize: '0.92rem', fontWeight: '800', color: '#2D1A4A' }}>
+                      {currentVariant?.colorName}
+                    </span>
+                    <span style={{
+                      marginLeft: 'auto',
+                      padding: '3px 10px',
+                      background: '#F3E8FF',
+                      color: '#7B2FBE',
+                      borderRadius: '999px',
+                      fontSize: '0.68rem',
+                      fontWeight: '800',
+                    }}>
+                      {product.colorVariants.length} colors
+                    </span>
+                  </div>
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '10px' }}>
+                    {product.colorVariants.map((variant, idx) => {
+                      const isSelected = idx === selectedColorIdx;
+                      const outOfStock = variant.stock === 0;
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => handleColorChange(idx)}
+                          disabled={outOfStock}
+                          title={`${variant.colorName} - ₹${variant.discountPrice || variant.price}${outOfStock ? ' (Out of Stock)' : ''}`}
+                          style={{
+                            position: 'relative',
+                            display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '5px',
+                            padding: '4px',
+                            background: 'transparent', border: 'none',
+                            cursor: outOfStock ? 'not-allowed' : 'pointer',
+                            opacity: outOfStock ? 0.5 : 1,
+                            fontFamily: 'inherit',
+                          }}
+                        >
+                          <div style={{
+                            width: '48px', height: '48px', borderRadius: '50%',
+                            background: variant.colorHex || '#ccc',
+                            border: `3px solid ${isSelected ? '#7B2FBE' : 'white'}`,
+                            boxShadow: isSelected
+                              ? '0 0 0 3px #7B2FBE, 0 6px 14px rgba(123,47,190,0.30)'
+                              : '0 2px 8px rgba(0,0,0,0.12)',
+                            transition: 'all 0.2s ease',
+                            position: 'relative',
+                          }}>
+                            {isSelected && (
+                              <span style={{
+                                position: 'absolute', bottom: '-4px', right: '-4px',
+                                background: '#22C55E', color: 'white',
+                                width: '20px', height: '20px', borderRadius: '50%',
+                                fontSize: '11px', fontWeight: '900',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                border: '2px solid white',
+                                boxShadow: '0 2px 6px rgba(34,197,94,0.35)',
+                              }}>✓</span>
+                            )}
+                            {outOfStock && (
+                              <div style={{
+                                position: 'absolute', inset: 0, borderRadius: '50%',
+                                background: 'rgba(255,255,255,0.7)',
+                                display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                fontSize: '0.7rem', fontWeight: '900', color: '#DC2626',
+                              }}>✕</div>
+                            )}
                           </div>
-                        </td>
-                      </tr>
-                      {currentSizes.length > 0 && (
+                          <span style={{
+                            fontSize: '0.68rem', fontWeight: '800',
+                            color: isSelected ? '#7B2FBE' : '#6B4E8A',
+                            maxWidth: '64px', textAlign: 'center', lineHeight: 1.1,
+                          }}>
+                            {variant.colorName}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Size Picker */}
+              {hasVariants && currentSizes.length > 0 && (
+                <div style={{
+                  padding: '16px 18px',
+                  background: 'linear-gradient(135deg,#FFF3EC,#FFF)',
+                  border: '2px solid #FFD4B8',
+                  borderRadius: '14px',
+                }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
+                    <span style={{ fontSize: '0.78rem', fontWeight: '900', color: '#6B4E8A', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                      📏 Size:
+                    </span>
+                    {selectedSize && (
+                      <span style={{ fontSize: '0.92rem', fontWeight: '800', color: '#FF6B35' }}>
+                        {selectedSize}
+                      </span>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
+                    {currentSizes.map(size => {
+                      const isSelected = selectedSize === size;
+                      return (
+                        <button
+                          key={size}
+                          type="button"
+                          onClick={() => setSelectedSize(size)}
+                          style={{
+                            padding: '10px 20px',
+                            borderRadius: '10px',
+                            border: '2px solid',
+                            borderColor: isSelected ? '#FF6B35' : '#FFD4B8',
+                            background: isSelected ? 'linear-gradient(135deg,#FF6B35,#7B2FBE)' : 'white',
+                            color: isSelected ? 'white' : '#6B4E8A',
+                            fontWeight: '800',
+                            fontSize: '0.88rem',
+                            cursor: 'pointer',
+                            fontFamily: 'inherit',
+                            transition: 'all 0.2s',
+                            minWidth: '52px',
+                            boxShadow: isSelected ? '0 4px 12px rgba(255,107,53,0.25)' : 'none',
+                          }}
+                        >
+                          {size}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+
+              {/* Non-variant Clothing Details */}
+              {!hasVariants && (product.gender || product.size || product.color || product.material || product.ageGroup) && (
+                <div style={{
+                  padding: '16px 18px',
+                  background: 'white',
+                  border: '2px solid #F3E8FF',
+                  borderRadius: '14px',
+                }}>
+                  <h4 style={{ margin: '0 0 12px', fontSize: '0.88rem', fontWeight: '900', color: '#2D1A4A' }}>
+                    📋 Product Details
+                  </h4>
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+                    gap: '10px',
+                  }}>
+                    {genderInfo && (
+                      <div style={{
+                        padding: '10px 12px', background: genderInfo.bg,
+                        borderRadius: '10px', border: `1.5px solid ${genderInfo.color}30`,
+                      }}>
+                        <p style={{ margin: 0, fontSize: '0.65rem', color: '#9585B0', fontWeight: '700', textTransform: 'uppercase' }}>
+                          Gender
+                        </p>
+                        <p style={{ margin: '3px 0 0', fontSize: '0.85rem', fontWeight: '900', color: genderInfo.color }}>
+                          {genderInfo.emoji} {genderInfo.label}
+                        </p>
+                      </div>
+                    )}
+                    {product.size && (
+                      <div style={{
+                        padding: '10px 12px', background: '#F3E8FF',
+                        borderRadius: '10px', border: '1.5px solid #DFC5F830',
+                      }}>
+                        <p style={{ margin: 0, fontSize: '0.65rem', color: '#9585B0', fontWeight: '700', textTransform: 'uppercase' }}>
+                          Size
+                        </p>
+                        <p style={{ margin: '3px 0 0', fontSize: '0.85rem', fontWeight: '900', color: '#7B2FBE' }}>
+                          📏 {product.size}
+                        </p>
+                      </div>
+                    )}
+                    {product.color && (
+                      <div style={{
+                        padding: '10px 12px', background: '#FFF3EC',
+                        borderRadius: '10px', border: '1.5px solid #FFD4B830',
+                      }}>
+                        <p style={{ margin: 0, fontSize: '0.65rem', color: '#9585B0', fontWeight: '700', textTransform: 'uppercase' }}>
+                          Color
+                        </p>
+                        <p style={{ margin: '3px 0 0', fontSize: '0.85rem', fontWeight: '900', color: '#FF6B35' }}>
+                          🎨 {product.color}
+                        </p>
+                      </div>
+                    )}
+                    {product.material && (
+                      <div style={{
+                        padding: '10px 12px', background: '#F0FDF4',
+                        borderRadius: '10px', border: '1.5px solid #BBF7D030',
+                      }}>
+                        <p style={{ margin: 0, fontSize: '0.65rem', color: '#9585B0', fontWeight: '700', textTransform: 'uppercase' }}>
+                          Material
+                        </p>
+                        <p style={{ margin: '3px 0 0', fontSize: '0.85rem', fontWeight: '900', color: '#22C55E' }}>
+                          🧵 {product.material}
+                        </p>
+                      </div>
+                    )}
+                    {product.ageGroup && (
+                      <div style={{
+                        padding: '10px 12px', background: '#FFFBEB',
+                        borderRadius: '10px', border: '1.5px solid #FDE68A30',
+                      }}>
+                        <p style={{ margin: 0, fontSize: '0.65rem', color: '#9585B0', fontWeight: '700', textTransform: 'uppercase' }}>
+                          Age Group
+                        </p>
+                        <p style={{ margin: '3px 0 0', fontSize: '0.85rem', fontWeight: '900', color: '#F59E0B' }}>
+                          👶 {product.ageGroup}
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Stock Status */}
+              <div style={{
+                padding: '12px 16px',
+                background: currentStock > 0 ? 'linear-gradient(135deg, #F0FDF4, #D1FAE5)' : 'linear-gradient(135deg, #FEF2F2, #FEE2E2)',
+                border: `1.5px solid ${currentStock > 0 ? '#86EFAC' : '#FCA5A5'}`,
+                borderRadius: '12px',
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px',
+              }}>
+                <span style={{
+                  fontSize: '0.88rem',
+                  fontWeight: '900',
+                  color: currentStock > 0 ? '#065F46' : '#991B1B',
+                }}>
+                  {currentStock > 0
+                    ? `✅ In Stock (${currentStock} available${hasVariants ? ` for ${currentVariant?.colorName}` : ''})`
+                    : `❌ Out of Stock${hasVariants ? ` for ${currentVariant?.colorName}` : ''}`
+                  }
+                </span>
+                {currentStock > 0 && currentStock <= 10 && (
+                  <span style={{
+                    padding: '4px 10px', background: '#F59E0B', color: 'white',
+                    borderRadius: '999px', fontSize: '0.72rem', fontWeight: '900',
+                  }}>
+                    ⚠️ Only {currentStock} left!
+                  </span>
+                )}
+              </div>
+
+              {/* Quantity Selector */}
+              {currentStock > 0 && (
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: '14px',
+                  padding: '14px 16px', background: '#F9FAFB',
+                  borderRadius: '12px', border: '1.5px solid #E5E7EB',
+                }}>
+                  <span style={{ fontSize: '0.88rem', fontWeight: '800', color: '#374151' }}>
+                    Quantity:
+                  </span>
+                  <div style={{
+                    display: 'flex', alignItems: 'center',
+                    background: 'white', borderRadius: '10px',
+                    border: '2px solid #E5E7EB',
+                    overflow: 'hidden',
+                  }}>
+                    <button
+                      onClick={() => setQuantity(q => Math.max(1, q - 1))}
+                      style={{
+                        width: '38px', height: '38px', border: 'none',
+                        background: 'white', cursor: 'pointer',
+                        fontSize: '1.2rem', fontWeight: '900', color: '#7B2FBE',
+                      }}
+                    >−</button>
+                    <span style={{
+                      minWidth: '48px', textAlign: 'center',
+                      fontSize: '1rem', fontWeight: '900', color: '#1F0F3A',
+                      borderLeft: '2px solid #E5E7EB',
+                      borderRight: '2px solid #E5E7EB',
+                      padding: '8px 0',
+                    }}>
+                      {quantity}
+                    </span>
+                    <button
+                      onClick={() => setQuantity(q => Math.min(currentStock, q + 1))}
+                      style={{
+                        width: '38px', height: '38px', border: 'none',
+                        background: 'white', cursor: 'pointer',
+                        fontSize: '1.2rem', fontWeight: '900', color: '#7B2FBE',
+                      }}
+                    >+</button>
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  onClick={handleAddToCart}
+                  disabled={currentStock === 0}
+                  style={{
+                    flex: 1,
+                    padding: '16px 24px',
+                    background: currentStock === 0
+                      ? '#F3F4F6'
+                      : 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                    color: currentStock === 0 ? '#9CA3AF' : 'white',
+                    border: 'none', borderRadius: '14px',
+                    fontSize: '1rem', fontWeight: '900',
+                    cursor: currentStock === 0 ? 'not-allowed' : 'pointer',
+                    fontFamily: 'inherit',
+                    boxShadow: currentStock === 0 ? 'none' : '0 8px 20px rgba(255,107,53,0.30)',
+                    transition: 'transform 0.2s',
+                  }}
+                  onMouseEnter={e => currentStock > 0 && (e.currentTarget.style.transform = 'translateY(-2px)')}
+                  onMouseLeave={e => (e.currentTarget.style.transform = 'translateY(0)')}
+                >
+                  🛒 {currentStock === 0 ? 'Out of Stock' : 'Add to Cart'}
+                </button>
+                <button
+                  onClick={handleWishlist}
+                  style={{
+                    padding: '16px 20px',
+                    background: inWishlist ? 'linear-gradient(135deg, #EF4444, #DC2626)' : 'white',
+                    color: inWishlist ? 'white' : '#EF4444',
+                    border: `2px solid ${inWishlist ? '#EF4444' : '#FCA5A5'}`,
+                    borderRadius: '14px',
+                    fontSize: '1.4rem',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s',
+                  }}
+                >
+                  {inWishlist ? '❤️' : '🤍'}
+                </button>
+              </div>
+
+              {/* Selection Summary */}
+              {hasVariants && (currentVariant || selectedSize) && (
+                <div style={{
+                  padding: '12px 16px',
+                  background: 'linear-gradient(135deg,#F0FDF4,#FBF7FF)',
+                  border: '1.5px solid #BBF7D0',
+                  borderRadius: '12px',
+                  display: 'flex', flexWrap: 'wrap', gap: '10px',
+                  fontSize: '0.84rem', fontWeight: '800', color: '#166534',
+                  alignItems: 'center',
+                }}>
+                  <span>✅ Selection:</span>
+                  {currentVariant && (
+                    <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{
+                        display: 'inline-block', width: '14px', height: '14px',
+                        borderRadius: '50%', background: currentVariant.colorHex,
+                        border: '2px solid white',
+                        boxShadow: '0 1px 3px rgba(0,0,0,0.2)',
+                      }} />
+                      {currentVariant.colorName}
+                    </span>
+                  )}
+                  {selectedSize && <span>• Size: {selectedSize}</span>}
+                  <span>• Qty: {quantity}</span>
+                </div>
+              )}
+
+              {/* Highlights */}
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))',
+                gap: '10px',
+                padding: '16px',
+                background: 'linear-gradient(135deg, #F8FAFC, #F1F5F9)',
+                borderRadius: '14px',
+                border: '1.5px solid #E5E7EB',
+              }}>
+                {[
+                  { icon: '🛡️', title: 'Certified', sub: 'Safety Tested' },
+                  { icon: '💚', title: '1M+', sub: 'Happy Parents' },
+                  { icon: '👶', title: 'Safe for', sub: 'Newborns' },
+                ].map((h, i) => (
+                  <div key={i} style={{
+                    display: 'flex', alignItems: 'center', gap: '10px',
+                    padding: '10px', background: 'white',
+                    borderRadius: '10px', border: '1px solid #F3E8FF',
+                  }}>
+                    <div style={{ fontSize: '1.6rem', flexShrink: 0 }}>{h.icon}</div>
+                    <div style={{ minWidth: 0 }}>
+                      <p style={{ margin: 0, fontSize: '0.76rem', fontWeight: '900', color: '#1F0F3A', lineHeight: 1.2 }}>
+                        {h.title}
+                      </p>
+                      <p style={{ margin: 0, fontSize: '0.68rem', color: '#6B4E8A', fontWeight: '700', lineHeight: 1.2 }}>
+                        {h.sub}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ══ TABS SECTION ══ */}
+        <div style={{
+          background: 'white', borderRadius: '24px',
+          padding: 'clamp(16px, 2.5vw, 28px)',
+          boxShadow: '0 8px 32px rgba(123,47,190,0.08)',
+          border: '1px solid rgba(123,47,190,0.06)',
+          marginBottom: '20px',
+        }}>
+          {/* Tab Headers */}
+          <div style={{
+            display: 'flex', gap: '8px',
+            borderBottom: '2px solid #F3E8FF',
+            marginBottom: '24px',
+            flexWrap: 'wrap',
+          }}>
+            {[
+              { key: 'description', icon: '📝', label: 'Description' },
+              { key: 'specifications', icon: '📋', label: 'Specifications' },
+              { key: 'reviews', icon: '⭐', label: 'Reviews' },
+            ].map(t => (
+              <button
+                key={t.key}
+                onClick={() => setTab(t.key)}
+                style={{
+                  padding: '12px 20px',
+                  background: tab === t.key ? 'linear-gradient(135deg, #FF6B35, #7B2FBE)' : 'transparent',
+                  color: tab === t.key ? 'white' : '#6B7280',
+                  border: 'none',
+                  borderRadius: '12px 12px 0 0',
+                  fontSize: '0.9rem',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  fontFamily: 'inherit',
+                  transition: 'all 0.2s',
+                  position: 'relative',
+                  bottom: '-2px',
+                  boxShadow: tab === t.key ? '0 -4px 12px rgba(123,47,190,0.15)' : 'none',
+                }}
+              >
+                {t.icon} {t.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Tab Content */}
+          <div>
+            {tab === 'description' && (
+              <div>
+                <p style={{
+                  fontSize: '0.95rem', color: '#374151',
+                  lineHeight: 1.8, margin: '0 0 20px', whiteSpace: 'pre-line',
+                }}>
+                  {product.description}
+                </p>
+
+                {product.features?.length > 0 && (
+                  <>
+                    <h4 style={{
+                      fontSize: '1.05rem', fontWeight: '900',
+                      color: '#1F0F3A', margin: '20px 0 12px',
+                    }}>
+                      ✨ Key Features
+                    </h4>
+                    <ul style={{ margin: 0, padding: 0, listStyle: 'none', display: 'grid', gap: '8px' }}>
+                      {product.features.map((f, i) => (
+                        <li key={i} style={{
+                          padding: '10px 14px',
+                          background: 'linear-gradient(135deg, #F0FDF4, #ECFDF5)',
+                          border: '1px solid #BBF7D0',
+                          borderRadius: '10px',
+                          display: 'flex', alignItems: 'center', gap: '10px',
+                          fontSize: '0.88rem', color: '#374151', fontWeight: '600',
+                        }}>
+                          <span style={{ fontSize: '1rem', flexShrink: 0 }}>✅</span> {f}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+
+                {product.tags?.length > 0 && (
+                  <div style={{ marginTop: '20px', display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                    {product.tags.map((tag, i) => (
+                      <span key={i} style={{
+                        padding: '5px 12px',
+                        background: '#F3E8FF', color: '#7B2FBE',
+                        borderRadius: '999px', fontSize: '0.75rem',
+                        fontWeight: '700', border: '1.5px solid #E9D5FF',
+                      }}>
+                        #{tag}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {tab === 'specifications' && (
+              <div>
+                <table style={{ width: '100%', borderCollapse: 'separate', borderSpacing: '0 4px' }}>
+                  <tbody>
+                    {hasVariants && (
+                      <>
                         <tr>
-                          <td className={styles.specKey}>Available Sizes ({currentVariant?.colorName})</td>
-                          <td>
+                          <td style={{
+                            padding: '12px 14px', background: '#F9FAFB',
+                            borderRadius: '10px 0 0 10px',
+                            fontSize: '0.85rem', fontWeight: '800', color: '#6B4E8A',
+                            width: '35%',
+                          }}>Available Colors</td>
+                          <td style={{
+                            padding: '12px 14px', background: '#F9FAFB',
+                            borderRadius: '0 10px 10px 0',
+                          }}>
                             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-                              {currentSizes.map(s => (
-                                <span key={s} style={{
-                                  padding: '2px 10px',
-                                  background: '#FFF3EC',
-                                  borderRadius: '6px',
-                                  fontSize: '0.82rem',
-                                  fontWeight: '700',
-                                  color: '#FF6B35',
-                                }}>{s}</span>
+                              {product.colorVariants.map((v, i) => (
+                                <span key={i} style={{
+                                  display: 'inline-flex', alignItems: 'center', gap: '6px',
+                                  padding: '3px 10px', background: 'white',
+                                  borderRadius: '999px', fontSize: '0.78rem',
+                                  fontWeight: '700', border: '1.5px solid #E5E7EB',
+                                }}>
+                                  <span style={{
+                                    display: 'inline-block', width: '12px', height: '12px',
+                                    borderRadius: '50%', background: v.colorHex,
+                                    border: '1.5px solid #ddd',
+                                  }} />
+                                  {v.colorName}
+                                </span>
                               ))}
                             </div>
                           </td>
                         </tr>
-                      )}
-                    </>
-                  )}
-                  {product.gender && (
-                    <tr>
-                      <td className={styles.specKey}>Gender</td>
-                      <td>
-                        {product.gender === 'boy'
-                          ? '👦' : product.gender === 'girl' ? '👧' : '🧒'}
-                        {' '}{product.gender.charAt(0).toUpperCase() + product.gender.slice(1)}
-                      </td>
-                    </tr>
-                  )}
-                  {!hasVariants && product.size && (
-                    <tr>
-                      <td className={styles.specKey}>Size</td>
-                      <td>📏 {product.size}</td>
-                    </tr>
-                  )}
-                  {!hasVariants && product.color && (
-                    <tr>
-                      <td className={styles.specKey}>Color</td>
-                      <td>🎨 {product.color}</td>
-                    </tr>
-                  )}
-                  {product.material && (
-                    <tr>
-                      <td className={styles.specKey}>Material</td>
-                      <td>🧵 {product.material}</td>
-                    </tr>
-                  )}
-                  {product.ageGroup && (
-                    <tr>
-                      <td className={styles.specKey}>Age Group</td>
-                      <td>👶 {product.ageGroup}</td>
-                    </tr>
-                  )}
-                  {product.brand && (
-                    <tr>
-                      <td className={styles.specKey}>Brand</td>
-                      <td>🏷️ {product.brand}</td>
-                    </tr>
-                  )}
-                  {product.weight && (
-                    <tr>
-                      <td className={styles.specKey}>Weight</td>
-                      <td>⚖️ {product.weight}g</td>
-                    </tr>
-                  )}
-                  {product.sku && (
-                    <tr>
-                      <td className={styles.specKey}>SKU</td>
-                      <td><code>{product.sku}</code></td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          )}
+                        {currentSizes.length > 0 && (
+                          <tr>
+                            <td style={{
+                              padding: '12px 14px', background: '#F9FAFB',
+                              borderRadius: '10px 0 0 10px',
+                              fontSize: '0.85rem', fontWeight: '800', color: '#6B4E8A',
+                            }}>Sizes ({currentVariant?.colorName})</td>
+                            <td style={{
+                              padding: '12px 14px', background: '#F9FAFB',
+                              borderRadius: '0 10px 10px 0',
+                            }}>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                                {currentSizes.map(s => (
+                                  <span key={s} style={{
+                                    padding: '2px 10px', background: '#FFF3EC',
+                                    borderRadius: '6px', fontSize: '0.8rem',
+                                    fontWeight: '800', color: '#FF6B35',
+                                  }}>{s}</span>
+                                ))}
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </>
+                    )}
+                    {[
+                      product.gender && ['Gender', `${product.gender === 'boy' ? '👦' : product.gender === 'girl' ? '👧' : '🧒'} ${product.gender.charAt(0).toUpperCase() + product.gender.slice(1)}`],
+                      !hasVariants && product.size && ['Size', `📏 ${product.size}`],
+                      !hasVariants && product.color && ['Color', `🎨 ${product.color}`],
+                      product.material && ['Material', `🧵 ${product.material}`],
+                      product.ageGroup && ['Age Group', `👶 ${product.ageGroup}`],
+                      product.brand && ['Brand', `🏷️ ${product.brand}`],
+                      product.weight && ['Weight', `⚖️ ${product.weight}g`],
+                      product.sku && ['SKU', product.sku, true],
+                    ].filter(Boolean).map(([key, val, mono], i) => (
+                      <tr key={i}>
+                        <td style={{
+                          padding: '12px 14px', background: '#F9FAFB',
+                          borderRadius: '10px 0 0 10px',
+                          fontSize: '0.85rem', fontWeight: '800', color: '#6B4E8A',
+                        }}>{key}</td>
+                        <td style={{
+                          padding: '12px 14px', background: '#F9FAFB',
+                          borderRadius: '0 10px 10px 0',
+                          fontSize: '0.85rem', color: '#1F2937', fontWeight: '600',
+                          fontFamily: mono ? 'monospace' : 'inherit',
+                        }}>{val}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
 
-          {tab === 'reviews' && (
-            <div className={styles.reviewsTab}>
-              {product.reviews?.length > 0 ? (
-                product.reviews.map((r, i) => (
-                  <div key={i} className={styles.reviewCard}>
-                    <div className={styles.reviewTop}>
-                      <div className={styles.reviewAvatar}>
-                        {r.name?.[0] || '?'}
-                      </div>
-                      <div>
-                        <strong className={styles.reviewName}>{r.name}</strong>
-                        <div className={styles.reviewStars}>
-                          {[1,2,3,4,5].map(s => (
-                            <span
-                              key={s}
-                              className={s <= r.rating ? styles.starOn : styles.starOff}
-                            >★</span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <p className={styles.reviewText}>{r.comment}</p>
-                  </div>
-                ))
-              ) : (
-                <div className={styles.noReviews}>
-                  <span>⭐</span>
-                  <p>No reviews yet. Be the first to review this product!</p>
-                </div>
-              )}
-            </div>
-          )}
+            {/* ✅ NEW: ReviewsSection Component */}
+            {tab === 'reviews' && (
+              <ReviewsSection productId={product.id} productName={product.name} />
+            )}
+          </div>
         </div>
+
+        {/* ══ RELATED PRODUCTS ══ */}
+        {related.length > 0 && (
+          <section style={{
+            background: 'white', borderRadius: '24px',
+            padding: 'clamp(16px, 2.5vw, 28px)',
+            boxShadow: '0 8px 32px rgba(123,47,190,0.08)',
+            border: '1px solid rgba(123,47,190,0.06)',
+          }}>
+            <div style={{
+              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+              marginBottom: '20px', flexWrap: 'wrap', gap: '12px',
+            }}>
+              <div>
+                <span style={{
+                  display: 'inline-block',
+                  padding: '4px 12px',
+                  background: 'linear-gradient(135deg, #FFF3EC, #F3E8FF)',
+                  border: '1.5px solid #FFD4B8',
+                  borderRadius: '999px',
+                  fontSize: '0.7rem',
+                  fontWeight: '800',
+                  color: '#FF6B35',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  marginBottom: '8px',
+                }}>
+                  {product.category?.name || 'Similar'}
+                </span>
+                <h2 style={{
+                  fontSize: 'clamp(1.2rem, 2.5vw, 1.7rem)',
+                  fontWeight: '900',
+                  color: '#1F0F3A',
+                  margin: '0 0 4px',
+                }}>
+                  🛍️ You May Also Like
+                </h2>
+                <p style={{
+                  margin: 0, fontSize: '0.82rem',
+                  color: '#7B7898', fontWeight: '600',
+                }}>
+                  More products from {product.category?.name || 'this category'}
+                </p>
+              </div>
+              <Link
+                href={`/products?category=${product.categoryId}`}
+                style={{
+                  padding: '10px 20px',
+                  background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                  color: 'white', borderRadius: '12px',
+                  textDecoration: 'none', fontWeight: '800',
+                  fontSize: '0.85rem',
+                  boxShadow: '0 4px 12px rgba(255,107,53,0.25)',
+                }}
+              >
+                View All →
+              </Link>
+            </div>
+
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+              gap: '16px',
+            }}>
+              {related.map((p, i) => (
+                <RelatedCard key={p.id} product={p} index={i} />
+              ))}
+            </div>
+          </section>
+        )}
       </div>
 
-      {/* ══ RELATED PRODUCTS ══ */}
-      {related.length > 0 && (
-        <section className={styles.relatedSection}>
-          <div className={styles.relatedHeader}>
-            <div>
-              <span className={styles.relatedLabel}>
-                {product.category?.name || 'Similar'}
-              </span>
-              <h2 className={styles.relatedTitle}>🛍️ You May Also Like</h2>
-              <p className={styles.relatedSub}>
-                More products from {product.category?.name || 'this category'}
-              </p>
-            </div>
-            <Link
-              href={`/products?category=${product.categoryId}`}
-              className={styles.viewAllBtn}
-            >
-              View All →
-            </Link>
-          </div>
-
-          <div className={styles.relatedGrid}>
-            {related.map((p, i) => (
-              <RelatedCard key={p.id} product={p} index={i} />
-            ))}
-          </div>
-        </section>
-      )}
+      <style>{`
+        @media (max-width: 900px) {
+          .productLayout {
+            grid-template-columns: 1fr !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
 
 /* ============================================================
-   RELATED PRODUCT CARD
+   RELATED PRODUCT CARD (Modern Design)
    ============================================================ */
 function RelatedCard({ product, index }) {
   const { addItem }              = useCart();
   const { isWishlisted, toggle } = useWishlist();
   const [imgLoaded, setImgLoaded] = useState(false);
   const [adding,    setAdding]    = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   const inWishlist = isWishlisted(product.id);
 
-  // ✅ Use first variant's first image if available
   const firstVariantImage = product.hasVariants && product.colorVariants?.[0]?.images?.[0]?.url;
   const imageUrl = firstVariantImage || product.images?.[0]?.url || null;
 
-  // ✅ Use first variant's price if available
   const displayPrice = product.hasVariants && product.colorVariants?.[0]
     ? product.colorVariants[0].price
     : product.price;
@@ -1115,14 +1331,33 @@ function RelatedCard({ product, index }) {
   return (
     <Link
       href={`/products/${product.id}`}
-      className={styles.relatedCard}
-      style={{ animationDelay: `${index * 60}ms` }}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+      style={{
+        display: 'block',
+        textDecoration: 'none',
+        background: 'white',
+        borderRadius: '16px',
+        border: `2px solid ${isHovered ? '#7B2FBE' : '#F3E8FF'}`,
+        overflow: 'hidden',
+        transition: 'all 0.25s ease',
+        transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
+        boxShadow: isHovered ? '0 12px 30px rgba(123,47,190,0.15)' : '0 2px 8px rgba(0,0,0,0.05)',
+        animation: `slideUp 0.4s ease ${index * 60}ms both`,
+      }}
     >
-      <div className={styles.relatedImgWrap}>
+      <div style={{
+        position: 'relative',
+        aspectRatio: '1 / 1',
+        background: 'linear-gradient(135deg, #FAFAFA, #F3F4F6)',
+        overflow: 'hidden',
+      }}>
         {!imgLoaded && (
-          <div className={styles.relatedImgSkeleton}>
-            <span>🛍️</span>
-          </div>
+          <div style={{
+            position: 'absolute', inset: 0,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '2.5rem', opacity: 0.3,
+          }}>🛍️</div>
         )}
         {imageUrl ? (
           <Image
@@ -1130,99 +1365,158 @@ function RelatedCard({ product, index }) {
             alt={product.name}
             width={220}
             height={220}
-            className={`${styles.relatedImg} ${
-              imgLoaded ? styles.relatedImgVisible : styles.relatedImgHidden
-            }`}
-            style={{ objectFit: 'cover' }}
             onLoad={() => setImgLoaded(true)}
+            style={{
+              width: '100%', height: '100%',
+              objectFit: 'cover',
+              opacity: imgLoaded ? 1 : 0,
+              transition: 'all 0.3s ease',
+              transform: isHovered ? 'scale(1.05)' : 'scale(1)',
+            }}
           />
         ) : (
-          <div className={styles.relatedNoImg}>🛍️</div>
+          <div style={{
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            height: '100%', fontSize: '3rem', opacity: 0.4,
+          }}>🛍️</div>
         )}
 
-        <div className={styles.relatedBadges}>
+        {/* Badges */}
+        <div style={{
+          position: 'absolute', top: '10px', left: '10px',
+          display: 'flex', flexDirection: 'column', gap: '5px',
+        }}>
           {discount > 0 && (
-            <span className={styles.relatedDiscount}>-{discount}%</span>
+            <span style={{
+              padding: '4px 10px',
+              background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+              color: 'white', borderRadius: '8px',
+              fontSize: '0.7rem', fontWeight: '900',
+              boxShadow: '0 3px 8px rgba(239,68,68,0.30)',
+            }}>-{discount}%</span>
           )}
           {product.isTrending && (
-            <span className={styles.relatedTrending}>🔥</span>
+            <span style={{
+              padding: '4px 10px',
+              background: 'linear-gradient(135deg, #FF6B35, #EA580C)',
+              color: 'white', borderRadius: '8px',
+              fontSize: '0.7rem', fontWeight: '900',
+            }}>🔥 Hot</span>
           )}
           {product.hasVariants && product.colorVariants?.length > 1 && (
             <span style={{
-              background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)',
-              color: 'white',
               padding: '3px 8px',
-              borderRadius: '6px',
-              fontSize: '0.65rem',
-              fontWeight: '800',
-            }}>
-              🎨 {product.colorVariants.length} Colors
-            </span>
+              background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)',
+              color: 'white', borderRadius: '8px',
+              fontSize: '0.65rem', fontWeight: '900',
+            }}>🎨 {product.colorVariants.length}</span>
           )}
         </div>
 
+        {/* Wishlist */}
         <button
-          className={`${styles.relatedWish} ${inWishlist ? styles.relatedWishOn : ''}`}
           onClick={handleWish}
-          aria-label="Wishlist"
+          style={{
+            position: 'absolute', top: '10px', right: '10px',
+            width: '36px', height: '36px', borderRadius: '50%',
+            background: 'white', border: 'none',
+            boxShadow: '0 3px 8px rgba(0,0,0,0.15)',
+            cursor: 'pointer', fontSize: '1rem',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}
         >
           {inWishlist ? '❤️' : '🤍'}
         </button>
 
         {product.stock === 0 && (
-          <div className={styles.relatedOos}>Out of Stock</div>
+          <div style={{
+            position: 'absolute', inset: 0,
+            background: 'rgba(255,255,255,0.85)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            fontSize: '0.9rem', fontWeight: '900', color: '#DC2626',
+          }}>
+            Out of Stock
+          </div>
         )}
       </div>
 
-      <div className={styles.relatedInfo}>
-        <p className={styles.relatedCat}>{product.category?.name || ''}</p>
-        <h3 className={styles.relatedName}>{product.name}</h3>
+      <div style={{ padding: '12px 14px' }}>
+        <p style={{
+          margin: '0 0 4px', fontSize: '0.68rem',
+          color: '#9585B0', fontWeight: '700',
+          textTransform: 'uppercase', letterSpacing: '0.5px',
+        }}>
+          {product.category?.name || ''}
+        </p>
 
-        {/* Mini color swatches preview */}
+        <h3 style={{
+          margin: '0 0 8px', fontSize: '0.88rem',
+          fontWeight: '800', color: '#1F0F3A',
+          lineHeight: 1.3,
+          overflow: 'hidden', textOverflow: 'ellipsis',
+          display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
+          minHeight: '2.3rem',
+        }}>
+          {product.name}
+        </h3>
+
         {product.hasVariants && product.colorVariants?.length > 1 && (
-          <div style={{
-            display: 'flex',
-            gap: '4px',
-            marginBottom: '6px',
-          }}>
+          <div style={{ display: 'flex', gap: '3px', marginBottom: '8px' }}>
             {product.colorVariants.slice(0, 5).map((v, i) => (
               <div key={i} style={{
-                width: '14px',
-                height: '14px',
-                borderRadius: '50%',
-                background: v.colorHex,
-                border: '1.5px solid white',
+                width: '13px', height: '13px', borderRadius: '50%',
+                background: v.colorHex, border: '1.5px solid white',
                 boxShadow: '0 1px 3px rgba(0,0,0,0.15)',
               }} title={v.colorName} />
             ))}
             {product.colorVariants.length > 5 && (
               <span style={{
-                fontSize: '0.65rem',
-                fontWeight: '700',
-                color: '#9585B0',
-                marginLeft: '4px',
+                fontSize: '0.62rem', fontWeight: '700',
+                color: '#9585B0', marginLeft: '3px',
               }}>+{product.colorVariants.length - 5}</span>
             )}
           </div>
         )}
 
-        <div className={styles.relatedPriceRow}>
-          <span className={styles.relatedPrice}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '10px' }}>
+          <span style={{
+            fontSize: '1rem', fontWeight: '900',
+            background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}>
             ₹{price?.toLocaleString('en-IN')}
           </span>
           {displayDiscountPrice && (
-            <span className={styles.relatedOldPrice}>
+            <span style={{
+              fontSize: '0.75rem',
+              color: '#9CA3AF',
+              textDecoration: 'line-through',
+              fontWeight: '600',
+            }}>
               ₹{displayPrice?.toLocaleString('en-IN')}
             </span>
           )}
         </div>
 
         <button
-          className={`${styles.relatedCartBtn} ${adding ? styles.relatedAdding : ''} ${
-            product.stock === 0 ? styles.relatedDisabled : ''
-          }`}
           onClick={handleCart}
           disabled={product.stock === 0}
+          style={{
+            width: '100%', padding: '9px',
+            background: product.stock === 0
+              ? '#F3F4F6'
+              : adding
+                ? 'linear-gradient(135deg, #10B981, #059669)'
+                : 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+            color: product.stock === 0 ? '#9CA3AF' : 'white',
+            border: 'none', borderRadius: '10px',
+            fontSize: '0.78rem', fontWeight: '900',
+            cursor: product.stock === 0 ? 'not-allowed' : 'pointer',
+            fontFamily: 'inherit',
+            boxShadow: product.stock === 0 ? 'none' : '0 3px 10px rgba(255,107,53,0.25)',
+          }}
         >
           {adding
             ? '✓ Added!'
@@ -1231,6 +1525,13 @@ function RelatedCard({ product, index }) {
               : '🛒 Add to Cart'}
         </button>
       </div>
+
+      <style>{`
+        @keyframes slideUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to   { opacity: 1; transform: translateY(0); }
+        }
+      `}</style>
     </Link>
   );
 }
