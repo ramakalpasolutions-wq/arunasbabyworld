@@ -13,44 +13,24 @@ function calculateRelevance(product, searchLower, matchingCategoryIds) {
   const categoryNameLower = (product.category?.name   || '').toLowerCase();
   const categorySlugLower = (product.category?.slug   || '').toLowerCase();
 
-  // 🥇 HIGHEST — Product is in matching category
-  if (matchingCategoryIds.includes(product.categoryId)) {
-    score += 10000;
-  }
-
-  // 🥈 Category name/slug match
-  if (categoryNameLower === searchLower || categorySlugLower === searchLower) {
-    score += 5000;
-  }
-  if (categoryNameLower.includes(searchLower) || categorySlugLower.includes(searchLower)) {
-    score += 2000;
-  }
-
-  // 🥉 Exact product name match
+  if (matchingCategoryIds.includes(product.categoryId)) score += 10000;
+  if (categoryNameLower === searchLower || categorySlugLower === searchLower) score += 5000;
+  if (categoryNameLower.includes(searchLower) || categorySlugLower.includes(searchLower)) score += 2000;
   if (nameLower === searchLower) score += 3000;
   if (nameLower.startsWith(searchLower)) score += 1500;
-
   const nameWords = nameLower.split(/\s+/);
   if (nameWords.includes(searchLower)) score += 1200;
   if (nameLower.includes(searchLower)) score += 800;
-
-  // Brand match
   if (brandLower === searchLower) score += 700;
   if (brandLower.includes(searchLower)) score += 400;
-
-  // Tags match
   if (product.tags?.some(t => t.toLowerCase() === searchLower)) score += 600;
   if (product.tags?.some(t => t.toLowerCase().includes(searchLower))) score += 300;
-
-  // Description match (lowest)
   if (shortDescLower.includes(searchLower)) score += 100;
-  if (descLower.includes(searchLower))       score += 20;
-
-  // 🎁 BOOSTS
-  if (product.isFeatured)          score += 50;
-  if (product.isTrending)          score += 40;
-  if ((product.stock || 0) > 0)    score += 10;
-  if (product.rating > 4)          score += 15;
+  if (descLower.includes(searchLower)) score += 20;
+  if (product.isFeatured) score += 50;
+  if (product.isTrending) score += 40;
+  if ((product.stock || 0) > 0) score += 10;
+  if (product.rating > 4) score += 15;
 
   return score;
 }
@@ -67,8 +47,6 @@ export async function GET(request) {
     const order    = searchParams.get('order') || 'desc';
     const featured = searchParams.get('featured');
     const trending = searchParams.get('trending');
-
-    // ✅ NEW FILTERS
     const brand    = searchParams.get('brand');
     const discount = searchParams.get('discount');
     const rating   = searchParams.get('rating');
@@ -87,15 +65,13 @@ export async function GET(request) {
 
     const where = { isActive: true };
 
-    if (featured === 'true')  where.isFeatured = true;
-    if (trending === 'true')  where.isTrending = true;
+    if (featured === 'true') where.isFeatured = true;
+    if (trending === 'true') where.isTrending = true;
 
-    // ✅ Brand filter (case-insensitive)
     if (brand && brand.trim()) {
       where.brand = { equals: brand.trim(), mode: 'insensitive' };
     }
 
-    // ✅ Discount filter (min discount %)
     if (discount) {
       const discountVal = parseFloat(discount);
       if (!isNaN(discountVal) && discountVal > 0) {
@@ -103,7 +79,6 @@ export async function GET(request) {
       }
     }
 
-    // ✅ Rating filter
     if (rating) {
       const ratingVal = parseFloat(rating);
       if (!isNaN(ratingVal) && ratingVal > 0) {
@@ -111,12 +86,10 @@ export async function GET(request) {
       }
     }
 
-    // ✅ In-stock only filter
     if (inStock === 'true') {
       where.stock = { gt: 0 };
     }
 
-    // ✅ Price range filter
     if (minPrice !== null || maxPrice !== null) {
       where.OR = [
         {
@@ -136,7 +109,6 @@ export async function GET(request) {
       ];
     }
 
-    // ✅ SMART SEARCH — Categories first, then products
     let matchingCategoryIds = [];
 
     if (search && search.trim()) {
@@ -176,89 +148,79 @@ export async function GET(request) {
       }
     }
 
-    // ✅ Direct category filter
-// ✅ Smart Category filter — handles typos, spaces, capitals, abbreviations
-if (category) {
-  const isObjectId = /^[a-f\d]{24}$/i.test(category);
+    // ✅ Smart Category filter
+    if (category) {
+      const isObjectId = /^[a-f\d]{24}$/i.test(category);
 
-  if (isObjectId) {
-    where.categoryId = category;
-  } else {
-    const rawCategory = category.trim();
+      if (isObjectId) {
+        where.categoryId = category;
+      } else {
+        const rawCategory = category.trim();
+        const normalized = rawCategory
+          .toLowerCase()
+          .replace(/\s+/g, '-')
+          .replace(/[^a-z0-9-]/g, '');
 
-    // Normalize: "Electric vachiles" → "electric-vachiles"
-    const normalized = rawCategory
-      .toLowerCase()
-      .replace(/\s+/g, '-')
-      .replace(/[^a-z0-9-]/g, '');
+        let catFound = null;
 
-    let catFound = null;
-
-    // 1️⃣ Exact slug match
-    catFound = await prisma.category.findFirst({
-      where: { slug: normalized, isActive: true },
-    });
-
-    // 2️⃣ Exact name match (case-insensitive)
-    if (!catFound) {
-      catFound = await prisma.category.findFirst({
-        where: {
-          name:     { equals: rawCategory, mode: 'insensitive' },
-          isActive: true,
-        },
-      });
-    }
-
-    // 3️⃣ Partial slug match
-    if (!catFound) {
-      catFound = await prisma.category.findFirst({
-        where: {
-          slug:     { contains: normalized, mode: 'insensitive' },
-          isActive: true,
-        },
-      });
-    }
-
-    // 4️⃣ Partial name match
-    if (!catFound) {
-      catFound = await prisma.category.findFirst({
-        where: {
-          name:     { contains: rawCategory, mode: 'insensitive' },
-          isActive: true,
-        },
-      });
-    }
-
-    // 5️⃣ Fuzzy match — use first meaningful word (e.g. "electric" from "Electric vachiles")
-    if (!catFound) {
-      const firstWord = rawCategory.split(/\s+/)[0]?.toLowerCase();
-      if (firstWord && firstWord.length >= 4) {
         catFound = await prisma.category.findFirst({
-          where: {
-            OR: [
-              { slug: { contains: firstWord, mode: 'insensitive' } },
-              { name: { contains: firstWord, mode: 'insensitive' } },
-            ],
-            isActive: true,
-          },
+          where: { slug: normalized, isActive: true },
         });
+
+        if (!catFound) {
+          catFound = await prisma.category.findFirst({
+            where: {
+              name: { equals: rawCategory, mode: 'insensitive' },
+              isActive: true,
+            },
+          });
+        }
+
+        if (!catFound) {
+          catFound = await prisma.category.findFirst({
+            where: {
+              slug: { contains: normalized, mode: 'insensitive' },
+              isActive: true,
+            },
+          });
+        }
+
+        if (!catFound) {
+          catFound = await prisma.category.findFirst({
+            where: {
+              name: { contains: rawCategory, mode: 'insensitive' },
+              isActive: true,
+            },
+          });
+        }
+
+        if (!catFound) {
+          const firstWord = rawCategory.split(/\s+/)[0]?.toLowerCase();
+          if (firstWord && firstWord.length >= 4) {
+            catFound = await prisma.category.findFirst({
+              where: {
+                OR: [
+                  { slug: { contains: firstWord, mode: 'insensitive' } },
+                  { name: { contains: firstWord, mode: 'insensitive' } },
+                ],
+                isActive: true,
+              },
+            });
+          }
+        }
+
+        if (catFound) {
+          where.categoryId = catFound.id;
+          console.log(`✅ Category "${rawCategory}" → matched: ${catFound.name} (${catFound.slug})`);
+        } else {
+          console.log(`⚠️ Category "${rawCategory}" → NOT FOUND`);
+          where.categoryId = '000000000000000000000000';
+        }
       }
     }
 
-    if (catFound) {
-      where.categoryId = catFound.id;
-      console.log(`✅ Category "${rawCategory}" → matched: ${catFound.name} (${catFound.slug})`);
-    } else {
-      console.log(`⚠️ Category "${rawCategory}" → NOT FOUND — returning 0 results`);
-      // Force empty results if category not found (better than showing all!)
-      where.categoryId = '000000000000000000000000';
-    }
-  }
-}
-
     const total = await prisma.product.count({ where });
 
-    // ✅ Determine sort field — special handling for discount
     let orderBy;
     if (sort === 'discountPercent') {
       orderBy = [
@@ -266,21 +228,20 @@ if (category) {
         { createdAt: 'desc' },
       ];
     } else if (sort === 'price') {
-      // Sort by price (discountPrice if available, else price)
       orderBy = [{ price: order }];
     } else {
       orderBy = { [sort]: order };
     }
 
-    // ✅ Fetch products
+    // ✅ Fetch ALL matching products for sorting (up to 500)
     let products = await prisma.product.findMany({
       where,
       include: {
         category: { select: { id: true, name: true, slug: true } },
       },
       orderBy,
-      skip: search ? 0 : (page - 1) * limit,
-      take: search ? Math.min(total, 200) : limit,
+      skip: 0,
+      take: Math.min(total, 500),
     });
 
     // ✅ SMART RELEVANCE SORTING when searching
@@ -295,11 +256,19 @@ if (category) {
         .sort((a, b) => b.score - a.score)
         .map(item => item.product);
 
-      const startIndex = (page - 1) * limit;
-      products = products.slice(startIndex, startIndex + limit);
-
       console.log(`🎯 Sorted ${products.length} products by relevance for "${search}"`);
     }
+
+    // ✅ ALWAYS push out-of-stock products to the end
+    if (inStock !== 'true') {
+      const inStockProducts = products.filter(p => (p.stock || 0) > 0);
+      const outOfStock      = products.filter(p => (p.stock || 0) === 0);
+      products = [...inStockProducts, ...outOfStock];
+    }
+
+    // ✅ Apply pagination AFTER all sorting
+    const startIndex = (page - 1) * limit;
+    products = products.slice(startIndex, startIndex + limit);
 
     return NextResponse.json({
       products,
