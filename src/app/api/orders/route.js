@@ -27,15 +27,31 @@ export async function GET(request) {
     }
 
     const { searchParams } = new URL(request.url);
-    const status         = searchParams.get('status');
-    const paymentStatus  = searchParams.get('paymentStatus');
-    const page           = parseInt(searchParams.get('page')  || '1');
-    const limit          = parseInt(searchParams.get('limit') || '10');
+    const status                = searchParams.get('status');
+    const paymentStatus         = searchParams.get('paymentStatus');
+    const excludeFailedPayments = searchParams.get('excludeFailedPayments');
+    const page                  = parseInt(searchParams.get('page')  || '1');
+    const limit                 = parseInt(searchParams.get('limit') || '10');
 
     const where = {};
     if (session.user.role !== 'admin') where.userId = session.user.id;
     if (status) where.orderStatus = status;
-    if (paymentStatus) where.paymentStatus = paymentStatus;
+
+    // ✅ Payment filter logic
+    if (paymentStatus) {
+      // Show ONLY these payment statuses
+      where.paymentStatus = paymentStatus;
+    } else if (excludeFailedPayments === 'true') {
+      // ✅ Hide failed payment orders from main list
+      where.NOT = [
+        {
+          AND: [
+            { paymentStatus: 'failed' },
+            { isPaid: false },
+          ],
+        },
+      ];
+    }
 
     const total  = await prisma.order.count({ where });
     const orders = await prisma.order.findMany({
@@ -102,7 +118,7 @@ export async function POST(request) {
       isPaid,
       paidAt,
       orderStatus,
-      paymentStatus,   // ✅ NEW
+      paymentStatus,
     } = data;
 
     const order = await prisma.order.create({
@@ -169,5 +185,28 @@ export async function POST(request) {
       { error: error.message || 'Internal server error' },
       { status: 500 }
     );
+  }
+}
+
+// ✅ DELETE — Admin can bulk delete
+export async function DELETE(request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'Order ID required' }, { status: 400 });
+    }
+
+    await prisma.order.delete({ where: { id } });
+    return NextResponse.json({ message: 'Order deleted' });
+  } catch (error) {
+    console.error('Order DELETE error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

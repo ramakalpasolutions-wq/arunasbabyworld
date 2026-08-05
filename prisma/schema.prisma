@@ -271,6 +271,26 @@ model Order {
   trackingUrl     String?
 }
 
+model CompanySettings {
+  id           String   @id @default(auto()) @map("_id") @db.ObjectId
+  companyName  String   @default("Arunas Baby World")
+  address      String   @default("Koritipadu, Guntur")
+  city         String   @default("Andhra Pradesh")
+  state        String   @default("Andhra Pradesh")
+  pincode      String   @default("522007")
+  phone        String   @default("+91 9010561998")
+  email        String   @default("arunasbabyworld947@gmail.com")
+  website      String   @default("www.arunasbabyworld.com")
+  gstin        String   @default("37CCAPB6572Q3Z3")
+  logoUrl      String   @default("/logo.png")
+  bankName     String?
+  accountNo    String?
+  ifscCode     String?
+  upiId        String?
+  updatedAt    DateTime @updatedAt
+
+  @@map("company_settings")
+}
 model Counter {
   id    String @id @default(auto()) @map("_id") @db.ObjectId
   name  String @unique

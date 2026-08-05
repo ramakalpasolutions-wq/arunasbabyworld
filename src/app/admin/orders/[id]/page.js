@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import styles from './page.module.css';
+import PrintBill from '@/components/admin/PrintBill';
 
 const STATUS_OPTIONS = [
   'Pending', 'Confirmed', 'Processing',
@@ -31,7 +32,7 @@ function fmtOrderNum(order) {
 }
 
 /* ══════════════════════════════════════════
-   SHIP BUTTON — Manual AWB fallback
+   SHIP BUTTON
 ══════════════════════════════════════════ */
 function ShipButton({ order, onSuccess }) {
   const [loading,       setLoading]       = useState(false);
@@ -455,7 +456,6 @@ function AdminCancelModal({ order, onClose, onSuccess }) {
         overflowY: 'auto', boxShadow: '0 24px 60px rgba(0,0,0,0.18)',
       }}>
 
-        {/* Header */}
         <div style={{
           padding: '20px 24px',
           borderBottom: '2px solid #FEF2F2',
@@ -485,7 +485,6 @@ function AdminCancelModal({ order, onClose, onSuccess }) {
 
         <div style={{ padding: '20px 24px' }}>
 
-          {/* Order Summary */}
           <div style={{
             padding: '12px 14px', background: '#F9FAFB', borderRadius: '12px',
             marginBottom: '16px', display: 'flex', alignItems: 'center',
@@ -504,7 +503,6 @@ function AdminCancelModal({ order, onClose, onSuccess }) {
             </strong>
           </div>
 
-          {/* Cancel Reason */}
           <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: '800', color: '#1F2937', marginBottom: '8px' }}>
             Cancellation Reason <span style={{ color: '#EF4444' }}>*</span>
           </label>
@@ -544,7 +542,6 @@ function AdminCancelModal({ order, onClose, onSuccess }) {
             />
           )}
 
-          {/* Refund Section */}
           {needsRefund && (
             <>
               <div style={{
@@ -732,7 +729,6 @@ function AdminCancelModal({ order, onClose, onSuccess }) {
             </div>
           )}
 
-          {/* Admin Notes */}
           <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#374151', marginBottom: '6px', textTransform: 'uppercase' }}>
             📝 Admin Notes (internal)
           </label>
@@ -749,7 +745,6 @@ function AdminCancelModal({ order, onClose, onSuccess }) {
             }}
           />
 
-          {/* Buttons */}
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
               onClick={onClose}
@@ -804,6 +799,7 @@ export default function AdminOrderDetail({ params }) {
   const [trackingNumber,       setTrackingNumber]       = useState('');
   const [adminNotes,           setAdminNotes]           = useState('');
   const [showAdminCancelModal, setShowAdminCancelModal] = useState(false);
+  const [showPrintBill,        setShowPrintBill]        = useState(false);
 
   useEffect(() => { fetchOrder(); }, [id]);
 
@@ -954,9 +950,10 @@ export default function AdminOrderDetail({ params }) {
   const returnReq         = order.returnRequest;
 
   const canShip = ['Confirmed', 'Processing', 'Shipped'].includes(order.orderStatus);
-
-  // ✅ Admin can cancel — not already cancelled, not delivered, not return-requested
   const canAdminCancel = !isCancelled && !isReturnRequested && order.orderStatus !== 'Delivered';
+
+  // ✅ Print Bill only for paid orders OR COD orders
+  const canPrint = order.isPaid || order.paymentMethod === 'COD';
 
   return (
     <div className={styles.page}>
@@ -985,6 +982,7 @@ export default function AdminOrderDetail({ params }) {
             })}
           </p>
         </div>
+
         <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
           <span style={{
             padding: '6px 16px', borderRadius: '20px',
@@ -995,7 +993,26 @@ export default function AdminOrderDetail({ params }) {
             {order.orderStatus?.replace('_', ' ')}
           </span>
 
-          {/* ✅ Admin Cancel & Refund button */}
+          {/* ✅ Print Bill Button */}
+          {canPrint && (
+            <button
+              onClick={() => setShowPrintBill(true)}
+              style={{
+                padding: '8px 16px',
+                background: 'linear-gradient(135deg, #10B981, #059669)',
+                color: 'white', border: 'none',
+                borderRadius: '10px', fontWeight: '800',
+                fontSize: '13px', cursor: 'pointer',
+                fontFamily: 'Nunito, sans-serif',
+                boxShadow: '0 4px 12px rgba(16,185,129,0.25)',
+                display: 'inline-flex', alignItems: 'center', gap: '6px',
+              }}
+            >
+              🖨️ Print Bill
+            </button>
+          )}
+
+          {/* Admin Cancel & Refund button */}
           {canAdminCancel && (
             <button
               onClick={() => setShowAdminCancelModal(true)}
@@ -1226,7 +1243,6 @@ export default function AdminOrderDetail({ params }) {
         {/* ── LEFT COLUMN ── */}
         <div className={styles.mainCol}>
 
-          {/* Order Items */}
           <div className={styles.card}>
             <h3>🛍️ Order Items ({order.orderItems?.length})</h3>
             {order.orderItems?.map((item, i) => (
@@ -1241,7 +1257,6 @@ export default function AdminOrderDetail({ params }) {
             ))}
           </div>
 
-          {/* Customer Details */}
           <div className={styles.card}>
             <h3>👤 Customer Details</h3>
             <div className={styles.detailGrid}>
@@ -1274,7 +1289,6 @@ export default function AdminOrderDetail({ params }) {
             </div>
           </div>
 
-          {/* Shipping Address */}
           <div className={styles.card}>
             <h3>📍 Shipping Address {isReturnRequested && '(Pickup From Here)'}</h3>
             {order.shippingAddress ? (
@@ -1291,7 +1305,6 @@ export default function AdminOrderDetail({ params }) {
         {/* ── RIGHT COLUMN ── */}
         <div className={styles.sideCol}>
 
-          {/* Price Summary */}
           <div className={styles.card}>
             <h3>💰 Price Summary</h3>
             <div className={styles.priceRows}>
@@ -1320,7 +1333,6 @@ export default function AdminOrderDetail({ params }) {
             </div>
           </div>
 
-          {/* ✅ Nimbus Post Shipping */}
           {canShip && (
             <div className={styles.card}>
               <h3>🚚 Shipping</h3>
@@ -1331,7 +1343,6 @@ export default function AdminOrderDetail({ params }) {
             </div>
           )}
 
-          {/* Update Order */}
           {!isReturnRequested && !isCancelled && (
             <div className={styles.card}>
               <h3>🔄 Update Order</h3>
@@ -1369,7 +1380,6 @@ export default function AdminOrderDetail({ params }) {
             </div>
           )}
 
-          {/* Quick Links */}
           {hasRefund && (
             <div className={styles.card} style={{ background: 'linear-gradient(135deg, #F5F3FF, #EDE9FE)' }}>
               <h3 style={{ color: '#7B2FBE' }}>🔗 Quick Links</h3>
@@ -1391,7 +1401,6 @@ export default function AdminOrderDetail({ params }) {
             </div>
           )}
 
-          {/* Delivered */}
           {order.isDelivered && !isReturnRequested && (
             <div className={styles.card} style={{ background: '#d1fae5', border: '1px solid #6ee7b7' }}>
               <h3 style={{ color: '#065f46' }}>🎉 Delivered</h3>
@@ -1412,6 +1421,14 @@ export default function AdminOrderDetail({ params }) {
           order={order}
           onClose={() => setShowAdminCancelModal(false)}
           onSuccess={() => { setShowAdminCancelModal(false); fetchOrder(); }}
+        />
+      )}
+
+      {/* ✅ Print Bill Modal */}
+      {showPrintBill && (
+        <PrintBill
+          order={order}
+          onClose={() => setShowPrintBill(false)}
         />
       )}
     </div>
