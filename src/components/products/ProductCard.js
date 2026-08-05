@@ -52,7 +52,6 @@ export function ProductCardSkeleton() {
     <div className={styles.skeleton}>
       <div className={styles.skeletonImage} />
       <div className={styles.skeletonBody}>
-        <div className={`${styles.skeletonLine} ${styles.skeletonLineShort}`} />
         <div className={`${styles.skeletonLine} ${styles.skeletonLineFull}`} />
         <div className={`${styles.skeletonLine} ${styles.skeletonLineMid}`} />
         <div className={`${styles.skeletonLine} ${styles.skeletonLineBtn}`} />
@@ -65,12 +64,8 @@ export default function ProductCard({ product }) {
   const { addItem, addToCart } = useCart();
   const { toggle, isWishlisted, isInWishlist } = useWishlist();
 
-  const cardRef = useRef(null);
-  const [tilt,        setTilt]        = useState({ x: 0, y: 0 });
-  const [isHovered,   setHovered]     = useState(false);
-  const [imgParallax, setImgParallax] = useState({ x: 0, y: 0 });
-  const [imgLoaded,   setImgLoaded]   = useState(false);
-  const [cartAdding,  setCartAdding]  = useState(false);
+  const [imgLoaded,  setImgLoaded]  = useState(false);
+  const [cartAdding, setCartAdding] = useState(false);
 
   if (!product) return null;
 
@@ -80,7 +75,7 @@ export default function ProductCard({ product }) {
       ? isInWishlist(product.id)
       : false;
 
-  // ✅ FIXED — Smart image resolver (checks color variants too)
+  // ✅ Smart image resolver (checks color variants too)
   const getProductImage = () => {
     if (product.images?.[0]?.url) return product.images[0].url;
     if (product.hasVariants && product.colorVariants?.length > 0) {
@@ -91,7 +86,7 @@ export default function ProductCard({ product }) {
     return null;
   };
 
-  // ✅ FIXED — Smart price resolver (uses variant price if no main price)
+  // ✅ Smart price resolver
   const getProductPrice = () => {
     if (product.hasVariants && product.colorVariants?.length > 0) {
       const firstVariant = product.colorVariants[0];
@@ -114,24 +109,6 @@ export default function ProductCard({ product }) {
     product.category?.slug || ''
   );
 
-  const handleMouseMove = (e) => {
-    const card = cardRef.current;
-    if (!card) return;
-    const { left, top, width, height } = card.getBoundingClientRect();
-    const x = (e.clientX - left) / width  - 0.5;
-    const y = (e.clientY - top)  / height - 0.5;
-    setTilt({ x: y * -14, y: x * 14 });
-    setImgParallax({ x: x * 12, y: y * 12 });
-  };
-
-  const handleMouseEnter = () => setHovered(true);
-
-  const handleMouseLeave = () => {
-    setHovered(false);
-    setTilt({ x: 0, y: 0 });
-    setImgParallax({ x: 0, y: 0 });
-  };
-
   const handleAddToCart = (e) => {
     e.preventDefault();
     e.stopPropagation();
@@ -139,21 +116,18 @@ export default function ProductCard({ product }) {
     setCartAdding(true);
     const addFn = addItem || addToCart;
     addFn({ ...product, quantity: 1 });
-    toast.success(
-      <span>Added to cart! 🛒</span>,
-      {
-        style: {
-          background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
-          color: 'white',
-          fontWeight: 700,
-          borderRadius: 999,
-          padding: '12px 20px',
-          fontSize: '0.9rem',
-        },
-        icon: null,
-        duration: 2000,
-      }
-    );
+    toast.success('Added to cart! 🛒', {
+      style: {
+        background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+        color: 'white',
+        fontWeight: 700,
+        borderRadius: 999,
+        padding: '12px 20px',
+        fontSize: '0.9rem',
+      },
+      icon: null,
+      duration: 2000,
+    });
     setTimeout(() => setCartAdding(false), 1200);
   };
 
@@ -164,7 +138,7 @@ export default function ProductCard({ product }) {
     if (inWishlist) {
       toast('Removed from wishlist 💔', { duration: 1500 });
     } else {
-      toast.success('Saved to wishlist ❤️', {
+      toast.success('Saved ❤️', {
         style: {
           background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
           color: 'white',
@@ -172,7 +146,7 @@ export default function ProductCard({ product }) {
           borderRadius: 999,
         },
         icon: null,
-        duration: 1800,
+        duration: 1500,
       });
     }
   };
@@ -186,83 +160,44 @@ export default function ProductCard({ product }) {
   return (
     <Link
       href={`/products/${product.id}`}
-      className={`${styles.card} ${isHovered ? styles.cardHovered : ''}`}
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+      className={styles.card}
       style={{
         '--accent':        accent.color,
         '--accent-pastel': accent.pastel,
-        transform: isHovered
-          ? `perspective(900px) rotateX(${tilt.x}deg) rotateY(${tilt.y}deg) translateY(-10px) scale(1.02)`
-          : 'perspective(900px) rotateX(0deg) rotateY(0deg) translateY(0) scale(1)',
       }}
     >
-      <div className={styles.gloss} />
 
+      {/* ═══ IMAGE ═══ */}
       <div className={styles.imageWrap} style={{ background: accent.pastel }}>
-        <div className={styles.dotPattern} />
+        {imageUrl ? (
+          <>
+            {!imgLoaded && (
+              <div className={styles.imgSkeleton}>
+                <span className={styles.imgSkeletonEmoji}>{accent.emoji}</span>
+              </div>
+            )}
+            <Image
+              src={imageUrl}
+              alt={product.name}
+              width={240}
+              height={240}
+              className={`${styles.image} ${imgLoaded ? styles.imageVisible : styles.imageHidden}`}
+              style={{ objectFit: 'cover' }}
+              onLoad={() => setImgLoaded(true)}
+            />
+          </>
+        ) : (
+          <div className={styles.noImage}>
+            <span className={styles.noImageEmoji}>{accent.emoji}</span>
+          </div>
+        )}
 
-        <div
-          className={styles.imageInner}
-          style={{
-            transform: isHovered
-              ? `translate(${imgParallax.x}px, ${imgParallax.y}px) scale(1.06)`
-              : 'translate(0,0) scale(1)',
-          }}
-        >
-          {imageUrl ? (
-            <>
-              {!imgLoaded && (
-                <div className={styles.imgSkeleton}>
-                  <span className={styles.imgSkeletonEmoji}>{accent.emoji}</span>
-                </div>
-              )}
-              <Image
-                src={imageUrl}
-                alt={product.name}
-                width={320}
-                height={320}
-                className={`${styles.image} ${imgLoaded ? styles.imageVisible : styles.imageHidden}`}
-                style={{ objectFit: 'cover' }}
-                onLoad={() => setImgLoaded(true)}
-              />
-            </>
-          ) : (
-            <div className={styles.noImage}>
-              <span className={styles.noImageEmoji}>{accent.emoji}</span>
-              <p>No Image</p>
-            </div>
-          )}
-        </div>
+        {/* Discount badge */}
+        {discount > 0 && (
+          <span className={styles.badgeDiscount}>-{discount}%</span>
+        )}
 
-        <div className={`${styles.shine} ${isHovered ? styles.shineActive : ''}`} />
-
-        <div className={styles.badges}>
-          {discount > 0 && (
-            <span className={styles.badgeDiscount}>-{discount}%</span>
-          )}
-          {product.isTrending && (
-            <span className={styles.badgeTrending}>🔥 Hot</span>
-          )}
-          {product.isFeatured && (
-            <span className={styles.badgeFeatured}>⭐ Top Pick</span>
-          )}
-          {product.hasVariants && product.colorVariants?.length > 1 && (
-            <span style={{
-              background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)',
-              color: 'white',
-              padding: '3px 8px',
-              borderRadius: '6px',
-              fontSize: '0.65rem',
-              fontWeight: '800',
-            }}>
-              🎨 {product.colorVariants.length} Colors
-            </span>
-          )}
-        </div>
-
+        {/* Wishlist button */}
         <button
           className={`${styles.wishBtn} ${inWishlist ? styles.wishActive : ''}`}
           onClick={handleWishlist}
@@ -270,86 +205,38 @@ export default function ProductCard({ product }) {
           type="button"
         >
           <span className={styles.wishIcon}>{inWishlist ? '❤️' : '🤍'}</span>
-          <span className={styles.wishRipple} />
         </button>
 
+        {/* OOS Overlay */}
         {product.stock === 0 && (
           <div className={styles.oos}>
             <span>Out of Stock</span>
           </div>
         )}
-
-        <span className={styles.catEmoji}>{accent.emoji}</span>
-
-        <div
-          className={`${styles.imgGlow} ${isHovered ? styles.imgGlowActive : ''}`}
-          style={{ '--accent': accent.color }}
-        />
       </div>
 
+      {/* ═══ INFO — COMPACT ═══ */}
       <div className={styles.info}>
-        <div
-          className={styles.separator}
-          style={{
-            background: `linear-gradient(90deg, ${accent.color}60, #7B2FBE40, transparent)`
-          }}
-        />
 
-        <p className={styles.category} style={{ color: accent.color }}>
-          {product.category?.name || 'Baby Products'}
-        </p>
+        {/* Title */}
+        <h3 className={styles.name} title={product.name}>
+          {product.name}
+        </h3>
 
-        <h3 className={styles.name}>{product.name}</h3>
-
-        {product.shortDescription && (
-          <p className={styles.desc}>{product.shortDescription}</p>
-        )}
-
+        {/* Prices */}
         <div className={styles.priceRow}>
-          <span
-            className={styles.price}
-            style={{ '--accent': accent.color, '--purple': '#7B2FBE' }}
-          >
-            ₹{displayDiscountPrice || displayPrice}
+          <span className={styles.price}>
+            ₹{Math.round(displayDiscountPrice || displayPrice)?.toLocaleString('en-IN')}
           </span>
 
           {displayDiscountPrice && displayDiscountPrice < displayPrice && (
-            <span className={styles.priceOld}>₹{displayPrice}</span>
-          )}
-
-          {discount > 0 && (
-            <span className={styles.saveBadge}>{discount}% off</span>
+            <span className={styles.priceOld}>
+              ₹{Math.round(displayPrice)?.toLocaleString('en-IN')}
+            </span>
           )}
         </div>
 
-        {product.rating > 0 && (
-          <div className={styles.ratingRow}>
-            <div className={styles.stars}>
-              {[1, 2, 3, 4, 5].map(s => (
-                <span
-                  key={s}
-                  className={
-                    s <= Math.round(product.rating)
-                      ? styles.starOn
-                      : styles.starOff
-                  }
-                >
-                  ★
-                </span>
-              ))}
-            </div>
-            <span className={styles.ratingCount}>
-              ({product.numReviews || 0})
-            </span>
-          </div>
-        )}
-
-        {product.stock > 0 && product.stock <= 10 && (
-          <p className={styles.lowStock}>
-            Only {product.stock} left!
-          </p>
-        )}
-
+        {/* Add to Cart Button */}
         <button
           className={`
             ${styles.cartBtn}
@@ -362,25 +249,19 @@ export default function ProductCard({ product }) {
           style={
             product.stock > 0
               ? {
-                  '--accent': accent.color,
                   background: `linear-gradient(135deg, ${accent.color} 0%, #7B2FBE 100%)`,
                 }
               : {}
           }
         >
           <span className={styles.cartInner}>
-            <span
-              className={`${styles.cartIcon} ${cartAdding ? styles.cartIconSpin : ''}`}
-            >
+            <span className={`${styles.cartIcon} ${cartAdding ? styles.cartIconSpin : ''}`}>
               {cartAdding ? '✓' : product.stock === 0 ? '✕' : '🛒'}
             </span>
             <span className={styles.cartLabel}>
-              {cartAdding ? 'Added!' : product.stock === 0 ? 'Out of Stock' : 'Add to Cart'}
+              {cartAdding ? 'Added!' : product.stock === 0 ? 'Out' : 'Add'}
             </span>
           </span>
-          <span
-            className={`${styles.cartShine} ${isHovered ? styles.cartShineActive : ''}`}
-          />
         </button>
       </div>
     </Link>
