@@ -1,0 +1,94 @@
+.authPage {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 20px;
+  background: linear-gradient(135deg, #fff0f7 0%, #f3f0ff 50%, #e0f2fe 100%);
+}
+
+.authBg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  background:
+    radial-gradient(circle at 20% 20%, rgba(255,107,157,0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 80%, rgba(124,58,237,0.12) 0%, transparent 50%),
+    radial-gradient(circle at 50% 50%, rgba(14,165,233,0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.authCard {
+  background: white;
+  border-radius: var(--radius-xl);
+  padding: 40px;
+  width: 100%;
+  max-width: 440px;
+  box-shadow: var(--shadow-xl);
+  position: relative;
+  z-index: 1;
+  animation: cardSlideUp 0.5s ease forwards;
+}
+
+@keyframes cardSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.authHeader { text-align: center; margin-bottom: 28px; }
+
+.logo {
+  display: inline-block;
+  font-size: 1.3rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  background: linear-gradient(135deg, var(--primary), var(--secondary));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 16px;
+}
+
+.authHeader h1 {
+  font-size: 1.7rem;
+  margin-bottom: 6px;
+}
+
+.authHeader p {
+  color: var(--text-secondary);
+  font-size: 0.9rem;
+}
+
+.form { display: flex; flex-direction: column; gap: 4px; }
+
+.submitBtn {
+  width: 100%;
+  padding: 14px;
+  font-size: 1rem;
+  margin-top: 8px;
+}
+
+.authFooter {
+  text-align: center;
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border-light);
+  font-size: 0.88rem;
+  color: var(--text-secondary);
+}
+
+.authFooter a {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.demo {
+  margin-top: 16px;
+  background: var(--accent-light);
+  border-radius: var(--radius-md);
+  padding: 10px 14px;
+  text-align: center;
+  font-size: 0.82rem;
+  color: var(--text-secondary);
+}

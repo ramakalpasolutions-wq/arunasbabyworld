@@ -1,0 +1,445 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String    @unique
+  password  String
+  phone     String?
+  role      String    @default("user")
+  avatar    String    @default("")
+  isActive  Boolean   @default(true)
+  addresses Address[]
+  wishlist  String[]  @db.ObjectId
+  orders    Order[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+type Address {
+  name      String?
+  phone     String?
+  address   String?
+  city      String?
+  state     String?
+  pincode   String?
+  isDefault Boolean @default(false)
+}
+
+model Category {
+  id          String          @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  slug        String          @unique
+  description String?
+  icon        String?
+  color       String          @default("#ff6b9d")
+  isActive    Boolean         @default(true)
+  order       Int             @default(0)
+  type        String          @default("normal")
+  banner      CategoryBanner?
+  gridImages  CategoryImage[]
+  products    Product[]
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+}
+
+type CategoryBanner {
+  url      String?
+  publicId String?
+  title    String?
+  subtitle String?
+}
+
+type CategoryImage {
+  url      String?
+  publicId String?
+  title    String?
+}
+
+// ============================================================
+// ✅ PRODUCT MODEL — with Color Variants
+// ============================================================
+model Product {
+  id               String         @id @default(auto()) @map("_id") @db.ObjectId
+  name             String
+  slug             String         @unique
+  description      String
+  shortDescription String?
+  price            Float
+  discountPrice    Float?
+  discountPercent  Float?
+  images           ProductImage[]
+  categoryId       String         @db.ObjectId
+  category         Category       @relation(fields: [categoryId], references: [id])
+  brand            String?
+  stock            Int            @default(0)
+  sku              String?        @unique
+  tags             String[]
+  youtubeUrl       String?
+  features         String[]
+  ageGroup         String?
+  size             String?
+  gender           String?
+  color            String?
+  material         String?
+
+  // ✅ Color Variants
+  hasVariants      Boolean        @default(false)
+  colorVariants    ColorVariant[]
+
+  reviews          Review[]
+  rating           Float          @default(0)
+  numReviews       Int            @default(0)
+  isFeatured       Boolean        @default(false)
+  isTrending       Boolean        @default(false)
+  isActive         Boolean        @default(true)
+  weight           Float?
+  createdAt        DateTime       @default(now())
+  updatedAt        DateTime       @updatedAt
+}
+
+type ProductImage {
+  url      String?
+  publicId String?
+  type     String?
+}
+
+type ColorVariant {
+  colorName     String?
+  colorHex      String?
+  price         Float?
+  discountPrice Float?
+  stock         Int?           @default(0)
+  sizes         String[]
+  images        VariantImage[]
+  sku           String?
+}
+
+type VariantImage {
+  url      String?
+  publicId String?
+  view     String?
+}
+
+// ============================================================
+// ✅ REVIEW MODEL — Enhanced with images & verification
+// ============================================================
+model Review {
+  id           String        @id @default(auto()) @map("_id") @db.ObjectId
+  productId    String        @db.ObjectId
+  product      Product       @relation(fields: [productId], references: [id])
+  userId       String        @db.ObjectId
+  orderId      String?       @db.ObjectId
+  name         String
+  email        String?
+  rating       Int
+  title        String?
+  comment      String
+  images       ReviewImage[]
+  isVerified   Boolean       @default(false)
+  isApproved   Boolean       @default(true)
+  helpfulCount Int           @default(0)
+  helpfulBy    String[]      @db.ObjectId
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([productId, createdAt])
+  @@index([userId])
+}
+
+type ReviewImage {
+  url      String?
+  publicId String?
+}
+
+model Brand {
+  id        String     @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  color     String     @default("#FF6B35")
+  logo      BrandLogo?
+  link      String     @default("/products")
+  isActive  Boolean    @default(true)
+  order     Int        @default(0)
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+
+  @@map("brands")
+}
+
+type BrandLogo {
+  url      String?
+  publicId String?
+}
+
+model Banner {
+  id            String        @id @default(auto()) @map("_id") @db.ObjectId
+  title         String
+  subtitle      String?
+  image         BannerImage?
+  mobileImage   BannerImage?
+  gridImages    BannerImage[]
+  panels        BannerPanel[]
+  buttonText    String        @default("Shop Now")
+  buttonLink    String        @default("/products")
+  bgColor       String        @default("#ff6b9d")
+  isActive      Boolean       @default(true)
+  order         Int           @default(0)
+  type          String        @default("hero")
+  emoji         String?
+  price         Float?
+  offer         String?
+  color         String?
+  slug          String?
+  gender        String?
+  festivalName  String?
+  startDate     DateTime?
+  endDate       DateTime?
+  foodCategory  String?
+  evGender      String?
+  newBornGender String?
+  ageGroup      String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  @@map("banners")
+}
+
+type BannerImage {
+  url      String?
+  publicId String?
+  title    String?
+  brand    String?
+  price    String?
+  link     String?
+}
+
+type BannerPanel {
+  url      String?
+  publicId String?
+  label    String?
+  sublabel String?
+  link     String?
+  bg       String?
+  isBig    Boolean?
+}
+
+model Order {
+  id              String      @id @default(auto()) @map("_id") @db.ObjectId
+  orderNumber     Int?
+  userId          String      @db.ObjectId
+  user            User        @relation(fields: [userId], references: [id])
+  orderItems      OrderItem[]
+  shippingAddress ShipAddress
+  paymentMethod   String      @default("Razorpay")
+  paymentResult   PayResult?
+  itemsPrice      Float       @default(0)
+  shippingPrice   Float       @default(0)
+  taxPrice        Float       @default(0)
+  discountAmount  Float       @default(0)
+  totalPrice      Float       @default(0)
+  couponCode      String?
+  isPaid          Boolean     @default(false)
+  paidAt          DateTime?
+  orderStatus     String      @default("Pending")
+  isDelivered     Boolean     @default(false)
+  deliveredAt     DateTime?
+  trackingNumber  String?
+  notes           String?
+  isCancelled     Boolean     @default(false)
+  cancelledAt     DateTime?
+  cancelReason    String?
+  refundId        String?     @db.ObjectId
+  refundStatus    String?
+  refundAmount    Float?
+  refundedAt      DateTime?
+  returnRequest   Json?
+  paymentStatus   String?     @default("pending")
+  returnStatus    String?
+  exchangeId      String?     @db.ObjectId
+  exchangeStatus  String?
+  createdAt       DateTime    @default(now())
+  updatedAt       DateTime    @updatedAt
+  awbNumber       String?
+  courierName     String?
+  shipmentId      String?
+  trackingUrl     String?
+}
+
+model CompanySettings {
+  id                 String   @id @default(auto()) @map("_id") @db.ObjectId
+  companyName        String   @default("Arunas Baby World")
+  tagline            String?
+  address            String   @default("Koritipadu, Guntur")
+  city               String   @default("Andhra Pradesh")
+  state              String   @default("Andhra Pradesh")
+  pincode            String   @default("522007")
+  country            String   @default("India")
+  phone              String   @default("+91 9010561998")
+  altPhone           String?
+  email              String   @default("arunasbabyworld947@gmail.com")
+  website            String   @default("www.arunasbabyworld.com")
+  gstin              String   @default("37CCAPB6572Q3Z3")
+  gstNumber          String?
+  panNumber          String?
+  logoUrl            String   @default("/logo.png")
+  invoicePrefix      String   @default("INV")
+  invoiceFooter      String?
+  termsAndConditions String?
+  bankName           String?
+  accountNo          String?
+  accountNumber      String?
+  ifscCode           String?
+  upiId              String?
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  @@map("company_settings")
+}
+
+type OrderItem {
+  productId String?
+  name      String?
+  image     String?
+  price     Float?
+  quantity  Int?
+}
+
+type ShipAddress {
+  name    String?
+  phone   String?
+  address String?
+  city    String?
+  state   String?
+  pincode String?
+}
+
+type PayResult {
+  id                String?
+  status            String?
+  updateTime        String?
+  razorpayOrderId   String?
+  razorpayPaymentId String?
+  razorpaySignature String?
+}
+
+model Coupon {
+  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
+  code                 String   @unique
+  description          String?
+  discountType         String   @default("percentage")
+  discountValue        Float
+  minOrderValue        Float    @default(0)
+  maxDiscount          Float?
+  usageLimit           Int?
+  usedCount            Int      @default(0)
+  expiryDate           DateTime
+  isActive             Boolean  @default(true)
+  applicableCategories String[]
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+}
+
+model Contact {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  name      String
+  email     String
+  phone     String?
+  subject   String?
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model SectionSetting {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  key         String   @unique
+  title       String?
+  emoji       String?
+  description String?
+  buttonText  String?
+  isVisible   Boolean  @default(true)
+  order       Int      @default(0)
+  updatedAt   DateTime @updatedAt
+
+  @@map("section_settings")
+}
+
+model Exchange {
+  id                String   @id @default(auto()) @map("_id") @db.ObjectId
+  orderId           String   @db.ObjectId
+  userId            String   @db.ObjectId
+  oldProductId      String   @db.ObjectId
+  oldProductName    String
+  oldProductImage   String?
+  oldPrice          Float
+  oldQuantity       Int      @default(1)
+  newProductId      String   @db.ObjectId
+  newProductName    String
+  newProductImage   String?
+  newPrice          Float
+  newQuantity       Int      @default(1)
+  priceDifference   Float    @default(0)
+  reason            String
+  description       String?
+  images            String[]
+  status            String   @default("pending")
+  paymentLinkId     String?
+  paymentLinkUrl    String?
+  paymentStatus     String?
+  paymentPaidAt     DateTime?
+  razorpayRefundId  String?
+  refundAmount      Float?
+  refundedAt        DateTime?
+  pickupTracking    String?
+  shipmentTracking  String?
+  adminNotes        String?
+  rejectionReason   String?
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+  approvedAt        DateTime?
+  pickedUpAt        DateTime?
+  receivedAt        DateTime?
+  verifiedAt        DateTime?
+  shippedAt         DateTime?
+  completedAt       DateTime?
+  rejectedAt        DateTime?
+
+  @@map("exchanges")
+}
+
+model Refund {
+  id                String          @id @default(auto()) @map("_id") @db.ObjectId
+  orderId           String          @db.ObjectId
+  userId            String          @db.ObjectId
+  amount            Float
+  reason            String?
+  refundType        String          @default("razorpay")
+  refundStatus      String          @default("pending")
+  razorpayRefundId  String?
+  razorpayPaymentId String?
+  bankDetails       BankDetailsType?
+  notes             String?
+  processedAt       DateTime?
+  scheduledAt          DateTime?
+  scheduledCancelledAt DateTime?
+  scheduledByAdmin     String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  @@map("refunds")
+}
+
+type BankDetailsType {
+  accountHolderName String?
+  accountNumber     String?
+  ifscCode          String?
+  bankName          String?
+  upiId             String?
+}
