@@ -1,15 +1,14 @@
 /* ============================================================
-   FOOTER.MODULE.CSS — Fully Responsive (Mobile-First Approach)
+   FOOTER.MODULE.CSS — Compact 3-Column Mobile Version
    ============================================================ */
 
 /* ============================================================
-   BASE / MOBILE-FIRST (< 480px default styles)
+   BASE FOOTER
    ============================================================ */
-
 .footer {
   background: linear-gradient(160deg, #1E0A30 0%, #2D1A4A 50%, #1A0D2E 100%);
   color: rgba(255, 255, 255, 0.80);
-  margin-top: 40px;
+  margin-top: 24px;
   position: relative;
   overflow: hidden;
   font-family: 'Nunito', sans-serif;
@@ -30,12 +29,8 @@
 }
 
 @keyframes rainbowShift {
-  0% {
-    background-position: 0% 50%;
-  }
-  100% {
-    background-position: 300% 50%;
-  }
+  0%   { background-position: 0% 50%; }
+  100% { background-position: 300% 50%; }
 }
 
 /* ── Decorative Background Circle ── */
@@ -52,19 +47,19 @@
 }
 
 /* ============================================================
-   TOP SECTION
+   TOP SECTION — MOBILE 3-COLUMN
    ============================================================ */
 .topSection {
-  padding: 32px 16px 24px;
+  padding: 20px 12px 14px;
   position: relative;
   z-index: 1;
 }
 
-/* ── Grid — Single Column on Mobile ── */
+/* ✅ 3-column grid on mobile */
 .grid {
   display: grid;
-  grid-template-columns: 1fr;
-  gap: 28px;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px 10px;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -75,93 +70,95 @@
 .brand {
   grid-column: 1 / -1;
   text-align: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 4px;
 }
 
 .brand p {
-  font-size: 0.84rem;
-  line-height: 1.7;
-  margin: 12px auto 16px;
+  font-size: 0.74rem;
+  line-height: 1.45;
+  margin: 8px auto 10px;
   color: rgba(255, 255, 255, 0.50);
   font-weight: 500;
-  max-width: 360px;
+  max-width: 320px;
 }
 
 /* ============================================================
-   FOOTER LOGO (Image Only)
+   LOGO
    ============================================================ */
 .logo {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   text-decoration: none;
-  margin-bottom: 4px;
   background: white;
-  padding: 10px 18px;
-  border-radius: 16px;
-  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.2);
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  padding: 6px 12px;
+  border-radius: 12px;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease;
 }
 
 .logo:hover {
-  transform: scale(1.05) translateY(-2px);
-  box-shadow: 0 8px 24px rgba(255, 107, 53, 0.35);
+  transform: scale(1.05);
 }
 
 .logoImg {
   width: auto;
-  height: 75px;
+  height: 48px;
   object-fit: contain;
   display: block;
 }
+
 /* ============================================================
    SOCIALS
    ============================================================ */
 .socials {
   display: flex;
   justify-content: center;
-  gap: 8px;
+  gap: 6px;
   flex-wrap: wrap;
-  margin-top: 4px;
+  margin-top: 2px;
 }
 
 .socials a {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
   background: rgba(255, 255, 255, 0.06);
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.95rem;
+  font-size: 0.82rem;
   transition: all 0.28s cubic-bezier(0.34, 1.3, 0.64, 1);
-  border: 1.5px solid rgba(255, 255, 255, 0.10);
+  border: 1px solid rgba(255, 255, 255, 0.10);
   text-decoration: none;
 }
 
 .socials a:hover {
   background: linear-gradient(135deg, #FF6B35, #7B2FBE);
   border-color: transparent;
-  transform: translateY(-3px) scale(1.08);
-  box-shadow: 0 6px 16px rgba(255, 107, 53, 0.25);
+  transform: translateY(-2px);
 }
 
 /* ============================================================
-   LINK COLUMNS
+   LINK COLUMNS — 3-COLUMN COMPACT
    ============================================================ */
 .col {
-  text-align: center;
+  text-align: left;
+  min-width: 0;
 }
 
 .col h4 {
   font-family: 'Nunito', sans-serif;
-  font-size: 0.78rem;
+  font-size: 0.64rem;
   font-weight: 800;
   text-transform: uppercase;
-  letter-spacing: 1.5px;
+  letter-spacing: 0.8px;
   color: white;
-  margin-bottom: 14px;
+  margin-bottom: 8px;
   position: relative;
-  padding-bottom: 10px;
+  padding-bottom: 5px;
   display: inline-block;
 }
 
@@ -169,32 +166,31 @@
   content: '';
   position: absolute;
   bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 24px;
-  height: 3px;
+  left: 0;
+  width: 18px;
+  height: 2px;
   background: linear-gradient(90deg, #FF6B35, #7B2FBE);
   border-radius: 3px;
   transition: width 0.30s ease;
 }
 
 .col:hover h4::after {
-  width: 40px;
+  width: 28px;
 }
 
 .col ul {
   list-style: none;
   display: flex;
   flex-direction: column;
-  gap: 8px;
+  gap: 5px;
   padding: 0;
   margin: 0;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .col ul li a {
   color: rgba(255, 255, 255, 0.55);
-  font-size: 0.84rem;
+  font-size: 0.70rem;
   transition: all 0.20s ease;
   font-weight: 500;
   font-family: 'Nunito', sans-serif;
@@ -203,22 +199,24 @@
   position: relative;
   text-decoration: none;
   gap: 2px;
+  line-height: 1.3;
+  word-break: break-word;
 }
 
 .col ul li a::before {
   content: '›';
-  font-size: 1rem;
+  font-size: 0.9rem;
   color: #FF6B35;
   opacity: 0;
   transform: translateX(-6px);
   transition: all 0.20s ease;
   position: absolute;
-  left: -14px;
+  left: -10px;
 }
 
 .col ul li a:hover {
   color: #FFD4B8;
-  padding-left: 14px;
+  padding-left: 10px;
 }
 
 .col ul li a:hover::before {
@@ -227,128 +225,23 @@
 }
 
 /* ============================================================
-   CONTACT INFO
-   ============================================================ */
-.contactInfo {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  font-size: 0.82rem;
-  color: rgba(255, 255, 255, 0.50);
-  align-items: center;
-}
-
-.contactInfo p {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  line-height: 1.5;
-  font-weight: 500;
-  font-family: 'Nunito', sans-serif;
-  margin: 0;
-  text-align: center;
-}
-
-.contactInfo a {
-  color: rgba(255, 255, 255, 0.55);
-  transition: color 0.20s ease;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.contactInfo a:hover {
-  color: #FFD4B8;
-}
-
-/* ============================================================
-   NEWSLETTER
-   ============================================================ */
-.newsletter {
-  margin-top: 16px;
-}
-
-.newsletterForm {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  margin-top: 10px;
-}
-
-.newsletterInput {
-  width: 100%;
-  padding: 10px 14px;
-  border-radius: 9999px;
-  border: 2px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.06);
-  color: white;
-  font-family: 'Nunito', sans-serif;
-  font-size: 0.84rem;
-  font-weight: 500;
-  outline: none;
-  transition: all 0.22s ease;
-  box-sizing: border-box;
-}
-
-.newsletterInput::placeholder {
-  color: rgba(255, 255, 255, 0.35);
-}
-
-.newsletterInput:focus {
-  border-color: #FF6B35;
-  background: rgba(255, 255, 255, 0.10);
-}
-
-.newsletterBtn {
-  width: 100%;
-  padding: 10px 18px;
-  border-radius: 9999px;
-  background: linear-gradient(135deg, #FF6B35, #7B2FBE);
-  color: white;
-  font-family: 'Nunito', sans-serif;
-  font-weight: 700;
-  font-size: 0.82rem;
-  border: none;
-  cursor: pointer;
-  transition: all 0.28s cubic-bezier(0.34, 1.3, 0.64, 1);
-  white-space: nowrap;
-  box-shadow: 0 4px 14px rgba(255, 107, 53, 0.28);
-  text-align: center;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.newsletterBtn:hover {
-  transform: translateY(-2px) scale(1.03);
-  box-shadow: 0 8px 24px rgba(255, 107, 53, 0.36);
-}
-
-/* ============================================================
    FOOTER USER CARD
    ============================================================ */
 .footerUserCard {
   display: flex;
   align-items: center;
-  gap: 10px;
-  margin-top: 14px;
-  padding: 10px 14px;
+  gap: 8px;
+  margin-top: 10px;
+  padding: 6px 10px;
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
-  transition: all 0.25s ease;
-  max-width: 220px;
-  margin-left: auto;
-  margin-right: auto;
-}
-
-.footerUserCard:hover {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 107, 53, 0.25);
+  border-radius: 10px;
+  max-width: 180px;
 }
 
 .footerUserAvatar {
-  width: 32px;
-  height: 32px;
+  width: 26px;
+  height: 26px;
   border-radius: 50%;
   background: linear-gradient(135deg, #FF6B35, #7B2FBE);
   color: white;
@@ -356,31 +249,33 @@
   align-items: center;
   justify-content: center;
   font-weight: 800;
-  font-size: 0.84rem;
+  font-size: 0.72rem;
   flex-shrink: 0;
 }
 
 .footerUserName {
-  font-size: 0.80rem;
+  font-size: 0.72rem;
   font-weight: 700;
   color: rgba(255, 255, 255, 0.85);
-  margin: 0 0 1px;
+  margin: 0;
   font-family: 'Nunito', sans-serif;
+  line-height: 1.2;
 }
 
 .footerUserRole {
-  font-size: 0.66rem;
+  font-size: 0.60rem;
   color: rgba(255, 255, 255, 0.42);
   margin: 0;
   font-weight: 500;
   font-family: 'Nunito', sans-serif;
+  line-height: 1.2;
 }
 
 /* ============================================================
    BOTTOM BAR
    ============================================================ */
 .bottom {
-  padding: 16px 16px;
+  padding: 10px 14px;
   position: relative;
   z-index: 1;
   border-top: 1px solid rgba(255, 255, 255, 0.07);
@@ -392,13 +287,13 @@
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 8px;
+  gap: 4px;
   max-width: 1200px;
   margin: 0 auto;
 }
 
 .bottomContent p {
-  font-size: 0.76rem;
+  font-size: 0.68rem;
   color: rgba(255, 255, 255, 0.36);
   font-weight: 500;
   font-family: 'Nunito', sans-serif;
@@ -409,12 +304,12 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 12px;
+  gap: 10px;
   flex-wrap: wrap;
 }
 
 .bottomLinks a {
-  font-size: 0.76rem;
+  font-size: 0.68rem;
   color: rgba(255, 255, 255, 0.36);
   text-decoration: none;
   font-weight: 500;
@@ -433,12 +328,12 @@
   position: fixed;
   bottom: 16px;
   right: 14px;
-  width: 40px;
-  height: 40px;
+  width: 38px;
+  height: 38px;
   border-radius: 50%;
   background: linear-gradient(135deg, #FF6B35, #7B2FBE);
   color: white;
-  font-size: 1.1rem;
+  font-size: 1rem;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -472,38 +367,197 @@
 }
 
 /* ============================================================
-   SMALL MOBILE — 360px and below
+   SMALL MOBILE — 360px and below (Ultra compact 3-col)
    ============================================================ */
 @media (max-width: 360px) {
   .topSection {
-    padding: 24px 12px 18px;
+    padding: 16px 8px 12px;
   }
 
   .grid {
-    gap: 22px;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 12px 6px;
   }
 
- .logo {
-  padding: 8px 14px;
-}
-.logoImg {
-  height: 55px;
-}
+  .logo {
+    padding: 5px 10px;
+  }
+
+  .logoImg {
+    height: 42px;
+  }
 
   .brand p {
-    font-size: 0.78rem;
-    max-width: 280px;
-  }
-
-  .socials {
-    gap: 6px;
+    font-size: 0.70rem;
+    max-width: 260px;
+    margin: 6px auto 8px;
   }
 
   .socials a {
-    width: 32px;
-    height: 32px;
-    font-size: 0.85rem;
-    border-radius: 8px;
+    width: 28px;
+    height: 28px;
+    font-size: 0.76rem;
+  }
+
+  .col h4 {
+    font-size: 0.60rem;
+    margin-bottom: 6px;
+    letter-spacing: 0.5px;
+  }
+
+  .col ul {
+    gap: 4px;
+  }
+
+  .col ul li a {
+    font-size: 0.66rem;
+  }
+
+  .footerUserCard {
+    padding: 5px 8px;
+    max-width: 100%;
+  }
+
+  .footerUserAvatar {
+    width: 24px;
+    height: 24px;
+    font-size: 0.68rem;
+  }
+
+  .footerUserName {
+    font-size: 0.68rem;
+  }
+
+  .footerUserRole {
+    font-size: 0.58rem;
+  }
+
+  .bottom {
+    padding: 8px 10px;
+  }
+
+  .bottomContent p,
+  .bottomLinks a {
+    font-size: 0.62rem;
+  }
+}
+
+/* ============================================================
+   MOBILE — 481px to 767px (Larger Phones — 3 columns)
+   ============================================================ */
+@media (min-width: 481px) and (max-width: 767px) {
+  .topSection {
+    padding: 24px 18px 18px;
+  }
+
+  .grid {
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 20px 18px;
+  }
+
+  .brand {
+    grid-column: 1 / -1;
+  }
+
+  .brand p {
+    font-size: 0.80rem;
+    max-width: 400px;
+  }
+
+  .logoImg {
+    height: 56px;
+  }
+
+  .socials a {
+    width: 34px;
+    height: 34px;
+    font-size: 0.9rem;
+  }
+
+  .col h4 {
+    font-size: 0.72rem;
+    letter-spacing: 1px;
+  }
+
+  .col ul li a {
+    font-size: 0.78rem;
+  }
+
+  .footerUserCard {
+    max-width: 200px;
+  }
+
+  .bottom {
+    padding: 12px 18px;
+  }
+
+  .bottomContent {
+    flex-direction: row;
+    justify-content: space-between;
+    text-align: left;
+    gap: 8px;
+  }
+
+  .bottomContent p,
+  .bottomLinks a {
+    font-size: 0.72rem;
+  }
+
+  .backToTop {
+    width: 40px;
+    height: 40px;
+  }
+
+  .footer {
+    margin-top: 32px;
+  }
+}
+
+/* ============================================================
+   TABLET — 768px to 1023px (Horizontal 4-column)
+   ============================================================ */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .topSection {
+    padding: 28px 22px 22px;
+  }
+
+  .grid {
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 24px 22px;
+    align-items: start;
+  }
+
+  .brand {
+    grid-column: auto;
+    text-align: left;
+    padding-bottom: 0;
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+
+  .brand p {
+    font-size: 0.80rem;
+    max-width: none;
+    margin: 10px 0 12px;
+    line-height: 1.5;
+  }
+
+  .logo {
+    padding: 6px 12px;
+  }
+
+  .logoImg {
+    height: 58px;
+  }
+
+  .socials {
+    justify-content: flex-start;
+  }
+
+  .socials a {
+    width: 34px;
+    height: 34px;
+    font-size: 0.92rem;
   }
 
   .col h4 {
@@ -516,263 +570,53 @@
   }
 
   .col ul li a {
-    font-size: 0.78rem;
-  }
-
-  .bottom {
-    padding: 12px 12px;
-  }
-
-  .bottomContent p {
-    font-size: 0.72rem;
-  }
-
-  .bottomLinks a {
-    font-size: 0.72rem;
-  }
-
-  .bottomLinks {
-    gap: 8px;
+    font-size: 0.80rem;
   }
 
   .footerUserCard {
-    padding: 8px 10px;
-    max-width: 200px;
-  }
-
-  .footerUserAvatar {
-    width: 28px;
-    height: 28px;
-    font-size: 0.76rem;
-  }
-
-  .footerUserName {
-    font-size: 0.74rem;
-  }
-
-  .footerUserRole {
-    font-size: 0.62rem;
-  }
-
-  .footer {
-    margin-top: 32px;
-  }
-}
-
-/* ============================================================
-   MOBILE — 481px to 767px (Larger Phones)
-   ============================================================ */
-@media (min-width: 481px) and (max-width: 767px) {
-  .topSection {
-    padding: 36px 20px 28px;
-  }
-
-  .grid {
-    grid-template-columns: 1fr 1fr;
-    gap: 28px 20px;
-  }
-
-  .brand {
-    grid-column: 1 / -1;
-  }
-
-  .brand p {
-    font-size: 0.86rem;
-    max-width: 420px;
-  }
-
-  .logoimg {
-  height: 65px;
-  }
-
-  .socials a {
-    width: 38px;
-    height: 38px;
-    font-size: 1rem;
-  }
-
-  /* Columns — align left on 2-col layout */
-  .col {
-    text-align: left;
-  }
-
-  .col h4::after {
-    left: 0;
-    transform: none;
-  }
-
-  .col ul {
-    align-items: flex-start;
-  }
-
-  .contactInfo {
-    align-items: flex-start;
-  }
-
-  .contactInfo p {
-    text-align: left;
-  }
-
-  .footerUserCard {
-    margin-left: 0;
+    margin-top: 8px;
+    padding: 6px 10px;
+    max-width: 220px;
   }
 
   .bottom {
-    padding: 16px 20px;
+    padding: 12px 22px;
   }
 
   .bottomContent {
     flex-direction: row;
     justify-content: space-between;
     text-align: left;
+    gap: 10px;
   }
 
-  .newsletterForm {
-    flex-direction: row;
+  .bottomContent p {
+    font-size: 0.74rem;
   }
 
-  .newsletterBtn {
-    width: auto;
-    flex-shrink: 0;
+  .bottomLinks {
+    gap: 12px;
+  }
+
+  .bottomLinks a {
+    font-size: 0.74rem;
   }
 
   .backToTop {
     width: 42px;
     height: 42px;
     bottom: 18px;
-    right: 16px;
-    font-size: 1.15rem;
+    right: 18px;
+    font-size: 1.1rem;
   }
 
   .footer {
-    margin-top: 48px;
-  }
-}
-
-/* ============================================================
-   TABLET — 768px to 1023px
-   ============================================================ */
-@media (min-width: 768px) and (max-width: 1023px) {
-  .topSection {
-    padding: 44px 28px 36px;
-  }
-
-  .grid {
-    grid-template-columns: 1fr 1fr 1fr;
-    gap: 32px 28px;
-  }
-
-  .brand {
-    grid-column: 1 / -1;
-    text-align: center;
-  }
-
-  .brand p {
-    font-size: 0.88rem;
-    max-width: 480px;
-    margin: 14px auto 18px;
-  }
-
-  .logoImg {
-    height: 75px;
-  }
-
-  .socials a {
-    width: 40px;
-    height: 40px;
-    font-size: 1.05rem;
-  }
-
-  /* Columns — left-aligned */
-  .col {
-    text-align: left;
-  }
-
-  .col h4 {
-    font-size: 0.80rem;
-    margin-bottom: 16px;
-  }
-
-  .col h4::after {
-    left: 0;
-    transform: none;
-  }
-
-  .col ul {
-    align-items: flex-start;
-    gap: 9px;
-  }
-
-  .col ul li a {
-    font-size: 0.86rem;
-  }
-
-  .contactInfo {
-    align-items: flex-start;
-  }
-
-  .contactInfo p {
-    text-align: left;
-    font-size: 0.84rem;
-  }
-
-  .footerUserCard {
-    margin-left: 0;
-    max-width: 240px;
-  }
-
-  .footerUserAvatar {
-    width: 34px;
-    height: 34px;
-    font-size: 0.86rem;
-  }
-
-  .bottom {
-    padding: 18px 28px;
-  }
-
-  .bottomContent {
-    flex-direction: row;
-    justify-content: space-between;
-    text-align: left;
-  }
-
-  .bottomContent p {
-    font-size: 0.80rem;
-  }
-
-  .bottomLinks {
-    gap: 14px;
-  }
-
-  .bottomLinks a {
-    font-size: 0.78rem;
-  }
-
-  .newsletterForm {
-    flex-direction: row;
-  }
-
-  .newsletterBtn {
-    width: auto;
-    flex-shrink: 0;
-  }
-
-  .backToTop {
-    width: 44px;
-    height: 44px;
-    bottom: 20px;
-    right: 20px;
-    font-size: 1.2rem;
-  }
-
-  .footer {
-    margin-top: 56px;
+    margin-top: 36px;
   }
 
   .footer::after {
-    width: 250px;
-    height: 250px;
+    width: 200px;
+    height: 200px;
     bottom: -40px;
     right: -40px;
   }
@@ -783,81 +627,65 @@
    ============================================================ */
 @media (min-width: 1024px) and (max-width: 1199px) {
   .topSection {
-    padding: 48px 32px 40px;
+    padding: 40px 32px 32px;
   }
 
   .grid {
     grid-template-columns: 1.8fr 1fr 1fr 1.3fr;
-    gap: 36px;
+    gap: 32px;
   }
 
   .brand {
     grid-column: auto;
     text-align: left;
+    padding-bottom: 0;
+    border-bottom: none;
+    margin-bottom: 0;
   }
 
   .brand p {
-    font-size: 0.86rem;
+    font-size: 0.84rem;
     max-width: none;
-    margin: 14px 0 18px;
+    margin: 12px 0 14px;
   }
 
-.logo {
-  justify-content: flex-start;
-  align-self: flex-start;
-}
+  .logo {
+    justify-content: flex-start;
+    align-self: flex-start;
+  }
 
-.logoImg {
-  height: 80px;
-}
+  .logoImg {
+    height: 68px;
+  }
 
   .socials {
     justify-content: flex-start;
   }
 
   .socials a {
-    width: 38px;
-    height: 38px;
-  }
-
-  .col {
-    text-align: left;
+    width: 36px;
+    height: 36px;
   }
 
   .col h4 {
-    font-size: 0.82rem;
-    margin-bottom: 18px;
-  }
-
-  .col h4::after {
-    left: 0;
-    transform: none;
+    font-size: 0.80rem;
+    margin-bottom: 14px;
   }
 
   .col ul {
-    align-items: flex-start;
-    gap: 9px;
+    gap: 8px;
   }
 
   .col ul li a {
-    font-size: 0.86rem;
-  }
-
-  .contactInfo {
-    align-items: flex-start;
-  }
-
-  .contactInfo p {
-    text-align: left;
+    font-size: 0.84rem;
   }
 
   .footerUserCard {
-    margin-left: 0;
     max-width: 220px;
   }
 
   .bottom {
-    padding: 18px 32px;
+    padding: 16px 32px;
   }
 
   .bottomContent {
@@ -865,37 +693,26 @@
     justify-content: space-between;
   }
 
-  .bottomContent p {
-    font-size: 0.82rem;
-  }
-
+  .bottomContent p,
   .bottomLinks a {
-    font-size: 0.80rem;
-  }
-
-  .newsletterForm {
-    flex-direction: row;
-  }
-
-  .newsletterBtn {
-    width: auto;
+    font-size: 0.78rem;
   }
 
   .backToTop {
-    width: 46px;
-    height: 46px;
-    bottom: 24px;
-    right: 24px;
-    font-size: 1.3rem;
+    width: 44px;
+    height: 44px;
+    bottom: 22px;
+    right: 22px;
+    font-size: 1.2rem;
   }
 
   .footer {
-    margin-top: 60px;
+    margin-top: 48px;
   }
 
   .footer::after {
-    width: 280px;
-    height: 280px;
+    width: 260px;
+    height: 260px;
     right: -60px;
     bottom: -20px;
   }
@@ -906,7 +723,7 @@
    ============================================================ */
 @media (min-width: 1200px) {
   .topSection {
-    padding: 56px 40px 44px;
+    padding: 48px 40px 40px;
   }
 
   .grid {
@@ -919,23 +736,27 @@
   .brand {
     grid-column: auto;
     text-align: left;
+    padding-bottom: 0;
+    border-bottom: none;
+    margin-bottom: 0;
   }
 
   .brand p {
     font-size: 0.88rem;
     line-height: 1.75;
-    margin: 16px 0 20px;
+    margin: 14px 0 18px;
     max-width: none;
   }
 
- .logo {
-  justify-content: flex-start;
-  align-self: flex-start;
-}
+  .logo {
+    justify-content: flex-start;
+    align-self: flex-start;
+  }
 
-.logoImg {
-  height: 85px;
-}
+  .logoImg {
+    height: 78px;
+  }
+
   .socials {
     justify-content: flex-start;
     gap: 10px;
@@ -947,18 +768,12 @@
     font-size: 1rem;
   }
 
-  .col {
-    text-align: left;
-  }
-
   .col h4 {
     font-size: 0.84rem;
-    margin-bottom: 20px;
+    margin-bottom: 18px;
   }
 
   .col h4::after {
-    left: 0;
-    transform: none;
     width: 26px;
   }
 
@@ -967,7 +782,6 @@
   }
 
   .col ul {
-    align-items: flex-start;
     gap: 9px;
   }
 
@@ -975,23 +789,7 @@
     font-size: 0.88rem;
   }
 
-  .contactInfo {
-    align-items: flex-start;
-    font-size: 0.86rem;
-  }
-
-  .contactInfo p {
-    text-align: left;
-    gap: 8px;
-    line-height: 1.55;
-  }
-
-  .contactInfo a {
-    font-weight: 600;
-  }
-
   .footerUserCard {
-    margin-left: 0;
     max-width: none;
   }
 
@@ -1020,32 +818,13 @@
     margin: 0 auto;
   }
 
-  .bottomContent p {
-    font-size: 0.82rem;
-  }
-
-  .bottomLinks {
-    gap: 16px;
-  }
-
+  .bottomContent p,
   .bottomLinks a {
     font-size: 0.80rem;
   }
 
-  .newsletterForm {
-    flex-direction: row;
-    gap: 8px;
-  }
-
-  .newsletterInput {
-    flex: 1;
-    min-width: 0;
-  }
-
-  .newsletterBtn {
-    width: auto;
-    padding: 10px 18px;
-    flex-shrink: 0;
+  .bottomLinks {
+    gap: 16px;
   }
 
   .backToTop {
@@ -1057,7 +836,7 @@
   }
 
   .footer {
-    margin-top: 64px;
+    margin-top: 56px;
   }
 
   .footer::before {
@@ -1077,7 +856,7 @@
    ============================================================ */
 @media (min-width: 1440px) {
   .topSection {
-    padding: 60px 48px 48px;
+    padding: 52px 48px 44px;
   }
 
   .grid {
@@ -1098,7 +877,8 @@
    HOVER & FOCUS ACCESSIBILITY
    ============================================================ */
 @media (hover: none) {
-  .socials a:hover {
+  .socials a:hover,
+  .backToTop:hover {
     transform: none;
     box-shadow: none;
   }
@@ -1111,23 +891,13 @@
     opacity: 0;
   }
 
-  .newsletterBtn:hover {
-    transform: none;
-  }
-
-  .backToTop:hover {
-    transform: none;
-  }
-
   .col:hover h4::after {
-    width: 24px;
+    width: 18px;
   }
 }
 
-/* ── Focus Visible for keyboard nav ── */
 .socials a:focus-visible,
 .col ul li a:focus-visible,
-.newsletterBtn:focus-visible,
 .bottomLinks a:focus-visible,
 .backToTop:focus-visible {
   outline: 2px solid #FF6B35;
@@ -1140,41 +910,64 @@
    ============================================================ */
 @media (max-height: 500px) and (orientation: landscape) {
   .topSection {
-    padding: 24px 20px 18px;
+    padding: 16px 18px 12px;
   }
 
   .grid {
-    grid-template-columns: 1fr 1fr 1fr 1fr;
-    gap: 16px;
+    grid-template-columns: 1.5fr 1fr 1fr 1fr;
+    gap: 14px;
   }
 
   .brand {
-    grid-column: 1 / -1;
+    grid-column: auto;
+    text-align: left;
+    padding-bottom: 0;
+    border-bottom: none;
+    margin-bottom: 0;
   }
 
   .brand p {
     display: none;
   }
 
-  .col h4 {
-    margin-bottom: 8px;
+  .logoImg {
+    height: 40px;
+  }
+
+  .socials {
+    justify-content: flex-start;
+    margin-top: 6px;
+  }
+
+  .socials a {
+    width: 26px;
+    height: 26px;
     font-size: 0.72rem;
   }
 
+  .col h4 {
+    margin-bottom: 6px;
+    font-size: 0.66rem;
+  }
+
   .col ul {
-    gap: 4px;
+    gap: 3px;
   }
 
   .col ul li a {
-    font-size: 0.76rem;
+    font-size: 0.68rem;
+  }
+
+  .footerUserCard {
+    display: none;
   }
 
   .bottom {
-    padding: 10px 20px;
+    padding: 8px 18px;
   }
 
   .footer {
-    margin-top: 24px;
+    margin-top: 16px;
   }
 }
 
@@ -1189,13 +982,9 @@
   }
 
   .footer::before,
-  .footer::after {
-    display: none;
-  }
-
+  .footer::after,
   .socials,
   .backToTop,
-  .newsletter,
   .footerUserCard {
     display: none !important;
   }
