@@ -9,7 +9,7 @@ import styles from './Header.module.css';
 import Image from 'next/image';
 
 const CATEGORY_ORDER = [
-  'clothing', 'personal-care', 'health-care', 'walkers',
+  'clothing', 'personal-care',  'walkers',
   'toys', 'cradles-cribs', 'electric-vehicles', 'food',
 ];
 

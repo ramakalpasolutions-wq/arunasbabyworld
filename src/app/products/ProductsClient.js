@@ -477,9 +477,9 @@ export default function ProductsClient() {
   /* ============================================================
      FILTER CONTENT
   ============================================================ */
-  const FilterContent = () => (
+const FilterContent = () => (
     <>
-      <div className={`${styles.filterBlock} ${styles.desktopCatBlock}`}>
+      <div className={styles.filterBlock}>
         <div className={styles.filterBlockTitle}><span className={styles.filterBlockIcon}>📂</span>Categories</div>
         {catLoading ? (
           <div className={styles.catList}>{[...Array(8)].map((_, i) => <div key={i} className={styles.catSkeleton} />)}</div>

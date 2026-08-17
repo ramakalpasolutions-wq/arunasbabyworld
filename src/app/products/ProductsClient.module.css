@@ -23,7 +23,7 @@
   min-height: 100vh;
   background: var(--bg);
   font-family: 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
-  /* padding-top: 40px; */
+  padding-top: 15px; /* ✅ Space for fixed header (logo + purple nav) */
 }
 
 /* Hide decorative elements */
@@ -38,7 +38,9 @@
 .heroStrip {
   background: var(--white);
   border-bottom: 1px solid var(--border);
-  padding: 14px 24px;
+  padding: 18px 24px;
+  position: relative;
+  z-index: 5;
 }
 
 .heroStripInner {
@@ -47,11 +49,14 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
+  gap: 20px;
+  flex-wrap: nowrap;
 }
 
-.heroStripLeft { min-width: 0; }
+.heroStripLeft {
+  min-width: 0;
+  flex-shrink: 0;
+}
 
 .heroCrumb {
   font-size: 0.76rem;
@@ -87,12 +92,14 @@
 
 .heroIn { color: var(--text-mid); font-weight: 700; }
 
-/* Quick pills — horizontal tabs */
 .quickPillsWrap {
-  flex-shrink: 0;
+  flex: 1;
+  display: flex;
+  justify-content: flex-end;
   overflow-x: auto;
   scrollbar-width: none;
   -webkit-overflow-scrolling: touch;
+  min-width: 0;
 }
 .quickPillsWrap::-webkit-scrollbar { display: none; }
 
@@ -100,8 +107,8 @@
   display: flex;
   gap: 0;
   width: max-content;
+  align-items: center;
 }
-
 .quickPill {
   display: inline-flex;
   align-items: center;
@@ -135,7 +142,7 @@
 ============================================================ */
 .toolbar {
   position: sticky;
-  top: 0;
+  top: 150px; /* ✅ Match padding-top so it sticks below header */
   z-index: 20;
   background: var(--white);
   border-bottom: 1px solid var(--border);
@@ -645,15 +652,14 @@
 /* ============================================================
    RESPONSIVE — 1024px
 ============================================================ */
-@media (max-width: 1024px) {
-  .productsGrid { grid-template-columns: repeat(3, 1fr); }
-  .skeletonGrid { grid-template-columns: repeat(3, 1fr); }
-}
 
 /* ============================================================
    RESPONSIVE — 900px
 ============================================================ */
 @media (max-width: 900px) {
+  .pageRoot {
+    padding-top: 20px; /* ✅ Smaller header on mobile */
+  }
   .mobileCatBar    { 
     display: block !important; 
     position: sticky;
@@ -668,9 +674,9 @@
   .main            { padding: 12px; }
 
   /* ✅ Toolbar sits BELOW mobile cat bar */
-  .toolbar {
+.toolbar {
     position: sticky;
-    top: 49px;  /* height of mobile cat bar (~49px) */
+    top: 49px; /* height of mobile cat bar */
     z-index: 18;
   }
 
@@ -708,6 +714,9 @@
 }
 
 @media (max-width: 480px) {
+  .pageRoot {
+    padding-top: 10px; /* ✅ Even smaller on tiny phones */
+  }
   .heroStrip { padding: 8px 12px; }
   .heroTitle { font-size: 0.88rem; }
   .toolbarInner { padding: 7px 12px; }
@@ -723,4 +732,38 @@
 @keyframes drawerSlide {
   from { transform: translateX(-105%); }
   to { transform: translateX(0); }
+}
+
+/* ============================================================
+   RESPONSIVE — 1024px (Tablet/Small Desktop)
+============================================================ */
+/* ============================================================
+   RESPONSIVE — 1024px (Tablet)
+============================================================ */
+@media (max-width: 1024px) {
+  .productsGrid { grid-template-columns: repeat(3, 1fr); }
+  .skeletonGrid { grid-template-columns: repeat(3, 1fr); }
+
+  .heroStripInner {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .heroStripLeft {
+    width: 100%;
+    flex-shrink: 1;
+  }
+  .quickPillsWrap {
+    width: 100%;
+    justify-content: flex-start;
+  }
+  .quickPills {
+    width: 100%;
+    border-bottom: 2px solid var(--border);
+  }
+  .quickPill {
+    flex: 1;
+    justify-content: center;
+    text-align: center;
+    padding: 10px 8px;
+  }
 }
