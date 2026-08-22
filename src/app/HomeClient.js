@@ -82,37 +82,27 @@ function SectionWrapper({ children }) {
 }
 
 /* ═══════════════════════════════════════
-   FLIP CARD
+   CLEAN SIMPLE CARD (NO FLIP)
 ═══════════════════════════════════════ */
-function FlipCard({ children, sceneClassName = '', href }) {
-  const [flipped, setFlipped] = useState(false);
-
-  const inner = (
-    <div
-      className={`flipScene ${sceneClassName} ${flipped ? 'isFlipped' : ''}`}
-      onMouseEnter={() => setFlipped(true)}
-      onMouseLeave={() => setFlipped(false)}
-      onPointerDown={() => setFlipped(true)}
-      onPointerUp={() => setFlipped(false)}
-      onPointerLeave={() => setFlipped(false)}
-      onPointerCancel={() => setFlipped(false)}
-    >
-      <div className="flipCard">{children}</div>
+function SimpleCard({ children, href, className = '' }) {
+  const cardContent = (
+    <div className={`cleanCard ${className}`}>
+      {children}
     </div>
   );
 
   if (href) {
     return (
       <Link href={href} style={{ textDecoration: 'none', display: 'block', height: '100%' }}>
-        {inner}
+        {cardContent}
       </Link>
     );
   }
-  return inner;
+  return cardContent;
 }
 
 /* ═══════════════════════════════════════
-   1. BRANDS (SEAMLESS LOOP & SMOOTH SPEED)
+   1. BRANDS
 ═══════════════════════════════════════ */
 function BrandsSection({ brands, sectionSettings = {} }) {
   const s        = sectionSettings['brands'] || {};
@@ -123,12 +113,8 @@ function BrandsSection({ brands, sectionSettings = {} }) {
   const scrollDuration = Math.max(40, displayBrands.length * 4.5);
 
   const buildBrandLink = (brand) => {
-    if (brand.link && brand.link !== '/products') {
-      return brand.link;
-    }
-    if (brand.name) {
-      return `/products?brand=${encodeURIComponent(brand.name)}`;
-    }
+    if (brand.link && brand.link !== '/products') return brand.link;
+    if (brand.name) return `/products?brand=${encodeURIComponent(brand.name)}`;
     return '/products';
   };
 
@@ -155,77 +141,39 @@ function BrandsSection({ brands, sectionSettings = {} }) {
           onTouchStart={e => e.currentTarget.style.animationPlayState = 'paused'}
           onTouchEnd={e => e.currentTarget.style.animationPlayState = 'running'}
         >
-          {/* List 1 */}
-          <div className="brandMarqueeTrack">
-            {displayBrands.map((brand, i) => {
-              const brandLink = buildBrandLink(brand);
-              return (
-                <Link
-                  key={`list1-${brand.id || i}`}
-                  href={brandLink}
-                  title={brand.name ? `Shop ${brand.name} products` : 'Shop products'}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', textDecoration: 'none', padding: '7px 16px', borderRadius: '999px', border: `1.5px solid ${brand.color || '#7B2FBE'}25`, background: `${brand.color || '#7B2FBE'}08`, flexShrink: 0, whiteSpace: 'nowrap', transition: 'all 0.2s ease' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = `${brand.color || '#7B2FBE'}18`; e.currentTarget.style.borderColor = brand.color || '#7B2FBE'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = `${brand.color || '#7B2FBE'}08`; e.currentTarget.style.borderColor = `${brand.color || '#7B2FBE'}25`; e.currentTarget.style.transform = 'translateY(0)'; }}
-                >
-                  {brand.logo?.url ? (
-                    <img src={brand.logo.url} alt={brand.name || 'Brand'} style={{ width: brand.name ? '32px' : '80px', height: brand.name ? '49px' : '47px', objectFit: 'contain', borderRadius: '4px', flexShrink: 0 }} />
-                  ) : (
-                    <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: brand.color || '#7B2FBE', flexShrink: 0 }} />
-                  )}
-                  {brand.name && (
-                    <span style={{ fontSize: '0.84rem', fontWeight: '800', color: brand.color || '#7B2FBE', fontFamily: 'Nunito, sans-serif' }}>{brand.name}</span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
-
-          {/* List 2 (Duplicate for Seamless Infinite Scroll) */}
-          <div className="brandMarqueeTrack" aria-hidden="true">
-            {displayBrands.map((brand, i) => {
-              const brandLink = buildBrandLink(brand);
-              return (
-                <Link
-                  key={`list2-${brand.id || i}`}
-                  href={brandLink}
-                  title={brand.name ? `Shop ${brand.name} products` : 'Shop products'}
-                  style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', textDecoration: 'none', padding: '7px 16px', borderRadius: '999px', border: `1.5px solid ${brand.color || '#7B2FBE'}25`, background: `${brand.color || '#7B2FBE'}08`, flexShrink: 0, whiteSpace: 'nowrap', transition: 'all 0.2s ease' }}
-                  onMouseEnter={e => { e.currentTarget.style.background = `${brand.color || '#7B2FBE'}18`; e.currentTarget.style.borderColor = brand.color || '#7B2FBE'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                  onMouseLeave={e => { e.currentTarget.style.background = `${brand.color || '#7B2FBE'}08`; e.currentTarget.style.borderColor = `${brand.color || '#7B2FBE'}25`; e.currentTarget.style.transform = 'translateY(0)'; }}
-                >
-                  {brand.logo?.url ? (
-                    <img src={brand.logo.url} alt={brand.name || 'Brand'} style={{ width: brand.name ? '32px' : '80px', height: brand.name ? '49px' : '47px', objectFit: 'contain', borderRadius: '4px', flexShrink: 0 }} />
-                  ) : (
-                    <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: brand.color || '#7B2FBE', flexShrink: 0 }} />
-                  )}
-                  {brand.name && (
-                    <span style={{ fontSize: '0.84rem', fontWeight: '800', color: brand.color || '#7B2FBE', fontFamily: 'Nunito, sans-serif' }}>{brand.name}</span>
-                  )}
-                </Link>
-              );
-            })}
-          </div>
+          {[1, 2].map(loopIdx => (
+            <div key={loopIdx} className="brandMarqueeTrack" aria-hidden={loopIdx === 2 ? "true" : undefined}>
+              {displayBrands.map((brand, i) => {
+                const brandLink = buildBrandLink(brand);
+                return (
+                  <Link
+                    key={`list${loopIdx}-${brand.id || i}`}
+                    href={brandLink}
+                    title={brand.name ? `Shop ${brand.name} products` : 'Shop products'}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', textDecoration: 'none', padding: '7px 16px', borderRadius: '999px', border: `1.5px solid ${brand.color || '#7B2FBE'}25`, background: `${brand.color || '#7B2FBE'}08`, flexShrink: 0, whiteSpace: 'nowrap', transition: 'all 0.2s ease' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = `${brand.color || '#7B2FBE'}18`; e.currentTarget.style.borderColor = brand.color || '#7B2FBE'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = `${brand.color || '#7B2FBE'}08`; e.currentTarget.style.borderColor = `${brand.color || '#7B2FBE'}25`; e.currentTarget.style.transform = 'translateY(0)'; }}
+                  >
+                    {brand.logo?.url ? (
+                      <img src={brand.logo.url} alt={brand.name || 'Brand'} style={{ width: brand.name ? '32px' : '80px', height: brand.name ? '49px' : '47px', objectFit: 'contain', borderRadius: '4px', flexShrink: 0 }} />
+                    ) : (
+                      <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: brand.color || '#7B2FBE', flexShrink: 0 }} />
+                    )}
+                    {brand.name && (
+                      <span style={{ fontSize: '0.84rem', fontWeight: '800', color: brand.color || '#7B2FBE', fontFamily: 'Nunito, sans-serif' }}>{brand.name}</span>
+                    )}
+                  </Link>
+                );
+              })}
+            </div>
+          ))}
         </div>
       </div>
 
       <style>{`
-        .brandMarqueeWrap {
-          display: flex;
-          width: max-content;
-          animation-name: brandScrollSeamless;
-          animation-timing-function: linear;
-          animation-iteration-count: infinite;
-        }
-        .brandMarqueeTrack {
-          display: flex;
-          gap: 12px;
-          padding-right: 12px;
-        }
-        @keyframes brandScrollSeamless {
-          0% { transform: translateX(0); }
-          100% { transform: translateX(-50%); }
-        }
+        .brandMarqueeWrap { display: flex; width: max-content; animation-name: brandScrollSeamless; animation-timing-function: linear; animation-iteration-count: infinite; }
+        .brandMarqueeTrack { display: flex; gap: 12px; padding-right: 12px; }
+        @keyframes brandScrollSeamless { 0% { transform: translateX(0); } 100% { transform: translateX(-50%); } }
         @keyframes rainbowShift { 0% { background-position: 0% 50%; } 100% { background-position: 300% 50%; } }
       `}</style>
     </section>
@@ -281,22 +229,7 @@ function SeasonBanner({ banners, sectionSettings = {} }) {
   const cardAspect  = activeRatio ? `${activeRatio}` : '16 / 9';
 
   return (
-    <section
-      className="kidFestivalSection"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-    >
-      <div className="kidDeco kidCloud1">☁️</div>
-      <div className="kidDeco kidCloud2">☁️</div>
-      <div className="kidDeco kidStar1">⭐</div>
-      <div className="kidDeco kidStar2">✨</div>
-      <div className="kidDeco kidStar3">🌟</div>
-      <div className="kidDeco kidBalloon1">🎈</div>
-      <div className="kidDeco kidBalloon2">🎈</div>
-      <div className="kidDeco kidHeart1">💕</div>
-      <div className="kidDeco kidRainbow">🌈</div>
-      <div className="kidDeco kidTeddy">🧸</div>
-
+    <section className="kidFestivalSection" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
       <div className="kidFestivalInner">
         {(secTitle || secDesc) && (
           <div className="kidFestivalHeader">
@@ -312,11 +245,7 @@ function SeasonBanner({ banners, sectionSettings = {} }) {
             const isActive = i === current;
 
             return (
-              <div
-                key={b.id || i}
-                className="kidFestivalSlide"
-                style={{ opacity: isActive ? 1 : 0, zIndex: isActive ? 2 : 1, pointerEvents: isActive ? 'auto' : 'none' }}
-              >
+              <div key={b.id || i} className="kidFestivalSlide" style={{ opacity: isActive ? 1 : 0, zIndex: isActive ? 2 : 1, pointerEvents: isActive ? 'auto' : 'none' }}>
                 <div className="kidMediaWrap">
                   {mediaUrl ? (
                     isVideo ? (
@@ -365,22 +294,13 @@ function SeasonBanner({ banners, sectionSettings = {} }) {
                 )}
 
                 {isVideo && isActive && (
-                  <button
-                    type="button"
-                    onClick={e => { e.stopPropagation(); setMuted(m => !m); setShowUnmutePrompt(false); }}
-                    className={`kidMuteBtn ${muted ? 'kidMutedPulse' : ''}`}
-                    aria-label={muted ? 'Unmute' : 'Mute'}
-                  >
+                  <button type="button" onClick={e => { e.stopPropagation(); setMuted(m => !m); setShowUnmutePrompt(false); }} className={`kidMuteBtn ${muted ? 'kidMutedPulse' : ''}`} aria-label={muted ? 'Unmute' : 'Mute'}>
                     {muted ? '🔇' : '🔊'}
                   </button>
                 )}
 
                 {isVideo && isActive && showUnmutePrompt && muted && (
-                  <button
-                    type="button"
-                    onClick={e => { e.stopPropagation(); setMuted(false); setShowUnmutePrompt(false); }}
-                    className="kidUnmutePrompt"
-                  >
+                  <button type="button" onClick={e => { e.stopPropagation(); setMuted(false); setShowUnmutePrompt(false); }} className="kidUnmutePrompt">
                     🔊 Tap for sound
                   </button>
                 )}
@@ -390,15 +310,9 @@ function SeasonBanner({ banners, sectionSettings = {} }) {
 
           {banners.length > 1 && (
             <>
-              <button onClick={() => setCurrent(p => (p - 1 + banners.length) % banners.length)} className="kidNav kidNavLeft"  aria-label="Previous">‹</button>
-              <button onClick={() => setCurrent(p => (p + 1) % banners.length)}                  className="kidNav kidNavRight" aria-label="Next">›</button>
+              <button onClick={() => setCurrent(p => (p - 1 + banners.length) % banners.length)} className="kidNav kidNavLeft" aria-label="Previous">‹</button>
+              <button onClick={() => setCurrent(p => (p + 1) % banners.length)} className="kidNav kidNavRight" aria-label="Next">›</button>
             </>
-          )}
-
-          {banners.length > 1 && !paused && !isVideoUrl(banners[current]?.image?.url) && (
-            <div className="kidProgressTrack">
-              <div key={current} className="kidProgressFill" />
-            </div>
           )}
 
           {banners.length > 1 && (
@@ -412,57 +326,30 @@ function SeasonBanner({ banners, sectionSettings = {} }) {
       </div>
 
       <style jsx>{`
-        .kidFestivalSection { position:relative; padding:32px 0 36px; overflow:hidden; background: radial-gradient(ellipse at 15% 20%,#FFE5EC 0%,transparent 45%), radial-gradient(ellipse at 85% 30%,#E0F4FF 0%,transparent 50%), radial-gradient(ellipse at 50% 90%,#FFF4D6 0%,transparent 55%), linear-gradient(135deg,#FFF9F0 0%,#FFE8F0 25%,#E8F4FF 50%,#F0E8FF 75%,#FFF0E0 100%); }
-        .kidDeco { position:absolute; font-size:2rem; opacity:0.55; pointer-events:none; user-select:none; z-index:1; filter:drop-shadow(0 4px 8px rgba(0,0,0,0.08)); }
-        .kidCloud1   { top:4%;    left:2%;   font-size:2.8rem; animation:floatY 6s   ease-in-out infinite;        }
-        .kidCloud2   { top:6%;    right:3%;  font-size:2.4rem; animation:floatY 7s   ease-in-out infinite 1s;    }
-        .kidStar1    { top:12%;   left:8%;   font-size:1.6rem; animation:spin   8s   linear     infinite;         }
-        .kidStar2    { bottom:10%;right:6%;  font-size:1.4rem; animation:spin   10s  linear     infinite reverse; }
-        .kidStar3    { top:22%;   right:2%;  font-size:1.8rem; animation:pulse  3s   ease-in-out infinite;        }
-        .kidBalloon1 { bottom:14%;left:3%;   font-size:2.5rem; animation:floatY 5s   ease-in-out infinite 0.5s;  }
-        .kidBalloon2 { top:42%;   right:1%;  font-size:2rem;   animation:floatY 6.5s ease-in-out infinite 1.5s;  }
-        .kidHeart1   { top:38%;   left:1%;   font-size:1.5rem; animation:pulse  2.5s ease-in-out infinite;        }
-        .kidRainbow  { bottom:6%; left:12%;  font-size:2rem;   animation:floatY 8s   ease-in-out infinite; opacity:0.4; }
-        .kidTeddy    { bottom:4%; right:14%; font-size:2.2rem; animation:wobble 4s   ease-in-out infinite; opacity:0.45; }
-        @keyframes floatY  { 0%,100%{transform:translateY(0)}    50%{transform:translateY(-15px)} }
-        @keyframes spin    { to{transform:rotate(360deg)} }
-        @keyframes pulse   { 0%,100%{transform:scale(1);opacity:.55} 50%{transform:scale(1.15);opacity:.85} }
-        @keyframes wobble  { 0%,100%{transform:rotate(-5deg)} 50%{transform:rotate(5deg)} }
-        .kidFestivalInner  { width:100%; margin:0 auto; position:relative; z-index:2; padding:0; }
+        .kidFestivalSection { position:relative; padding:32px 0 36px; overflow:hidden; background: linear-gradient(135deg,#FFF9F0 0%,#FFE8F0 100%); }
+        .kidFestivalInner { width:100%; margin:0 auto; position:relative; z-index:2; }
         .kidFestivalHeader { text-align:center; margin-bottom:16px; padding:0 16px; }
-        .kidFestivalHeader h2 { font-size:clamp(1.2rem,2.4vw,1.8rem); font-weight:900; color:#2D1A4A; margin:0 0 4px; font-family:'Nunito',sans-serif; text-shadow:0 2px 6px rgba(255,255,255,0.6); }
-        .kidFestivalHeader p  { font-size:0.92rem; color:#6B4E8A; margin:0; font-weight:600; font-family:'Nunito',sans-serif; }
-        .kidFestivalCard { position:relative; width:100%; max-width:100vw; margin:0 auto; background:#000; overflow:hidden; max-height:90vh; border-top:4px solid rgba(255,107,53,0.25); border-bottom:4px solid rgba(123,47,190,0.25); box-shadow:0 10px 40px rgba(0,0,0,0.15); }
+        .kidFestivalHeader h2 { font-size:clamp(1.2rem,2.4vw,1.8rem); font-weight:900; color:#2D1A4A; margin:0 0 4px; font-family:'Nunito',sans-serif; }
+        .kidFestivalHeader p { font-size:0.92rem; color:#6B4E8A; margin:0; font-weight:600; font-family:'Nunito',sans-serif; }
+        .kidFestivalCard { position:relative; width:100%; max-width:100vw; margin:0 auto; background:#000; overflow:hidden; max-height:90vh; }
         .kidFestivalSlide { position:absolute; inset:0; transition:opacity 0.5s ease; }
-        .kidMediaWrap { position:absolute; inset:0; width:100%; height:100%; overflow:hidden; display:flex; align-items:center; justify-content:center; background:#000; }
-        .kidMedia { width:100%; height:100%; object-fit:contain; object-position:center; display:block; }
-        .kidNoMedia { width:100%; height:100%; display:flex; align-items:center; justify-content:center; font-size:6rem; }
-        .kidTextOverlay { position:absolute; inset:0; background:linear-gradient(to top,rgba(0,0,0,0.75) 0%,rgba(0,0,0,0.35) 30%,rgba(0,0,0,0.05) 55%,transparent 100%); z-index:3; pointer-events:none; }
-        .kidTextContent { position:absolute; left:0; right:0; bottom:0; width:100%; padding:clamp(16px,3vw,36px) clamp(16px,4vw,60px); display:flex; flex-direction:column; align-items:flex-start; justify-content:flex-end; z-index:4; }
-        .kidFestivalBadge { display:inline-block; width:fit-content; padding:6px 16px; background:white; color:#FF6B35; border-radius:999px; font-size:clamp(0.65rem,1vw,0.78rem); font-weight:900; margin-bottom:12px; text-transform:uppercase; letter-spacing:1.2px; font-family:'Nunito',sans-serif; box-shadow:0 4px 12px rgba(0,0,0,0.25); border:2px solid rgba(255,255,255,0.9); }
-        .kidTextContent h2 { font-size:clamp(1.2rem,3vw,2.4rem); font-weight:900; color:white; margin:0 0 10px; line-height:1.15; font-family:'Nunito',sans-serif; text-shadow:0 2px 12px rgba(0,0,0,0.65),0 0 4px rgba(0,0,0,0.4); max-width:80%; }
-        .kidTextContent p  { font-size:clamp(0.8rem,1.4vw,1.05rem); color:rgba(255,255,255,0.96); margin:0 0 14px; font-weight:600; line-height:1.45; font-family:'Nunito',sans-serif; text-shadow:0 1px 8px rgba(0,0,0,0.55); max-width:70%; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
-        .kidShopBtn { display:inline-flex; align-items:center; gap:6px; width:fit-content; padding:clamp(10px,1.5vw,14px) clamp(22px,3vw,32px); background:linear-gradient(135deg,#FF6B35,#FF4081,#7B2FBE); color:white; border-radius:999px; text-decoration:none; font-weight:800; font-size:clamp(0.82rem,1.3vw,0.95rem); font-family:'Nunito',sans-serif; box-shadow:0 8px 22px rgba(255,107,53,0.50),0 0 0 3px rgba(255,255,255,0.4); transition:transform 0.25s ease,box-shadow 0.25s ease; border:2px solid rgba(255,255,255,0.85); }
-        .kidShopBtn:hover { transform:translateY(-3px) scale(1.04); }
-        .kidMuteBtn { position:absolute; top:16px; right:16px; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.95); color:#2D1A4A; border:2px solid rgba(255,107,53,0.4); cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; z-index:6; box-shadow:0 4px 12px rgba(0,0,0,0.20); transition:transform 0.2s ease; }
-        .kidMuteBtn:hover { transform:scale(1.12); }
-        .kidMutedPulse { animation:mutedPulse 1.8s ease-in-out infinite; background:linear-gradient(135deg,#FF6B35,#FF4081); color:white; border-color:white; }
-        @keyframes mutedPulse { 0%,100%{box-shadow:0 0 0 0 rgba(255,107,53,0.7)} 50%{box-shadow:0 0 0 14px rgba(255,107,53,0)} }
-        .kidUnmutePrompt { position:absolute; top:70px; right:16px; padding:9px 16px; background:linear-gradient(135deg,#FF6B35,#FF4081); color:white; border:2px solid white; border-radius:999px; font-size:13px; font-weight:800; font-family:'Nunito',sans-serif; cursor:pointer; z-index:7; box-shadow:0 6px 20px rgba(255,107,53,0.50); animation:bouncePrompt 1s ease-in-out infinite; display:inline-flex; align-items:center; gap:5px; white-space:nowrap; }
-        @keyframes bouncePrompt { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-5px)} }
-        .kidNav { position:absolute; top:50%; transform:translateY(-50%); width:46px; height:46px; border-radius:50%; background:rgba(255,255,255,0.95); border:2px solid rgba(255,107,53,0.4); font-size:1.6rem; cursor:pointer; color:#2D1A4A; box-shadow:0 4px 14px rgba(0,0,0,0.25); z-index:5; display:flex; align-items:center; justify-content:center; font-weight:900; transition:all 0.2s ease; line-height:1; }
-        .kidNav:hover { background:linear-gradient(135deg,#FF6B35,#7B2FBE); color:white; transform:translateY(-50%) scale(1.12); border-color:white; }
-        .kidNavLeft  { left:20px; }
+        .kidMediaWrap { position:absolute; inset:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#000; }
+        .kidMedia { width:100%; height:100%; object-fit:contain; }
+        .kidTextOverlay { position:absolute; inset:0; background:linear-gradient(to top,rgba(0,0,0,0.75) 0%,transparent 100%); z-index:3; pointer-events:none; }
+        .kidTextContent { position:absolute; left:0; right:0; bottom:0; padding:24px; z-index:4; display:flex; flex-direction:column; align-items:flex-start; }
+        .kidFestivalBadge { padding:6px 16px; background:white; color:#FF6B35; border-radius:999px; font-size:0.75rem; font-weight:900; margin-bottom:8px; font-family:'Nunito',sans-serif; }
+        .kidTextContent h2 { font-size:clamp(1.2rem,3vw,2.4rem); font-weight:900; color:white; margin:0 0 8px; font-family:'Nunito',sans-serif; }
+        .kidTextContent p { font-size:0.9rem; color:white; margin:0 0 12px; font-family:'Nunito',sans-serif; }
+        .kidShopBtn { padding:10px 24px; background:linear-gradient(135deg,#FF6B35,#7B2FBE); color:white; border-radius:999px; text-decoration:none; font-weight:800; font-family:'Nunito',sans-serif; }
+        .kidMuteBtn { position:absolute; top:16px; right:16px; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.95); color:#2D1A4A; border:2px solid rgba(255,107,53,0.4); cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; z-index:6; }
+        .kidUnmutePrompt { position:absolute; top:70px; right:16px; padding:9px 16px; background:linear-gradient(135deg,#FF6B35,#FF4081); color:white; border:2px solid white; border-radius:999px; font-size:13px; font-weight:800; font-family:'Nunito',sans-serif; cursor:pointer; z-index:7; }
+        .kidNav { position:absolute; top:50%; transform:translateY(-50%); width:46px; height:46px; border-radius:50%; background:rgba(255,255,255,0.95); border:2px solid rgba(255,107,53,0.4); font-size:1.6rem; cursor:pointer; color:#2D1A4A; z-index:5; display:flex; align-items:center; justify-content:center; font-weight:900; }
+        .kidNavLeft { left:20px; }
         .kidNavRight { right:20px; }
-        .kidProgressTrack { position:absolute; bottom:0; left:0; right:0; height:4px; background:rgba(255,255,255,0.3); z-index:5; }
-        .kidProgressFill  { height:100%; background:linear-gradient(90deg,#FF6B35,#FF4081,#7B2FBE); animation:kidProgress 5s linear forwards; }
-        @keyframes kidProgress { from{width:0%} to{width:100%} }
         .kidDots { position:absolute; bottom:18px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:5; }
-        .kidDot  { width:10px; height:10px; border-radius:50%; border:2px solid rgba(255,255,255,0.7); background:rgba(255,255,255,0.4); cursor:pointer; padding:0; transition:all 0.3s ease; box-shadow:0 2px 6px rgba(0,0,0,0.30); }
+        .kidDot { width:10px; height:10px; border-radius:50%; border:2px solid rgba(255,255,255,0.7); background:rgba(255,255,255,0.4); cursor:pointer; padding:0; }
         .kidDotActive { width:32px; border-radius:999px; background:white; border-color:white; }
-        @media(max-width:1024px){.kidFestivalSection{padding:24px 0 28px}.kidFestivalCard{max-height:75vh}.kidNav{width:40px;height:40px;font-size:1.4rem}.kidNavLeft{left:12px}.kidNavRight{right:12px}}
-        @media(max-width:768px){.kidFestivalSection{padding:18px 0 22px}.kidFestivalCard{max-height:70vh;border-top-width:3px;border-bottom-width:3px}.kidDeco{font-size:1.4rem;opacity:0.4}.kidCloud1,.kidCloud2{font-size:1.8rem}.kidBalloon1,.kidBalloon2{font-size:1.6rem}.kidTeddy{font-size:1.5rem}.kidRainbow{font-size:1.4rem}.kidNav{width:36px;height:36px;font-size:1.2rem}.kidNavLeft{left:8px}.kidNavRight{right:8px}.kidMuteBtn{width:38px;height:38px;font-size:14px;top:12px;right:12px}.kidUnmutePrompt{font-size:12px;padding:7px 12px;top:58px;right:12px}.kidTextContent{padding:16px 18px}.kidTextContent h2{max-width:100%}.kidTextContent p{max-width:100%}}
-        @media(max-width:480px){.kidFestivalCard{max-height:65vh}.kidDeco{font-size:1.2rem}.kidShopBtn{padding:8px 18px;font-size:0.8rem}.kidDots{bottom:12px;gap:6px}.kidDot{width:8px;height:8px}.kidDotActive{width:24px}}
+        @media(max-width:768px){ .kidNav { width:36px; height:36px; font-size:1.2rem; } .kidNavLeft{left:8px} .kidNavRight{right:8px} }
       `}</style>
     </section>
   );
@@ -495,8 +382,6 @@ function BudgetSection({ banners, sectionSettings = {} }) {
         <h2 style={{ fontSize: 'clamp(1rem,2.5vw,1.9rem)', fontWeight: '900', color: '#1a1a2e', margin: 0, fontFamily: 'Nunito, sans-serif', textTransform: 'uppercase', letterSpacing: 'clamp(1.5px,0.3vw,3px)', whiteSpace: 'nowrap' }}>
           {secEmoji} {secTitle}
         </h2>
-        <div style={{ position: 'absolute', left: '-12px', top: '50%', transform: 'translateY(-50%)', width: 0, height: 0, borderTop: '16px solid transparent', borderBottom: '16px solid transparent', borderRight: '12px solid #fff' }} />
-        <div style={{ position: 'absolute', right: '-12px', top: '50%', transform: 'translateY(-50%)', width: 0, height: 0, borderTop: '16px solid transparent', borderBottom: '16px solid transparent', borderLeft: '12px solid #fff' }} />
       </div>
 
       {secDesc && (
@@ -516,13 +401,12 @@ function BudgetSection({ banners, sectionSettings = {} }) {
               <p style={{ fontSize: 'clamp(0.62rem,1.2vw,1rem)', fontWeight: '900', color: '#1a1a8e', margin: '0 0 4px', fontFamily: 'Nunito, sans-serif', textTransform: 'uppercase', letterSpacing: 'clamp(2px,0.5vw,4px)' }}>{item.offer}</p>
               <p style={{ fontSize: 'clamp(1.5rem,6vw,4.5rem)', fontWeight: '900', color: '#1a1a8e', margin: 0, lineHeight: 1.1, fontFamily: 'Nunito, sans-serif', letterSpacing: '-1px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: '2px', whiteSpace: 'nowrap' }}>
                 {item.price}
-                <span style={{ fontSize: '0.30em', marginBottom: 'clamp(4px,1vw,14px)', color: '#FF6B35', fontWeight: '900', animation: 'budgetArrow 1.2s ease-in-out infinite' }}>›</span>
+                <span style={{ fontSize: '0.30em', marginBottom: 'clamp(4px,1vw,14px)', color: '#FF6B35', fontWeight: '900' }}>›</span>
               </p>
             </div>
           </Link>
         ))}
       </div>
-      <style>{`@keyframes budgetArrow { 0%,100%{opacity:1;transform:translateX(0)} 50%{opacity:0.3;transform:translateX(4px)} }`}</style>
     </section>
   );
 }
@@ -550,7 +434,7 @@ function SunnySection({ banners, sectionSettings = {} }) {
             <h2 style={{ fontSize: 'clamp(1.3rem,2.5vw,2rem)', fontWeight: '800', color: '#2D1A4A', margin: '0 0 4px', fontFamily: 'Nunito, sans-serif' }}>{secEmoji} {secTitle}</h2>
             {secDesc && <p style={{ fontSize: '0.84rem', color: '#9585B0', margin: 0, fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>{secDesc}</p>}
           </div>
-          <Link href="/products?category=clothing" style={{ padding: '9px 20px', background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)', color: 'white', borderRadius: '999px', textDecoration: 'none', fontSize: '0.82rem', fontWeight: '700', fontFamily: 'Nunito, sans-serif' }}>
+          <Link href="/products" style={{ padding: '9px 20px', background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)', color: 'white', borderRadius: '999px', textDecoration: 'none', fontSize: '0.82rem', fontWeight: '700', fontFamily: 'Nunito, sans-serif' }}>
             {secBtn} →
           </Link>
         </div>
@@ -558,10 +442,10 @@ function SunnySection({ banners, sectionSettings = {} }) {
         <div className="sunnyGrid">
           {banners.map((banner, i) => {
             const frontImg = banner.image?.url || null;
-            const backImg  = banner.mobileImage?.url || frontImg;
+            const linkUrl  = banner.buttonLink || '/products';
             return (
-              <FlipCard key={banner.id || i} sceneClassName="sunnyFlipScene" href="/products?category=clothing">
-                <div className="flipFace flipFront sunnyDashedBorder">
+              <SimpleCard key={banner.id || i} href={linkUrl}>
+                <div className="sunnyDashedBorder">
                   <div className="sunnyImgWrap">
                     {frontImg
                       ? <img src={frontImg} alt={banner.title || 'Collection'} style={{ width:'100%',height:'100%',objectFit:'cover',objectPosition:'center top',display:'block' }} />
@@ -569,30 +453,21 @@ function SunnySection({ banners, sectionSettings = {} }) {
                     <div className="sunnyTitleStrip"><span>{banner.title}</span></div>
                   </div>
                 </div>
-                <div className="flipFace flipBack sunnyDashedBorder">
-                  <div className="sunnyImgWrap">
-                    {backImg
-                      ? <img src={backImg} alt={banner.title||'Back'} style={{ width:'100%',height:'100%',objectFit:'cover',objectPosition:'center top',display:'block' }} />
-                      : <div style={{ width:'100%',height:'100%',background:'linear-gradient(160deg,#FFE8B0,#FFD78A)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'4.5rem' }}>☀️</div>}
-                    <div className="sunnyTitleStrip"><span>{banner.title}</span></div>
-                  </div>
-                </div>
-              </FlipCard>
+              </SimpleCard>
             );
           })}
         </div>
 
         <style>{`
           .sunnyGrid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; }
-          .sunnyFlipScene { height:280px; }
-          .sunnyDashedBorder { border:3px solid #E03F4F; background:white; box-sizing:border-box; border-radius:24px; box-shadow:0 6px 18px rgba(224,63,79,0.18); transition:box-shadow 0.3s ease; }
-          .flipScene.isFlipped .sunnyDashedBorder,.flipScene:hover .sunnyDashedBorder{border-color:#C92A3A;box-shadow:0 14px 36px rgba(224,63,79,0.35)}
-          .sunnyImgWrap { position:relative; width:100%; height:100%; overflow:hidden; border-radius:16px; }
+          .sunnyDashedBorder { border:3px solid #E03F4F; background:white; box-sizing:border-box; border-radius:24px; box-shadow:0 6px 18px rgba(224,63,79,0.18); transition:all 0.3s ease; width:100%; height:280px; }
+          .cleanCard:hover .sunnyDashedBorder { border-color:#C92A3A; box-shadow:0 14px 36px rgba(224,63,79,0.35); transform:translateY(-6px); }
+          .sunnyImgWrap { position:relative; width:100%; height:100%; overflow:hidden; border-radius:20px; }
           .sunnyTitleStrip { position:absolute; left:0; bottom:0; right:0; background:#1a1a2e; padding:10px 12px; text-align:center; }
           .sunnyTitleStrip span { font-size:11px; font-weight:900; color:white; letter-spacing:0.8px; text-transform:uppercase; font-family:'Nunito',sans-serif; }
-          @media(max-width:1024px){.sunnyGrid{grid-template-columns:repeat(3,1fr);gap:14px}.sunnyFlipScene{height:260px}}
-          @media(max-width:700px) {.sunnyGrid{grid-template-columns:repeat(2,1fr);gap:12px}.sunnyFlipScene{height:240px}}
-          @media(max-width:380px) {.sunnyGrid{grid-template-columns:1fr}.sunnyFlipScene{height:260px}}
+          @media(max-width:1024px){.sunnyGrid{grid-template-columns:repeat(3,1fr);gap:14px}.sunnyDashedBorder{height:260px}}
+          @media(max-width:700px) {.sunnyGrid{grid-template-columns:repeat(2,1fr);gap:12px}.sunnyDashedBorder{height:240px}}
+          @media(max-width:380px) {.sunnyGrid{grid-template-columns:1fr}.sunnyDashedBorder{height:260px}}
         `}</style>
       </div>
     </section>
@@ -632,15 +507,9 @@ function GenderSection({ banners, sectionSettings = {} }) {
               return (
                 <div key={banner.id || i} className={`herHimImgWrap ${isHer ? 'herSide' : 'himSide'}`}>
                   {imgUrl ? (
-                    <img
-                      src={imgUrl}
-                      alt={banner.title || (isHer ? 'Girls' : 'Boys')}
-                      className="herHimImg"
-                    />
+                    <img src={imgUrl} alt={banner.title || (isHer ? 'Girls' : 'Boys')} className="herHimImg" />
                   ) : (
-                    <div className="herHimFallback">
-                      <span>{isHer ? '👧' : '👦'}</span>
-                    </div>
+                    <div className="herHimFallback"><span>{isHer ? '👧' : '👦'}</span></div>
                   )}
                 </div>
               );
@@ -663,72 +532,27 @@ function GenderSection({ banners, sectionSettings = {} }) {
       </div>
 
       <style jsx>{`
-        .herHimSection {
-          padding: clamp(36px, 5vw, 60px) clamp(12px, 2vw, 20px);
-          background: linear-gradient(180deg, #FFF5F8 0%, #F0F8FF 100%);
-          position: relative;
-          overflow: hidden;
-        }
+        .herHimSection { padding: clamp(36px, 5vw, 60px) clamp(12px, 2vw, 20px); background: linear-gradient(180deg, #FFF5F8 0%, #F0F8FF 100%); position: relative; overflow: hidden; }
         .herHimHeader { text-align: center; margin-bottom: 32px; position: relative; z-index: 2; }
-        .herHimBadge {
-          display: inline-block; padding: 6px 20px; background: rgba(255, 255, 255, 0.95);
-          border: 1.5px solid #FFB6D9; border-radius: 999px; font-size: 0.72rem; font-weight: 800;
-          color: #E91E63; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 14px;
-          font-family: 'Nunito', sans-serif; box-shadow: 0 4px 14px rgba(233, 30, 99, 0.12);
-        }
-        .herHimTitle { fontSize: clamp(1.6rem, 3vw, 2.4rem); font-weight: 900; color: #2D1A4A; margin: 0 0 8px; font-family: 'Nunito', sans-serif; }
+        .herHimBadge { display: inline-block; padding: 6px 20px; background: rgba(255, 255, 255, 0.95); border: 1.5px solid #FFB6D9; border-radius: 999px; font-size: 0.72rem; font-weight: 800; color: #E91E63; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 14px; font-family: 'Nunito', sans-serif; box-shadow: 0 4px 14px rgba(233, 30, 99, 0.12); }
+        .herHimTitle { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 900; color: #2D1A4A; margin: 0 0 8px; font-family: 'Nunito', sans-serif; }
         .herHimDesc { font-size: 0.95rem; color: #9585B0; margin: 0; font-weight: 500; font-family: 'Nunito', sans-serif; }
         .herHimWrapper { max-width: 1200px; margin: 0 auto; padding: 0; }
-        .herHimCard {
-          position: relative; background: linear-gradient(180deg, #BFE3F2 0%, #A8D4E8 40%, #C9B89C 70%, #B8A88C 100%);
-          border-radius: 32px; overflow: hidden; min-height: clamp(380px, 50vw, 540px);
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15); padding: clamp(20px, 3vw, 40px) clamp(20px, 3vw, 40px) clamp(80px, 10vw, 120px);
-          display: flex; align-items: flex-end; justify-content: center;
-        }
-        .bgTextHer, .bgTextHim {
-          position: absolute; top: 50%; transform: translateY(-50%);
-          font-size: clamp(8rem, 22vw, 22rem); font-weight: 900; color: rgba(255, 255, 255, 0.55);
-          font-family: 'Nunito', 'Arial Black', sans-serif; letter-spacing: -0.05em; line-height: 0.85;
-          pointer-events: none; user-select: none; z-index: 1;
-        }
+        .herHimCard { position: relative; background: linear-gradient(180deg, #BFE3F2 0%, #A8D4E8 40%, #C9B89C 70%, #B8A88C 100%); border-radius: 32px; overflow: hidden; min-height: clamp(380px, 50vw, 540px); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15); padding: clamp(20px, 3vw, 40px) clamp(20px, 3vw, 40px) clamp(80px, 10vw, 120px); display: flex; align-items: flex-end; justify-content: center; }
+        .bgTextHer, .bgTextHim { position: absolute; top: 50%; transform: translateY(-50%); font-size: clamp(8rem, 22vw, 22rem); font-weight: 900; color: rgba(255, 255, 255, 0.55); font-family: 'Nunito', 'Arial Black', sans-serif; letter-spacing: -0.05em; line-height: 0.85; pointer-events: none; user-select: none; z-index: 1; }
         .bgTextHer { left: clamp(-20px, -2vw, -10px); }
         .bgTextHim { right: clamp(-20px, -2vw, -10px); }
-        .woodFloor {
-          position: absolute; left: 0; right: 0; bottom: 0; height: 35%;
-          background: repeating-linear-gradient(90deg, rgba(139, 105, 75, 0.18) 0px, rgba(139, 105, 75, 0.18) 2px, transparent 2px, transparent 60px),
-                      linear-gradient(180deg, transparent 0%, rgba(139, 105, 75, 0.20) 100%);
-          z-index: 1; pointer-events: none;
-        }
+        .woodFloor { position: absolute; left: 0; right: 0; bottom: 0; height: 35%; background: repeating-linear-gradient(90deg, rgba(139, 105, 75, 0.18) 0px, rgba(139, 105, 75, 0.18) 2px, transparent 2px, transparent 60px), linear-gradient(180deg, transparent 0%, rgba(139, 105, 75, 0.20) 100%); z-index: 1; pointer-events: none; }
         .herHimImages { position: relative; z-index: 2; display: flex; align-items: flex-end; justify-content: center; gap: clamp(20px, 4vw, 60px); width: 100%; max-width: 900px; height: 100%; }
         .herHimImgWrap { flex: 1; height: clamp(280px, 38vw, 460px); display: flex; align-items: flex-end; justify-content: center; position: relative; }
         .herHimImg { width: 100%; height: 100%; object-fit: contain; object-position: bottom center; display: block; filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.25)); transition: transform 0.4s ease; }
         .herHimImgWrap:hover .herHimImg { transform: translateY(-8px) scale(1.03); }
         .herHimFallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 8rem; }
         .herHimButtons { position: absolute; bottom: clamp(24px, 4vw, 50px); left: 50%; transform: translateX(-50%); display: flex; gap: clamp(60px, 18vw, 220px); z-index: 5; }
-        .ctaPill {
-          display: inline-flex; align-items: center; gap: 4px; padding: clamp(10px, 1.5vw, 14px) clamp(28px, 4vw, 44px);
-          background: linear-gradient(135deg, #FFE85C 0%, #FFD93D 100%); color: #1a1a2e;
-          font-family: 'Nunito', sans-serif; font-weight: 900; font-size: clamp(0.95rem, 1.8vw, 1.2rem);
-          text-decoration: none; border-radius: 999px; letter-spacing: 1px; box-shadow: 0 6px 0 #C9A52E, 0 10px 20px rgba(0, 0, 0, 0.20);
-          border: 3px solid #1a1a2e; transition: all 0.2s ease; text-transform: uppercase;
-        }
+        .ctaPill { display: inline-flex; align-items: center; gap: 4px; padding: clamp(10px, 1.5vw, 14px) clamp(28px, 4vw, 44px); background: linear-gradient(135deg, #FFE85C 0%, #FFD93D 100%); color: #1a1a2e; font-family: 'Nunito', sans-serif; font-weight: 900; font-size: clamp(0.95rem, 1.8vw, 1.2rem); text-decoration: none; border-radius: 999px; letter-spacing: 1px; box-shadow: 0 6px 0 #C9A52E, 0 10px 20px rgba(0, 0, 0, 0.20); border: 3px solid #1a1a2e; transition: all 0.2s ease; text-transform: uppercase; }
         .ctaPill:hover { transform: translateY(-3px); box-shadow: 0 9px 0 #C9A52E, 0 14px 26px rgba(0, 0, 0, 0.25); }
-        @media (max-width: 768px) {
-          .herHimCard { min-height: 360px; padding: 20px 16px 90px; border-radius: 24px; }
-          .bgTextHer, .bgTextHim { font-size: clamp(6rem, 26vw, 12rem); }
-          .herHimImages { gap: 12px; }
-          .herHimImgWrap { height: clamp(220px, 45vw, 320px); }
-          .herHimButtons { gap: clamp(40px, 22vw, 100px); bottom: 20px; }
-          .ctaPill { padding: 9px 22px; font-size: 0.9rem; }
-        }
-        @media (max-width: 480px) {
-          .herHimSection { padding: 28px 10px; }
-          .herHimCard { min-height: 320px; padding: 16px 10px 80px; border-radius: 20px; }
-          .bgTextHer, .bgTextHim { font-size: 7rem; }
-          .herHimImgWrap { height: 220px; }
-          .herHimButtons { gap: 50px; }
-          .ctaPill { padding: 8px 18px; font-size: 0.85rem; }
-        }
+        @media (max-width: 768px) { .herHimCard { min-height: 360px; padding: 20px 16px 90px; border-radius: 24px; } .bgTextHer, .bgTextHim { font-size: clamp(6rem, 26vw, 12rem); } .herHimImages { gap: 12px; } .herHimImgWrap { height: clamp(220px, 45vw, 320px); } .herHimButtons { gap: clamp(40px, 22vw, 100px); bottom: 20px; } .ctaPill { padding: 9px 22px; font-size: 0.9rem; } }
+        @media (max-width: 480px) { .herHimSection { padding: 28px 10px; } .herHimCard { min-height: 320px; padding: 16px 10px 80px; border-radius: 20px; } .bgTextHer, .bgTextHim { font-size: 7rem; } .herHimImgWrap { height: 220px; } .herHimButtons { gap: 50px; } .ctaPill { padding: 8px 18px; font-size: 0.85rem; } }
       `}</style>
     </section>
   );
@@ -764,11 +588,7 @@ function PromoSection({ banners, sectionSettings = {} }) {
             {secDesc && <p className="promoDesc">{secDesc}</p>}
           </div>
 
-          <div
-            className="promoCarousel"
-            onMouseEnter={() => setPaused(true)}
-            onMouseLeave={() => setPaused(false)}
-          >
+          <div className="promoCarousel" onMouseEnter={() => setPaused(true)} onMouseLeave={() => setPaused(false)}>
             {banners.map((b, i) => {
               const mediaUrl  = b.image?.url    || '';
               const isVideo   = isVideoUrl(mediaUrl);
@@ -781,27 +601,14 @@ function PromoSection({ banners, sectionSettings = {} }) {
               const accent    = b.color         || '#FF6B9D';
 
               return (
-                <div
-                  key={b.id || i}
-                  className={`promoSlide ${isActive ? 'promoSlideActive' : ''}`}
-                >
+                <div key={b.id || i} className={`promoSlide ${isActive ? 'promoSlideActive' : ''}`}>
                   <Link href={link} className="promoCard">
                     <div className="promoMediaWrap">
                       {mediaUrl ? (
                         isVideo ? (
-                          <video
-                            key={`${b.id}-${isActive}`}
-                            src={mediaUrl}
-                            autoPlay loop muted playsInline
-                            className="promoMedia"
-                          />
+                          <video key={`${b.id}-${isActive}`} src={mediaUrl} autoPlay loop muted playsInline className="promoMedia" />
                         ) : (
-                          <img
-                            src={mediaUrl}
-                            alt={cardTitle}
-                            className="promoMedia"
-                            loading="lazy"
-                          />
+                          <img src={mediaUrl} alt={cardTitle} className="promoMedia" loading="lazy" />
                         )
                       ) : (
                         <div className="promoNoMedia"><span>🎁</span></div>
@@ -810,9 +617,7 @@ function PromoSection({ banners, sectionSettings = {} }) {
                     </div>
 
                     <div className="promoContent">
-                      <span className="promoTagBadge" style={{ background: accent }}>
-                        ✨ PROMO
-                      </span>
+                      <span className="promoTagBadge" style={{ background: accent }}>✨ PROMO</span>
                       {cardTitle && <h3 className="promoCardTitle">{cardTitle}</h3>}
                       {cardDesc && <p className="promoCardDesc">{cardDesc}</p>}
                       {offerText && (
@@ -834,12 +639,7 @@ function PromoSection({ banners, sectionSettings = {} }) {
             {banners.length > 1 && (
               <div className="promoDots">
                 {banners.map((_, i) => (
-                  <button
-                    key={i}
-                    onClick={() => setCurrent(i)}
-                    className={`promoDot ${i === current ? 'promoDotActive' : ''}`}
-                    aria-label={`Slide ${i + 1}`}
-                  />
+                  <button key={i} onClick={() => setCurrent(i)} className={`promoDot ${i === current ? 'promoDotActive' : ''}`} aria-label={`Slide ${i + 1}`} />
                 ))}
               </div>
             )}
@@ -850,18 +650,10 @@ function PromoSection({ banners, sectionSettings = {} }) {
           .promoSec { padding: clamp(36px, 5vw, 60px) clamp(12px, 2vw, 20px); background: linear-gradient(135deg, #FFF9F5 0%, #FFF0F8 50%, #F5F0FF 100%); }
           .promoWrap { max-width: 1300px; margin: 0 auto; }
           .promoHead { text-align: center; margin-bottom: 28px; }
-          .promoBadge {
-            display: inline-block; padding: 5px 18px; background: linear-gradient(135deg, #FFF3EC, #FFE8F5);
-            border: 1.5px solid #FFD4B8; border-radius: 999px; font-size: 0.72rem; font-weight: 800;
-            color: #FF6B35; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
-            font-family: 'Nunito', sans-serif;
-          }
+          .promoBadge { display: inline-block; padding: 5px 18px; background: linear-gradient(135deg, #FFF3EC, #FFE8F5); border: 1.5px solid #FFD4B8; border-radius: 999px; font-size: 0.72rem; font-weight: 800; color: #FF6B35; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; font-family: 'Nunito', sans-serif; }
           .promoTitle { font-size: clamp(1.4rem, 2.6vw, 2.2rem); font-weight: 900; color: #2D1A4A; margin: 0 0 6px; font-family: 'Nunito', sans-serif; }
           .promoDesc { font-size: 0.9rem; color: #9585B0; margin: 0; font-weight: 500; font-family: 'Nunito', sans-serif; }
-          .promoCarousel {
-            position: relative; width: 100%; aspect-ratio: 21 / 9; min-height: 360px; max-height: 560px;
-            border-radius: 24px; overflow: hidden; box-shadow: 0 14px 44px rgba(0, 0, 0, 0.12); background: #000;
-          }
+          .promoCarousel { position: relative; width: 100%; aspect-ratio: 21 / 9; min-height: 360px; max-height: 560px; border-radius: 24px; overflow: hidden; box-shadow: 0 14px 44px rgba(0, 0, 0, 0.12); background: #000; }
           .promoSlide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.7s ease; pointer-events: none; z-index: 1; }
           .promoSlideActive { opacity: 1; pointer-events: auto; z-index: 2; }
           .promoCard { position: relative; display: block; width: 100%; height: 100%; text-decoration: none; color: inherit; }
@@ -877,29 +669,13 @@ function PromoSection({ banners, sectionSettings = {} }) {
           .promoOfferLabel { font-size: clamp(0.75rem, 1.2vw, 0.95rem); font-weight: 800; color: #FFD93D; font-family: 'Nunito', sans-serif; letter-spacing: 1px; }
           .promoOfferNum { font-size: clamp(2rem, 4.5vw, 3.5rem); font-weight: 900; line-height: 1; color: #FFD93D; font-family: 'Nunito', sans-serif; letter-spacing: -1.5px; }
           .promoOfferPct { font-size: clamp(0.9rem, 1.6vw, 1.3rem); font-weight: 900; color: #FFD93D; font-family: 'Nunito', sans-serif; }
-          .promoBtn {
-            display: inline-flex; align-items: center; gap: 6px; padding: clamp(10px, 1.5vw, 14px) clamp(24px, 3vw, 36px);
-            background: linear-gradient(135deg, #FF6B35, #FF4081, #7B2FBE); color: #fff; border: 2px solid rgba(255, 255, 255, 0.85);
-            border-radius: 999px; font-size: clamp(0.8rem, 1.3vw, 0.95rem); font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase;
-            cursor: pointer; font-family: 'Nunito', sans-serif; box-shadow: 0 8px 22px rgba(255, 107, 53, 0.5); transition: transform 0.25s ease;
-          }
+          .promoBtn { display: inline-flex; align-items: center; gap: 6px; padding: clamp(10px, 1.5vw, 14px) clamp(24px, 3vw, 36px); background: linear-gradient(135deg, #FF6B35, #FF4081, #7B2FBE); color: #fff; border: 2px solid rgba(255, 255, 255, 0.85); border-radius: 999px; font-size: clamp(0.8rem, 1.3vw, 0.95rem); font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; cursor: pointer; font-family: 'Nunito', sans-serif; box-shadow: 0 8px 22px rgba(255, 107, 53, 0.5); transition: transform 0.25s ease; }
           .promoBtn:hover { transform: translateY(-3px) scale(1.04); }
           .promoDots { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 5; }
           .promoDot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, 0.5); border: 2px solid rgba(255, 255, 255, 0.7); cursor: pointer; padding: 0; transition: all 0.3s ease; }
           .promoDotActive { width: 32px; border-radius: 999px; background: linear-gradient(90deg, #FF6B35, #7B2FBE); border-color: #fff; }
-          @media (max-width: 900px) {
-            .promoCarousel { aspect-ratio: 4 / 5; min-height: 460px; max-height: none; }
-            .promoOverlay { background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.7) 25%, rgba(0, 0, 0, 0.35) 50%, transparent 75%); }
-            .promoContent { top: auto; right: 0; bottom: 0; left: 0; width: 100%; padding: 24px 22px 46px; justify-content: flex-end; gap: 10px; }
-          }
-          @media (max-width: 560px) {
-            .promoCarousel { aspect-ratio: 3 / 4; min-height: 420px; border-radius: 18px; }
-            .promoContent { padding: 20px 18px 44px; }
-            .promoCardTitle { font-size: 1.15rem; }
-            .promoCardDesc { font-size: 0.78rem; -webkit-line-clamp: 2; }
-            .promoOfferNum { font-size: 2rem; }
-            .promoBtn { padding: 9px 22px; font-size: 0.78rem; }
-          }
+          @media (max-width: 900px) { .promoCarousel { aspect-ratio: 4 / 5; min-height: 460px; max-height: none; } .promoOverlay { background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.7) 25%, rgba(0, 0, 0, 0.35) 50%, transparent 75%); } .promoContent { top: auto; right: 0; bottom: 0; left: 0; width: 100%; padding: 24px 22px 46px; justify-content: flex-end; gap: 10px; } }
+          @media (max-width: 560px) { .promoCarousel { aspect-ratio: 3 / 4; min-height: 420px; border-radius: 18px; } .promoContent { padding: 20px 18px 44px; } .promoCardTitle { font-size: 1.15rem; } .promoCardDesc { font-size: 0.78rem; -webkit-line-clamp: 2; } .promoOfferNum { font-size: 2rem; } .promoBtn { padding: 9px 22px; font-size: 0.78rem; } }
         `}</style>
       </section>
     </SectionWrapper>
@@ -1010,14 +786,14 @@ function BabyFoodSection({ banners, sectionSettings = {} }) {
           {banners.map((banner, i) => {
             const color    = banner.color || foodColors[i % foodColors.length];
             const frontImg = banner.image?.url || null;
-            const backImg  = banner.mobileImage?.url || frontImg;
             const link     = banner.buttonLink || '/products?category=food';
+
             return (
-              <FlipCard key={banner.id || i} sceneClassName="bfFlipScene" href={link}>
-                <div className="flipFace flipFront bfCard" style={{ borderColor: `${color}40` }}>
+              <SimpleCard key={banner.id || i} href={link}>
+                <div className="bfCard" style={{ borderColor: `${color}40` }}>
                   <div className="bfImgWrap" style={{ background: frontImg ? '#f8f8f8' : `${color}12` }}>
                     {frontImg
-                      ? <img src={frontImg} alt={banner.title} style={{ width:'100%',height:'100%',objectFit:'contain',padding:'8px',boxSizing:'border-box' }} />
+                      ? <img src={frontImg} alt={banner.title || ''} style={{ width:'100%',height:'100%',objectFit:'contain',padding:'8px',boxSizing:'border-box' }} />
                       : <span style={{ fontSize:'4rem' }}>{banner.emoji||'🍼'}</span>}
                   </div>
                   <div className="bfInfo">
@@ -1025,18 +801,7 @@ function BabyFoodSection({ banners, sectionSettings = {} }) {
                     <span style={{ fontSize:'0.78rem', fontWeight:'800', color, fontFamily:'Nunito,sans-serif' }}>Shop Now →</span>
                   </div>
                 </div>
-                <div className="flipFace flipBack bfCard" style={{ borderColor: color }}>
-                  <div className="bfImgWrap" style={{ background: backImg ? '#f8f8f8' : `${color}25` }}>
-                    {backImg
-                      ? <img src={backImg} alt={banner.title} style={{ width:'100%',height:'100%',objectFit:'contain',padding:'8px',boxSizing:'border-box' }} />
-                      : <span style={{ fontSize:'4rem' }}>🍎</span>}
-                  </div>
-                  <div className="bfInfo" style={{ background: color }}>
-                    <h3 style={{ fontSize:'0.92rem', fontWeight:'800', margin:'0 0 4px', color:'white', fontFamily:'Nunito,sans-serif' }}>{banner.title}</h3>
-                    <span style={{ fontSize:'0.78rem', fontWeight:'800', color:'white', fontFamily:'Nunito,sans-serif' }}>View Details →</span>
-                  </div>
-                </div>
-              </FlipCard>
+              </SimpleCard>
             );
           })}
         </div>
@@ -1049,11 +814,11 @@ function BabyFoodSection({ banners, sectionSettings = {} }) {
 
         <style>{`
           .bfGrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(180px,1fr)); gap:18px; }
-          .bfFlipScene { height:280px; }
-          .bfCard { background:white; border:2px solid transparent; border-radius:20px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,0.07); display:flex; flex-direction:column; }
+          .bfCard { background:white; border:2px solid transparent; border-radius:20px; overflow:hidden; box-shadow:0 4px 20px rgba(0,0,0,0.07); display:flex; flex-direction:column; width:100%; height:280px; transition:transform 0.3s ease, box-shadow 0.3s ease; }
+          .cleanCard:hover .bfCard { transform:translateY(-6px); box-shadow:0 12px 30px rgba(0,0,0,0.12); }
           .bfImgWrap { flex:1; display:flex; align-items:center; justify-content:center; overflow:hidden; }
           .bfInfo { padding:12px 14px; background:white; }
-          @media(max-width:700px){.bfGrid{grid-template-columns:repeat(2,1fr);gap:12px}.bfFlipScene{height:260px}}
+          @media(max-width:700px){.bfGrid{grid-template-columns:repeat(2,1fr);gap:12px}.bfCard{height:260px}}
         `}</style>
       </div>
     </section>
@@ -1097,12 +862,11 @@ function ToysSection({ banners, sectionSettings = {} }) {
         <div className="toysGrid">
           {banners.map((banner, i) => {
             const frontImg = banner.image?.url || null;
-            const backImg  = banner.mobileImage?.url || frontImg;
             const link     = banner.buttonLink || '/products?category=toys';
             const color    = banner.color || '#EF4444';
             return (
-              <FlipCard key={banner.id || i} sceneClassName="toysFlipScene" href={link}>
-                <div className="flipFace flipFront toysCard">
+              <SimpleCard key={banner.id || i} href={link}>
+                <div className="toysCard">
                   <div className="toysImgWrap" style={{ background: frontImg ? '#fffaf9' : 'linear-gradient(135deg,#FEF2F2,#FFF7ED)' }}>
                     {frontImg
                       ? <img src={frontImg} alt={banner.title} style={{ width:'100%',height:'100%',objectFit:'contain',padding:'12px',boxSizing:'border-box' }} />
@@ -1114,30 +878,19 @@ function ToysSection({ banners, sectionSettings = {} }) {
                     <span style={{ fontSize:'0.80rem', fontWeight:'800', color, fontFamily:'Nunito,sans-serif' }}>Shop Now →</span>
                   </div>
                 </div>
-                <div className="flipFace flipBack toysCard" style={{ border:`2px solid ${color}` }}>
-                  <div className="toysImgWrap" style={{ background: backImg ? '#fffaf9' : `${color}15` }}>
-                    {backImg
-                      ? <img src={backImg} alt={banner.title} style={{ width:'100%',height:'100%',objectFit:'contain',padding:'12px',boxSizing:'border-box' }} />
-                      : <span style={{ fontSize:'4rem' }}>🎁</span>}
-                  </div>
-                  <div className="toysInfo" style={{ background: color }}>
-                    <h3 style={{ fontSize:'0.92rem', fontWeight:'800', color:'white', margin:'0 0 5px', fontFamily:'Nunito,sans-serif' }}>{banner.title}</h3>
-                    <span style={{ fontSize:'0.80rem', fontWeight:'800', color:'white', fontFamily:'Nunito,sans-serif' }}>View Details →</span>
-                  </div>
-                </div>
-              </FlipCard>
+              </SimpleCard>
             );
           })}
         </div>
 
         <style>{`
           .toysGrid { display:grid; grid-template-columns:repeat(5,1fr); gap:18px; }
-          .toysFlipScene { height:320px; }
-          .toysCard { background:rgba(255,255,255,0.86); backdrop-filter:blur(12px); border:2px solid #b8e6f0; border-radius:22px; overflow:hidden; display:flex; flex-direction:column; }
+          .toysCard { background:rgba(255,255,255,0.86); backdrop-filter:blur(12px); border:2px solid #b8e6f0; border-radius:22px; overflow:hidden; display:flex; flex-direction:column; width:100%; height:320px; transition:transform 0.3s ease, box-shadow 0.3s ease; }
+          .cleanCard:hover .toysCard { transform:translateY(-6px); box-shadow:0 12px 30px rgba(0,0,0,0.12); }
           .toysImgWrap { flex:1; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; }
           .toysInfo { padding:12px 14px; background:white; }
-          @media(max-width:1024px){.toysGrid{grid-template-columns:repeat(3,1fr);gap:14px}.toysFlipScene{height:270px}}
-          @media(max-width:700px) {.toysGrid{grid-template-columns:repeat(2,1fr);gap:12px}.toysFlipScene{height:260px}}
+          @media(max-width:1024px){.toysGrid{grid-template-columns:repeat(3,1fr);gap:14px}.toysCard{height:270px}}
+          @media(max-width:700px) {.toysGrid{grid-template-columns:repeat(2,1fr);gap:12px}.toysCard{height:260px}}
           @media(max-width:380px) {.toysGrid{grid-template-columns:1fr}}
         `}</style>
       </div>
@@ -1167,27 +920,28 @@ function CareSection({ personalCareBanners, healthCareBanners, sectionSettings =
   const healthBtn   = hs.buttonText  || 'View All';
 
   const getImageItems = (arr, fallback) =>
-    (arr || []).map(b => ({ front: b.image?.url||'', back: b.mobileImage?.url||b.image?.url||'', link: b.buttonLink||fallback })).filter(it => it.front);
+    (arr || []).map(b => ({ 
+      front: b.image?.url || '', 
+      link:  b.buttonLink || fallback 
+    })).filter(it => it.front);
 
   const personalItems = getImageItems(personalCareBanners, '/products?category=personal-care');
   const healthItems   = getImageItems(healthCareBanners,   '/products?category=health-care');
 
   if (!personalItems.length && !healthItems.length) return null;
 
-  const PureImageCard = ({ item, accentColor, fallbackEmoji = '🖼️' }) => (
-    <FlipCard href={item.link} sceneClassName="careFlipScene">
-      <div className="flipFace flipFront" style={{ borderRadius:'20px', background:'#fff', border:`2px solid ${accentColor}30`, overflow:'hidden' }}>
-        {item.front
-          ? <img src={item.front} alt="" style={{ width:'100%',height:'100%',objectFit:'cover',objectPosition:'center',display:'block' }} />
-          : <div style={{ width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'3.5rem',background:`${accentColor}10` }}>{fallbackEmoji}</div>}
-      </div>
-      <div className="flipFace flipBack" style={{ borderRadius:'20px', background:'#fff', border:`2px solid ${accentColor}`, overflow:'hidden' }}>
-        {item.back
-          ? <img src={item.back} alt="" style={{ width:'100%',height:'100%',objectFit:'cover',objectPosition:'center',display:'block' }} />
-          : <div style={{ width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'3.5rem',background:`${accentColor}20` }}>{fallbackEmoji}</div>}
-      </div>
-    </FlipCard>
-  );
+  const PureImageCard = ({ item, accentColor, fallbackEmoji = '🖼️' }) => {
+    return (
+      <SimpleCard href={item.link}>
+        <div style={{ borderRadius:'20px', background:'#fff', border:`2px solid ${accentColor}30`, overflow:'hidden', width:'100%', height:'100%', transition:'transform 0.3s ease, box-shadow 0.3s ease' }}
+          className="careImgCard">
+          {item.front
+            ? <img src={item.front} alt="" style={{ width:'100%',height:'100%',objectFit:'cover',objectPosition:'center',display:'block' }} />
+            : <div style={{ width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'3.5rem',background:`${accentColor}10` }}>{fallbackEmoji}</div>}
+        </div>
+      </SimpleCard>
+    );
+  };
 
   const SectionHeader = ({ title, subtitle, description, accentColor, linkAll, btnText }) => (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'20px', flexWrap:'wrap', gap:'12px' }}>
@@ -1207,7 +961,7 @@ function CareSection({ personalCareBanners, healthCareBanners, sectionSettings =
 
   const BentoGrid = ({ items, accentColor }) => {
     const d = [...items];
-    while (d.length < 4) d.push(d[0] || { front:'',back:'',link:'/products' });
+    while (d.length < 4) d.push(d[0] || { front:'',link:'/products' });
     return (
       <div className="bentoGrid">
         <div className="bentoBig"><PureImageCard item={d[0]} accentColor={accentColor} fallbackEmoji="🧴" /></div>
@@ -1277,74 +1031,22 @@ function CareSection({ personalCareBanners, healthCareBanners, sectionSettings =
       )}
 
       <style>{`
-        .careFlipScene { height:100%; }
+        .cleanCard:hover .careImgCard { transform:translateY(-6px); box-shadow:0 12px 30px rgba(0,0,0,0.12); }
         .bentoGrid { display:grid; grid-template-columns:1.4fr 1fr 1fr; grid-template-rows:185px 185px; gap:12px; height:382px; }
         .bentoBig  { grid-column:1; grid-row:1/span 2; }
         .bentoTop1 { grid-column:2; grid-row:1; }
         .bentoTop2 { grid-column:3; grid-row:1; }
         .bentoWide { grid-column:2/span 2; grid-row:2; }
-
-        .healthMarqueeFullWidth {
-          position: relative;
-          width: 100vw;
-          margin-left: calc(50% - 50vw);
-          margin-right: calc(50% - 50vw);
-          overflow: hidden;
-          padding: 16px 0;
-        }
-        .healthFadeLeft,
-        .healthFadeRight {
-          position: absolute;
-          top: 0;
-          bottom: 0;
-          width: 120px;
-          z-index: 3;
-          pointer-events: none;
-        }
-        .healthFadeLeft {
-          left: 0;
-          background: linear-gradient(to right, #F0FDF4 0%, rgba(240,253,244,0.7) 50%, transparent 100%);
-        }
-        .healthFadeRight {
-          right: 0;
-          background: linear-gradient(to left, #F0FDF4 0%, rgba(240,253,244,0.7) 50%, transparent 100%);
-        }
-        .healthMarqueeTrack {
-          display: flex;
-          gap: 20px;
-          width: max-content;
-          will-change: transform;
-          padding: 0 10px;
-        }
-        .healthMarqueeItem {
-          flex-shrink: 0;
-          width: 300px;
-          height: 320px;
-        }
-        @keyframes healthScroll {
-          0%   { transform: translateX(0); }
-          100% { transform: translateX(-33.333%); }
-        }
-
-        @media(max-width:1024px){
-          .healthMarqueeItem { width: 260px; height: 280px; }
-          .healthFadeLeft, .healthFadeRight { width: 80px; }
-        }
-        @media(max-width:900px){
-          .bentoGrid{grid-template-columns:1fr 1fr;grid-template-rows:200px 160px 160px;height:auto}
-          .bentoBig{grid-column:1/span 2;grid-row:1}.bentoTop1{grid-column:1;grid-row:2}.bentoTop2{grid-column:2;grid-row:2}.bentoWide{grid-column:1/span 2;grid-row:3}
-
-          .healthMarqueeItem { width: 220px; height: 240px; }
-          .healthFadeLeft, .healthFadeRight { width: 60px; }
-        }
-        @media(max-width:560px){
-          .bentoGrid{grid-template-columns:1fr;grid-template-rows:200px 160px 160px 160px}
-          .bentoBig{grid-column:1;grid-row:1}.bentoTop1{grid-column:1;grid-row:2}.bentoTop2{grid-column:1;grid-row:3}.bentoWide{grid-column:1;grid-row:4}
-
-          .healthMarqueeItem { width: 180px; height: 200px; }
-          .healthFadeLeft, .healthFadeRight { width: 40px; }
-          .healthMarqueeTrack { gap: 14px; }
-        }
+        .healthMarqueeFullWidth { position: relative; width: 100vw; margin-left: calc(50% - 50vw); margin-right: calc(50% - 50vw); overflow: hidden; padding: 16px 0; }
+        .healthFadeLeft, .healthFadeRight { position: absolute; top: 0; bottom: 0; width: 120px; z-index: 3; pointer-events: none; }
+        .healthFadeLeft { left: 0; background: linear-gradient(to right, #F0FDF4 0%, rgba(240,253,244,0.7) 50%, transparent 100%); }
+        .healthFadeRight { right: 0; background: linear-gradient(to left, #F0FDF4 0%, rgba(240,253,244,0.7) 50%, transparent 100%); }
+        .healthMarqueeTrack { display: flex; gap: 20px; width: max-content; will-change: transform; padding: 0 10px; }
+        .healthMarqueeItem { flex-shrink: 0; width: 300px; height: 320px; }
+        @keyframes healthScroll { 0% { transform: translateX(0); } 100% { transform: translateX(-33.333%); } }
+        @media(max-width:1024px){ .healthMarqueeItem { width: 260px; height: 280px; } .healthFadeLeft, .healthFadeRight { width: 80px; } }
+        @media(max-width:900px){ .bentoGrid{grid-template-columns:1fr 1fr;grid-template-rows:200px 160px 160px;height:auto} .bentoBig{grid-column:1/span 2;grid-row:1}.bentoTop1{grid-column:1;grid-row:2}.bentoTop2{grid-column:2;grid-row:2}.bentoWide{grid-column:1/span 2;grid-row:3} .healthMarqueeItem { width: 220px; height: 240px; } .healthFadeLeft, .healthFadeRight { width: 60px; } }
+        @media(max-width:560px){ .bentoGrid{grid-template-columns:1fr;grid-template-rows:200px 160px 160px 160px} .bentoBig{grid-column:1;grid-row:1}.bentoTop1{grid-column:1;grid-row:2}.bentoTop2{grid-column:1;grid-row:3}.bentoWide{grid-column:1;grid-row:4} .healthMarqueeItem { width: 180px; height: 200px; } .healthFadeLeft, .healthFadeRight { width: 40px; } .healthMarqueeTrack { gap: 14px; } }
       `}</style>
     </section>
   );
@@ -1354,7 +1056,7 @@ function CareSection({ personalCareBanners, healthCareBanners, sectionSettings =
    11. ELECTRIC VEHICLES
 ═══════════════════════════════════════ */
 function EVSection({ banners, sectionSettings = {} }) {
-  const s        = sectionSettings['electric'] || {};
+  const s        = sectionSettings['electric'] || sectionSettings['electric-vehicle'] || {};
   const secTitle = s.title       || 'Electric Vehicles for Kids';
   const secEmoji = s.emoji       || '🚗';
   const secDesc  = s.description || '';
@@ -1378,10 +1080,9 @@ function EVSection({ banners, sectionSettings = {} }) {
         <div className="evGrid">
           {banners.slice(0, 4).map((item, i) => {
             const frontImg = item.image?.url || null;
-            const backImg  = item.mobileImage?.url || frontImg;
             return (
-              <FlipCard key={i} sceneClassName="evFlipScene" href={item.buttonLink || '/products?category=electric-vehicles'}>
-                <div className="flipFace flipFront evRedBorder">
+              <SimpleCard key={i} href={item.buttonLink || '/products?category=electric-vehicles'}>
+                <div className="evRedBorder">
                   <div className="evImgWrap" style={{ background: frontImg ? '#f0f8ff' : 'linear-gradient(135deg,#E0F2FE,#F3E8FF)' }}>
                     {frontImg
                       ? <img src={frontImg} alt={item.title} style={{ width:'100%',height:'100%',objectFit:'contain',padding:'12px',boxSizing:'border-box' }} />
@@ -1402,18 +1103,7 @@ function EVSection({ banners, sectionSettings = {} }) {
                     </div>
                   </div>
                 </div>
-                <div className="flipFace flipBack evRedBorder">
-                  <div className="evImgWrap" style={{ background: backImg ? '#f0f8ff' : 'linear-gradient(135deg,#F0E6FF,#FFE0F0)' }}>
-                    {backImg
-                      ? <img src={backImg} alt={item.title} style={{ width:'100%',height:'100%',objectFit:'contain',padding:'12px',boxSizing:'border-box' }} />
-                      : <span style={{ fontSize:'5rem' }}>⚡</span>}
-                  </div>
-                  <div className="evInfo" style={{ background:'linear-gradient(135deg,#0EA5E9,#7B2FBE)' }}>
-                    <h3 style={{ fontSize:'0.92rem', fontWeight:'800', color:'white', margin:'0 0 4px', fontFamily:'Nunito,sans-serif' }}>{item.title}</h3>
-                    <span style={{ fontSize:'0.78rem', fontWeight:'800', color:'white', fontFamily:'Nunito,sans-serif' }}>Click to View →</span>
-                  </div>
-                </div>
-              </FlipCard>
+              </SimpleCard>
             );
           })}
         </div>
@@ -1426,12 +1116,11 @@ function EVSection({ banners, sectionSettings = {} }) {
 
         <style>{`
           .evGrid { display:grid; grid-template-columns:repeat(auto-fill,minmax(220px,1fr)); gap:20px; }
-          .evFlipScene { height:350px; }
-          .evRedBorder { border:3px solid #E03F4F; background:rgba(255,255,255,0.95); backdrop-filter:blur(12px); box-sizing:border-box; display:flex; flex-direction:column; border-radius:24px; box-shadow:0 6px 18px rgba(224,63,79,0.18); transition:box-shadow 0.3s ease; }
-          .flipScene.isFlipped .evRedBorder,.flipScene:hover .evRedBorder{border-color:#C92A3A;box-shadow:0 18px 44px rgba(224,63,79,0.35)}
+          .evRedBorder { border:3px solid #E03F4F; background:rgba(255,255,255,0.95); backdrop-filter:blur(12px); box-sizing:border-box; display:flex; flex-direction:column; border-radius:24px; box-shadow:0 6px 18px rgba(224,63,79,0.18); transition:all 0.3s ease; width:100%; height:350px; }
+          .cleanCard:hover .evRedBorder { border-color:#C92A3A; box-shadow:0 18px 44px rgba(224,63,79,0.35); transform:translateY(-6px); }
           .evImgWrap { flex:1; display:flex; align-items:center; justify-content:center; position:relative; overflow:hidden; border-radius:16px; }
           .evInfo { padding:14px 16px; background:white; }
-          @media(max-width:700px){.evGrid{grid-template-columns:repeat(2,1fr);gap:14px}.evFlipScene{height:300px}}
+          @media(max-width:700px){.evGrid{grid-template-columns:repeat(2,1fr);gap:14px}.evRedBorder{height:300px}}
           @media(max-width:380px){.evGrid{grid-template-columns:1fr}}
         `}</style>
       </div>
@@ -1551,6 +1240,77 @@ function CTASection({ sectionSettings = {} }) {
 }
 
 /* ═══════════════════════════════════════
+   14. DYNAMIC CUSTOM SECTION
+═══════════════════════════════════════ */
+function DynamicCustomSection({ sectionKey, banners = [], sectionSettings = {} }) {
+  const s        = sectionSettings[sectionKey] || {};
+  const secTitle = s.title       || sectionKey;
+  const secEmoji = s.emoji       || '🛍️';
+  const secDesc  = s.description || '';
+
+  if (!banners?.length) return null;
+
+  return (
+    <section style={{ padding: 'clamp(36px,5vw,60px) clamp(12px,2vw,20px)', background: 'linear-gradient(180deg,#ffffff 0%,#f9f6ff 100%)' }}>
+      <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px', flexWrap: 'wrap', gap: '12px' }}>
+          <div>
+            <span style={{ display: 'inline-block', padding: '4px 14px', background: '#FFF3EC', border: '1.5px solid #FFD4B8', borderRadius: '999px', fontSize: '0.70rem', fontWeight: '800', color: '#FF6B35', textTransform: 'uppercase', marginBottom: '8px', fontFamily: 'Nunito, sans-serif' }}>
+              {secEmoji} Collection
+            </span>
+            <h2 style={{ fontSize: 'clamp(1.3rem,2.5vw,2rem)', fontWeight: '800', color: '#2D1A4A', margin: '0 0 4px', fontFamily: 'Nunito, sans-serif' }}>{secEmoji} {secTitle}</h2>
+            {secDesc && <p style={{ fontSize: '0.84rem', color: '#9585B0', margin: 0, fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>{secDesc}</p>}
+          </div>
+        </div>
+
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(240px, 1fr))', gap: '18px' }}>
+          {banners.map((banner, i) => {
+            const frontImg = banner.image?.url || null;
+            const link     = banner.buttonLink || '/products';
+            const color    = banner.color || '#FF6B35';
+            const isVideo  = isVideoUrl(frontImg);
+
+            return (
+              <SimpleCard key={banner.id || i} href={link}>
+                <div className="dynamicCard" style={{ borderColor: `${color}30` }}>
+                  <div className="dynamicImgWrap" style={{ background: frontImg ? '#f8f8f8' : `${color}15` }}>
+                    {frontImg ? (
+                      isVideo ? (
+                        <video src={frontImg} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <img src={frontImg} alt={banner.title || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      )
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3.5rem' }}>
+                        {banner.emoji || secEmoji}
+                      </div>
+                    )}
+                  </div>
+                  <div className="dynamicInfo">
+                    <h3 style={{ fontSize: '0.98rem', fontWeight: '800', color: '#2D1A4A', margin: '0 0 4px', fontFamily: 'Nunito, sans-serif' }}>{banner.title}</h3>
+                    {banner.subtitle && <p style={{ fontSize: '0.78rem', color: '#9585B0', margin: '0 0 8px', fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>{banner.subtitle}</p>}
+                    <span style={{ fontSize: '0.82rem', fontWeight: '800', color, fontFamily: 'Nunito, sans-serif' }}>
+                      {banner.buttonText || 'Shop Now'} →
+                    </span>
+                  </div>
+                </div>
+              </SimpleCard>
+            );
+          })}
+        </div>
+
+        <style>{`
+          .dynamicCard { background: white; border: 2px solid transparent; border-radius: 20px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.07); display: flex; flex-direction: column; width: 100%; height: 320px; transition: transform 0.3s ease, box-shadow 0.3s ease; }
+          .cleanCard:hover .dynamicCard { transform: translateY(-6px); box-shadow: 0 12px 30px rgba(0,0,0,0.12); }
+          .dynamicImgWrap { flex: 1; overflow: hidden; }
+          .dynamicInfo { padding: 12px 14px; background: white; }
+        `}</style>
+      </div>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════
    MAIN HOME CLIENT
 ═══════════════════════════════════════ */
 export default function HomeClient({
@@ -1570,11 +1330,29 @@ export default function HomeClient({
   ctaBanners          = [],
   trending            = [],
   featured            = [],
+  banners             = [],
   initialSectionSettings = {},
 }) {
   useScrollReveal();
   const sectionSettings = useSectionSettings(initialSectionSettings);
   const isVisible = (key) => sectionSettings[key]?.isVisible !== false;
+
+  const BUILTIN_KEYS = new Set([
+    'hero', 'brands', 'category', 'budget', 'sunny', 'gender',
+    'festival', 'promo', 'baby-food', 'toys', 'care', 'personal-care',
+    'health-care', 'electric', 'electric-vehicle', 'trending', 'cta', 'wellness'
+  ]);
+
+  const allBannersList = banners?.length > 0 ? banners : [
+    ...heroBanners, ...categoryBanners, ...festivalBanners, ...budgetBanners,
+    ...sunnyBanners, ...promoBanners, ...genderBanners, ...personalCareBanners,
+    ...healthCareBanners, ...evBanners, ...babyFoodBanners, ...toysBanners
+  ];
+
+  const customSectionKeys = Array.from(new Set([
+    ...Object.keys(sectionSettings).filter(k => !BUILTIN_KEYS.has(k) && sectionSettings[k]?.isVisible !== false),
+    ...allBannersList.map(b => b.type).filter(t => t && !BUILTIN_KEYS.has(t))
+  ]));
 
   const allSections = [
     { key: 'hero',      render: <HeroBanner banners={heroBanners} /> },
@@ -1582,7 +1360,7 @@ export default function HomeClient({
     { key: 'category',  render: <CategorySection banners={categoryBanners} sectionSettings={sectionSettings} /> },
     { key: 'budget',    render: <BudgetSection banners={budgetBanners} sectionSettings={sectionSettings} /> },
     { key: 'sunny',     render: <SunnySection banners={sunnyBanners} sectionSettings={sectionSettings} /> },
-    { key: 'gender',    render: <GenderSection banners={genderBanners} sectionSettings={sectionSettings} /> }, 
+    { key: 'gender',    render: <GenderSection banners={genderBanners} sectionSettings={sectionSettings} /> },
     { key: 'festival',  render: <SeasonBanner banners={festivalBanners} sectionSettings={sectionSettings} /> },
     { key: 'promo',     render: <PromoSection banners={promoBanners} sectionSettings={sectionSettings} /> },
     { key: 'baby-food', render: <BabyFoodSection banners={babyFoodBanners} sectionSettings={sectionSettings} /> },
@@ -1596,44 +1374,32 @@ export default function HomeClient({
   return (
     <>
       <style jsx global>{`
-        .flipScene {
-          perspective: 1200px;
+        .cleanCard {
+          display: block;
           width: 100%;
           height: 100%;
           cursor: pointer;
-          position: relative;
           -webkit-tap-highlight-color: transparent;
-        }
-        .flipCard {
-          position: relative;
-          width: 100%;
-          height: 100%;
-          transition: transform 0.25s ease-out;
-          transform-style: preserve-3d;
-        }
-        .flipFace {
-          position: absolute;
-          width: 100%;
-          height: 100%;
-          backface-visibility: hidden;
-          -webkit-backface-visibility: hidden;
-          border-radius: 20px;
-          overflow: hidden;
-        }
-        .flipFront { transform: rotateY(0deg); }
-        .flipBack  { transform: rotateY(180deg); }
-        .flipScene:hover .flipCard,
-        .flipScene.isFlipped .flipCard {
-          transform: rotateY(180deg);
         }
       `}</style>
 
       <div className={styles.home}>
+        {/* Built-in Sections */}
         {allSections.map(section =>
           isVisible(section.key) && (
             <div key={section.key}>{section.render}</div>
           )
         )}
+
+        {/* Dynamic Custom Sections (admin-created) */}
+        {customSectionKeys.map(key => {
+          const sectionBanners = allBannersList.filter(b => b.type === key);
+          return isVisible(key) && sectionBanners.length > 0 && (
+            <div key={`custom-${key}`}>
+              <DynamicCustomSection sectionKey={key} banners={sectionBanners} sectionSettings={sectionSettings} />
+            </div>
+          );
+        })}
       </div>
     </>
   );
