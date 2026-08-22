@@ -275,60 +275,72 @@ export default function Header() {
           }}>
             🎯 {searchResults.length} Products Found
           </div>
-          {searchResults.map((product, i) => (
-            <Link
-              key={product.id}
-              href={`/products/${product.slug || product.id}`}
-              onClick={() => {
-                saveRecentSearch(searchQuery);
-                setSearchOpen(false);
-                setSearchQuery('');
-                setSelectedIndex(-1);
-              }}
-              style={{
-                display: 'flex', alignItems: 'center', gap: '12px',
-                padding: '10px 14px', textDecoration: 'none', color: 'inherit',
-                background: selectedIndex === i ? '#F0F9FF' : 'white',
-                borderBottom: i < searchResults.length - 1 ? '1px solid #F1F5F9' : 'none',
-                transition: 'background 0.15s',
-              }}
-              onMouseEnter={() => setSelectedIndex(i)}
-              onMouseLeave={() => setSelectedIndex(-1)}
-            >
-              <img
-                src={product.images?.[0]?.url || 'https://via.placeholder.com/48'}
-                alt={product.name}
-                style={{
-                  width: '48px', height: '48px', borderRadius: '8px',
-                  objectFit: 'cover', flexShrink: 0, border: '1px solid #E5E7EB',
+          {/* ✅ FIXED DESKTOP RESULTS (SHOWS BRAND TAG PROPERLY) */}
+          {searchResults.map((product, i) => {
+            const imgUrl = product.images?.[0]?.url || product.images?.[0] || product.image || 'https://via.placeholder.com/48';
+            const price = Math.round(product.discountPrice || product.price || 0);
+            const oldPrice = product.discountPrice && product.discountPrice < product.price ? Math.round(product.price) : null;
+            
+            return (
+              <Link
+                key={product.id}
+                href={`/products/${product.slug || product.id}`}
+                onClick={() => {
+                  saveRecentSearch(searchQuery);
+                  setSearchOpen(false);
+                  setSearchQuery('');
+                  setSelectedIndex(-1);
                 }}
-              />
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{
-                  margin: 0, fontSize: '0.86rem', fontWeight: '700', color: '#0F172A',
-                  overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                }}>
-                  {product.name}
-                </p>
-                <p style={{ margin: '2px 0 0', fontSize: '0.74rem', color: '#64748B', fontWeight: '600' }}>
-                  {product.brand || 'Baby Care'}
-                </p>
-              </div>
-              <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                <p style={{ margin: 0, fontSize: '0.90rem', fontWeight: '800', color: '#0369A1' }}>
-                  ₹{Math.round(product.discountPrice || product.price)?.toLocaleString('en-IN')}
-                </p>
-                {product.discountPrice && product.discountPrice < product.price && (
+                style={{
+                  display: 'flex', alignItems: 'center', gap: '12px',
+                  padding: '10px 14px', textDecoration: 'none', color: 'inherit',
+                  background: selectedIndex === i ? '#F0F9FF' : 'white',
+                  borderBottom: i < searchResults.length - 1 ? '1px solid #F1F5F9' : 'none',
+                  transition: 'background 0.15s',
+                }}
+                onMouseEnter={() => setSelectedIndex(i)}
+                onMouseLeave={() => setSelectedIndex(-1)}
+              >
+                <img
+                  src={imgUrl}
+                  alt={product.name}
+                  style={{
+                    width: '48px', height: '48px', borderRadius: '8px',
+                    objectFit: 'cover', flexShrink: 0, border: '1px solid #E5E7EB', background: '#F8FAFC'
+                  }}
+                />
+                <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{
-                    margin: '2px 0 0', fontSize: '0.68rem', color: '#94A3B8',
-                    textDecoration: 'line-through', fontWeight: '600',
+                    margin: 0, fontSize: '0.86rem', fontWeight: '800', color: '#0F172A',
+                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   }}>
-                    ₹{Math.round(product.price)?.toLocaleString('en-IN')}
+                    {product.name}
                   </p>
-                )}
-              </div>
-            </Link>
-          ))}
+                  {(product.brand || product.brandName) && (
+                    <p style={{ 
+                      margin: '3px 0 0', fontSize: '0.70rem', color: '#0369A1', fontWeight: '700',
+                      display: 'inline-block', background: '#E0F2FE', padding: '2px 8px', borderRadius: '4px' 
+                    }}>
+                      🏷️ {product.brand || product.brandName}
+                    </p>
+                  )}
+                </div>
+                <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                  <p style={{ margin: 0, fontSize: '0.90rem', fontWeight: '800', color: '#0369A1' }}>
+                    ₹{price.toLocaleString('en-IN')}
+                  </p>
+                  {oldPrice && (
+                    <p style={{
+                      margin: '2px 0 0', fontSize: '0.68rem', color: '#94A3B8',
+                      textDecoration: 'line-through', fontWeight: '600',
+                    }}>
+                      ₹{oldPrice.toLocaleString('en-IN')}
+                    </p>
+                  )}
+                </div>
+              </Link>
+            );
+          })}
 
           <button
             onClick={() => handleSearch()}
@@ -796,37 +808,53 @@ export default function Header() {
                 <p className={styles.mobileSearchLabel}>
                   🎯 {searchResults.length} Products Found
                 </p>
+                {/* ✅ FIXED MOBILE RESULTS (SHOWS BRAND TAG PROPERLY) */}
                 <div className={styles.mobileResultsList}>
-                  {searchResults.map(product => (
-                    <Link
-                      key={product.id}
-                      href={`/products/${product.slug || product.id}`}
-                      onClick={() => {
-                        saveRecentSearch(searchQuery);
-                        setMobileSearchOpen(false);
-                        setSearchQuery('');
-                      }}
-                      className={styles.mobileResultItem}
-                    >
-                      <img
-                        src={product.images?.[0]?.url || 'https://via.placeholder.com/50'}
-                        alt={product.name}
-                        className={styles.mobileResultImg}
-                      />
-                      <div className={styles.mobileResultInfo}>
-                        <p className={styles.mobileResultName}>{product.name}</p>
-                        <p className={styles.mobileResultPrice}>
-                          ₹{Math.round(product.discountPrice || product.price)?.toLocaleString('en-IN')}
-                          {product.discountPrice && product.discountPrice < product.price && (
-                            <span className={styles.mobileResultOldPrice}>
-                              ₹{Math.round(product.price)?.toLocaleString('en-IN')}
-                            </span>
+                  {searchResults.map(product => {
+                    const imgUrl = product.images?.[0]?.url || product.images?.[0] || product.image || 'https://via.placeholder.com/50';
+                    const price = Math.round(product.discountPrice || product.price || 0);
+                    const oldPrice = product.discountPrice && product.discountPrice < product.price ? Math.round(product.price) : null;
+
+                    return (
+                      <Link
+                        key={product.id}
+                        href={`/products/${product.slug || product.id}`}
+                        onClick={() => {
+                          saveRecentSearch(searchQuery);
+                          setMobileSearchOpen(false);
+                          setSearchQuery('');
+                        }}
+                        className={styles.mobileResultItem}
+                        style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', textDecoration: 'none', borderBottom: '1px solid #F1F5F9' }}
+                      >
+                        <img
+                          src={imgUrl}
+                          alt={product.name}
+                          className={styles.mobileResultImg}
+                          style={{ width: '50px', height: '50px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #E5E7EB' }}
+                        />
+                        <div className={styles.mobileResultInfo} style={{ flex: 1, minWidth: 0 }}>
+                          <p className={styles.mobileResultName} style={{ margin: '0 0 4px', fontSize: '0.9rem', fontWeight: '800', color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {product.name}
+                          </p>
+                          {(product.brand || product.brandName) && (
+                            <p style={{ margin: '0 0 4px', fontSize: '0.72rem', color: '#0369A1', fontWeight: '700', display: 'inline-block', background: '#E0F2FE', padding: '2px 8px', borderRadius: '4px' }}>
+                              🏷️ {product.brand || product.brandName}
+                            </p>
                           )}
-                        </p>
-                      </div>
-                      <span className={styles.mobileResultArrow}>›</span>
-                    </Link>
-                  ))}
+                          <p className={styles.mobileResultPrice} style={{ margin: 0, fontSize: '0.9rem', fontWeight: '800', color: '#0369A1' }}>
+                            ₹{price.toLocaleString('en-IN')}
+                            {oldPrice && (
+                              <span className={styles.mobileResultOldPrice} style={{ marginLeft: '6px', fontSize: '0.75rem', color: '#94A3B8', textDecoration: 'line-through' }}>
+                                ₹{oldPrice.toLocaleString('en-IN')}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        <span className={styles.mobileResultArrow} style={{ color: '#94A3B8', fontSize: '1.2rem' }}>›</span>
+                      </Link>
+                    );
+                  })}
                 </div>
 
                 <button

@@ -1,5 +1,3 @@
-// C:\Users\user\arunasbabyworld\src\app\HomeClient.js
-
 'use client';
 import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
@@ -114,7 +112,7 @@ function FlipCard({ children, sceneClassName = '', href }) {
 }
 
 /* ═══════════════════════════════════════
-   1. BRANDS (✅ FIXED - Click filters by brand)
+   1. BRANDS (SEAMLESS LOOP & SMOOTH SPEED)
 ═══════════════════════════════════════ */
 function BrandsSection({ brands, sectionSettings = {} }) {
   const s        = sectionSettings['brands'] || {};
@@ -122,19 +120,15 @@ function BrandsSection({ brands, sectionSettings = {} }) {
   const secDesc  = s.description || '';
 
   const displayBrands = brands?.length > 0 ? brands : DEFAULT_BRANDS;
-  const items = [...displayBrands, ...displayBrands, ...displayBrands];
+  const scrollDuration = Math.max(40, displayBrands.length * 4.5);
 
-  // ✅ Smart brand link builder
   const buildBrandLink = (brand) => {
-    // Priority 1: If admin set explicit link (not default), use it
     if (brand.link && brand.link !== '/products') {
       return brand.link;
     }
-    // Priority 2: If brand has name, filter products by brand
     if (brand.name) {
       return `/products?brand=${encodeURIComponent(brand.name)}`;
     }
-    // Fallback
     return '/products';
   };
 
@@ -149,45 +143,89 @@ function BrandsSection({ brands, sectionSettings = {} }) {
         </div>
       )}
 
-      <div style={{ position: 'relative', overflow: 'hidden', padding: '12px 0' }}>
+      <div style={{ position: 'relative', overflow: 'hidden', padding: '12px 0', display: 'flex' }}>
         <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: '60px', background: 'linear-gradient(to right, white, transparent)', zIndex: 2, pointerEvents: 'none' }} />
         <div style={{ position: 'absolute', right: 0, top: 0, bottom: 0, width: '60px', background: 'linear-gradient(to left, white, transparent)', zIndex: 2, pointerEvents: 'none' }} />
+        
         <div
-          style={{ display: 'flex', gap: '12px', width: 'max-content', animation: 'brandScroll 15s linear infinite' }}
+          className="brandMarqueeWrap"
+          style={{ animationDuration: `${scrollDuration}s` }}
           onMouseEnter={e => e.currentTarget.style.animationPlayState = 'paused'}
           onMouseLeave={e => e.currentTarget.style.animationPlayState = 'running'}
           onTouchStart={e => e.currentTarget.style.animationPlayState = 'paused'}
           onTouchEnd={e => e.currentTarget.style.animationPlayState = 'running'}
         >
-          {items.map((brand, i) => {
-            // ✅ Build correct link for each brand
-            const brandLink = buildBrandLink(brand);
+          {/* List 1 */}
+          <div className="brandMarqueeTrack">
+            {displayBrands.map((brand, i) => {
+              const brandLink = buildBrandLink(brand);
+              return (
+                <Link
+                  key={`list1-${brand.id || i}`}
+                  href={brandLink}
+                  title={brand.name ? `Shop ${brand.name} products` : 'Shop products'}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', textDecoration: 'none', padding: '7px 16px', borderRadius: '999px', border: `1.5px solid ${brand.color || '#7B2FBE'}25`, background: `${brand.color || '#7B2FBE'}08`, flexShrink: 0, whiteSpace: 'nowrap', transition: 'all 0.2s ease' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = `${brand.color || '#7B2FBE'}18`; e.currentTarget.style.borderColor = brand.color || '#7B2FBE'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = `${brand.color || '#7B2FBE'}08`; e.currentTarget.style.borderColor = `${brand.color || '#7B2FBE'}25`; e.currentTarget.style.transform = 'translateY(0)'; }}
+                >
+                  {brand.logo?.url ? (
+                    <img src={brand.logo.url} alt={brand.name || 'Brand'} style={{ width: brand.name ? '32px' : '80px', height: brand.name ? '49px' : '47px', objectFit: 'contain', borderRadius: '4px', flexShrink: 0 }} />
+                  ) : (
+                    <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: brand.color || '#7B2FBE', flexShrink: 0 }} />
+                  )}
+                  {brand.name && (
+                    <span style={{ fontSize: '0.84rem', fontWeight: '800', color: brand.color || '#7B2FBE', fontFamily: 'Nunito, sans-serif' }}>{brand.name}</span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
 
-            return (
-              <Link
-                key={`${brand.id}-${i}`}
-                href={brandLink}
-                title={brand.name ? `Shop ${brand.name} products` : 'Shop products'}
-                style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', textDecoration: 'none', padding: '7px 16px', borderRadius: '999px', border: `1.5px solid ${brand.color}25`, background: `${brand.color}08`, flexShrink: 0, whiteSpace: 'nowrap', transition: 'all 0.2s ease' }}
-                onMouseEnter={e => { e.currentTarget.style.background = `${brand.color}18`; e.currentTarget.style.borderColor = brand.color; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                onMouseLeave={e => { e.currentTarget.style.background = `${brand.color}08`; e.currentTarget.style.borderColor = `${brand.color}25`; e.currentTarget.style.transform = 'translateY(0)'; }}
-              >
-                {brand.logo?.url ? (
-                  <img src={brand.logo.url} alt={brand.name || 'Brand'} style={{ width: brand.name ? '32px' : '80px', height: brand.name ? '49px' : '47px', objectFit: 'contain', borderRadius: '4px', flexShrink: 0 }} />
-                ) : (
-                  <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: brand.color, flexShrink: 0 }} />
-                )}
-                {brand.name && (
-                  <span style={{ fontSize: '0.84rem', fontWeight: '800', color: brand.color, fontFamily: 'Nunito, sans-serif' }}>{brand.name}</span>
-                )}
-              </Link>
-            );
-          })}
+          {/* List 2 (Duplicate for Seamless Infinite Scroll) */}
+          <div className="brandMarqueeTrack" aria-hidden="true">
+            {displayBrands.map((brand, i) => {
+              const brandLink = buildBrandLink(brand);
+              return (
+                <Link
+                  key={`list2-${brand.id || i}`}
+                  href={brandLink}
+                  title={brand.name ? `Shop ${brand.name} products` : 'Shop products'}
+                  style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', textDecoration: 'none', padding: '7px 16px', borderRadius: '999px', border: `1.5px solid ${brand.color || '#7B2FBE'}25`, background: `${brand.color || '#7B2FBE'}08`, flexShrink: 0, whiteSpace: 'nowrap', transition: 'all 0.2s ease' }}
+                  onMouseEnter={e => { e.currentTarget.style.background = `${brand.color || '#7B2FBE'}18`; e.currentTarget.style.borderColor = brand.color || '#7B2FBE'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = `${brand.color || '#7B2FBE'}08`; e.currentTarget.style.borderColor = `${brand.color || '#7B2FBE'}25`; e.currentTarget.style.transform = 'translateY(0)'; }}
+                >
+                  {brand.logo?.url ? (
+                    <img src={brand.logo.url} alt={brand.name || 'Brand'} style={{ width: brand.name ? '32px' : '80px', height: brand.name ? '49px' : '47px', objectFit: 'contain', borderRadius: '4px', flexShrink: 0 }} />
+                  ) : (
+                    <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: brand.color || '#7B2FBE', flexShrink: 0 }} />
+                  )}
+                  {brand.name && (
+                    <span style={{ fontSize: '0.84rem', fontWeight: '800', color: brand.color || '#7B2FBE', fontFamily: 'Nunito, sans-serif' }}>{brand.name}</span>
+                  )}
+                </Link>
+              );
+            })}
+          </div>
         </div>
       </div>
 
       <style>{`
-        @keyframes brandScroll  { 0% { transform: translateX(0); } 100% { transform: translateX(-33.333%); } }
+        .brandMarqueeWrap {
+          display: flex;
+          width: max-content;
+          animation-name: brandScrollSeamless;
+          animation-timing-function: linear;
+          animation-iteration-count: infinite;
+        }
+        .brandMarqueeTrack {
+          display: flex;
+          gap: 12px;
+          padding-right: 12px;
+        }
+        @keyframes brandScrollSeamless {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); }
+        }
         @keyframes rainbowShift { 0% { background-position: 0% 50%; } 100% { background-position: 300% 50%; } }
       `}</style>
     </section>
@@ -431,344 +469,6 @@ function SeasonBanner({ banners, sectionSettings = {} }) {
 }
 
 /* ═══════════════════════════════════════
-   REST OF SECTIONS (Gender, Budget, Sunny, Promo, Category, BabyFood, Toys, Care, EV, Trending, CTA)
-   These are UNCHANGED — same as your original file
-═══════════════════════════════════════ */
-
-/* Copy your existing GenderSection, BudgetSection, SunnySection, PromoSection, 
-   CategorySection, BabyFoodSection, ToysSection, CareSection, EVSection, 
-   TrendingFeaturedSection, CTASection, and default export MainClient from your original file */
-/* ═══════════════════════════════════════
-   6. GENDER (HER & HIM Style)
-═══════════════════════════════════════ */
-function GenderSection({ banners, sectionSettings = {} }) {
-  const s        = sectionSettings['gender'] || {};
-  const secTitle = s.title       || 'Shop By Gender';
-  const secEmoji = s.emoji       || '👶';
-  const secDesc  = s.description || 'Adorable picks for boys & girls';
-
-  if (!banners?.length) return null;
-
-  // Split banners: even index = HER (girls), odd index = HIM (boys)
-  // OR just take first two
-  const items = banners.slice(0, 2);
-
-  return (
-    <section className="herHimSection">
-      {/* Header */}
-      <div className="herHimHeader">
-        <span className="herHimBadge">💖 For Little Ones</span>
-        <h2 className="herHimTitle">{secEmoji} {secTitle}</h2>
-        {secDesc && <p className="herHimDesc">{secDesc}</p>}
-      </div>
-
-      {/* Main HER & HIM Card */}
-      <div className="herHimWrapper">
-        <div className="herHimCard">
-
-          {/* Giant Background Text */}
-          <div className="bgTextHer">HER</div>
-          <div className="bgTextHim">HIM</div>
-
-          {/* Wood plank floor effect */}
-          <div className="woodFloor" />
-
-          {/* Two banner images side by side */}
-          <div className="herHimImages">
-            {items.map((banner, i) => {
-              const imgUrl = banner.image?.url || banner.mobileImage?.url;
-              const isHer  = i === 0;
-              return (
-                <div key={banner.id || i} className={`herHimImgWrap ${isHer ? 'herSide' : 'himSide'}`}>
-                  {imgUrl ? (
-                    <img
-                      src={imgUrl}
-                      alt={banner.title || (isHer ? 'Girls' : 'Boys')}
-                      className="herHimImg"
-                    />
-                  ) : (
-                    <div className="herHimFallback">
-                      <span>{isHer ? '👧' : '👦'}</span>
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* CTA Buttons */}
-          <div className="herHimButtons">
-            {items.map((banner, i) => {
-              const isHer = i === 0;
-              const link  = banner.buttonLink || '/products';
-              const label = isHer ? 'HER' : 'HIM';
-              return (
-                <Link key={i} href={link} className={`ctaPill ${isHer ? 'ctaHer' : 'ctaHim'}`}>
-                  {label} ›
-                </Link>
-              );
-            })}
-          </div>
-        </div>
-      </div>
-
-      <style jsx>{`
-        .herHimSection {
-          padding: clamp(36px, 5vw, 60px) clamp(12px, 2vw, 20px);
-          background: linear-gradient(180deg, #FFF5F8 0%, #F0F8FF 100%);
-          position: relative;
-          overflow: hidden;
-        }
-
-        /* HEADER */
-        .herHimHeader {
-          text-align: center;
-          margin-bottom: 32px;
-          position: relative;
-          z-index: 2;
-        }
-        .herHimBadge {
-          display: inline-block;
-          padding: 6px 20px;
-          background: rgba(255, 255, 255, 0.95);
-          border: 1.5px solid #FFB6D9;
-          border-radius: 999px;
-          font-size: 0.72rem;
-          font-weight: 800;
-          color: #E91E63;
-          text-transform: uppercase;
-          letter-spacing: 1.2px;
-          margin-bottom: 14px;
-          font-family: 'Nunito', sans-serif;
-          box-shadow: 0 4px 14px rgba(233, 30, 99, 0.12);
-        }
-        .herHimTitle {
-          font-size: clamp(1.6rem, 3vw, 2.4rem);
-          font-weight: 900;
-          color: #2D1A4A;
-          margin: 0 0 8px;
-          font-family: 'Nunito', sans-serif;
-        }
-        .herHimDesc {
-          font-size: 0.95rem;
-          color: #9585B0;
-          margin: 0;
-          font-weight: 500;
-          font-family: 'Nunito', sans-serif;
-        }
-
-        /* WRAPPER */
-        .herHimWrapper {
-          max-width: 1200px;
-          margin: 0 auto;
-          padding: 0;
-        }
-
-        /* MAIN CARD */
-        .herHimCard {
-          position: relative;
-          background: linear-gradient(180deg, #BFE3F2 0%, #A8D4E8 40%, #C9B89C 70%, #B8A88C 100%);
-          border-radius: 32px;
-          overflow: hidden;
-          min-height: clamp(380px, 50vw, 540px);
-          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
-          padding: clamp(20px, 3vw, 40px) clamp(20px, 3vw, 40px) clamp(80px, 10vw, 120px);
-          display: flex;
-          align-items: flex-end;
-          justify-content: center;
-        }
-
-        /* GIANT BACKGROUND TEXT */
-        .bgTextHer,
-        .bgTextHim {
-          position: absolute;
-          top: 50%;
-          transform: translateY(-50%);
-          font-size: clamp(8rem, 22vw, 22rem);
-          font-weight: 900;
-          color: rgba(255, 255, 255, 0.55);
-          font-family: 'Nunito', 'Arial Black', sans-serif;
-          letter-spacing: -0.05em;
-          line-height: 0.85;
-          pointer-events: none;
-          user-select: none;
-          z-index: 1;
-          text-shadow:
-            0 4px 0 rgba(255, 255, 255, 0.25),
-            0 8px 24px rgba(0, 0, 0, 0.08);
-        }
-        .bgTextHer {
-          left: clamp(-20px, -2vw, -10px);
-        }
-        .bgTextHim {
-          right: clamp(-20px, -2vw, -10px);
-        }
-
-        /* WOOD FLOOR EFFECT */
-        .woodFloor {
-          position: absolute;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          height: 35%;
-          background:
-            repeating-linear-gradient(
-              90deg,
-              rgba(139, 105, 75, 0.18) 0px,
-              rgba(139, 105, 75, 0.18) 2px,
-              transparent 2px,
-              transparent 60px
-            ),
-            linear-gradient(180deg, transparent 0%, rgba(139, 105, 75, 0.20) 100%);
-          z-index: 1;
-          pointer-events: none;
-        }
-
-        /* IMAGES CONTAINER */
-        .herHimImages {
-          position: relative;
-          z-index: 2;
-          display: flex;
-          align-items: flex-end;
-          justify-content: center;
-          gap: clamp(20px, 4vw, 60px);
-          width: 100%;
-          max-width: 900px;
-          height: 100%;
-        }
-
-        .herHimImgWrap {
-          flex: 1;
-          height: clamp(280px, 38vw, 460px);
-          display: flex;
-          align-items: flex-end;
-          justify-content: center;
-          position: relative;
-        }
-        .herHimImg {
-          width: 100%;
-          height: 100%;
-          object-fit: contain;
-          object-position: bottom center;
-          display: block;
-          filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.25));
-          transition: transform 0.4s ease;
-        }
-        .herHimImgWrap:hover .herHimImg {
-          transform: translateY(-8px) scale(1.03);
-        }
-        .herHimFallback {
-          width: 100%;
-          height: 100%;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          font-size: 8rem;
-        }
-
-        /* CTA BUTTONS */
-        .herHimButtons {
-          position: absolute;
-          bottom: clamp(24px, 4vw, 50px);
-          left: 50%;
-          transform: translateX(-50%);
-          display: flex;
-          gap: clamp(60px, 18vw, 220px);
-          z-index: 5;
-        }
-        .ctaPill {
-          display: inline-flex;
-          align-items: center;
-          gap: 4px;
-          padding: clamp(10px, 1.5vw, 14px) clamp(28px, 4vw, 44px);
-          background: linear-gradient(135deg, #FFE85C 0%, #FFD93D 100%);
-          color: #1a1a2e;
-          font-family: 'Nunito', sans-serif;
-          font-weight: 900;
-          font-size: clamp(0.95rem, 1.8vw, 1.2rem);
-          text-decoration: none;
-          border-radius: 999px;
-          letter-spacing: 1px;
-          box-shadow:
-            0 6px 0 #C9A52E,
-            0 10px 20px rgba(0, 0, 0, 0.20);
-          border: 3px solid #1a1a2e;
-          transition: all 0.2s ease;
-          text-transform: uppercase;
-        }
-        .ctaPill:hover {
-          transform: translateY(-3px);
-          box-shadow:
-            0 9px 0 #C9A52E,
-            0 14px 26px rgba(0, 0, 0, 0.25);
-        }
-        .ctaPill:active {
-          transform: translateY(2px);
-          box-shadow:
-            0 3px 0 #C9A52E,
-            0 5px 12px rgba(0, 0, 0, 0.20);
-        }
-
-        /* RESPONSIVE */
-        @media (max-width: 768px) {
-          .herHimCard {
-            min-height: 360px;
-            padding: 20px 16px 90px;
-            border-radius: 24px;
-          }
-          .bgTextHer,
-          .bgTextHim {
-            font-size: clamp(6rem, 26vw, 12rem);
-            color: rgba(255, 255, 255, 0.45);
-          }
-          .herHimImages {
-            gap: 12px;
-          }
-          .herHimImgWrap {
-            height: clamp(220px, 45vw, 320px);
-          }
-          .herHimButtons {
-            gap: clamp(40px, 22vw, 100px);
-            bottom: 20px;
-          }
-          .ctaPill {
-            padding: 9px 22px;
-            font-size: 0.9rem;
-            border-width: 2.5px;
-            box-shadow:
-              0 4px 0 #C9A52E,
-              0 7px 14px rgba(0, 0, 0, 0.18);
-          }
-        }
-        @media (max-width: 480px) {
-          .herHimSection {
-            padding: 28px 10px;
-          }
-          .herHimCard {
-            min-height: 320px;
-            padding: 16px 10px 80px;
-            border-radius: 20px;
-          }
-          .bgTextHer,
-          .bgTextHim {
-            font-size: 7rem;
-          }
-          .herHimImgWrap {
-            height: 220px;
-          }
-          .herHimButtons {
-            gap: 50px;
-          }
-          .ctaPill {
-            padding: 8px 18px;
-            font-size: 0.85rem;
-          }
-        }
-      `}</style>
-    </section>
-  );
-}
-/* ═══════════════════════════════════════
    3. BUDGET
 ═══════════════════════════════════════ */
 function BudgetSection({ banners, sectionSettings = {} }) {
@@ -900,7 +600,142 @@ function SunnySection({ banners, sectionSettings = {} }) {
 }
 
 /* ═══════════════════════════════════════
-   PROMO SECTION — Text Overlay Style (FIXED)
+   5. GENDER (HER & HIM)
+═══════════════════════════════════════ */
+function GenderSection({ banners, sectionSettings = {} }) {
+  const s        = sectionSettings['gender'] || {};
+  const secTitle = s.title       || 'Shop By Gender';
+  const secEmoji = s.emoji       || '👶';
+  const secDesc  = s.description || 'Adorable picks for boys & girls';
+
+  if (!banners?.length) return null;
+  const items = banners.slice(0, 2);
+
+  return (
+    <section className="herHimSection">
+      <div className="herHimHeader">
+        <span className="herHimBadge">💖 For Little Ones</span>
+        <h2 className="herHimTitle">{secEmoji} {secTitle}</h2>
+        {secDesc && <p className="herHimDesc">{secDesc}</p>}
+      </div>
+
+      <div className="herHimWrapper">
+        <div className="herHimCard">
+          <div className="bgTextHer">HER</div>
+          <div className="bgTextHim">HIM</div>
+          <div className="woodFloor" />
+
+          <div className="herHimImages">
+            {items.map((banner, i) => {
+              const imgUrl = banner.image?.url || banner.mobileImage?.url;
+              const isHer  = i === 0;
+              return (
+                <div key={banner.id || i} className={`herHimImgWrap ${isHer ? 'herSide' : 'himSide'}`}>
+                  {imgUrl ? (
+                    <img
+                      src={imgUrl}
+                      alt={banner.title || (isHer ? 'Girls' : 'Boys')}
+                      className="herHimImg"
+                    />
+                  ) : (
+                    <div className="herHimFallback">
+                      <span>{isHer ? '👧' : '👦'}</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="herHimButtons">
+            {items.map((banner, i) => {
+              const isHer = i === 0;
+              const link  = banner.buttonLink || '/products';
+              const label = isHer ? 'HER' : 'HIM';
+              return (
+                <Link key={i} href={link} className={`ctaPill ${isHer ? 'ctaHer' : 'ctaHim'}`}>
+                  {label} ›
+                </Link>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      <style jsx>{`
+        .herHimSection {
+          padding: clamp(36px, 5vw, 60px) clamp(12px, 2vw, 20px);
+          background: linear-gradient(180deg, #FFF5F8 0%, #F0F8FF 100%);
+          position: relative;
+          overflow: hidden;
+        }
+        .herHimHeader { text-align: center; margin-bottom: 32px; position: relative; z-index: 2; }
+        .herHimBadge {
+          display: inline-block; padding: 6px 20px; background: rgba(255, 255, 255, 0.95);
+          border: 1.5px solid #FFB6D9; border-radius: 999px; font-size: 0.72rem; font-weight: 800;
+          color: #E91E63; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 14px;
+          font-family: 'Nunito', sans-serif; box-shadow: 0 4px 14px rgba(233, 30, 99, 0.12);
+        }
+        .herHimTitle { fontSize: clamp(1.6rem, 3vw, 2.4rem); font-weight: 900; color: #2D1A4A; margin: 0 0 8px; font-family: 'Nunito', sans-serif; }
+        .herHimDesc { font-size: 0.95rem; color: #9585B0; margin: 0; font-weight: 500; font-family: 'Nunito', sans-serif; }
+        .herHimWrapper { max-width: 1200px; margin: 0 auto; padding: 0; }
+        .herHimCard {
+          position: relative; background: linear-gradient(180deg, #BFE3F2 0%, #A8D4E8 40%, #C9B89C 70%, #B8A88C 100%);
+          border-radius: 32px; overflow: hidden; min-height: clamp(380px, 50vw, 540px);
+          box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15); padding: clamp(20px, 3vw, 40px) clamp(20px, 3vw, 40px) clamp(80px, 10vw, 120px);
+          display: flex; align-items: flex-end; justify-content: center;
+        }
+        .bgTextHer, .bgTextHim {
+          position: absolute; top: 50%; transform: translateY(-50%);
+          font-size: clamp(8rem, 22vw, 22rem); font-weight: 900; color: rgba(255, 255, 255, 0.55);
+          font-family: 'Nunito', 'Arial Black', sans-serif; letter-spacing: -0.05em; line-height: 0.85;
+          pointer-events: none; user-select: none; z-index: 1;
+        }
+        .bgTextHer { left: clamp(-20px, -2vw, -10px); }
+        .bgTextHim { right: clamp(-20px, -2vw, -10px); }
+        .woodFloor {
+          position: absolute; left: 0; right: 0; bottom: 0; height: 35%;
+          background: repeating-linear-gradient(90deg, rgba(139, 105, 75, 0.18) 0px, rgba(139, 105, 75, 0.18) 2px, transparent 2px, transparent 60px),
+                      linear-gradient(180deg, transparent 0%, rgba(139, 105, 75, 0.20) 100%);
+          z-index: 1; pointer-events: none;
+        }
+        .herHimImages { position: relative; z-index: 2; display: flex; align-items: flex-end; justify-content: center; gap: clamp(20px, 4vw, 60px); width: 100%; max-width: 900px; height: 100%; }
+        .herHimImgWrap { flex: 1; height: clamp(280px, 38vw, 460px); display: flex; align-items: flex-end; justify-content: center; position: relative; }
+        .herHimImg { width: 100%; height: 100%; object-fit: contain; object-position: bottom center; display: block; filter: drop-shadow(0 20px 30px rgba(0, 0, 0, 0.25)); transition: transform 0.4s ease; }
+        .herHimImgWrap:hover .herHimImg { transform: translateY(-8px) scale(1.03); }
+        .herHimFallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 8rem; }
+        .herHimButtons { position: absolute; bottom: clamp(24px, 4vw, 50px); left: 50%; transform: translateX(-50%); display: flex; gap: clamp(60px, 18vw, 220px); z-index: 5; }
+        .ctaPill {
+          display: inline-flex; align-items: center; gap: 4px; padding: clamp(10px, 1.5vw, 14px) clamp(28px, 4vw, 44px);
+          background: linear-gradient(135deg, #FFE85C 0%, #FFD93D 100%); color: #1a1a2e;
+          font-family: 'Nunito', sans-serif; font-weight: 900; font-size: clamp(0.95rem, 1.8vw, 1.2rem);
+          text-decoration: none; border-radius: 999px; letter-spacing: 1px; box-shadow: 0 6px 0 #C9A52E, 0 10px 20px rgba(0, 0, 0, 0.20);
+          border: 3px solid #1a1a2e; transition: all 0.2s ease; text-transform: uppercase;
+        }
+        .ctaPill:hover { transform: translateY(-3px); box-shadow: 0 9px 0 #C9A52E, 0 14px 26px rgba(0, 0, 0, 0.25); }
+        @media (max-width: 768px) {
+          .herHimCard { min-height: 360px; padding: 20px 16px 90px; border-radius: 24px; }
+          .bgTextHer, .bgTextHim { font-size: clamp(6rem, 26vw, 12rem); }
+          .herHimImages { gap: 12px; }
+          .herHimImgWrap { height: clamp(220px, 45vw, 320px); }
+          .herHimButtons { gap: clamp(40px, 22vw, 100px); bottom: 20px; }
+          .ctaPill { padding: 9px 22px; font-size: 0.9rem; }
+        }
+        @media (max-width: 480px) {
+          .herHimSection { padding: 28px 10px; }
+          .herHimCard { min-height: 320px; padding: 16px 10px 80px; border-radius: 20px; }
+          .bgTextHer, .bgTextHim { font-size: 7rem; }
+          .herHimImgWrap { height: 220px; }
+          .herHimButtons { gap: 50px; }
+          .ctaPill { padding: 8px 18px; font-size: 0.85rem; }
+        }
+      `}</style>
+    </section>
+  );
+}
+
+/* ═══════════════════════════════════════
+   6. PROMO SECTION
 ═══════════════════════════════════════ */
 function PromoSection({ banners, sectionSettings = {} }) {
   const s        = sectionSettings['promo'] || {};
@@ -923,15 +758,12 @@ function PromoSection({ banners, sectionSettings = {} }) {
     <SectionWrapper>
       <section className="promoSec">
         <div className="promoWrap">
-
-          {/* Header */}
           <div className="promoHead">
             <span className="promoBadge">🎁 Hot Deals</span>
             <h2 className="promoTitle">{secEmoji} {secTitle}</h2>
             {secDesc && <p className="promoDesc">{secDesc}</p>}
           </div>
 
-          {/* Carousel */}
           <div
             className="promoCarousel"
             onMouseEnter={() => setPaused(true)}
@@ -954,8 +786,6 @@ function PromoSection({ banners, sectionSettings = {} }) {
                   className={`promoSlide ${isActive ? 'promoSlideActive' : ''}`}
                 >
                   <Link href={link} className="promoCard">
-
-                    {/* Background Media */}
                     <div className="promoMediaWrap">
                       {mediaUrl ? (
                         isVideo ? (
@@ -976,30 +806,15 @@ function PromoSection({ banners, sectionSettings = {} }) {
                       ) : (
                         <div className="promoNoMedia"><span>🎁</span></div>
                       )}
-
-                      {/* Dark gradient overlay for text readability */}
                       <div className="promoOverlay" />
                     </div>
 
-                    {/* CONTENT — Overlaid on right side */}
                     <div className="promoContent">
-
-                      {/* Promo Badge */}
                       <span className="promoTagBadge" style={{ background: accent }}>
                         ✨ PROMO
                       </span>
-
-                      {/* Title */}
-                      {cardTitle && (
-                        <h3 className="promoCardTitle">{cardTitle}</h3>
-                      )}
-
-                      {/* Description */}
-                      {cardDesc && (
-                        <p className="promoCardDesc">{cardDesc}</p>
-                      )}
-
-                      {/* Offer */}
+                      {cardTitle && <h3 className="promoCardTitle">{cardTitle}</h3>}
+                      {cardDesc && <p className="promoCardDesc">{cardDesc}</p>}
                       {offerText && (
                         <div className="promoOfferRow">
                           <span className="promoOfferLabel">UPTO</span>
@@ -1007,8 +822,6 @@ function PromoSection({ banners, sectionSettings = {} }) {
                           {!/[%₹$]/.test(offerText) && <span className="promoOfferPct">% OFF</span>}
                         </div>
                       )}
-
-                      {/* Button */}
                       <button type="button" className="promoBtn">
                         {btnText} <span className="promoBtnArrow">›</span>
                       </button>
@@ -1018,7 +831,6 @@ function PromoSection({ banners, sectionSettings = {} }) {
               );
             })}
 
-            {/* Dots */}
             {banners.length > 1 && (
               <div className="promoDots">
                 {banners.map((_, i) => (
@@ -1035,320 +847,58 @@ function PromoSection({ banners, sectionSettings = {} }) {
         </div>
 
         <style jsx>{`
-          .promoSec {
-            padding: clamp(36px, 5vw, 60px) clamp(12px, 2vw, 20px);
-            background: linear-gradient(135deg, #FFF9F5 0%, #FFF0F8 50%, #F5F0FF 100%);
-          }
-          .promoWrap {
-            max-width: 1300px;
-            margin: 0 auto;
-          }
-
-          /* HEADER */
-          .promoHead {
-            text-align: center;
-            margin-bottom: 28px;
-          }
+          .promoSec { padding: clamp(36px, 5vw, 60px) clamp(12px, 2vw, 20px); background: linear-gradient(135deg, #FFF9F5 0%, #FFF0F8 50%, #F5F0FF 100%); }
+          .promoWrap { max-width: 1300px; margin: 0 auto; }
+          .promoHead { text-align: center; margin-bottom: 28px; }
           .promoBadge {
-            display: inline-block;
-            padding: 5px 18px;
-            background: linear-gradient(135deg, #FFF3EC, #FFE8F5);
-            border: 1.5px solid #FFD4B8;
-            border-radius: 999px;
-            font-size: 0.72rem;
-            font-weight: 800;
-            color: #FF6B35;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 12px;
+            display: inline-block; padding: 5px 18px; background: linear-gradient(135deg, #FFF3EC, #FFE8F5);
+            border: 1.5px solid #FFD4B8; border-radius: 999px; font-size: 0.72rem; font-weight: 800;
+            color: #FF6B35; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;
             font-family: 'Nunito', sans-serif;
           }
-          .promoTitle {
-            font-size: clamp(1.4rem, 2.6vw, 2.2rem);
-            font-weight: 900;
-            color: #2D1A4A;
-            margin: 0 0 6px;
-            font-family: 'Nunito', sans-serif;
-          }
-          .promoDesc {
-            font-size: 0.9rem;
-            color: #9585B0;
-            margin: 0;
-            font-weight: 500;
-            font-family: 'Nunito', sans-serif;
-          }
-
-          /* CAROUSEL */
+          .promoTitle { font-size: clamp(1.4rem, 2.6vw, 2.2rem); font-weight: 900; color: #2D1A4A; margin: 0 0 6px; font-family: 'Nunito', sans-serif; }
+          .promoDesc { font-size: 0.9rem; color: #9585B0; margin: 0; font-weight: 500; font-family: 'Nunito', sans-serif; }
           .promoCarousel {
-            position: relative;
-            width: 100%;
-            aspect-ratio: 21 / 9;
-            min-height: 360px;
-            max-height: 560px;
-            border-radius: 24px;
-            overflow: hidden;
-            box-shadow: 0 14px 44px rgba(0, 0, 0, 0.12);
-            background: #000;
+            position: relative; width: 100%; aspect-ratio: 21 / 9; min-height: 360px; max-height: 560px;
+            border-radius: 24px; overflow: hidden; box-shadow: 0 14px 44px rgba(0, 0, 0, 0.12); background: #000;
           }
-
-          /* SLIDE */
-          .promoSlide {
-            position: absolute;
-            inset: 0;
-            opacity: 0;
-            transition: opacity 0.7s ease;
-            pointer-events: none;
-            z-index: 1;
-          }
-          .promoSlideActive {
-            opacity: 1;
-            pointer-events: auto;
-            z-index: 2;
-          }
-
-          /* CARD */
-          .promoCard {
-            position: relative;
-            display: block;
-            width: 100%;
-            height: 100%;
-            text-decoration: none;
-            color: inherit;
-          }
-
-          /* MEDIA — Full background */
-          .promoMediaWrap {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            z-index: 1;
-            overflow: hidden;
-          }
-          .promoMedia {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center;
-            display: block;
-          }
-          .promoNoMedia {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 6rem;
-            background: linear-gradient(135deg, #FFE8D6, #F5E6FF);
-          }
-
-          /* Dark gradient overlay — for text readability on RIGHT side */
-          .promoOverlay {
-            position: absolute;
-            inset: 0;
-            z-index: 2;
-            background: linear-gradient(
-              to left,
-              rgba(0, 0, 0, 0.82) 0%,
-              rgba(0, 0, 0, 0.65) 30%,
-              rgba(0, 0, 0, 0.25) 55%,
-              transparent 75%
-            );
-          }
-
-          /* CONTENT — Overlaid on right side */
-          .promoContent {
-            position: absolute;
-            top: 0;
-            right: 0;
-            bottom: 0;
-            width: 50%;
-            z-index: 3;
-            padding: clamp(24px, 4vw, 56px);
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: flex-start;
-            gap: clamp(10px, 1.8vw, 18px);
-            color: #fff;
-          }
-
-          .promoTagBadge {
-            display: inline-block;
-            padding: 5px 14px;
-            border-radius: 999px;
-            font-size: 0.68rem;
-            font-weight: 800;
-            color: #fff;
-            text-transform: uppercase;
-            letter-spacing: 1.2px;
-            font-family: 'Nunito', sans-serif;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-          }
-
-          .promoCardTitle {
-            font-size: clamp(1.3rem, 2.6vw, 2.4rem);
-            font-weight: 900;
-            color: #fff;
-            margin: 0;
-            line-height: 1.15;
-            font-family: 'Nunito', sans-serif;
-            text-shadow:
-              0 2px 12px rgba(0, 0, 0, 0.7),
-              0 0 4px rgba(0, 0, 0, 0.5);
-          }
-
-          .promoCardDesc {
-            font-size: clamp(0.85rem, 1.3vw, 1rem);
-            font-weight: 500;
-            color: rgba(255, 255, 255, 0.92);
-            margin: 0;
-            line-height: 1.55;
-            font-family: 'Nunito', sans-serif;
-            text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6);
-            display: -webkit-box;
-            -webkit-line-clamp: 3;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-          }
-
-          .promoOfferRow {
-            display: flex;
-            align-items: baseline;
-            gap: 6px;
-            margin-top: 4px;
-          }
-          .promoOfferLabel {
-            font-size: clamp(0.75rem, 1.2vw, 0.95rem);
-            font-weight: 800;
-            color: #FFD93D;
-            font-family: 'Nunito', sans-serif;
-            letter-spacing: 1px;
-            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-          }
-          .promoOfferNum {
-            font-size: clamp(2rem, 4.5vw, 3.5rem);
-            font-weight: 900;
-            line-height: 1;
-            color: #FFD93D;
-            font-family: 'Nunito', sans-serif;
-            letter-spacing: -1.5px;
-            text-shadow:
-              0 4px 16px rgba(0, 0, 0, 0.6),
-              0 2px 4px rgba(0, 0, 0, 0.5);
-          }
-          .promoOfferPct {
-            font-size: clamp(0.9rem, 1.6vw, 1.3rem);
-            font-weight: 900;
-            color: #FFD93D;
-            font-family: 'Nunito', sans-serif;
-            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
-          }
-
+          .promoSlide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.7s ease; pointer-events: none; z-index: 1; }
+          .promoSlideActive { opacity: 1; pointer-events: auto; z-index: 2; }
+          .promoCard { position: relative; display: block; width: 100%; height: 100%; text-decoration: none; color: inherit; }
+          .promoMediaWrap { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; overflow: hidden; }
+          .promoMedia { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
+          .promoNoMedia { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 6rem; background: linear-gradient(135deg, #FFE8D6, #F5E6FF); }
+          .promoOverlay { position: absolute; inset: 0; z-index: 2; background: linear-gradient(to left, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.65) 30%, rgba(0, 0, 0, 0.25) 55%, transparent 75%); }
+          .promoContent { position: absolute; top: 0; right: 0; bottom: 0; width: 50%; z-index: 3; padding: clamp(24px, 4vw, 56px); display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: clamp(10px, 1.8vw, 18px); color: #fff; }
+          .promoTagBadge { display: inline-block; padding: 5px 14px; border-radius: 999px; font-size: 0.68rem; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 1.2px; font-family: 'Nunito', sans-serif; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
+          .promoCardTitle { font-size: clamp(1.3rem, 2.6vw, 2.4rem); font-weight: 900; color: #fff; margin: 0; line-height: 1.15; font-family: 'Nunito', sans-serif; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7), 0 0 4px rgba(0, 0, 0, 0.5); }
+          .promoCardDesc { font-size: clamp(0.85rem, 1.3vw, 1rem); font-weight: 500; color: rgba(255, 255, 255, 0.92); margin: 0; line-height: 1.55; font-family: 'Nunito', sans-serif; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+          .promoOfferRow { display: flex; align-items: baseline; gap: 6px; margin-top: 4px; }
+          .promoOfferLabel { font-size: clamp(0.75rem, 1.2vw, 0.95rem); font-weight: 800; color: #FFD93D; font-family: 'Nunito', sans-serif; letter-spacing: 1px; }
+          .promoOfferNum { font-size: clamp(2rem, 4.5vw, 3.5rem); font-weight: 900; line-height: 1; color: #FFD93D; font-family: 'Nunito', sans-serif; letter-spacing: -1.5px; }
+          .promoOfferPct { font-size: clamp(0.9rem, 1.6vw, 1.3rem); font-weight: 900; color: #FFD93D; font-family: 'Nunito', sans-serif; }
           .promoBtn {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: clamp(10px, 1.5vw, 14px) clamp(24px, 3vw, 36px);
-            background: linear-gradient(135deg, #FF6B35, #FF4081, #7B2FBE);
-            color: #fff;
-            border: 2px solid rgba(255, 255, 255, 0.85);
-            border-radius: 999px;
-            font-size: clamp(0.8rem, 1.3vw, 0.95rem);
-            font-weight: 800;
-            letter-spacing: 1.2px;
-            text-transform: uppercase;
-            cursor: pointer;
-            font-family: 'Nunito', sans-serif;
-            box-shadow:
-              0 8px 22px rgba(255, 107, 53, 0.5),
-              0 0 0 3px rgba(255, 255, 255, 0.2);
-            transition: transform 0.25s ease, box-shadow 0.25s ease;
-            margin-top: 6px;
+            display: inline-flex; align-items: center; gap: 6px; padding: clamp(10px, 1.5vw, 14px) clamp(24px, 3vw, 36px);
+            background: linear-gradient(135deg, #FF6B35, #FF4081, #7B2FBE); color: #fff; border: 2px solid rgba(255, 255, 255, 0.85);
+            border-radius: 999px; font-size: clamp(0.8rem, 1.3vw, 0.95rem); font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase;
+            cursor: pointer; font-family: 'Nunito', sans-serif; box-shadow: 0 8px 22px rgba(255, 107, 53, 0.5); transition: transform 0.25s ease;
           }
-          .promoBtn:hover {
-            transform: translateY(-3px) scale(1.04);
-            box-shadow:
-              0 12px 28px rgba(255, 107, 53, 0.6),
-              0 0 0 4px rgba(255, 255, 255, 0.3);
-          }
-          .promoBtnArrow {
-            font-size: 1.3em;
-            line-height: 1;
-            transition: transform 0.25s ease;
-          }
-          .promoBtn:hover .promoBtnArrow {
-            transform: translateX(4px);
-          }
-
-          /* DOTS */
-          .promoDots {
-            position: absolute;
-            bottom: 16px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 8px;
-            z-index: 5;
-          }
-          .promoDot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.5);
-            border: 2px solid rgba(255, 255, 255, 0.7);
-            cursor: pointer;
-            padding: 0;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
-          }
-          .promoDotActive {
-            width: 32px;
-            border-radius: 999px;
-            background: linear-gradient(90deg, #FF6B35, #7B2FBE);
-            border-color: #fff;
-          }
-
-          /* RESPONSIVE */
+          .promoBtn:hover { transform: translateY(-3px) scale(1.04); }
+          .promoDots { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 5; }
+          .promoDot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, 0.5); border: 2px solid rgba(255, 255, 255, 0.7); cursor: pointer; padding: 0; transition: all 0.3s ease; }
+          .promoDotActive { width: 32px; border-radius: 999px; background: linear-gradient(90deg, #FF6B35, #7B2FBE); border-color: #fff; }
           @media (max-width: 900px) {
-            .promoCarousel {
-              aspect-ratio: 4 / 5;
-              min-height: 460px;
-              max-height: none;
-            }
-            .promoOverlay {
-              background: linear-gradient(
-                to top,
-                rgba(0, 0, 0, 0.88) 0%,
-                rgba(0, 0, 0, 0.7) 25%,
-                rgba(0, 0, 0, 0.35) 50%,
-                transparent 75%
-              );
-            }
-            .promoContent {
-              top: auto;
-              right: 0;
-              bottom: 0;
-              left: 0;
-              width: 100%;
-              padding: 24px 22px 46px;
-              justify-content: flex-end;
-              gap: 10px;
-            }
+            .promoCarousel { aspect-ratio: 4 / 5; min-height: 460px; max-height: none; }
+            .promoOverlay { background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.7) 25%, rgba(0, 0, 0, 0.35) 50%, transparent 75%); }
+            .promoContent { top: auto; right: 0; bottom: 0; left: 0; width: 100%; padding: 24px 22px 46px; justify-content: flex-end; gap: 10px; }
           }
           @media (max-width: 560px) {
-            .promoCarousel {
-              aspect-ratio: 3 / 4;
-              min-height: 420px;
-              border-radius: 18px;
-            }
-            .promoContent {
-              padding: 20px 18px 44px;
-            }
+            .promoCarousel { aspect-ratio: 3 / 4; min-height: 420px; border-radius: 18px; }
+            .promoContent { padding: 20px 18px 44px; }
             .promoCardTitle { font-size: 1.15rem; }
-            .promoCardDesc  { font-size: 0.78rem; -webkit-line-clamp: 2; }
-            .promoOfferNum  { font-size: 2rem; }
-            .promoBtn       { padding: 9px 22px; font-size: 0.78rem; }
+            .promoCardDesc { font-size: 0.78rem; -webkit-line-clamp: 2; }
+            .promoOfferNum { font-size: 2rem; }
+            .promoBtn { padding: 9px 22px; font-size: 0.78rem; }
           }
         `}</style>
       </section>
@@ -1356,10 +906,8 @@ function PromoSection({ banners, sectionSettings = {} }) {
   );
 }
 
-
-
 /* ═══════════════════════════════════════
-   5. CATEGORY
+   7. CATEGORY
 ═══════════════════════════════════════ */
 function CategorySection({ banners, sectionSettings = {} }) {
   const s        = sectionSettings['category'] || {};
@@ -1435,7 +983,7 @@ function CategorySection({ banners, sectionSettings = {} }) {
 }
 
 /* ═══════════════════════════════════════
-   7. BABY FOOD
+   8. BABY FOOD
 ═══════════════════════════════════════ */
 function BabyFoodSection({ banners, sectionSettings = {} }) {
   const s        = sectionSettings['baby-food'] || {};
@@ -1513,7 +1061,7 @@ function BabyFoodSection({ banners, sectionSettings = {} }) {
 }
 
 /* ═══════════════════════════════════════
-   8. TOYS
+   9. TOYS
 ═══════════════════════════════════════ */
 function ToysSection({ banners, sectionSettings = {} }) {
   const s        = sectionSettings['toys'] || {};
@@ -1598,7 +1146,7 @@ function ToysSection({ banners, sectionSettings = {} }) {
 }
 
 /* ═══════════════════════════════════════
-   9. CARE
+   10. CARE
 ═══════════════════════════════════════ */
 function CareSection({ personalCareBanners, healthCareBanners, sectionSettings = {} }) {
   const ws            = sectionSettings['wellness']      || {};
@@ -1670,7 +1218,6 @@ function CareSection({ personalCareBanners, healthCareBanners, sectionSettings =
     );
   };
 
-  /* 🆕 FULL-WIDTH AUTO-SCROLLING HEALTH MARQUEE */
   const HealthMarquee = ({ items, accentColor }) => {
     const scrollItems = [...items, ...items, ...items];
     const duration = Math.max(25, items.length * 7);
@@ -1700,7 +1247,6 @@ function CareSection({ personalCareBanners, healthCareBanners, sectionSettings =
 
   return (
     <section style={{ padding:'clamp(42px,6vw,68px) 0', background:'linear-gradient(135deg,#FAFAFA 0%,#F8F4FF 50%,#F0FDF4 100%)', overflow:'hidden' }}>
-      {/* Centered header & personal care */}
       <div style={{ maxWidth:'1200px', margin:'0 auto', padding:'0 20px' }}>
         <div style={{ textAlign:'center', marginBottom:'40px' }}>
           <span style={{ display:'inline-block', padding:'6px 20px', background:'linear-gradient(135deg,#F3E8FF,#ECFDF5)', border:'1.5px solid #DFC5F8', borderRadius:'999px', fontSize:'0.72rem', fontWeight:'800', color:'#7B2FBE', textTransform:'uppercase', letterSpacing:'1.2px', marginBottom:'12px', fontFamily:'Nunito,sans-serif' }}>
@@ -1721,28 +1267,23 @@ function CareSection({ personalCareBanners, healthCareBanners, sectionSettings =
           <div style={{ height:'1px', background:'linear-gradient(90deg,transparent,#C8E6D0,transparent)', margin:'0 0 48px' }} />
         )}
 
-        {/* Health Care HEADER stays within container */}
         {healthItems.length > 0 && (
           <SectionHeader title={healthTitle} subtitle={healthSub} description={healthDesc} accentColor="#10B981" linkAll="/products?category=health-care" btnText={healthBtn} />
         )}
       </div>
 
-      {/* 🆕 FULL-WIDTH MARQUEE — OUTSIDE the 1200px container */}
       {healthItems.length > 0 && (
         <HealthMarquee items={healthItems} accentColor="#10B981" />
       )}
 
       <style>{`
         .careFlipScene { height:100%; }
-
-        /* Personal Care Bento Grid */
         .bentoGrid { display:grid; grid-template-columns:1.4fr 1fr 1fr; grid-template-rows:185px 185px; gap:12px; height:382px; }
         .bentoBig  { grid-column:1; grid-row:1/span 2; }
         .bentoTop1 { grid-column:2; grid-row:1; }
         .bentoTop2 { grid-column:3; grid-row:1; }
         .bentoWide { grid-column:2/span 2; grid-row:2; }
 
-        /* 🆕 FULL-WIDTH Health Care Marquee */
         .healthMarqueeFullWidth {
           position: relative;
           width: 100vw;
@@ -1808,8 +1349,9 @@ function CareSection({ personalCareBanners, healthCareBanners, sectionSettings =
     </section>
   );
 }
+
 /* ═══════════════════════════════════════
-   10. ELECTRIC VEHICLES
+   11. ELECTRIC VEHICLES
 ═══════════════════════════════════════ */
 function EVSection({ banners, sectionSettings = {} }) {
   const s        = sectionSettings['electric'] || {};
@@ -1898,7 +1440,7 @@ function EVSection({ banners, sectionSettings = {} }) {
 }
 
 /* ═══════════════════════════════════════
-   11. TRENDING + FEATURED
+   12. TRENDING + FEATURED
 ═══════════════════════════════════════ */
 function TrendingFeaturedSection({ trending, featured, sectionSettings = {} }) {
   const s        = sectionSettings['trending'] || {};
@@ -1948,7 +1490,7 @@ function TrendingFeaturedSection({ trending, featured, sectionSettings = {} }) {
 }
 
 /* ═══════════════════════════════════════
-   12. CTA
+   13. CTA
 ═══════════════════════════════════════ */
 function CTASection({ sectionSettings = {} }) {
   const s        = sectionSettings['cta'] || {};
