@@ -10,6 +10,8 @@ const PANEL_DEFAULTS = [
   { label: '🔥 Trending Now', sublabel: '2.4k sold this week', link: '/products', bg: '#FFF3E8', isBig: true, url: '', publicId: '' },
 ];
 
+const CORE_SYSTEM_KEYS = ['hero', 'brands', 'section-settings'];
+
 const DEFAULT_SECTIONS = [
   { key: 'hero',          defaultTitle: 'New Arrivals',     defaultEmoji: '🖼️', hint: 'Main hero slider',        color: '#FF6B35' },
   { key: 'category',      defaultTitle: 'Shop By Category', defaultEmoji: '📁', hint: 'Home page category cards', color: '#FF6B35' },
@@ -20,7 +22,7 @@ const DEFAULT_SECTIONS = [
   { key: 'festival',      defaultTitle: 'Festival Special',  defaultEmoji: '🎪', hint: 'Festival video/image banners', color: '#FF4081' },
   { key: 'baby-food',     defaultTitle: 'Baby Food',         defaultEmoji: '🍼', hint: 'Baby food section',        color: '#10B981' },
   { key: 'toys',          defaultTitle: 'Toys & Games',      defaultEmoji: '🧸', hint: 'Toys & games section',     color: '#EF4444' },
-  { key: 'electric',      defaultTitle: 'Electric Rides',    defaultEmoji: '🚗', hint: 'Electric vehicle section', color: '#0EA5E9' },
+  { key: 'electric-vehicle', defaultTitle: 'Electric Rides', defaultEmoji: '🚗', hint: 'Electric vehicle section', color: '#0EA5E9' },
   { key: 'personal-care', defaultTitle: 'Personal Care',     defaultEmoji: '🧴', hint: 'Bento grid (4 images)',    color: '#7B2FBE' },
   { key: 'health-care',   defaultTitle: 'Health & Safety',   defaultEmoji: '🏥', hint: 'Mosaic grid (5 images)',   color: '#10B981' },
   { key: 'wellness',      defaultTitle: 'Wellness & Care Products', defaultEmoji: '🌿', hint: 'Care section heading', color: '#7B2FBE' },
@@ -68,18 +70,6 @@ const SEASON_PRESETS = {
     { label: '🧸 Default', emoji: '🧸', title: 'Toys & Games' },
     { label: '🎄 Christmas', emoji: '🎄', title: 'Christmas Toys' },
   ],
-  'personal-care': [
-    { label: '🧴 Default', emoji: '🧴', title: 'Personal Baby Care' },
-    { label: '☀️ Summer',  emoji: '☀️', title: 'Summer Care' },
-  ],
-  'health-care': [
-    { label: '🏥 Default', emoji: '🏥', title: 'Health & Safety' },
-    { label: '💊 Medical', emoji: '💊', title: 'Baby Health Essentials' },
-  ],
-  wellness: [
-    { label: '🌿 Default', emoji: '🌿', title: 'Wellness & Care Products' },
-    { label: '💚 Natural', emoji: '💚', title: 'Natural Wellness' },
-  ],
 };
 
 const isVideoUrl = (url) => {
@@ -88,28 +78,30 @@ const isVideoUrl = (url) => {
 };
 
 // ============================================================
-// SECTION SETTINGS COMPONENT (unchanged)
+// SECTION SETTINGS COMPONENT
 // ============================================================
-function SectionSettings() {
+function SectionSettings({ onSectionDeleted, onSectionAdded, sectionsList }) {
   const [settings,  setSettings]  = useState({});
   const [saving,    setSaving]    = useState(null);
   const [saved,     setSaved]     = useState(null);
   const [loading,   setLoading]   = useState(true);
   const [savingAll, setSavingAll] = useState(false);
+  const [deleting,  setDeleting]  = useState(null);
+
+  const loadSettings = async () => {
+    try {
+      const res  = await fetch('/api/section-settings');
+      const data = await res.json();
+      setSettings(data.settings || {});
+    } catch {
+      toast.error('Failed to load settings');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        const res  = await fetch('/api/section-settings');
-        const data = await res.json();
-        setSettings(data.settings || {});
-      } catch {
-        toast.error('Failed to load settings');
-      } finally {
-        setLoading(false);
-      }
-    };
-    load();
+    loadSettings();
   }, []);
 
   const updateSetting = (key, field, value) => {
@@ -134,10 +126,34 @@ function SectionSettings() {
       setSaved(key);
       toast.success('✅ Saved!');
       setTimeout(() => setSaved(null), 2500);
+      if (onSectionAdded) onSectionAdded();
     } catch (err) {
       toast.error('Failed: ' + err.message);
     } finally {
       setSaving(null);
+    }
+  };
+
+  const deleteSection = async (key, title) => {
+    if (CORE_SYSTEM_KEYS.includes(key)) {
+      toast.error('Core system sections cannot be deleted');
+      return;
+    }
+    if (!confirm(`Are you sure you want to delete the "${title}" section?`)) return;
+
+    setDeleting(key);
+    try {
+      const res = await fetch(`/api/section-settings?key=${key}`, { method: 'DELETE' });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete section');
+      
+      toast.success('Section deleted ✅');
+      if (onSectionDeleted) onSectionDeleted(key);
+      loadSettings();
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setDeleting(null);
     }
   };
 
@@ -152,6 +168,7 @@ function SectionSettings() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Failed');
       toast.success('✅ All saved!');
+      if (onSectionAdded) onSectionAdded();
     } catch (err) {
       toast.error('Failed: ' + err.message);
     } finally {
@@ -175,23 +192,6 @@ function SectionSettings() {
     }
   };
 
-  const resetAll = async () => {
-    if (!confirm('Reset ALL sections to default?')) return;
-    const defaults = {};
-    DEFAULT_SECTIONS.forEach(s => { defaults[s.key] = { title: s.defaultTitle, emoji: s.defaultEmoji }; });
-    setSettings(defaults);
-    try {
-      await fetch('/api/section-settings', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ settings: defaults }),
-      });
-      toast.success('All reset ↺');
-    } catch {
-      toast.error('Failed');
-    }
-  };
-
   const inp = { width: '100%', padding: '11px 13px', border: '2px solid #EDD9FF', borderRadius: '10px', fontSize: '14px', fontFamily: 'Nunito, sans-serif', outline: 'none', background: 'white', color: '#2D1A4A', boxSizing: 'border-box' };
   const lbl = { display: 'block', fontSize: '11px', fontWeight: '800', color: '#7B2FBE', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.5px' };
 
@@ -204,15 +204,29 @@ function SectionSettings() {
     );
   }
 
+  // Combine default sections + custom settings sections
+  const allConfiguredSections = [...DEFAULT_SECTIONS];
+  Object.keys(settings).forEach(k => {
+    if (!allConfiguredSections.some(s => s.key === k)) {
+      allConfiguredSections.push({
+        key: k,
+        defaultTitle: settings[k].title || k,
+        defaultEmoji: settings[k].emoji || '🏷️',
+        hint: 'Custom banner section',
+        color: '#7B2FBE',
+        isCustom: true
+      });
+    }
+  });
+
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: '800', margin: '0 0 4px', color: '#2D1A4A' }}>🎨 Section Names & Seasons</h2>
-          <p style={{ color: '#9585B0', margin: 0, fontSize: '0.82rem', fontWeight: '600' }}>✅ Saved to MongoDB</p>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: '800', margin: '0 0 4px', color: '#2D1A4A' }}>🎨 Manage Section Names & Sections</h2>
+          <p style={{ color: '#9585B0', margin: 0, fontSize: '0.82rem', fontWeight: '600' }}>Add, edit or remove home page sections</p>
         </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <button onClick={resetAll} style={{ padding: '8px 16px', background: '#fee2e2', color: '#dc2626', border: '1.5px solid #fca5a5', borderRadius: '10px', fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>↺ Reset All</button>
           <button onClick={saveAll} disabled={savingAll} style={{ padding: '8px 20px', background: savingAll ? '#ccc' : 'linear-gradient(135deg,#FF6B35,#7B2FBE)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '800', cursor: savingAll ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
             {savingAll ? '⏳ Saving...' : '💾 Save All'}
           </button>
@@ -220,13 +234,13 @@ function SectionSettings() {
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-        {DEFAULT_SECTIONS.map(section => {
+        {allConfiguredSections.map(section => {
           const current  = settings[section.key] || {};
           const title    = (current.title !== undefined && current.title !== null && current.title !== '') ? current.title : section.defaultTitle;
           const emoji    = (current.emoji !== undefined && current.emoji !== null && current.emoji !== '') ? current.emoji : section.defaultEmoji;
           const isEdited = !!(current.title || current.emoji);
           const presets  = SEASON_PRESETS[section.key] || [];
-          const showExtra = ['personal-care', 'health-care', 'wellness'].includes(section.key);
+          const isCore   = CORE_SYSTEM_KEYS.includes(section.key);
 
           return (
             <div key={section.key} style={{ background: 'white', borderRadius: '14px', border: `2px solid ${isEdited ? section.color : '#EDD9FF'}`, overflow: 'hidden' }}>
@@ -245,6 +259,16 @@ function SectionSettings() {
                   <button onClick={() => saveSection(section.key)} disabled={saving === section.key} style={{ padding: '6px 16px', background: saved === section.key ? '#d1fae5' : `linear-gradient(135deg, ${section.color}, #7B2FBE)`, color: saved === section.key ? '#059669' : 'white', border: 'none', borderRadius: '7px', fontSize: '12px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit' }}>
                     {saved === section.key ? '✅' : saving === section.key ? '⏳' : '💾 Save'}
                   </button>
+                  {!isCore && (
+                    <button 
+                      onClick={() => deleteSection(section.key, title)} 
+                      disabled={deleting === section.key}
+                      style={{ padding: '6px 12px', background: '#fee2e2', color: '#dc2626', border: '1.5px solid #fca5a5', borderRadius: '7px', fontSize: '12px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit' }}
+                      title="Delete Section"
+                    >
+                      {deleting === section.key ? '⏳' : '🗑️ Delete'}
+                    </button>
+                  )}
                 </div>
               </div>
               <div style={{ padding: '14px 18px' }}>
@@ -258,31 +282,6 @@ function SectionSettings() {
                     <input type="text" value={title || ''} onChange={e => updateSetting(section.key, 'title', e.target.value)} placeholder={section.defaultTitle} style={inp} />
                   </div>
                 </div>
-
-                {showExtra && (
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '12px' }}>
-                    <div>
-                      <label style={lbl}>Subtitle / Badge</label>
-                      <input type="text" value={current.subtitle || ''} onChange={e => updateSetting(section.key, 'subtitle', e.target.value)} placeholder={section.key === 'personal-care' ? '🧴 Baby Care Essentials' : section.key === 'health-care' ? '💊 Stay Safe & Healthy' : '🌿 Baby Wellness'} style={inp} />
-                    </div>
-                    <div>
-                      <label style={lbl}>Description</label>
-                      <input type="text" value={current.description || ''} onChange={e => updateSetting(section.key, 'description', e.target.value)} placeholder="Short description..." style={inp} />
-                    </div>
-                    {section.key !== 'wellness' && (
-                      <div style={{ gridColumn: '1 / -1' }}>
-                        <label style={lbl}>Button Text</label>
-                        <input type="text" value={current.buttonText || ''} onChange={e => updateSetting(section.key, 'buttonText', e.target.value)} placeholder="View All" style={inp} />
-                      </div>
-                    )}
-                    {section.key === 'wellness' && (
-                      <div style={{ gridColumn: '1 / -1' }}>
-                        <label style={lbl}>Badge Text</label>
-                        <input type="text" value={current.badge || ''} onChange={e => updateSetting(section.key, 'badge', e.target.value)} placeholder="🌿 Baby Wellness" style={inp} />
-                      </div>
-                    )}
-                  </div>
-                )}
 
                 {presets.length > 0 && (
                   <div>
@@ -306,7 +305,7 @@ function SectionSettings() {
 }
 
 // ============================================================
-// BRANDS TAB (unchanged)
+// BRANDS TAB
 // ============================================================
 function BrandsTab() {
   const [brands,    setBrands]    = useState([]);
@@ -340,22 +339,22 @@ function BrandsTab() {
   };
 
   const handleLogoUpload = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  setUploading(true);
-  try {
-    const result = await uploadFileToR2(file, 'arunas/brands');
-    setForm(f => ({
-      ...f,
-      logo: { url: result.url, publicId: result.publicId },
-    }));
-    toast.success('✅ Logo uploaded!');
-  } catch (err) {
-    toast.error(err.message);
-  } finally {
-    setUploading(false);
-  }
-};
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const result = await uploadFileToR2(file, 'arunas/brands');
+      setForm(f => ({
+        ...f,
+        logo: { url: result.url, publicId: result.publicId },
+      }));
+      toast.success('✅ Logo uploaded!');
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -488,7 +487,7 @@ function BrandsTab() {
 }
 
 // ============================================================
-// CARE GRID MANAGER (unchanged)
+// CARE GRID MANAGER
 // ============================================================
 function CareGridManager({ type, title, accentColor, layout }) {
   const SLOTS = layout === 'bento'
@@ -535,25 +534,25 @@ function CareGridManager({ type, title, accentColor, layout }) {
   useEffect(() => { fetchBanners(); }, [type]);
 
   const uploadImage = async (slotIndex, side, file) => {
-  if (!file) return;
-  const k = `${slotIndex}-${side}`;
-  setUploading(prev => ({ ...prev, [k]: true }));
-  try {
-    const result = await uploadFileToR2(file, `arunas/banners/${type}`);
-    const imgObj = { url: result.url, publicId: result.publicId };
-    setBanners(prev => {
-      const u = [...prev];
-      if (side === 'front') u[slotIndex] = { ...u[slotIndex], image: imgObj };
-      else                  u[slotIndex] = { ...u[slotIndex], mobileImage: imgObj };
-      return u;
-    });
-    toast.success(`✅ ${side === 'front' ? 'Front' : 'Back'} uploaded!`);
-  } catch (err) {
-    toast.error(err.message);
-  } finally {
-    setUploading(prev => ({ ...prev, [k]: false }));
-  }
-};
+    if (!file) return;
+    const k = `${slotIndex}-${side}`;
+    setUploading(prev => ({ ...prev, [k]: true }));
+    try {
+      const result = await uploadFileToR2(file, `arunas/banners/${type}`);
+      const imgObj = { url: result.url, publicId: result.publicId };
+      setBanners(prev => {
+        const u = [...prev];
+        if (side === 'front') u[slotIndex] = { ...u[slotIndex], image: imgObj };
+        else                  u[slotIndex] = { ...u[slotIndex], mobileImage: imgObj };
+        return u;
+      });
+      toast.success(`✅ ${side === 'front' ? 'Front' : 'Back'} uploaded!`);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setUploading(prev => ({ ...prev, [k]: false }));
+    }
+  };
 
   const removeImage = (slotIndex, side) => {
     setBanners(prev => {
@@ -725,13 +724,19 @@ function CareGridManager({ type, title, accentColor, layout }) {
 export default function AdminBanners() {
   const [activeTab,       setActiveTab]       = useState('hero');
   const [allBanners,      setAllBanners]      = useState([]);
+  const [sectionsMap,     setSectionsMap]     = useState({});
   const [loading,         setLoading]         = useState(true);
   const [showForm,        setShowForm]        = useState(false);
+  const [showAddSection,  setShowAddSection]  = useState(false);
   const [editing,         setEditing]         = useState(null);
   const [uploading,       setUploading]       = useState(false);
   const [uploadingMobile, setUploadingMobile] = useState(false);
   const [uploadingHero,   setUploadingHero]   = useState(false);
   const [saving,          setSaving]          = useState(false);
+  const [creatingSection, setCreatingSection] = useState(false);
+
+  // New Section State
+  const [newSection, setNewSection] = useState({ title: '', emoji: '🛍️', key: '' });
 
   const emptyForm = {
     title: '', subtitle: '', buttonText: 'Shop Now', buttonLink: '/products',
@@ -746,6 +751,16 @@ export default function AdminBanners() {
   const [form, setForm] = useState(emptyForm);
   const set = (key, val) => setForm(f => ({ ...f, [key]: val }));
 
+  const fetchSections = async () => {
+    try {
+      const res = await fetch('/api/section-settings');
+      const data = await res.json();
+      setSectionsMap(data.settings || {});
+    } catch {
+      console.error('Failed to fetch dynamic sections');
+    }
+  };
+
   const fetchBanners = async () => {
     try {
       setLoading(true);
@@ -756,28 +771,102 @@ export default function AdminBanners() {
     finally { setLoading(false); }
   };
 
-  useEffect(() => { fetchBanners(); }, []);
+  useEffect(() => {
+    fetchSections();
+    fetchBanners();
+  }, []);
 
-  const heroBanners         = allBanners.filter(b => b.type === 'hero' || !b.type);
-  const categoryBanners     = allBanners.filter(b => b.type === 'category');
-  const festivalBanners     = allBanners.filter(b => b.type === 'festival');
-  const budgetBanners       = allBanners.filter(b => b.type === 'budget');
-  const sunnyBanners        = allBanners.filter(b => b.type === 'sunny');
-  const offerBanners        = allBanners.filter(b => b.type === 'promo');
-  const genderBanners       = allBanners.filter(b => b.type === 'gender');
-  const babyFoodBanners     = allBanners.filter(b => b.type === 'baby-food');
-  const toysBanners         = allBanners.filter(b => b.type === 'toys');
-  const evBanners           = allBanners.filter(b => b.type === 'electric-vehicle');
-  const personalCareBanners = allBanners.filter(b => b.type === 'personal-care');
-  const healthCareBanners   = allBanners.filter(b => b.type === 'health-care');
+  // Build Dynamic Tabs List
+  const tabsList = [];
+  
+  // 1. Add Default & Configured Banner Sections
+  const knownKeys = new Set();
+  
+  DEFAULT_SECTIONS.forEach(s => {
+    knownKeys.add(s.key);
+    const customConfig = sectionsMap[s.key];
+    tabsList.push({
+      key: s.key,
+      label: `${customConfig?.emoji || s.defaultEmoji} ${customConfig?.title || s.defaultTitle}`,
+      list: allBanners.filter(b => b.type === s.key || (s.key === 'hero' && !b.type)),
+      isCustom: false,
+    });
+  });
+
+  // 2. Add User-created Dynamic Sections from DB
+  Object.keys(sectionsMap).forEach(key => {
+    if (!knownKeys.has(key)) {
+      knownKeys.add(key);
+      const s = sectionsMap[key];
+      tabsList.push({
+        key,
+        label: `${s.emoji || '🏷️'} ${s.title || key}`,
+        list: allBanners.filter(b => b.type === key),
+        isCustom: true,
+      });
+    }
+  });
+
+  // 3. Add Special System Tabs
+  tabsList.push(
+    { key: 'brands',           label: '🏷️ Brands',          list: [], isSpecial: true },
+    { key: 'section-settings', label: '🎨 Section Names',   list: [], isSpecial: true }
+  );
+
+  const handleCreateSection = async (e) => {
+    e.preventDefault();
+    if (!newSection.title.trim()) {
+      toast.error('Please enter section title');
+      return;
+    }
+
+    const generatedKey = newSection.key.trim() 
+      ? newSection.key.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-')
+      : newSection.title.trim().toLowerCase().replace(/[^a-z0-9]/g, '-');
+
+    setCreatingSection(true);
+    try {
+      const res = await fetch('/api/section-settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          single: {
+            key: generatedKey,
+            title: newSection.title,
+            emoji: newSection.emoji || '🛍️',
+            order: tabsList.length,
+          }
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to create section');
+
+      toast.success('Section created! 🎉');
+      setShowAddSection(false);
+      setNewSection({ title: '', emoji: '🛍️', key: '' });
+      await fetchSections();
+      setActiveTab(generatedKey);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setCreatingSection(false);
+    }
+  };
+
+  const handleSectionDeleted = (deletedKey) => {
+    fetchSections();
+    if (activeTab === deletedKey) {
+      setActiveTab('hero');
+    }
+  };
 
   const openAdd = (type) => {
     setEditing(null);
     setForm({
       ...emptyForm,
       type,
-      // ✅ For budget — set sensible defaults
-      title: type === 'budget' ? 'Budget Card' : '',  // auto-fill so user doesn't need to enter
+      title: type === 'budget' ? 'Budget Card' : '',
       panels: PANEL_DEFAULTS,
       buttonLink:
         type === 'festival'          ? '/products'
@@ -829,69 +918,69 @@ export default function AdminBanners() {
     setShowForm(true);
   };
 
- const handleImageUpload = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  setUploading(true);
-  try {
-    const result = await uploadFileToR2(file, `arunas/banners/${form.type}`);
-    setForm(f => ({
-      ...f,
-      image: {
-        url:      result.url,
-        publicId: result.publicId,
-        type:     result.type,
-      },
-    }));
-    toast.success(`✅ ${result.type === 'video' ? 'Video' : 'Image'} uploaded!`);
-  } catch (err) {
-    toast.error(err.message);
-  } finally {
-    setUploading(false);
-  }
-};
+  const handleImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploading(true);
+    try {
+      const result = await uploadFileToR2(file, `arunas/banners/${form.type}`);
+      setForm(f => ({
+        ...f,
+        image: {
+          url:      result.url,
+          publicId: result.publicId,
+          type:     result.type,
+        },
+      }));
+      toast.success(`✅ ${result.type === 'video' ? 'Video' : 'Image'} uploaded!`);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleMobileImageUpload = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  setUploadingMobile(true);
-  try {
-    const result = await uploadFileToR2(file, 'arunas/banners/mobile');
-    setForm(f => ({
-      ...f,
-      mobileImage: { url: result.url, publicId: result.publicId },
-    }));
-    toast.success('✅ Mobile uploaded!');
-  } catch (err) {
-    toast.error(err.message);
-  } finally {
-    setUploadingMobile(false);
-  }
-};
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingMobile(true);
+    try {
+      const result = await uploadFileToR2(file, 'arunas/banners/mobile');
+      setForm(f => ({
+        ...f,
+        mobileImage: { url: result.url, publicId: result.publicId },
+      }));
+      toast.success('✅ Mobile uploaded!');
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setUploadingMobile(false);
+    }
+  };
 
   const handleHeroMediaUpload = async (e) => {
-  const file = e.target.files[0];
-  if (!file) return;
-  setUploadingHero(true);
-  try {
-    const result = await uploadFileToR2(file, 'arunas/banners/hero');
-    setForm(f => {
-      const panels = [...(f.panels || PANEL_DEFAULTS)];
-      panels[0] = {
-        ...panels[0],
-        isBig:    true,
-        url:      result.url,
-        publicId: result.publicId,
-      };
-      return { ...f, panels };
-    });
-    toast.success('✅ Hero media uploaded!');
-  } catch (err) {
-    toast.error(err.message);
-  } finally {
-    setUploadingHero(false);
-  }
-};
+    const file = e.target.files[0];
+    if (!file) return;
+    setUploadingHero(true);
+    try {
+      const result = await uploadFileToR2(file, 'arunas/banners/hero');
+      setForm(f => {
+        const panels = [...(f.panels || PANEL_DEFAULTS)];
+        panels[0] = {
+          ...panels[0],
+          isBig:    true,
+          url:      result.url,
+          publicId: result.publicId,
+        };
+        return { ...f, panels };
+      });
+      toast.success('✅ Hero media uploaded!');
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setUploadingHero(false);
+    }
+  };
 
   const updateHeroPanel = (field, value) => {
     setForm(f => {
@@ -912,7 +1001,6 @@ export default function AdminBanners() {
   const handleSave = async (e) => {
     e.preventDefault();
 
-    // ✅ For budget, title is auto-generated from price (no need to type)
     if (form.type === 'budget') {
       if (!form.price) {
         toast.error('Please enter a price');
@@ -926,7 +1014,6 @@ export default function AdminBanners() {
     setSaving(true);
     try {
       const payload = {
-        // ✅ For budget, use price as title for admin display
         title:         form.type === 'budget' ? `Under ₹${form.price}` : form.title,
         subtitle:      form.subtitle      || null,
         buttonText:    form.buttonText    || 'Shop Now',
@@ -990,9 +1077,7 @@ export default function AdminBanners() {
 
   const inp   = { width: '100%', padding: '11px 14px', border: '2px solid #EDD9FF', borderRadius: '10px', fontSize: '14px', fontFamily: 'Nunito, sans-serif', outline: 'none', background: 'white', color: '#2D1A4A', boxSizing: 'border-box' };
   const lbl   = { display: 'block', fontSize: '11px', fontWeight: '800', color: '#7B2FBE', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.6px' };
-  const pInp  = { width: '100%', padding: '8px 10px', border: '2px solid #EDD9FF', borderRadius: '8px', fontSize: '12px', fontFamily: 'Nunito, sans-serif', outline: 'none', background: 'white', color: '#2D1A4A', boxSizing: 'border-box', fontWeight: '600' };
-  const pLbl  = { display: 'block', fontSize: '10px', fontWeight: '800', color: '#7B2FBE', marginBottom: '4px', textTransform: 'uppercase' };
-  const tabSt = (key) => ({ padding: '9px 15px', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '12.5px', cursor: 'pointer', fontFamily: 'Nunito, sans-serif', background: activeTab === key ? 'linear-gradient(135deg,#FF6B35,#7B2FBE)' : '#f3f4f6', color: activeTab === key ? 'white' : '#555', boxShadow: activeTab === key ? '0 4px 14px rgba(255,107,53,0.25)' : 'none', transition: 'all 0.2s', whiteSpace: 'nowrap' });
+  const tabSt = (key) => ({ padding: '9px 15px', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '12.5px', cursor: 'pointer', fontFamily: 'Nunito, sans-serif', background: activeTab === key ? 'linear-gradient(135deg,#FF6B35,#7B2FBE)' : '#f3f4f6', color: activeTab === key ? 'white' : '#555', boxShadow: activeTab === key ? '0 4px 14px rgba(255,107,53,0.25)' : 'none', transition: 'all 0.2s', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '6px' });
 
   const BannerCard = ({ banner }) => {
     const heroPanel = banner.panels?.[0];
@@ -1092,11 +1177,6 @@ export default function AdminBanners() {
                 <p style={{ fontSize: '12px', fontWeight: '700', color: form.color || '#FF6B35', margin: '6px 0 2px' }}>
                   Click to upload {allowVideo ? 'image or video' : 'image'}
                 </p>
-                {allowVideo && (
-                  <p style={{ fontSize: '10px', color: '#9585B0', margin: 0, fontWeight: '600' }}>
-                    📸 JPG/PNG (10MB) · 🎥 MP4/WebM (50MB)
-                  </p>
-                )}
               </div>
             )}
           </div>
@@ -1110,50 +1190,8 @@ export default function AdminBanners() {
     );
   };
 
-  const formTitle = () => {
-    const action = editing ? '✏️ Edit' : '➕ Add';
-    const map = { hero: 'Hero Banner', category: 'Category Card', festival: 'Festival Banner', budget: 'Budget Card', sunny: 'Sunny Card', promo: 'Promo Offer', gender: 'Girl/Boy Card', 'baby-food': 'Baby Food Card', toys: 'Toys Card', 'electric-vehicle': 'Electric Vehicle' };
-    return `${action} ${map[form.type] || 'Banner'}`;
-  };
-
-  const TABS = [
-    { key: 'hero',             label: '🖼️ Hero',           list: heroBanners },
-    { key: 'category',         label: '📁 Categories',      list: categoryBanners },
-    { key: 'festival',         label: '🎪 Festival',        list: festivalBanners },
-    { key: 'budget',           label: '🏪 Budget',          list: budgetBanners },
-    { key: 'sunny',            label: '☀️ Sunny',           list: sunnyBanners },
-    { key: 'promo',            label: '🏷️ Promo',           list: offerBanners },
-    { key: 'gender',           label: '👧👦 Gender',         list: genderBanners },
-    { key: 'baby-food',        label: '🍼 Baby Food',       list: babyFoodBanners },
-    { key: 'toys',             label: '🧸 Toys',            list: toysBanners },
-    { key: 'electric-vehicle', label: '🚗 Electric',        list: evBanners },
-    { key: 'personal-care',    label: '🧴 Personal Care',   list: personalCareBanners },
-    { key: 'health-care',      label: '🏥 Health Care',     list: healthCareBanners },
-    { key: 'brands',           label: '🏷️ Brands',          list: [] },
-    { key: 'section-settings', label: '🎨 Section Names',   list: [] },
-  ];
-  const currentTab = TABS.find(t => t.key === activeTab);
-
-  const tabInfo = {
-    hero:               '🎥 Hero banners — upload ONE image OR video (full-screen auto-play)',
-    category:           '📁 Category cards — upload image, name, color & link',
-    festival:           '🎥 Festival banners — upload IMAGE or VIDEO + (optional) schedule + text overlay',
-    budget:             '🏪 Budget price circles — just enter price & color',
-    sunny:              '☀️ Category cards section',
-    promo:              '🏷️ Promo offer cards',
-    gender:             '👧👦 Girl & Boy cards',
-    'baby-food':        '🍼 Baby food cards',
-    toys:               '🧸 Toys & Games',
-    'electric-vehicle': '🚗 Electric vehicles',
-  };
-
-  const isCareTab    = activeTab === 'personal-care' || activeTab === 'health-care';
+  const currentTab = tabsList.find(t => t.key === activeTab) || tabsList[0];
   const isSpecialTab = ['brands', 'section-settings', 'personal-care', 'health-care'].includes(activeTab);
-
-  const heroPanel = form.panels?.[0] || PANEL_DEFAULTS[0];
-  const heroIsVideo = isVideoUrl(heroPanel.url);
-
-  // ✅ Determine if budget needs simplified form (no image, no title, no emoji)
   const isBudgetForm = form.type === 'budget';
 
   return (
@@ -1162,29 +1200,45 @@ export default function AdminBanners() {
       <div className="adminMainHeader" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
           <h1 style={{ fontSize: '1.6rem', fontWeight: '800', margin: '0 0 4px', color: '#2D1A4A' }}>Banners & Sections 🖼️</h1>
-          <p style={{ color: '#9585B0', margin: 0, fontSize: '0.85rem' }}>Manage home page content</p>
+          <p style={{ color: '#9585B0', margin: 0, fontSize: '0.85rem' }}>Manage home page banners, sections & custom categories</p>
         </div>
+        <button
+          onClick={() => setShowAddSection(true)}
+          style={{ padding: '9px 18px', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 12px rgba(16,185,129,0.25)' }}
+        >
+          ➕ Add New Section
+        </button>
       </div>
 
-      <div className="adminTabsContainer" style={{ display: 'flex', gap: '7px', marginBottom: '20px', flexWrap: 'wrap' }}>
-        {TABS.map(tab => (
+      <div className="adminTabsContainer" style={{ display: 'flex', gap: '7px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center' }}>
+        {tabsList.map(tab => (
           <button key={tab.key} style={tabSt(tab.key)} onClick={() => setActiveTab(tab.key)}>
             {tab.label}
-            {tab.key !== 'brands' && tab.key !== 'section-settings' && ` (${tab.list.length})`}
+            {!tab.isSpecial && ` (${tab.list.length})`}
           </button>
         ))}
+        <button
+          onClick={() => setShowAddSection(true)}
+          style={{ padding: '9px 14px', border: '2px dashed #10B981', borderRadius: '10px', fontWeight: '800', fontSize: '12.5px', cursor: 'pointer', fontFamily: 'Nunito, sans-serif', background: '#ECFDF5', color: '#059669', whiteSpace: 'nowrap' }}
+        >
+          ➕ Section
+        </button>
       </div>
 
       {activeTab === 'brands'           && <BrandsTab />}
-      {activeTab === 'section-settings' && <SectionSettings />}
+      {activeTab === 'section-settings' && <SectionSettings onSectionDeleted={handleSectionDeleted} onSectionAdded={fetchSections} sectionsList={tabsList} />}
       {activeTab === 'personal-care'    && <CareGridManager type="personal-care" title="Personal Care" accentColor="#7B2FBE" layout="bento" />}
       {activeTab === 'health-care'      && <CareGridManager type="health-care"   title="Health Care"   accentColor="#10B981" layout="mosaic" />}
 
       {!isSpecialTab && currentTab && (
         <div>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px', padding: '12px 16px', background: '#FBF7FF', borderRadius: '12px', border: '1.5px solid #EDD9FF' }}>
-            <p style={{ margin: 0, fontSize: '13px', color: '#6B4E8A', fontWeight: '600' }}>{tabInfo[activeTab] || ''}</p>
-            <button onClick={() => openAdd(activeTab)} style={{ padding: '9px 18px', background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', flexShrink: 0 }}>+ Add</button>
+            <p style={{ margin: 0, fontSize: '13px', color: '#6B4E8A', fontWeight: '600' }}>
+              Upload and manage items inside <strong>{currentTab.label}</strong>
+            </p>
+            <button onClick={() => openAdd(activeTab)} style={{ padding: '9px 18px', background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              + Add Item
+            </button>
           </div>
 
           {loading
@@ -1193,8 +1247,8 @@ export default function AdminBanners() {
               ? (
                 <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '16px', border: '2px dashed #EDD9FF', color: '#9585B0' }}>
                   <div style={{ fontSize: '3rem', marginBottom: '12px' }}>{currentTab.label.split(' ')[0]}</div>
-                  <p style={{ fontWeight: '700', fontSize: '1rem', margin: '0 0 16px' }}>No items yet</p>
-                  <button onClick={() => openAdd(activeTab)} style={{ padding: '10px 24px', background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit' }}>+ Add First</button>
+                  <p style={{ fontWeight: '700', fontSize: '1rem', margin: '0 0 16px' }}>No banners in this section yet</p>
+                  <button onClick={() => openAdd(activeTab)} style={{ padding: '10px 24px', background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit' }}>+ Add First Item</button>
                 </div>
               )
               : (
@@ -1206,8 +1260,41 @@ export default function AdminBanners() {
         </div>
       )}
 
-      {/* FORM MODAL */}
-      {showForm && !isCareTab && (
+      {/* CREATE NEW SECTION MODAL */}
+      {showAddSection && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.60)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' }}
+          onClick={e => { if (e.target === e.currentTarget) setShowAddSection(false); }}>
+          <div style={{ background: 'white', borderRadius: '20px', width: '100%', maxWidth: '440px', padding: '20px', boxShadow: '0 24px 60px rgba(0,0,0,0.3)' }} onClick={e => e.stopPropagation()}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1.5px solid #EDD9FF', paddingBottom: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', color: '#2D1A4A' }}>➕ Add New Banner Section</h3>
+              <button onClick={() => setShowAddSection(false)} style={{ background: '#f3f4f6', border: 'none', borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', fontSize: '1rem' }}>✕</button>
+            </div>
+            <form onSubmit={handleCreateSection} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div>
+                <label style={lbl}>Emoji Icon</label>
+                <input type="text" value={newSection.emoji} onChange={e => setNewSection({ ...newSection, emoji: e.target.value })} placeholder="🛍️" style={{ ...inp, textAlign: 'center', fontSize: '20px' }} />
+              </div>
+              <div>
+                <label style={lbl}>Section Title *</label>
+                <input type="text" value={newSection.title} onChange={e => setNewSection({ ...newSection, title: e.target.value })} placeholder="e.g. Winter Essentials" required style={inp} />
+              </div>
+              <div>
+                <label style={lbl}>Section Tag/Key (optional)</label>
+                <input type="text" value={newSection.key} onChange={e => setNewSection({ ...newSection, key: e.target.value })} placeholder="e.g. winter-essentials" style={inp} />
+              </div>
+              <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
+                <button type="button" onClick={() => setShowAddSection(false)} style={{ padding: '10px 18px', border: '2px solid #EDD9FF', borderRadius: '10px', background: 'white', color: '#6B4E8A', fontWeight: '700', cursor: 'pointer' }}>Cancel</button>
+                <button type="submit" disabled={creatingSection} style={{ flex: 1, padding: '10px 18px', background: 'linear-gradient(135deg,#10B981,#059669)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', cursor: 'pointer' }}>
+                  {creatingSection ? '⏳ Creating...' : '✨ Create Section'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* ITEM FORM MODAL */}
+      {showForm && (
         <div className="adminModal"
           style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.60)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px', overflowY: 'auto' }}
           onClick={e => { if (e.target === e.currentTarget) { setShowForm(false); setEditing(null); } }}>
@@ -1219,587 +1306,54 @@ export default function AdminBanners() {
             <div className="adminModalHeader"
               style={{ position: 'sticky', top: 0, background: 'white', zIndex: 10, padding: '16px 22px 12px', borderBottom: '1.5px solid #EDD9FF', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '20px 20px 0 0' }}>
               <div>
-                <h2 style={{ fontSize: '1.05rem', fontWeight: '800', margin: 0, color: '#2D1A4A' }}>{formTitle()}</h2>
-                <p style={{ fontSize: '11px', color: '#9585B0', margin: '2px 0 0', fontWeight: '600' }}>{editing ? 'Update banner' : 'Add new banner'}</p>
+                <h2 style={{ fontSize: '1.05rem', fontWeight: '800', margin: 0, color: '#2D1A4A' }}>
+                  {editing ? '✏️ Edit' : '➕ Add'} Banner Item ({form.type})
+                </h2>
               </div>
               <button type="button" onClick={() => { setShowForm(false); setEditing(null); }}
                 style={{ background: '#f3f4f6', border: 'none', borderRadius: '8px', width: '34px', height: '34px', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', color: '#2D1A4A', flexShrink: 0 }}>✕</button>
             </div>
 
             <form onSubmit={handleSave} className="adminModalBody" style={{ padding: '18px 22px 22px' }}>
-
-              {/* ✅ BUDGET — SIMPLIFIED FORM (No card name, image, emoji) */}
-              {isBudgetForm ? (
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                  <div style={{ padding: '14px', background: 'linear-gradient(135deg, #FFF3EC, #F3E8FF)', borderRadius: '12px', border: '1.5px solid #FFD4B8' }}>
-                    <p style={{ margin: 0, fontSize: '12px', color: '#7B2FBE', fontWeight: '700', lineHeight: '1.5' }}>
-                      💡 Budget cards show as <strong>"UNDER ₹{form.price || '499'}"</strong> circles on the home page. Just enter the price and pick a color!
-                    </p>
+              <div className="adminFormGrid" style={{ display: 'grid', gap: '20px', alignItems: 'start' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', minWidth: 0 }}>
+                  <div>
+                    <label style={lbl}>Banner Title *</label>
+                    <input type="text" value={form.title} onChange={e => set('title', e.target.value)} placeholder="Enter title..." required style={inp} />
                   </div>
-
+                  <div>
+                    <label style={lbl}>Subtitle / Description</label>
+                    <input type="text" value={form.subtitle} onChange={e => set('subtitle', e.target.value)} placeholder="Optional description" style={inp} />
+                  </div>
                   <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                    <div>
-                      <label style={lbl}>Price (₹) *</label>
-                      <input
-                        type="number"
-                        value={form.price}
-                        onChange={e => set('price', e.target.value)}
-                        placeholder="499"
-                        min="0"
-                        required
-                        style={inp}
-                        autoFocus
-                      />
-                    </div>
-                    <div>
-                      <label style={lbl}>Offer Label</label>
-                      <input
-                        type="text"
-                        value={form.offer}
-                        onChange={e => set('offer', e.target.value)}
-                        placeholder="UNDER"
-                        style={inp}
-                      />
-                    </div>
+                    <div><label style={lbl}>Button Link</label><input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products" style={inp} /></div>
+                    <div><label style={lbl}>Order</label><input type="number" value={form.order} onChange={e => set('order', parseInt(e.target.value) || 0)} min="0" style={inp} /></div>
                   </div>
-
-                  <div>
-                    <label style={lbl}>Color (Card Background)</label>
-                    <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                      <input type="color" value={form.color || '#1a1a8e'} onChange={e => set('color', e.target.value)} style={{ width: '52px', height: '44px', border: '2px solid #EDD9FF', borderRadius: '10px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
-                      <input type="text" value={form.color || '#1a1a8e'} onChange={e => set('color', e.target.value)} style={{ ...inp, flex: 1 }} />
-                    </div>
-                  </div>
-
-                  <div>
-                    <label style={lbl}>Order (0 = first)</label>
-                    <input type="number" value={form.order} onChange={e => set('order', parseInt(e.target.value) || 0)} min="0" style={inp} />
-                  </div>
-
-                  {/* Live Preview */}
-                  <div style={{ padding: '20px', background: 'linear-gradient(180deg, #f0e0cc 0%, #c8dce8 100%)', borderRadius: '14px', textAlign: 'center' }}>
-                    <p style={{ fontSize: '10px', fontWeight: '800', color: '#666', margin: '0 0 10px', letterSpacing: '1.5px' }}>LIVE PREVIEW</p>
-                    <p style={{ fontSize: '0.85rem', fontWeight: '900', color: '#1a1a8e', margin: '0 0 4px', letterSpacing: '3px' }}>
-                      {(form.offer || 'UNDER').toUpperCase()}
-                    </p>
-                    <p style={{ fontSize: '3rem', fontWeight: '900', color: '#1a1a8e', margin: 0, lineHeight: 1 }}>
-                      {form.price || '—'}
-                      <span style={{ fontSize: '1rem', color: '#FF6B35', marginLeft: '4px' }}>›</span>
-                    </p>
-                  </div>
-
                   <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '700', color: '#2D1A4A', padding: '10px 14px', background: '#F3E8FF', borderRadius: '10px' }}>
                     <input type="checkbox" checked={form.isActive} onChange={e => set('isActive', e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#FF6B35', cursor: 'pointer' }} />
                     ✅ Active — show on home page
                   </label>
                 </div>
-              ) : (
-                // ✅ REGULAR FORM (all other banner types)
-                <div className="adminFormGrid" style={{ display: 'grid', gap: '20px', alignItems: 'start' }}>
 
-                  {/* LEFT COLUMN */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', minWidth: 0 }}>
-
-                    <div>
-                      <label style={lbl}>
-                        {form.type === 'category' ? 'Category Name *'
-                          : form.type === 'sunny' ? 'Card Label *'
-                          : form.type === 'promo' ? 'Offer Title *'
-                          : form.type === 'festival' ? 'Festival Title *'
-                          : form.type === 'baby-food' ? 'Food Name *'
-                          : form.type === 'toys' ? 'Toy Name *'
-                          : form.type === 'electric-vehicle' ? 'Vehicle Name *'
-                          : 'Banner Title *'}
-                      </label>
-                      <input type="text" value={form.title} onChange={e => set('title', e.target.value)} placeholder="Enter title..." required style={inp} />
-                    </div>
-
-                    {!['sunny', 'category'].includes(form.type) && (
-                      <div>
-                        <label style={lbl}>Subtitle / Description</label>
-                        <input type="text" value={form.subtitle} onChange={e => set('subtitle', e.target.value)} placeholder="Optional description" style={inp} />
-                      </div>
-                    )}
-
-                    {form.type === 'category' && (
-                      <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        <div style={{ gridColumn: '1 / -1' }}>
-                          <label style={lbl}>Button Link *</label>
-                          <input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products?category=clothing" style={inp} />
-                        </div>
-                        <div>
-                          <label style={lbl}>Card Color</label>
-                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                            <input type="color" value={form.color || '#FF6B35'} onChange={e => set('color', e.target.value)} style={{ width: '44px', height: '40px', border: '2px solid #EDD9FF', borderRadius: '8px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
-                            <input type="text" value={form.color || '#FF6B35'} onChange={e => set('color', e.target.value)} style={{ ...inp, flex: 1 }} />
-                          </div>
-                        </div>
-                        <div>
-                          <label style={lbl}>Order (0 = first)</label>
-                          <input type="number" value={form.order} onChange={e => set('order', parseInt(e.target.value) || 0)} min="0" style={inp} />
-                        </div>
-                      </div>
-                    )}
-
-                    {form.type === 'hero' && (
-                      <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        <div><label style={lbl}>Button Text</label><input type="text" value={form.buttonText} onChange={e => set('buttonText', e.target.value)} placeholder="Shop Now" style={inp} /></div>
-                        <div><label style={lbl}>Button Link</label><input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products" style={inp} /></div>
-                        <div>
-                          <label style={lbl}>BG Color</label>
-                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                            <input type="color" value={form.bgColor} onChange={e => set('bgColor', e.target.value)} style={{ width: '44px', height: '40px', border: '2px solid #EDD9FF', borderRadius: '8px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
-                            <input type="text" value={form.bgColor} onChange={e => set('bgColor', e.target.value)} style={{ ...inp, flex: 1 }} />
-                          </div>
-                        </div>
-                        <div><label style={lbl}>Order</label><input type="number" value={form.order} onChange={e => set('order', parseInt(e.target.value) || 0)} min="0" style={inp} /></div>
-                      </div>
-                    )}
-
-                    {form.type === 'festival' && (
-                      <>
-                        <div><label style={lbl}>Festival Name</label><input type="text" value={form.festivalName} onChange={e => set('festivalName', e.target.value)} placeholder="e.g. Diwali" style={inp} /></div>
-
-                        <div style={{ padding: '12px 14px', background: '#FEF3C7', borderRadius: '10px', border: '1.5px solid #FDE68A' }}>
-                          <p style={{ margin: 0, fontSize: '11px', color: '#92400E', fontWeight: '700', lineHeight: '1.5' }}>
-                            💡 <strong>Dates are optional!</strong> Leave empty to show forever. Set dates only if you want to limit when this banner appears.
-                          </p>
-                        </div>
-
-                        <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                          <div><label style={lbl}>📅 Start Date (optional)</label><input type="datetime-local" value={form.startDate} onChange={e => set('startDate', e.target.value)} style={inp} /></div>
-                          <div><label style={lbl}>📅 End Date (optional)</label><input type="datetime-local" value={form.endDate} onChange={e => set('endDate', e.target.value)} style={inp} /></div>
-                          <div><label style={lbl}>Button Text</label><input type="text" value={form.buttonText} onChange={e => set('buttonText', e.target.value)} placeholder="Shop Now" style={inp} /></div>
-                          <div><label style={lbl}>Button Link</label><input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products" style={inp} /></div>
-                        </div>
-                        <div><label style={lbl}>Emoji</label><input type="text" value={form.emoji} onChange={e => set('emoji', e.target.value)} placeholder="🪔" style={inp} /></div>
-                      </>
-                    )}
-
-                    {form.type === 'sunny' && (
-                      <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        <div><label style={lbl}>Category Slug</label><input type="text" value={form.slug} onChange={e => set('slug', e.target.value)} placeholder="clothing" style={inp} /></div>
-                        <div><label style={lbl}>Emoji</label><input type="text" value={form.emoji} onChange={e => set('emoji', e.target.value)} placeholder="👕" style={inp} /></div>
-                      </div>
-                    )}
-
-             {form.type === 'promo' && (
-  <>
-    <div style={{ padding: '12px 14px', background: '#FEF3C7', borderRadius: '10px', border: '1.5px solid #FDE68A' }}>
-      <p style={{ margin: 0, fontSize: '11px', color: '#92400E', fontWeight: '700', lineHeight: '1.5' }}>
-        💡 <strong>FirstCry-style banner layout:</strong><br />
-        🖼️ LEFT = Product image/video<br />
-        📝 RIGHT TOP = Section title (e.g. "Tops & Tees")<br />
-        🏷️ RIGHT MIDDLE = Dark strip with brand logos<br />
-        🏷️ RIGHT BOTTOM = Big offer text + Shop Now button
-      </p>
-    </div>
-
-    {/* SECTION TITLE (top of right panel) */}
-    <div>
-      <label style={lbl}>📝 Section Title (Top) *</label>
-      <input
-        type="text"
-        value={form.title}
-        onChange={e => set('title', e.target.value)}
-        placeholder="Tops & Tees"
-        required
-        style={inp}
-      />
-      <p style={{ fontSize: '10px', color: '#9585B0', marginTop: '4px', fontWeight: '600' }}>
-        Shows above the dark logo strip (e.g. "Tops & Tees", "Shoes & Sneakers")
-      </p>
-    </div>
-
-    {/* OFFER */}
-    <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-      <div>
-        <label style={lbl}>💰 Offer Headline *</label>
-        <input
-          type="text"
-          value={form.offer}
-          onChange={e => set('offer', e.target.value)}
-          placeholder="UNDER ₹299*"
-          required
-          style={inp}
-        />
-      </div>
-      <div>
-        <label style={lbl}>🛒 Button Text</label>
-        <input
-          type="text"
-          value={form.buttonText}
-          onChange={e => set('buttonText', e.target.value)}
-          placeholder="SHOP NOW"
-          style={inp}
-        />
-      </div>
-    </div>
-
-    {/* COLORS */}
-    <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-      <div>
-        <label style={lbl}>🎨 Right Panel BG (light)</label>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <input type="color" value={form.color || '#E8E8E8'} onChange={e => set('color', e.target.value)} style={{ width: '44px', height: '40px', border: '2px solid #EDD9FF', borderRadius: '8px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
-          <input type="text" value={form.color || '#E8E8E8'} onChange={e => set('color', e.target.value)} style={{ ...inp, flex: 1 }} />
-        </div>
-      </div>
-      <div>
-        <label style={lbl}>🎨 Logo Strip BG (dark)</label>
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-          <input type="color" value={form.bgColor || '#1f2937'} onChange={e => set('bgColor', e.target.value)} style={{ width: '44px', height: '40px', border: '2px solid #EDD9FF', borderRadius: '8px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
-          <input type="text" value={form.bgColor || '#1f2937'} onChange={e => set('bgColor', e.target.value)} style={{ ...inp, flex: 1 }} />
-        </div>
-      </div>
-    </div>
-
-    {/* BRAND LOGOS */}
-    <div style={{ padding: '14px', background: '#FBF7FF', borderRadius: '12px', border: '1.5px solid #EDD9FF' }}>
-      <p style={{ margin: '0 0 12px', fontSize: '12px', fontWeight: '800', color: '#7B2FBE', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
-        🏷️ Brand Logos (Dark Strip)
-      </p>
-
-      {/* Brand Logo 1 */}
-      <div style={{ marginBottom: '12px' }}>
-        <label style={{ ...lbl, marginBottom: '6px' }}>Brand Logo 1 URL</label>
-        <input
-          type="text"
-          value={form.slug || ''}
-          onChange={e => set('slug', e.target.value)}
-          placeholder="https://example.com/logo1.png (e.g. DNMX)"
-          style={inp}
-        />
-        {form.slug && (
-          <div style={{ marginTop: '8px', padding: '10px', background: form.bgColor || '#1f2937', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src={form.slug} alt="Logo 1" style={{ height: '36px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
-          </div>
-        )}
-      </div>
-
-      {/* Brand Logo 2 */}
-      <div style={{ marginBottom: '12px' }}>
-        <label style={{ ...lbl, marginBottom: '6px' }}>Brand Logo 2 URL</label>
-        <input
-          type="text"
-          value={form.foodCategory || ''}
-          onChange={e => set('foodCategory', e.target.value)}
-          placeholder="https://example.com/logo2.png (e.g. TeamSpirit)"
-          style={inp}
-        />
-        {form.foodCategory && (
-          <div style={{ marginTop: '8px', padding: '10px', background: form.bgColor || '#1f2937', borderRadius: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <img src={form.foodCategory} alt="Logo 2" style={{ height: '36px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />
-          </div>
-        )}
-      </div>
-
-      {/* Extra Brand Text */}
-      <div>
-        <label style={{ ...lbl, marginBottom: '6px' }}>Extra Brand Text (after logos)</label>
-        <input
-          type="text"
-          value={form.subtitle}
-          onChange={e => set('subtitle', e.target.value)}
-          placeholder="more"
-          style={inp}
-        />
-        <p style={{ fontSize: '10px', color: '#9585B0', marginTop: '4px', fontWeight: '600' }}>
-          Shows as "& more" next to logos
-        </p>
-      </div>
-    </div>
-
-    {/* LINK + ORDER */}
-    <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-      <div>
-        <label style={lbl}>🔗 Button Link</label>
-        <input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products" style={inp} />
-      </div>
-      <div>
-        <label style={lbl}>📌 Order (0 = first)</label>
-        <input type="number" value={form.order} onChange={e => set('order', parseInt(e.target.value) || 0)} min="0" style={inp} />
-      </div>
-    </div>
-
-    {/* LIVE PREVIEW */}
-    {(form.title || form.offer || form.slug || form.foodCategory) && (
-      <div style={{ marginTop: '8px', padding: '16px', background: '#FBF7FF', borderRadius: '14px', border: '2px solid #EDD9FF' }}>
-        <p style={{ fontSize: '10px', fontWeight: '800', color: '#9585B0', margin: '0 0 12px', letterSpacing: '1.5px', textAlign: 'center' }}>
-          📱 LIVE PREVIEW
-        </p>
-        <div style={{ background: form.color || '#E8E8E8', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 8px 24px rgba(0,0,0,0.12)' }}>
-          {/* Title */}
-          {form.title && (
-            <div style={{ padding: '14px 16px 6px', textAlign: 'center' }}>
-              <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '700', color: '#2D1A4A', fontFamily: 'Nunito, sans-serif' }}>
-                {form.title}
-              </p>
-            </div>
-          )}
-          {/* Dark Logo Strip */}
-          {(form.slug || form.foodCategory || form.subtitle) && (
-            <div style={{ background: form.bgColor || '#1f2937', padding: '12px 16px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '14px', flexWrap: 'wrap' }}>
-              {form.slug && <img src={form.slug} alt="L1" style={{ height: '28px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />}
-              {form.slug && form.foodCategory && <span style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.4)' }} />}
-              {form.foodCategory && <img src={form.foodCategory} alt="L2" style={{ height: '28px', objectFit: 'contain', filter: 'brightness(0) invert(1)' }} />}
-              {form.subtitle && <span style={{ color: 'white', fontSize: '13px', fontWeight: '600', fontFamily: 'Nunito, sans-serif' }}>& {form.subtitle}</span>}
-            </div>
-          )}
-          {/* Offer + Button */}
-          <div style={{ padding: '20px 16px', textAlign: 'center' }}>
-            <p style={{ margin: '0 0 12px', fontSize: '1.6rem', fontWeight: '900', color: '#1a1a2e', fontFamily: 'Nunito, sans-serif', letterSpacing: '0.5px' }}>
-              {form.offer || 'UNDER ₹299*'}
-            </p>
-            <button type="button" style={{ padding: '8px 28px', background: '#1a1a2e', color: 'white', border: 'none', borderRadius: '999px', fontSize: '12px', fontWeight: '800', letterSpacing: '1.5px', fontFamily: 'Nunito, sans-serif', cursor: 'default' }}>
-              {form.buttonText || 'SHOP NOW'}
-            </button>
-          </div>
-        </div>
-      </div>
-    )}
-  </>
-)}
-                    {form.type === 'gender' && (
-                      <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        <div><label style={lbl}>For</label><select value={form.gender || 'girl'} onChange={e => set('gender', e.target.value)} style={{ ...inp, cursor: 'pointer' }}><option value="girl">👧 Girl</option><option value="boy">👦 Boy</option></select></div>
-                        <div><label style={lbl}>Button Link</label><input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products" style={inp} /></div>
-                      </div>
-                    )}
-
-                    {form.type === 'baby-food' && (
-                      <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        <div><label style={lbl}>Emoji</label><input type="text" value={form.emoji} onChange={e => set('emoji', e.target.value)} placeholder="🥣" style={inp} /></div>
-                        <div><label style={lbl}>Button Link</label><input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products" style={inp} /></div>
-                      </div>
-                    )}
-
-                    {form.type === 'toys' && (
-                      <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        <div><label style={lbl}>Emoji</label><input type="text" value={form.emoji} onChange={e => set('emoji', e.target.value)} placeholder="🧸" style={inp} /></div>
-                        <div><label style={lbl}>Button Link</label><input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products" style={inp} /></div>
-                      </div>
-                    )}
-
-                    {form.type === 'electric-vehicle' && (
-                      <>
-                        <div><label style={lbl}>For Gender *</label><select value={form.evGender || 'boy'} onChange={e => set('evGender', e.target.value)} style={{ ...inp, cursor: 'pointer' }}><option value="boy">👦 Boys</option><option value="girl">👧 Girls</option></select></div>
-                        <div className="adminFormCols" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                          <div><label style={lbl}>Price (₹)</label><input type="number" value={form.price} onChange={e => set('price', e.target.value)} placeholder="4999" min="0" style={inp} /></div>
-                          <div><label style={lbl}>Age Group</label><input type="text" value={form.ageGroup} onChange={e => set('ageGroup', e.target.value)} placeholder="2-5 Years" style={inp} /></div>
-                        </div>
-                      </>
-                    )}
-
-                    <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '700', color: '#2D1A4A', padding: '10px 14px', background: '#F3E8FF', borderRadius: '10px' }}>
-                      <input type="checkbox" checked={form.isActive} onChange={e => set('isActive', e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#FF6B35', cursor: 'pointer' }} />
-                      ✅ Active — show on home page
-                    </label>
-                  </div>
-
-                  {/* RIGHT COLUMN */}
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', minWidth: 0 }}>
-
-                    {form.type !== 'hero' && (
-                      <ImgUpload
-                       label={
-  form.type === 'category' ? '📁 Category Image *'
-  : form.type === 'festival' ? '🎥 Festival Media (Image or Video)'
-  : form.type === 'promo' ? '🎥 Product Media (Image or Video — Left Side)'
-  : '🖼️ Front Image (Main)'
-}
-                        value={form.image}
-                        onChange={handleImageUpload}
-                        uploading={uploading}
-                        onRemove={() => setForm(f => ({ ...f, image: null }))}
-                      allowVideo={form.type === 'festival' || form.type === 'promo'}
-                      />
-                    )}
-
-                    {['sunny', 'baby-food', 'toys', 'electric-vehicle'].includes(form.type) && (
-                      <>
-                        <div>
-                          <ImgUpload
-                            label="🔄 Back Image (3D Flip on Hover)"
-                            value={form.mobileImage}
-                            onChange={handleMobileImageUpload}
-                            uploading={uploadingMobile}
-                            onRemove={() => setForm(f => ({ ...f, mobileImage: null }))}
-                          />
-                          <p style={{ fontSize: '11px', color: '#7B2FBE', marginTop: '6px', fontWeight: '700', fontFamily: 'Nunito, sans-serif' }}>
-                            💡 This image shows on hover (3D flip)
-                          </p>
-                        </div>
-
-                        {(form.image?.url || form.mobileImage?.url) && (
-                          <div style={{ border: '2px solid #E03F4F', borderRadius: '16px', overflow: 'hidden', background: 'linear-gradient(135deg, #FFF5F5, #FFE8EB)', padding: '14px' }}>
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
-                              <div>
-                                <h4 style={{ margin: 0, fontSize: '0.92rem', fontWeight: '800', color: '#2D1A4A', fontFamily: 'Nunito, sans-serif' }}>🎲 Live 3D Flip Preview</h4>
-                                <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#9585B0', fontWeight: '600', fontFamily: 'Nunito, sans-serif' }}>Hover to flip</p>
-                              </div>
-                              <span style={{ padding: '4px 10px', background: '#E03F4F', color: 'white', borderRadius: '999px', fontSize: '10px', fontWeight: '800', fontFamily: 'Nunito, sans-serif' }}>HOVER ME</span>
-                            </div>
-                            <div className="adminFlipScene">
-                              <div className="adminFlipCard">
-                                <div className="adminFlipFace adminFlipFront">
-                                  {form.image?.url
-                                    ? <img src={form.image.url} alt="Front" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', background: 'linear-gradient(135deg, #F3E8FF, #FFE8EB)', color: '#9585B0' }}><span style={{ fontSize: '2.5rem' }}>🖼️</span><p style={{ fontSize: '12px', fontWeight: '700', margin: '8px 0 0', fontFamily: 'Nunito, sans-serif' }}>Upload Front</p></div>
-                                  }
-                                  <div style={{ position: 'absolute', top: '10px', left: '10px', padding: '4px 10px', background: 'rgba(0,0,0,0.7)', color: 'white', borderRadius: '999px', fontSize: '10px', fontWeight: '800', fontFamily: 'Nunito, sans-serif' }}>FRONT</div>
-                                </div>
-                                <div className="adminFlipFace adminFlipBack">
-                                  {form.mobileImage?.url
-                                    ? <img src={form.mobileImage.url} alt="Back" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                    : <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', background: 'linear-gradient(135deg, #FFE8B0, #FFD78A)', color: '#9585B0' }}><span style={{ fontSize: '2.5rem' }}>🔄</span><p style={{ fontSize: '12px', fontWeight: '700', margin: '8px 0 0', fontFamily: 'Nunito, sans-serif' }}>Upload Back</p></div>
-                                  }
-                                  <div style={{ position: 'absolute', top: '10px', left: '10px', padding: '4px 10px', background: 'rgba(224,63,79,0.9)', color: 'white', borderRadius: '999px', fontSize: '10px', fontWeight: '800', fontFamily: 'Nunito, sans-serif' }}>BACK</div>
-                                </div>
-                              </div>
-                            </div>
-                            <style>{`
-                              .adminFlipScene { perspective: 1200px; width: 100%; height: 280px; cursor: pointer; margin-top: 4px; }
-                              .adminFlipCard { position: relative; width: 100%; height: 100%; transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1); transform-style: preserve-3d; border-radius: 16px; }
-                              .adminFlipScene:hover .adminFlipCard { transform: rotateY(180deg); }
-                              .adminFlipFace { position: absolute; width: 100%; height: 100%; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 16px; overflow: hidden; background: white; border: 3px solid #E03F4F; box-sizing: border-box; box-shadow: 0 6px 20px rgba(224,63,79,0.20); }
-                              .adminFlipFront { transform: rotateY(0deg); }
-                              .adminFlipBack  { transform: rotateY(180deg); }
-                            `}</style>
-                          </div>
-                        )}
-                      </>
-                    )}
-
-                    {form.type === 'hero' && (
-                      <div style={{ border: '2px solid #EDD9FF', borderRadius: '16px', overflow: 'hidden' }}>
-                        <div style={{ padding: '12px 16px', background: 'linear-gradient(135deg,#FFF3EC,#F3E8FF)', borderBottom: '1.5px solid #EDD9FF', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                          <span style={{ fontSize: '1.4rem' }}>🎥</span>
-                          <div>
-                            <h4 style={{ margin: 0, fontSize: '0.92rem', fontWeight: '800', color: '#2D1A4A' }}>Hero Media (Image or Video)</h4>
-                            <p style={{ margin: '2px 0 0', fontSize: '11px', color: '#9585B0', fontWeight: '600' }}>
-                              📸 Image OR 🎥 Video — Auto-plays full-screen on hero
-                            </p>
-                          </div>
-                        </div>
-
-                        <div style={{ padding: '14px' }}>
-                          <div style={{ background: heroPanel.bg || '#FFF3E8', borderRadius: '14px', padding: '14px', border: '2px solid rgba(255,255,255,0.9)' }}>
-
-                            <label style={{ cursor: 'pointer', display: 'block', marginBottom: '12px' }}>
-                              <input
-                                type="file"
-                                accept="image/*,video/mp4,video/webm,video/quicktime"
-                                onChange={handleHeroMediaUpload}
-                                style={{ display: 'none' }}
-                                disabled={uploadingHero}
-                              />
-                              <div style={{
-                                width: '100%',
-                                height: '240px',
-                                border: '2px dashed #C8B4DC',
-                                borderRadius: '12px',
-                                background: 'rgba(255,255,255,0.85)',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'center',
-                                overflow: 'hidden',
-                                cursor: 'pointer',
-                                position: 'relative',
-                              }}>
-                                {uploadingHero ? (
-                                  <div style={{ textAlign: 'center' }}>
-                                    <div style={{ fontSize: '2rem', marginBottom: '8px' }}>⏳</div>
-                                    <p style={{ color: '#7B2FBE', fontWeight: '700', fontSize: '13px', margin: 0, fontFamily: 'Nunito, sans-serif' }}>Uploading...</p>
-                                  </div>
-                                ) : heroPanel.url ? (
-                                  heroIsVideo ? (
-                                    <>
-                                      <video src={heroPanel.url} autoPlay muted loop playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                      <span style={{
-                                        position: 'absolute', top: '10px', right: '10px',
-                                        background: 'rgba(0,0,0,0.65)', color: 'white',
-                                        padding: '4px 10px', borderRadius: '999px',
-                                        fontSize: '10px', fontWeight: '800',
-                                        display: 'inline-flex', alignItems: 'center', gap: '5px',
-                                        fontFamily: 'Nunito, sans-serif',
-                                      }}>
-                                        <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ff4757' }} />
-                                        VIDEO
-                                      </span>
-                                    </>
-                                  ) : (
-                                    <>
-                                      <img src={heroPanel.url} alt={heroPanel.label} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                                      <span style={{
-                                        position: 'absolute', top: '10px', right: '10px',
-                                        background: 'rgba(0,0,0,0.65)', color: 'white',
-                                        padding: '4px 10px', borderRadius: '999px',
-                                        fontSize: '10px', fontWeight: '800',
-                                        fontFamily: 'Nunito, sans-serif',
-                                      }}>
-                                        🖼️ IMAGE
-                                      </span>
-                                    </>
-                                  )
-                                ) : (
-                                  <div style={{ textAlign: 'center', padding: '20px' }}>
-                                    <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🎥</div>
-                                    <p style={{ color: '#7B2FBE', fontWeight: '800', fontSize: '15px', margin: '0 0 6px', fontFamily: 'Nunito, sans-serif' }}>
-                                      Click to Upload Media
-                                    </p>
-                                    <p style={{ color: '#9585B0', fontWeight: '600', fontSize: '11px', margin: 0, fontFamily: 'Nunito, sans-serif', lineHeight: '1.5' }}>
-                                      📸 Image (JPG/PNG/WebP) up to 10 MB<br />
-                                      🎥 Video (MP4/WebM) up to 50 MB
-                                    </p>
-                                  </div>
-                                )}
-                              </div>
-                            </label>
-
-                            {heroPanel.url && (
-                              <button type="button" onClick={removeHeroMedia} style={{ width: '100%', padding: '8px', background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '8px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit', marginBottom: '12px' }}>
-                                🗑️ Remove Media
-                              </button>
-                            )}
-
-                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                              <div>
-                                <label style={pLbl}>Badge Label</label>
-                                <input type="text" value={heroPanel.label || ''} onChange={e => updateHeroPanel('label', e.target.value)} placeholder="🔥 Trending" style={pInp} />
-                              </div>
-                              <div>
-                                <label style={pLbl}>Sub Label</label>
-                                <input type="text" value={heroPanel.sublabel || ''} onChange={e => updateHeroPanel('sublabel', e.target.value)} placeholder="2.4k sold this week" style={pInp} />
-                              </div>
-                              <div>
-                                <label style={pLbl}>Click Link</label>
-                                <input type="text" value={heroPanel.link || ''} onChange={e => updateHeroPanel('link', e.target.value)} placeholder="/products" style={pInp} />
-                              </div>
-                              <div>
-                                <label style={pLbl}>BG Color (fallback)</label>
-                                <div style={{ display: 'flex', gap: '5px', alignItems: 'center' }}>
-                                  <input type="color" value={heroPanel.bg || '#FDE8D0'} onChange={e => updateHeroPanel('bg', e.target.value)} style={{ width: '36px', height: '34px', border: '2px solid #EDD9FF', borderRadius: '6px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
-                                  <input type="text" value={heroPanel.bg || '#FDE8D0'} onChange={e => updateHeroPanel('bg', e.target.value)} style={{ ...pInp, flex: 1 }} />
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-
-                  </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', minWidth: 0 }}>
+                  <ImgUpload
+                    label="🖼️ Banner Image or Video"
+                    value={form.image}
+                    onChange={handleImageUpload}
+                    uploading={uploading}
+                    onRemove={() => setForm(f => ({ ...f, image: null }))}
+                    allowVideo={true}
+                  />
                 </div>
-              )}
+              </div>
 
               <div className="adminFormFooter" style={{ display: 'flex', gap: '10px', marginTop: '20px', paddingTop: '16px', borderTop: '1.5px solid #EDD9FF' }}>
                 <button type="button" onClick={() => { setShowForm(false); setEditing(null); }}
-                  style={{ padding: '12px 22px', border: '2px solid #EDD9FF', borderRadius: '10px', background: 'white', color: '#6B4E8A', fontWeight: '700', fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  style={{ padding: '12px 22px', border: '2px solid #EDD9FF', borderRadius: '10px', background: 'white', color: '#6B4E8A', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}>
                   Cancel
                 </button>
-                <button type="submit" disabled={saving || uploading || uploadingMobile || uploadingHero}
-                  style={{ flex: 1, padding: '12px 22px', background: saving ? '#ccc' : 'linear-gradient(135deg,#FF6B35,#7B2FBE)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize: '14px', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit', boxShadow: saving ? 'none' : '0 4px 14px rgba(255,107,53,0.30)' }}>
+                <button type="submit" disabled={saving || uploading}
+                  style={{ flex: 1, padding: '12px 22px', background: saving ? '#ccc' : 'linear-gradient(135deg,#FF6B35,#7B2FBE)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize: '14px', cursor: 'pointer' }}>
                   {saving ? '⏳ Saving...' : editing ? '💾 Update' : '✨ Create'}
                 </button>
               </div>
@@ -1810,23 +1364,7 @@ export default function AdminBanners() {
 
       <style>{`
         .adminFormGrid { grid-template-columns: 1fr 340px; gap: 24px; }
-        @media (max-width: 1024px) { .adminFormGrid { grid-template-columns: 1fr 300px; } }
-        @media (max-width: 820px)  { .adminFormGrid { grid-template-columns: 1fr !important; gap: 18px !important; } }
-        @media (max-width: 600px)  { .adminFormCols { grid-template-columns: 1fr !important; } }
-        @media (max-width: 768px)  { .adminBannersGrid { grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)) !important; gap: 12px !important; } }
-        @media (max-width: 480px) {
-          .adminBannersGrid { grid-template-columns: 1fr !important; }
-          .adminMainHeader h1 { font-size: 1.3rem !important; }
-          .adminTabsContainer button { padding: 8px 12px !important; font-size: 11.5px !important; }
-          .adminFormFooter { flex-direction: column-reverse !important; gap: 8px !important; }
-          .adminFormFooter button { width: 100% !important; }
-          .adminModal { padding: 8px !important; }
-          .adminModalCard { border-radius: 14px !important; }
-          .adminModalHeader { padding: 12px 14px 10px !important; }
-          .adminModalBody { padding: 14px 14px 18px !important; }
-        }
-        @media (max-width: 380px) { .adminTabsContainer button { padding: 7px 10px !important; font-size: 11px !important; } }
-        input, select { min-height: 44px; }
+        @media (max-width: 820px)  { .adminFormGrid { grid-template-columns: 1fr !important; } }
       `}</style>
     </div>
   );
