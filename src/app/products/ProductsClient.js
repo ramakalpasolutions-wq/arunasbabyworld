@@ -16,6 +16,12 @@ const SORT_OPTIONS = [
   { value: 'name-desc',            label: '🔤 Name: Z to A' },
 ];
 
+const GENDER_OPTIONS = [
+  { value: 'boy',    label: '👦 Boy',    color: '#0EA5E9' },
+  { value: 'girl',   label: '👧 Girl',   color: '#EC4899' },
+  { value: 'unisex', label: '👶 Unisex', color: '#10B981' },
+];
+
 const CATEGORY_ORDER = [
   'clothing', 'personal-care', 'health-care', 'walkers',
   'toys', 'cradles-cribs', 'electric-vehicles', 'food',
@@ -42,6 +48,11 @@ const RATING_OPTIONS = [
 ];
 
 const EXCLUDED_SLUGS = ['maternity', 'nursery'];
+
+// ✅ PRICE SLIDER CONFIG
+const PRICE_MIN  = 0;
+const PRICE_MAX  = 10000;
+const PRICE_STEP = 50;
 
 /* ============================================================
    INFINITE SCROLL TRIGGER
@@ -162,10 +173,9 @@ export default function ProductsClient() {
   const [pagination,    setPagination]    = useState({ page: 1, pages: 1, total: 0 });
   const [sidebarOpen,   setSidebarOpen]   = useState(false);
   const [activeQuick,   setActiveQuick]   = useState('all');
-  const [priceError,    setPriceError]    = useState('');
 
-  const [localMin,   setLocalMin]   = useState(searchParams.get('minPrice') || '');
-  const [localMax,   setLocalMax]   = useState(searchParams.get('maxPrice') || '');
+  const [localMin,   setLocalMin]   = useState(searchParams.get('minPrice') || String(PRICE_MIN));
+  const [localMax,   setLocalMax]   = useState(searchParams.get('maxPrice') || String(PRICE_MAX));
   const [appliedMin, setAppliedMin] = useState(searchParams.get('minPrice') || '');
   const [appliedMax, setAppliedMax] = useState(searchParams.get('maxPrice') || '');
 
@@ -173,6 +183,7 @@ export default function ProductsClient() {
     search:   searchParams.get('search')   || '',
     category: searchParams.get('category') || '',
     brand:    searchParams.get('brand')    || '',
+    gender:   searchParams.get('gender')   || '',
     sort:     searchParams.get('sort')     || 'createdAt-desc',
     minPrice: searchParams.get('minPrice') || '',
     maxPrice: searchParams.get('maxPrice') || '',
@@ -227,6 +238,7 @@ export default function ProductsClient() {
         const paramObj = {};
         if (filters.category) paramObj.category = filters.category;
         if (filters.search)   paramObj.search = filters.search;
+        if (filters.gender)   paramObj.gender = filters.gender;
         if (filters.featured) paramObj.featured = filters.featured;
         if (filters.trending) paramObj.trending = filters.trending;
         if (filters.minPrice) paramObj.minPrice = filters.minPrice;
@@ -251,7 +263,7 @@ export default function ProductsClient() {
     fetchBrands();
     return () => controller.abort();
   }, [
-    filters.category || '', filters.search || '', filters.featured || '',
+    filters.category || '', filters.search || '', filters.gender || '', filters.featured || '',
     filters.trending || '', filters.minPrice || '', filters.maxPrice || '',
     filters.discount || '', filters.rating || '', !!filters.inStock,
   ]);
@@ -265,6 +277,7 @@ export default function ProductsClient() {
       category: searchParams.get('category') || '',
       search:   searchParams.get('search') || '',
       brand:    searchParams.get('brand') || '',
+      gender:   searchParams.get('gender') || '',
       featured: searchParams.get('featured') || '',
       trending: searchParams.get('trending') || '',
       discount: searchParams.get('discount') || '',
@@ -275,8 +288,8 @@ export default function ProductsClient() {
       maxPrice: urlMax,
       page: 1,
     }));
-    setLocalMin(urlMin);
-    setLocalMax(urlMax);
+    setLocalMin(urlMin || String(PRICE_MIN));
+    setLocalMax(urlMax || String(PRICE_MAX));
     setAppliedMin(urlMin);
     setAppliedMax(urlMax);
     setAllProducts([]);
@@ -288,6 +301,7 @@ export default function ProductsClient() {
     if (filters.category) params.set('category', filters.category);
     if (filters.search?.trim()) params.set('search', filters.search.trim());
     if (filters.brand) params.set('brand', filters.brand);
+    if (filters.gender) params.set('gender', filters.gender);
     if (filters.minPrice) params.set('minPrice', filters.minPrice);
     if (filters.maxPrice) params.set('maxPrice', filters.maxPrice);
     if (filters.featured === 'true') params.set('featured', 'true');
@@ -302,12 +316,12 @@ export default function ProductsClient() {
     const cur = window.location.pathname + window.location.search;
     if (cur !== newUrl) window.history.replaceState({}, '', newUrl);
   }, [
-    filters.category, filters.search, filters.brand, filters.minPrice,
+    filters.category, filters.search, filters.brand, filters.gender, filters.minPrice,
     filters.maxPrice, filters.featured, filters.trending, filters.discount,
     filters.rating, filters.inStock, filters.sort, pathname,
   ]);
 
-  // ✅ Fetch products (supports load more)
+  // ✅ Fetch products
   const fetchProducts = useCallback(async (isLoadMore = false) => {
     if (isLoadMore) {
       setLoadingMore(true);
@@ -331,6 +345,7 @@ export default function ProductsClient() {
       if (filters.search?.trim()) paramObj.search = filters.search.trim();
       if (filters.category)       paramObj.category = filters.category;
       if (filters.brand)          paramObj.brand = filters.brand;
+      if (filters.gender)         paramObj.gender = filters.gender;
       if (filters.featured)       paramObj.featured = filters.featured;
       if (filters.trending)       paramObj.trending = filters.trending;
       if (filters.discount)       paramObj.discount = filters.discount;
@@ -363,12 +378,11 @@ export default function ProductsClient() {
     }
   }, [filters]);
 
-  // ✅ Smart fetch — detect load more vs fresh
   useEffect(() => {
     const prev = prevFiltersRef.current;
     const isPageOnly = prev && filters.page !== prev.page &&
       filters.search === prev.search && filters.category === prev.category &&
-      filters.brand === prev.brand && filters.sort === prev.sort &&
+      filters.brand === prev.brand && filters.gender === prev.gender && filters.sort === prev.sort &&
       filters.featured === prev.featured && filters.trending === prev.trending &&
       filters.discount === prev.discount && filters.rating === prev.rating &&
       filters.inStock === prev.inStock && filters.minPrice === prev.minPrice &&
@@ -382,13 +396,11 @@ export default function ProductsClient() {
     prevFiltersRef.current = { ...filters };
   }, [filters]);
 
-  // ✅ Load more handler
   const loadMoreProducts = useCallback(() => {
     if (loadingMore || pagination.page >= pagination.pages) return;
     setFilters(prev => ({ ...prev, page: prev.page + 1 }));
   }, [loadingMore, pagination]);
 
-  // Handlers
   const updateFilter = (key, value) => {
     if (key !== 'page') setAllProducts([]);
     setFilters(prev => ({
@@ -398,41 +410,44 @@ export default function ProductsClient() {
     }));
   };
 
-  const handleApplyPrice = () => {
-    setPriceError('');
-    const minVal = localMin.trim();
-    const maxVal = localMax.trim();
-    if (!minVal && !maxVal) { handleClearPrice(); return; }
-    const min = minVal ? parseFloat(minVal) : null;
-    const max = maxVal ? parseFloat(maxVal) : null;
-    if (minVal && (isNaN(min) || min < 0)) { setPriceError('Invalid min'); return; }
-    if (maxVal && (isNaN(max) || max < 0)) { setPriceError('Invalid max'); return; }
-    let fMin = min, fMax = max;
-    if (fMin !== null && fMax !== null && fMin > fMax) {
-      [fMin, fMax] = [fMax, fMin];
-      setLocalMin(String(fMin)); setLocalMax(String(fMax));
+  // ✅ Commit slider — applies filter when user releases the thumb
+  const handleSliderCommit = () => {
+    const minV = Number(localMin || PRICE_MIN);
+    const maxV = Number(localMax || PRICE_MAX);
+
+    const atDefault = minV <= PRICE_MIN && maxV >= PRICE_MAX;
+    if (atDefault) {
+      if (appliedMin || appliedMax) handleClearPrice();
+      return;
     }
-    const ms = fMin !== null ? String(fMin) : '';
-    const xs = fMax !== null ? String(fMax) : '';
-    setAppliedMin(ms); setAppliedMax(xs);
+
+    const ms = minV > PRICE_MIN ? String(minV) : '';
+    const xs = maxV < PRICE_MAX ? String(maxV) : '';
+
+    setAppliedMin(ms);
+    setAppliedMax(xs);
     setAllProducts([]);
     setFilters(prev => ({ ...prev, minPrice: ms, maxPrice: xs, page: 1 }));
   };
 
   const handleClearPrice = () => {
-    setPriceError('');
-    setLocalMin(''); setLocalMax(''); setAppliedMin(''); setAppliedMax('');
+    setLocalMin(String(PRICE_MIN));
+    setLocalMax(String(PRICE_MAX));
+    setAppliedMin('');
+    setAppliedMax('');
     setAllProducts([]);
     setFilters(prev => ({ ...prev, minPrice: '', maxPrice: '', page: 1 }));
   };
 
   const clearAll = () => {
-    setPriceError('');
-    setLocalMin(''); setLocalMax(''); setAppliedMin(''); setAppliedMax('');
+    setLocalMin(String(PRICE_MIN));
+    setLocalMax(String(PRICE_MAX));
+    setAppliedMin('');
+    setAppliedMax('');
     setActiveQuick('all');
     setAllProducts([]);
     setFilters({
-      search: '', category: '', brand: '', sort: 'createdAt-desc',
+      search: '', category: '', brand: '', gender: '', sort: 'createdAt-desc',
       minPrice: '', maxPrice: '', featured: '', trending: '',
       discount: '', rating: '', inStock: false, page: 1,
     });
@@ -464,21 +479,51 @@ export default function ProductsClient() {
   ];
 
   const hasActiveFilters = !!(
-    filters.category || filters.brand || filters.minPrice || filters.maxPrice ||
+    filters.category || filters.brand || filters.gender || filters.minPrice || filters.maxPrice ||
     filters.featured || filters.trending || filters.discount || filters.rating || filters.inStock
   );
 
   const activeFilterCount = [
-    filters.category, filters.brand, filters.minPrice || filters.maxPrice,
+    filters.category, filters.brand, filters.gender, filters.minPrice || filters.maxPrice,
     filters.featured, filters.trending, filters.discount, filters.rating,
     filters.inStock ? 'x' : '',
   ].filter(Boolean).length;
 
+  // ✅ Slider % positions
+  const minPct = ((Number(localMin || PRICE_MIN) - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100;
+  const maxPct = ((Number(localMax || PRICE_MAX) - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100;
+
   /* ============================================================
-     FILTER CONTENT
+     FILTER CONTENT - Changed to a normal function to prevent unmount
   ============================================================ */
-const FilterContent = () => (
+  const renderFilterContent = () => (
     <>
+      {/* GENDER FILTER BLOCK */}
+      <div className={styles.filterBlock}>
+        <div className={styles.filterBlockTitle}><span className={styles.filterBlockIcon}>👦👧</span>Gender</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+          {GENDER_OPTIONS.map(g => (
+            <button
+              key={g.value}
+              onClick={() => updateFilter('gender', g.value === filters.gender ? '' : g.value)}
+              style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                width: '100%', padding: '7px 10px', textAlign: 'left',
+                background: filters.gender === g.value ? '#FFF0F5' : 'transparent',
+                border: filters.gender === g.value ? '1.5px solid #FF3F6C' : '1px solid transparent',
+                borderRadius: '8px', fontSize: '0.84rem',
+                fontWeight: filters.gender === g.value ? '800' : '600',
+                color: filters.gender === g.value ? '#FF3F6C' : '#535766',
+                cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s Ease',
+              }}
+            >
+              <span>{g.label}</span>
+              {filters.gender === g.value && <span style={{ fontSize: '0.9rem', color: '#FF3F6C' }}>✓</span>}
+            </button>
+          ))}
+        </div>
+      </div>
+
       <div className={styles.filterBlock}>
         <div className={styles.filterBlockTitle}><span className={styles.filterBlockIcon}>📂</span>Categories</div>
         {catLoading ? (
@@ -520,21 +565,99 @@ const FilterContent = () => (
         )}
       </div>
 
+      {/* ✅ NEW PRICE RANGE SLIDER */}
       <div className={styles.filterBlock}>
-        <div className={styles.filterBlockTitle}><span className={styles.filterBlockIcon}>💰</span>Price</div>
-        <div className={styles.priceInputWrap}>
-          <input type="number" value={localMin} onChange={e => { setLocalMin(e.target.value); setPriceError(''); }}
-            onKeyDown={e => e.key === 'Enter' && handleApplyPrice()} placeholder="Min" min="0" className={styles.priceInput} />
+        <div className={styles.filterBlockTitle}>
+          <span className={styles.filterBlockIcon}>💰</span>Price
         </div>
-        <div className={styles.priceInputWrap}>
-          <input type="number" value={localMax} onChange={e => { setLocalMax(e.target.value); setPriceError(''); }}
-            onKeyDown={e => e.key === 'Enter' && handleApplyPrice()} placeholder="Max" min="0" className={styles.priceInput} />
+
+        <div style={{ padding: '4px 4px 6px' }}>
+          <p style={{
+            margin: '0 0 16px',
+            fontSize: '0.92rem',
+            fontWeight: '800',
+            color: '#282C3F',
+            fontFamily: 'inherit',
+          }}>
+            ₹{Number(localMin || PRICE_MIN)} – ₹{Number(localMax || PRICE_MAX)}{Number(localMax || PRICE_MAX) >= PRICE_MAX ? '+' : ''}
+          </p>
+
+          <div style={{
+            position: 'relative',
+            height: '30px',
+            display: 'flex',
+            alignItems: 'center',
+          }}>
+            {/* Track background */}
+            <div style={{
+              position: 'absolute',
+              left: 0, right: 0,
+              height: '5px',
+              borderRadius: '999px',
+              background: '#CED4DA',
+            }} />
+
+            {/* Active track */}
+            <div style={{
+              position: 'absolute',
+              left:  `${minPct}%`,
+              right: `${100 - maxPct}%`,
+              height: '5px',
+              borderRadius: '999px',
+              background: '#2563EB',
+            }} />
+
+            {/* Min thumb */}
+            <input
+              type="range"
+              min={PRICE_MIN}
+              max={PRICE_MAX}
+              step={PRICE_STEP}
+              value={Number(localMin || PRICE_MIN)}
+              onChange={(e) => {
+                const val = Math.min(Number(e.target.value), Number(localMax || PRICE_MAX) - PRICE_STEP);
+                setLocalMin(String(val));
+              }}
+              onMouseUp={handleSliderCommit}
+              onTouchEnd={handleSliderCommit}
+              className="priceRangeThumb priceMinThumb"
+              style={{ zIndex: Number(localMin || PRICE_MIN) > PRICE_MAX - PRICE_STEP * 2 ? 5 : 3 }}
+            />
+
+            {/* Max thumb */}
+            <input
+              type="range"
+              min={PRICE_MIN}
+              max={PRICE_MAX}
+              step={PRICE_STEP}
+              value={Number(localMax || PRICE_MAX)}
+              onChange={(e) => {
+                const val = Math.max(Number(e.target.value), Number(localMin || PRICE_MIN) + PRICE_STEP);
+                setLocalMax(String(val));
+              }}
+              onMouseUp={handleSliderCommit}
+              onTouchEnd={handleSliderCommit}
+              className="priceRangeThumb priceMaxThumb"
+              style={{ zIndex: 4 }}
+            />
+          </div>
+
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            marginTop: '8px',
+            fontSize: '0.72rem',
+            color: '#94969F',
+            fontWeight: '700',
+          }}>
+            <span>₹{PRICE_MIN}</span>
+            <span>₹{PRICE_MAX}+</span>
+          </div>
         </div>
-        {priceError && <div className={styles.priceError}>{priceError}</div>}
-        <button className={styles.applyPriceBtn} onClick={handleApplyPrice}>Apply</button>
+
         {(appliedMin || appliedMax) && (
-          <div className={styles.appliedPrice}>
-            <span>₹{appliedMin || '0'} — ₹{appliedMax || '∞'}</span>
+          <div className={styles.appliedPrice} style={{ marginTop: '10px' }}>
+            <span>₹{appliedMin || PRICE_MIN} — ₹{appliedMax || `${PRICE_MAX}+`}</span>
             <button className={styles.clearPriceBtn} onClick={handleClearPrice}>✕</button>
           </div>
         )}
@@ -646,6 +769,12 @@ const FilterContent = () => (
         {hasActiveFilters && (
           <div className={styles.activeFiltersRow}>
             <div className={styles.activeFilterTags}>
+              {filters.gender && (
+                <span className={styles.activeTag}>
+                  {GENDER_OPTIONS.find(g => g.value === filters.gender)?.label || filters.gender}
+                  <button onClick={() => updateFilter('gender', '')}>✕</button>
+                </span>
+              )}
               {filters.category && selectedCategoryName && (
                 <span className={styles.activeTag}>{selectedCategoryName}<button onClick={() => handleCategoryClick('')}>✕</button></span>
               )}
@@ -690,7 +819,8 @@ const FilterContent = () => (
               <div className={styles.sidebarTitle}>Filters</div>
               <button className={styles.clearAllBtn} onClick={clearAll}>Clear All</button>
             </div>
-            <FilterContent />
+            {/* ✅ CALLED AS A FUNCTION HERE */}
+            {renderFilterContent()}
           </aside>
 
           {/* PRODUCTS */}
@@ -718,39 +848,21 @@ const FilterContent = () => (
                   ))}
                 </div>
 
-                {/* ✅ Infinite scroll trigger */}
                 {pagination.page < pagination.pages && (
                   <LoadMoreTrigger loading={loadingMore} onLoadMore={loadMoreProducts} />
                 )}
 
-                {/* Loading more spinner */}
                 {loadingMore && (
-                  <div style={{
-                    display: 'flex', justifyContent: 'center', padding: '24px 0',
-                  }}>
-                    <div style={{
-                      display: 'flex', alignItems: 'center', gap: '10px',
-                      color: '#94969F', fontSize: '0.84rem', fontWeight: '700',
-                    }}>
-                      <div style={{
-                        width: '22px', height: '22px',
-                        border: '3px solid #E9E9ED',
-                        borderTop: '3px solid #FF3F6C',
-                        borderRadius: '50%',
-                        animation: 'spin 0.8s linear infinite',
-                      }} />
+                  <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#94969F', fontSize: '0.84rem', fontWeight: '700' }}>
+                      <div style={{ width: '22px', height: '22px', border: '3px solid #E9E9ED', borderTop: '3px solid #FF3F6C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                       Loading more...
                     </div>
                   </div>
                 )}
 
-                {/* End message */}
                 {pagination.page >= pagination.pages && (
-                  <div style={{
-                    textAlign: 'center', padding: '30px 20px',
-                    color: '#94969F', fontSize: '0.82rem', fontWeight: '700',
-                    borderTop: '1px solid #E9E9ED', marginTop: '20px',
-                  }}>
+                  <div style={{ textAlign: 'center', padding: '30px 20px', color: '#94969F', fontSize: '0.82rem', fontWeight: '700', borderTop: '1px solid #E9E9ED', marginTop: '20px' }}>
                     You've seen all {pagination.total} products
                   </div>
                 )}
@@ -781,13 +893,78 @@ const FilterContent = () => (
               <button className={styles.clearAllBtn} onClick={clearAll}>Clear All</button>
               <button className={styles.closeSidebar} onClick={() => setSidebarOpen(false)}>✕</button>
             </div>
-            <FilterContent />
+            {/* ✅ CALLED AS A FUNCTION HERE */}
+            {renderFilterContent()}
           </aside>
         </>
       )}
 
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
+
+        /* ✅ Dual Range Slider Thumbs */
+        .priceRangeThumb {
+          position: absolute;
+          left: 0;
+          top: 0;
+          width: 100%;
+          height: 30px;
+          margin: 0;
+          padding: 0;
+          background: transparent;
+          pointer-events: none;
+          -webkit-appearance: none;
+          appearance: none;
+          outline: none;
+        }
+
+        .priceRangeThumb::-webkit-slider-thumb {
+          pointer-events: auto;
+          -webkit-appearance: none;
+          appearance: none;
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          background: #2563EB;
+          border: 4px solid white;
+          box-shadow: 0 2px 8px rgba(37, 99, 235, 0.45);
+          cursor: pointer;
+          margin-top: -8px;
+          transition: transform 0.15s ease;
+        }
+        .priceRangeThumb::-webkit-slider-thumb:hover {
+          transform: scale(1.15);
+        }
+        .priceRangeThumb::-webkit-slider-thumb:active {
+          transform: scale(1.25);
+          box-shadow: 0 4px 14px rgba(37, 99, 235, 0.6);
+        }
+
+        .priceRangeThumb::-moz-range-thumb {
+          pointer-events: auto;
+          width: 22px;
+          height: 22px;
+          border-radius: 50%;
+          background: #2563EB;
+          border: 4px solid white;
+          box-shadow: 0 2px 8px rgba(37, 99, 235, 0.45);
+          cursor: pointer;
+          transition: transform 0.15s ease;
+        }
+        .priceRangeThumb::-moz-range-thumb:hover {
+          transform: scale(1.15);
+        }
+
+        .priceRangeThumb::-webkit-slider-runnable-track {
+          height: 5px;
+          background: transparent;
+          border: none;
+        }
+        .priceRangeThumb::-moz-range-track {
+          height: 5px;
+          background: transparent;
+          border: none;
+        }
       `}</style>
     </div>
   );

@@ -48,6 +48,7 @@ export async function GET(request) {
     const featured = searchParams.get('featured');
     const trending = searchParams.get('trending');
     const brand    = searchParams.get('brand');
+    const gender   = searchParams.get('gender'); // ✅ Gender Filter Param
     const discount = searchParams.get('discount');
     const rating   = searchParams.get('rating');
     const inStock  = searchParams.get('inStock');
@@ -70,6 +71,11 @@ export async function GET(request) {
 
     if (brand && brand.trim()) {
       where.brand = { equals: brand.trim(), mode: 'insensitive' };
+    }
+
+    // ✅ GENDER FILTER logic
+    if (gender && gender.trim()) {
+      where.gender = { equals: gender.trim(), mode: 'insensitive' };
     }
 
     if (discount) {
@@ -126,7 +132,6 @@ export async function GET(request) {
       });
 
       matchingCategoryIds = matchingCategories.map(c => c.id);
-      console.log(`🔍 Search "${s}" → Found ${matchingCategoryIds.length} matching categories:`, matchingCategories.map(c => c.name));
 
       const searchConditions = [
         ...(matchingCategoryIds.length > 0
@@ -134,6 +139,7 @@ export async function GET(request) {
           : []),
         { name:             { contains: s, mode: 'insensitive' } },
         { brand:            { contains: s, mode: 'insensitive' } },
+        { gender:           { contains: s, mode: 'insensitive' } },
         { tags:             { has: s } },
         { tags:             { has: s.toLowerCase() } },
         { shortDescription: { contains: s, mode: 'insensitive' } },
@@ -211,9 +217,7 @@ export async function GET(request) {
 
         if (catFound) {
           where.categoryId = catFound.id;
-          console.log(`✅ Category "${rawCategory}" → matched: ${catFound.name} (${catFound.slug})`);
         } else {
-          console.log(`⚠️ Category "${rawCategory}" → NOT FOUND`);
           where.categoryId = '000000000000000000000000';
         }
       }
@@ -233,7 +237,6 @@ export async function GET(request) {
       orderBy = { [sort]: order };
     }
 
-    // ✅ Fetch ALL matching products for sorting (up to 500)
     let products = await prisma.product.findMany({
       where,
       include: {
@@ -244,7 +247,6 @@ export async function GET(request) {
       take: Math.min(total, 500),
     });
 
-    // ✅ SMART RELEVANCE SORTING when searching
     if (search && search.trim()) {
       const searchLower = search.trim().toLowerCase();
 
@@ -255,18 +257,14 @@ export async function GET(request) {
         }))
         .sort((a, b) => b.score - a.score)
         .map(item => item.product);
-
-      console.log(`🎯 Sorted ${products.length} products by relevance for "${search}"`);
     }
 
-    // ✅ ALWAYS push out-of-stock products to the end
     if (inStock !== 'true') {
       const inStockProducts = products.filter(p => (p.stock || 0) > 0);
       const outOfStock      = products.filter(p => (p.stock || 0) === 0);
       products = [...inStockProducts, ...outOfStock];
     }
 
-    // ✅ Apply pagination AFTER all sorting
     const startIndex = (page - 1) * limit;
     products = products.slice(startIndex, startIndex + limit);
 
