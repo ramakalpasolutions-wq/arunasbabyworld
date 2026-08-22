@@ -73,13 +73,13 @@ function getExpectedDelivery(createdAt) {
 function OrderTrackingCard({ order }) {
   const [expanded, setExpanded] = useState(false);
 
- const currentStep = STATUS_STEPS.indexOf(order.orderStatus);
-const isCancelled = order.orderStatus === 'Cancelled' || order.orderStatus === 'Refunded';
-const isDelivered = order.orderStatus === 'Delivered';
-const color       = STATUS_COLOR[order.orderStatus] || '#888';
-const hasExchange = !!order.exchangeId; // ✅ NEW
+  const currentStep = STATUS_STEPS.indexOf(order.orderStatus);
+  const isCancelled = order.orderStatus === 'Cancelled' || order.orderStatus === 'Refunded';
+  const isDelivered = order.orderStatus === 'Delivered';
+  const color       = STATUS_COLOR[order.orderStatus] || '#888';
+  const hasExchange = !!order.exchangeId;
 
-const expected = getExpectedDelivery(order.createdAt);
+  const expected = getExpectedDelivery(order.createdAt);
 
   return (
     <div style={{
@@ -137,14 +137,14 @@ const expected = getExpectedDelivery(order.createdAt);
             })}
           </p>
 
-          {/* ✅ Expected delivery — show for active orders */}
+          {/* Expected delivery — show for active orders */}
           {!isCancelled && !isDelivered && (
             <p style={{ fontSize: '0.78rem', color: '#7B2FBE', margin: '2px 0 0', fontWeight: '700' }}>
               🗓️ Expected: {expected.min} – {expected.max}
             </p>
           )}
 
-          {/* ✅ Actual delivery date — show when delivered */}
+          {/* Actual delivery date — show when delivered */}
           {isDelivered && order.deliveredAt && (
             <p style={{ fontSize: '0.78rem', color: '#10B981', margin: '2px 0 0', fontWeight: '700' }}>
               🎉 Delivered: {new Date(order.deliveredAt).toLocaleDateString('en-IN', {
@@ -184,62 +184,64 @@ const expected = getExpectedDelivery(order.createdAt);
           </button>
         </div>
       </div>
-{/* ✅ NEW: Exchange Status Badge */}
-{hasExchange && (
-  <div style={{
-    margin: '0 20px',
-    marginTop: '14px',
-    padding: '10px 14px',
-    background: order.exchangeStatus === 'completed' 
-      ? 'linear-gradient(135deg, #ECFDF5, #D1FAE5)' 
-      : 'linear-gradient(135deg, #FFF3E8, #FFE4CC)',
-    border: `1.5px solid ${order.exchangeStatus === 'completed' ? '#10B981' : '#FF6B35'}`,
-    borderRadius: '10px',
-    display: 'flex',
-    alignItems: 'center',
-    gap: '10px',
-    flexWrap: 'wrap',
-  }}>
-    <span style={{ fontSize: '1.3rem' }}>
-      {order.exchangeStatus === 'completed' ? '🎉' : '🔄'}
-    </span>
-    <div style={{ flex: 1, minWidth: 0 }}>
-      <p style={{ 
-        margin: 0, 
-        fontSize: '0.84rem', 
-        fontWeight: '800', 
-        color: order.exchangeStatus === 'completed' ? '#065F46' : '#9A3412',
-      }}>
-        {order.exchangeStatus === 'completed' 
-          ? '✅ Exchange Completed!' 
-          : `🔄 Exchange in Progress — ${order.exchangeStatus?.replace(/_/g, ' ')}`}
-      </p>
-      <p style={{ 
-        margin: '2px 0 0', 
-        fontSize: '0.74rem', 
-        color: order.exchangeStatus === 'completed' ? '#047857' : '#7C2D12', 
-        fontWeight: '600',
-      }}>
-        {order.exchangeStatus === 'completed' 
-          ? 'New product delivered to you' 
-          : 'Click "View Details" to track exchange'}
-      </p>
-    </div>
-    <Link href="/orders/exchanges" style={{
-      padding: '6px 14px',
-      background: 'white',
-      color: order.exchangeStatus === 'completed' ? '#10B981' : '#FF6B35',
-      border: `1.5px solid ${order.exchangeStatus === 'completed' ? '#10B981' : '#FF6B35'}`,
-      borderRadius: '8px',
-      textDecoration: 'none',
-      fontWeight: '800',
-      fontSize: '0.76rem',
-      whiteSpace: 'nowrap',
-    }}>
-      🔄 View Exchange
-    </Link>
-  </div>
-)}
+
+      {/* Exchange Status Badge */}
+      {hasExchange && (
+        <div style={{
+          margin: '0 20px',
+          marginTop: '14px',
+          padding: '10px 14px',
+          background: order.exchangeStatus === 'completed'
+            ? 'linear-gradient(135deg, #ECFDF5, #D1FAE5)'
+            : 'linear-gradient(135deg, #FFF3E8, #FFE4CC)',
+          border: `1.5px solid ${order.exchangeStatus === 'completed' ? '#10B981' : '#FF6B35'}`,
+          borderRadius: '10px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '10px',
+          flexWrap: 'wrap',
+        }}>
+          <span style={{ fontSize: '1.3rem' }}>
+            {order.exchangeStatus === 'completed' ? '🎉' : '🔄'}
+          </span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <p style={{
+              margin: 0,
+              fontSize: '0.84rem',
+              fontWeight: '800',
+              color: order.exchangeStatus === 'completed' ? '#065F46' : '#9A3412',
+            }}>
+              {order.exchangeStatus === 'completed'
+                ? '✅ Exchange Completed!'
+                : `🔄 Exchange in Progress — ${order.exchangeStatus?.replace(/_/g, ' ')}`}
+            </p>
+            <p style={{
+              margin: '2px 0 0',
+              fontSize: '0.74rem',
+              color: order.exchangeStatus === 'completed' ? '#047857' : '#7C2D12',
+              fontWeight: '600',
+            }}>
+              {order.exchangeStatus === 'completed'
+                ? 'New product delivered to you'
+                : 'Click "View Details" to track exchange'}
+            </p>
+          </div>
+          <Link href="/orders/exchanges" style={{
+            padding: '6px 14px',
+            background: 'white',
+            color: order.exchangeStatus === 'completed' ? '#10B981' : '#FF6B35',
+            border: `1.5px solid ${order.exchangeStatus === 'completed' ? '#10B981' : '#FF6B35'}`,
+            borderRadius: '8px',
+            textDecoration: 'none',
+            fontWeight: '800',
+            fontSize: '0.76rem',
+            whiteSpace: 'nowrap',
+          }}>
+            🔄 View Exchange
+          </Link>
+        </div>
+      )}
+
       {/* ── Items Preview ── */}
       <div style={{ padding: '14px 20px', borderBottom: `1px solid ${color}12`, display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
         <div style={{ display: 'flex', gap: '6px' }}>
@@ -265,77 +267,77 @@ const expected = getExpectedDelivery(order.createdAt);
       {/* ── INLINE TRACKING TIMELINE ── */}
       <div style={{ padding: '18px 20px' }}>
 
-   {isCancelled ? (
-  <div style={{
-    padding: '14px 18px',
-    background: order.orderStatus === 'Refunded' ? '#ECFDF5' : '#FEF2F2',
-    border: `1.5px solid ${order.orderStatus === 'Refunded' ? '#10B981' : '#FCA5A5'}`,
-    borderRadius: '14px',
-    display: 'flex', gap: '12px', alignItems: 'flex-start',
-  }}>
-    <span style={{ fontSize: '1.5rem' }}>
-      {order.orderStatus === 'Refunded' ? '💰' : '✅'}
-    </span>
-    <div style={{ flex: 1 }}>
-      <strong style={{
-        color: order.orderStatus === 'Refunded' ? '#065F46' : '#DC2626',
-        fontSize: '0.95rem',
-      }}>
-        {order.orderStatus === 'Refunded' ? '✅ Order Refunded' : `Order ${order.orderStatus}`}
-      </strong>
-      {order.orderStatus === 'Refunded' && order.refundAmount && (
-        <p style={{
-          margin: '6px 0 0', fontSize: '0.88rem',
-          color: '#065F46', fontWeight: '800',
-        }}>
-          💵 Refunded: ₹{order.refundAmount.toLocaleString('en-IN')}
-        </p>
-      )}
-      {order.refundStatus === 'completed' && (
-        <p style={{
-          margin: '4px 0 0', fontSize: '0.82rem',
-          color: '#047857', fontWeight: '700',
-        }}>
-          ✅ Money credited to your account
-        </p>
-      )}
-      {order.refundStatus === 'processing' && (
-        <p style={{
-          margin: '4px 0 0', fontSize: '0.82rem',
-          color: '#1E40AF', fontWeight: '700',
-        }}>
-          ⚙️ Refund processing — will reach you in 2-3 hours
-        </p>
-      )}
-      {order.refundStatus === 'scheduled' && (
-        <p style={{
-          margin: '4px 0 0', fontSize: '0.82rem',
-          color: '#EA580C', fontWeight: '700',
-        }}>
-          ⏱️ Refund scheduled — processing soon
-        </p>
-      )}
-      {order.refundStatus === 'pending' && (
-        <p style={{
-          margin: '4px 0 0', fontSize: '0.82rem',
-          color: '#92400E', fontWeight: '700',
-        }}>
-          🟡 Refund being processed — 5-7 business days
-        </p>
-      )}
-      {!order.refundStatus && (
-        <p style={{
-          margin: '4px 0 0', fontSize: '0.80rem',
-          color: '#6B7280', fontWeight: '500',
-        }}>
-          {order.orderStatus === 'Refunded'
-            ? 'Refund will be processed within 5-7 business days.'
-            : 'Your order has been cancelled.'}
-        </p>
-      )}
-    </div>
-  </div>
-) : (
+        {isCancelled ? (
+          <div style={{
+            padding: '14px 18px',
+            background: order.orderStatus === 'Refunded' ? '#ECFDF5' : '#FEF2F2',
+            border: `1.5px solid ${order.orderStatus === 'Refunded' ? '#10B981' : '#FCA5A5'}`,
+            borderRadius: '14px',
+            display: 'flex', gap: '12px', alignItems: 'flex-start',
+          }}>
+            <span style={{ fontSize: '1.5rem' }}>
+              {order.orderStatus === 'Refunded' ? '💰' : '✅'}
+            </span>
+            <div style={{ flex: 1 }}>
+              <strong style={{
+                color: order.orderStatus === 'Refunded' ? '#065F46' : '#DC2626',
+                fontSize: '0.95rem',
+              }}>
+                {order.orderStatus === 'Refunded' ? '✅ Order Refunded' : `Order ${order.orderStatus}`}
+              </strong>
+              {order.orderStatus === 'Refunded' && order.refundAmount && (
+                <p style={{
+                  margin: '6px 0 0', fontSize: '0.88rem',
+                  color: '#065F46', fontWeight: '800',
+                }}>
+                  💵 Refunded: ₹{order.refundAmount.toLocaleString('en-IN')}
+                </p>
+              )}
+              {order.refundStatus === 'completed' && (
+                <p style={{
+                  margin: '4px 0 0', fontSize: '0.82rem',
+                  color: '#047857', fontWeight: '700',
+                }}>
+                  ✅ Money credited to your account
+                </p>
+              )}
+              {order.refundStatus === 'processing' && (
+                <p style={{
+                  margin: '4px 0 0', fontSize: '0.82rem',
+                  color: '#1E40AF', fontWeight: '700',
+                }}>
+                  ⚙️ Refund processing — will reach you in 2-3 hours
+                </p>
+              )}
+              {order.refundStatus === 'scheduled' && (
+                <p style={{
+                  margin: '4px 0 0', fontSize: '0.82rem',
+                  color: '#EA580C', fontWeight: '700',
+                }}>
+                  ⏱️ Refund scheduled — processing soon
+                </p>
+              )}
+              {order.refundStatus === 'pending' && (
+                <p style={{
+                  margin: '4px 0 0', fontSize: '0.82rem',
+                  color: '#92400E', fontWeight: '700',
+                }}>
+                  🟡 Refund being processed — 5-7 business days
+                </p>
+              )}
+              {!order.refundStatus && (
+                <p style={{
+                  margin: '4px 0 0', fontSize: '0.80rem',
+                  color: '#6B7280', fontWeight: '500',
+                }}>
+                  {order.orderStatus === 'Refunded'
+                    ? 'Refund will be processed within 5-7 business days.'
+                    : 'Your order has been cancelled.'}
+                </p>
+              )}
+            </div>
+          </div>
+        ) : (
           <>
             {/* HORIZONTAL STEP TRACKER */}
             <div style={{ marginBottom: '14px' }}>
@@ -401,7 +403,7 @@ const expected = getExpectedDelivery(order.createdAt);
                   {STATUS_DESC[order.orderStatus] || 'Order in progress'}
                 </p>
 
-                {/* ✅ Expected delivery in status box */}
+                {/* Expected delivery in status box */}
                 {!isDelivered && (
                   <p style={{ fontSize: '0.74rem', color: '#7B2FBE', margin: '5px 0 0', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     🗓️ Expected delivery:
@@ -411,7 +413,7 @@ const expected = getExpectedDelivery(order.createdAt);
                   </p>
                 )}
 
-                {/* ✅ Actual delivery date in status box */}
+                {/* Actual delivery date in status box */}
                 {isDelivered && order.deliveredAt && (
                   <p style={{ fontSize: '0.74rem', color: '#10B981', margin: '5px 0 0', fontWeight: '700' }}>
                     📅 Delivered on {new Date(order.deliveredAt).toLocaleDateString('en-IN', {
@@ -483,7 +485,7 @@ const expected = getExpectedDelivery(order.createdAt);
               </div>
             </div>
 
-            {/* ✅ Delivery Date Info */}
+            {/* Delivery Date Info */}
             <div style={{ marginBottom: '12px', padding: '14px 16px', background: isDelivered ? 'linear-gradient(135deg,#F0FDF4,#D1FAE5)' : 'linear-gradient(135deg,#F8F4FF,#EDE9FE)', borderRadius: '14px', border: `1.5px solid ${isDelivered ? '#6EE7B7' : '#DDD6FE'}` }}>
               <h4 style={{ fontSize: '0.80rem', fontWeight: '800', color: isDelivered ? '#065F46' : '#7B2FBE', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                 🗓️ Delivery Info
@@ -670,16 +672,8 @@ export default function ProfileClient() {
       setOrdersLoading(false);
     }
   };
-  // ✅ NEW: Auto-refresh orders every 10 seconds to show live refund status
-useEffect(() => {
-  if (status !== 'authenticated' || activeTab !== 'orders') return;
-  
-  const interval = setInterval(() => {
-    fetchOrders();
-  }, 10000); // refresh every 10 seconds
-  
-  return () => clearInterval(interval);
-}, [status, activeTab]);
+
+  // ❌ REMOVED: auto-refresh every 10 seconds
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -845,13 +839,7 @@ useEffect(() => {
             </div>
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              {/* Info banner */}
-              <div style={{ padding: '14px 18px', background: 'linear-gradient(135deg, #F0FDF4, #F3E8FF)', border: '1.5px solid #BBF7D0', borderRadius: '14px', display: 'flex', alignItems: 'center', gap: '10px', fontFamily: 'Nunito, sans-serif' }}>
-                <div style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981', animation: 'liveBlip 1.5s ease-in-out infinite', flexShrink: 0 }} />
-                <p style={{ fontSize: '0.85rem', fontWeight: '700', color: '#166534', margin: 0 }}>
-                  Live tracking — your order status updates automatically. Expected delivery shown for active orders.
-                </p>
-              </div>
+              {/* ❌ REMOVED: Live tracking banner */}
 
               {orders.map(order => (
                 <OrderTrackingCard key={order.id} order={order} />
@@ -860,13 +848,6 @@ useEffect(() => {
           )}
         </div>
       )}
-
-      <style>{`
-        @keyframes liveBlip {
-          0%, 100% { transform: scale(1); opacity: 1; }
-          50%       { transform: scale(1.5); opacity: 0.5; }
-        }
-      `}</style>
     </div>
   );
 }
