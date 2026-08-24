@@ -102,7 +102,7 @@ export async function POST(request) {
     });
 
   } catch (error) {
-    console.error('Bulk upload error:', error);
+    console.error('Bulk  error:', error);
     return NextResponse.json(
       { error: error.message || 'Internal server error' },
       { status: 500 }

@@ -3,7 +3,6 @@
 /**
  * ✅ Upload file directly to R2 via presigned URL
  * Bypasses Vercel's 4.5 MB serverless body limit
- * Works for files up to 50 MB
  *
  * @param {File} file - The file to upload (from input.files[0])
  * @param {string} folder - R2 folder path (e.g., 'arunas/banners/hero')
@@ -13,35 +12,58 @@
 export async function uploadFileToR2(file, folder = 'uploads', onProgress) {
   if (!file) throw new Error('No file provided');
 
-  // ✅ Client-side validation
-  const isVideo = file.type.startsWith('video/');
-  const maxSize = isVideo ? 50 * 1024 * 1024 : 10 * 1024 * 1024;
+  // 1️⃣ Fix empty file type (Common on Windows/iOS for video files)
+  let contentType = file.type;
+  if (!contentType) {
+    const ext = (file.name.split('.').pop() || '').toLowerCase();
+    const mimeMap = {
+      jpg: 'image/jpeg',
+      jpeg: 'image/jpeg',
+      png: 'image/png',
+      webp: 'image/webp',
+      gif: 'image/gif',
+      mp4: 'video/mp4',
+      webm: 'video/webm',
+      mov: 'video/quicktime',
+      m4v: 'video/x-m4v',
+    };
+    contentType = mimeMap[ext] || 'application/octet-stream';
+  }
+
+  // 2️⃣ Client-side size validation
+  const isVideo = contentType.startsWith('video/');
+  const maxSize = isVideo ? 100 * 1024 * 1024 : 15 * 1024 * 1024; // 100MB for video, 15MB for image
   if (file.size > maxSize) {
-    const limitMB = isVideo ? 50 : 10;
+    const limitMB = isVideo ? 100 : 15;
     throw new Error(
-      `File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max: ${limitMB} MB`
+      `File too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Max limit: ${limitMB} MB`
     );
   }
 
-  // 1️⃣ Get presigned URL from your API
+  // 3️⃣ Get presigned URL from API
   const presignRes = await fetch('/api/upload-presign', {
-    method:  'POST',
+    method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({
-      filename:    file.name,
-      contentType: file.type,
+    body: JSON.stringify({
+      filename: file.name,
+      contentType: contentType,
       folder,
     }),
   });
 
+  const presignData = await presignRes.json().catch(() => ({}));
+
   if (!presignRes.ok) {
-    const err = await presignRes.json().catch(() => ({}));
-    throw new Error(err.error || `Presign failed (${presignRes.status})`);
+    throw new Error(presignData.error || `Presign failed (${presignRes.status})`);
   }
 
-  const { uploadUrl, publicUrl, key } = await presignRes.json();
+  const { uploadUrl, publicUrl, key } = presignData;
 
-  // 2️⃣ Upload file DIRECTLY to R2 (bypasses Vercel completely)
+  if (!uploadUrl) {
+    throw new Error('Upload URL missing from server response. Check R2 environment variables.');
+  }
+
+  // 4️⃣ Direct PUT upload to Cloudflare R2
   await new Promise((resolve, reject) => {
     const xhr = new XMLHttpRequest();
 
@@ -56,23 +78,35 @@ export async function uploadFileToR2(file, folder = 'uploads', onProgress) {
       if (xhr.status >= 200 && xhr.status < 300) {
         resolve();
       } else {
-        reject(new Error(`Upload failed: HTTP ${xhr.status}`));
+        reject(
+          new Error(
+            `R2 returned error ${xhr.status}. Check R2 bucket permissions or env keys.`
+          )
+        );
       }
     };
 
-    xhr.onerror   = () => reject(new Error('Network error during upload'));
-    xhr.ontimeout = () => reject(new Error('Upload timed out'));
+    xhr.onerror = () => {
+      reject(
+        new Error(
+          'Upload blocked by browser or network. Open F12 > Network tab to inspect failing request.'
+        )
+      );
+    };
+
+    xhr.ontimeout = () => reject(new Error('Upload timed out. Try a smaller file.'));
 
     xhr.open('PUT', uploadUrl);
-    xhr.setRequestHeader('Content-Type', file.type);
-    xhr.timeout = 5 * 60 * 1000;   // 5 minutes
+    // MUST match contentType sent to presign API exactly
+    xhr.setRequestHeader('Content-Type', contentType);
+    xhr.timeout = 10 * 60 * 1000; // 10 minute timeout for large videos
     xhr.send(file);
   });
 
-  // 3️⃣ Return in your existing format
+  // 5️⃣ Return standard response format
   return {
-    url:      publicUrl,
+    url: publicUrl,
     publicId: key,
-    type:     isVideo ? 'video' : 'image',
+    type: isVideo ? 'video' : 'image',
   };
 }
