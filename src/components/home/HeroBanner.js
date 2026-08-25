@@ -7,7 +7,7 @@ import styles from './HeroBanner.module.css';
 const defaultBanners = [
   {
     id: '1',
-    tag: '✨ New Arrivals 2025',
+    tag: '✨ New Arrivals 2026',
     title: 'Soft & Stylish\nBaby Essentials',
     subtitle:
       'Discover premium organic cotton outfits designed for comfort, warmth, and everyday adventures.',

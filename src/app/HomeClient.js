@@ -1210,7 +1210,7 @@ function CTASection({ sectionSettings = {} }) {
                 </Link>
               </div>
               <div style={{ display:'flex', gap:'20px', marginTop:'28px', flexWrap:'wrap' }}>
-                {[{ icon:'🛡️', text:'100% Safe & Certified' }, { icon:'🚚', text:'Free delivery ₹499+' }, { icon:'↩️', text:'30-day returns' }].map((b, i) => (
+                {[{ icon:'🛡️', text:'100% Safe & Certified' }, {  }, ].map((b, i) => (
                   <div key={i} style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'0.80rem', color:'rgba(255,255,255,0.85)', fontWeight:'600', fontFamily:'Nunito,sans-serif' }}>
                     <span>{b.icon}</span>{b.text}
                   </div>

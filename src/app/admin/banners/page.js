@@ -889,13 +889,17 @@ export default function AdminBanners() {
 
   const openEdit = (banner) => {
     setEditing(banner);
+    const heroUrl = banner.panels?.[0]?.url || banner.image?.url || '';
+    const heroPublicId = banner.panels?.[0]?.publicId || banner.image?.publicId || '';
+    const heroMediaObj = heroUrl ? { url: heroUrl, publicId: heroPublicId } : null;
+
     setForm({
       title:         banner.title         || '',
       subtitle:      banner.subtitle      || '',
       buttonText:    banner.buttonText    || 'Shop Now',
       buttonLink:    banner.buttonLink    || '/products',
       bgColor:       banner.bgColor       || '#ff6b9d',
-      image:         banner.image         || null,
+      image:         banner.image?.url ? banner.image : heroMediaObj,
       mobileImage:   banner.mobileImage   || null,
       panels:        banner.panels?.length > 0 ? banner.panels : PANEL_DEFAULTS,
       isActive:      banner.isActive,
@@ -924,14 +928,26 @@ export default function AdminBanners() {
     setUploading(true);
     try {
       const result = await uploadFileToR2(file, `arunas/banners/${form.type}`);
-      setForm(f => ({
-        ...f,
-        image: {
+      const imgObj = {
+        url:      result.url,
+        publicId: result.publicId,
+        type:     result.type,
+      };
+
+      setForm(f => {
+        const panels = [...(f.panels || PANEL_DEFAULTS)];
+        panels[0] = {
+          ...panels[0],
+          isBig:    true,
           url:      result.url,
           publicId: result.publicId,
-          type:     result.type,
-        },
-      }));
+        };
+        return {
+          ...f,
+          image:  imgObj,
+          panels: f.type === 'hero' ? panels : f.panels,
+        };
+      });
       toast.success(`✅ ${result.type === 'video' ? 'Video' : 'Image'} uploaded!`);
     } catch (err) {
       toast.error(err.message);
@@ -972,7 +988,11 @@ export default function AdminBanners() {
           url:      result.url,
           publicId: result.publicId,
         };
-        return { ...f, panels };
+        return { 
+          ...f, 
+          panels,
+          image: { url: result.url, publicId: result.publicId, type: result.type } 
+        };
       });
       toast.success('✅ Hero media uploaded!');
     } catch (err) {
@@ -994,7 +1014,7 @@ export default function AdminBanners() {
     setForm(f => {
       const panels = [...(f.panels || PANEL_DEFAULTS)];
       panels[0] = { ...panels[0], url: '', publicId: '' };
-      return { ...f, panels };
+      return { ...f, panels, image: null };
     });
   };
 
@@ -1013,6 +1033,10 @@ export default function AdminBanners() {
 
     setSaving(true);
     try {
+      const imageUrl = form.image?.url || form.panels?.[0]?.url || null;
+      const imagePublicId = form.image?.publicId || form.panels?.[0]?.publicId || null;
+      const imageObj = imageUrl ? { url: imageUrl, publicId: imagePublicId, type: form.image?.type } : null;
+
       const payload = {
         title:         form.type === 'budget' ? `Under ₹${form.price}` : form.title,
         subtitle:      form.subtitle      || null,
@@ -1029,7 +1053,7 @@ export default function AdminBanners() {
         offer:         form.offer         || null,
         color:         form.color         || null,
         slug:          form.slug          || null,
-        image:         form.image         || null,
+        image:         imageObj,
         mobileImage:   form.mobileImage   || null,
         gender:        form.gender        || null,
         festivalName:  form.festivalName  || null,
@@ -1040,9 +1064,9 @@ export default function AdminBanners() {
         newBornGender: form.newBornGender || null,
         ageGroup:      form.ageGroup      || null,
         panels: form.type === 'hero'
-          ? (form.panels || PANEL_DEFAULTS).map(p => ({
-              url:      p.url      || '',
-              publicId: p.publicId || '',
+          ? (form.panels || PANEL_DEFAULTS).map((p, idx) => ({
+              url:      (idx === 0 ? (p.url || form.image?.url || '') : (p.url || '')),
+              publicId: (idx === 0 ? (p.publicId || form.image?.publicId || '') : (p.publicId || '')),
               label:    p.label    || '',
               sublabel: p.sublabel || '',
               link:     p.link     || '/products',
@@ -1081,7 +1105,7 @@ export default function AdminBanners() {
 
   const BannerCard = ({ banner }) => {
     const heroPanel = banner.panels?.[0];
-    const heroMedia = heroPanel?.url;
+    const heroMedia = heroPanel?.url || banner.image?.url;
     const heroIsVideo = isVideoUrl(heroMedia);
     const bannerImageIsVideo = isVideoUrl(banner.image?.url);
 
@@ -1341,7 +1365,7 @@ export default function AdminBanners() {
                     value={form.image}
                     onChange={handleImageUpload}
                     uploading={uploading}
-                    onRemove={() => setForm(f => ({ ...f, image: null }))}
+                    onRemove={() => setForm(f => ({ ...f, image: null, panels: [] }))}
                     allowVideo={true}
                   />
                 </div>
