@@ -212,14 +212,13 @@ export default function Header() {
       setSelectedIndex(prev => (prev - 1 + totalItems) % Math.max(totalItems, 1));
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (selectedIndex >= 0) {
-        if (searchResults[selectedIndex]) {
-          const product = searchResults[selectedIndex];
-          router.push(`/products/${product.slug || product.id}`);
-          setSearchOpen(false);
-          setSearchQuery('');
-          setSelectedIndex(-1);
-        }
+      if (selectedIndex >= 0 && searchResults[selectedIndex]) {
+        const product = searchResults[selectedIndex];
+        // ✅ FIXED: Always use product.id
+        router.push(`/products/${product.id}`);
+        setSearchOpen(false);
+        setSearchQuery('');
+        setSelectedIndex(-1);
       } else {
         handleSearch(e);
       }
@@ -229,293 +228,6 @@ export default function Header() {
   const closeMobile = () => setMobileOpen(false);
   const isLoadingSession = status === 'loading';
   const isLoggedIn = status === 'authenticated' && session && session.user;
-
-  // ✅ Search Dropdown (Desktop)
-  const SearchDropdown = () => (
-    <div style={{
-      position: 'absolute',
-      top: 'calc(100% + 8px)',
-      left: 0,
-      right: 0,
-      background: 'white',
-      border: '1.5px solid #38BDF8',
-      borderRadius: '16px',
-      boxShadow: '0 12px 40px rgba(3, 105, 161, 0.15)',
-      maxHeight: '70vh',
-      overflowY: 'auto',
-      zIndex: 999,
-      animation: 'searchFadeIn 0.2s ease-out',
-    }}>
-      {searchLoading && (
-        <div style={{
-          padding: '20px', textAlign: 'center',
-          color: '#0369A1', fontSize: '0.86rem', fontWeight: '600',
-        }}>
-          <div style={{
-            display: 'inline-block',
-            width: '24px', height: '24px',
-            border: '3px solid #E0F2FE',
-            borderTop: '3px solid #0369A1',
-            borderRadius: '50%',
-            animation: 'spin 0.8s linear infinite',
-            marginBottom: '8px',
-          }} />
-          <p style={{ margin: 0 }}>Searching...</p>
-        </div>
-      )}
-
-      {!searchLoading && searchQuery && searchResults.length > 0 && (
-        <div>
-          <div style={{
-            padding: '10px 16px',
-            background: 'linear-gradient(90deg, #F0F9FF, #E0F2FE)',
-            borderBottom: '1px solid #BAE6FD',
-            fontSize: '0.72rem', fontWeight: '800',
-            color: '#0369A1', textTransform: 'uppercase', letterSpacing: '0.5px',
-          }}>
-            🎯 {searchResults.length} Products Found
-          </div>
-          {/* ✅ FIXED DESKTOP RESULTS (SHOWS BRAND TAG PROPERLY) */}
-          {searchResults.map((product, i) => {
-            const imgUrl = product.images?.[0]?.url || product.images?.[0] || product.image || 'https://via.placeholder.com/48';
-            const price = Math.round(product.discountPrice || product.price || 0);
-            const oldPrice = product.discountPrice && product.discountPrice < product.price ? Math.round(product.price) : null;
-            
-            return (
-              <Link
-                key={product.id}
-                href={`/products/${product.slug || product.id}`}
-                onClick={() => {
-                  saveRecentSearch(searchQuery);
-                  setSearchOpen(false);
-                  setSearchQuery('');
-                  setSelectedIndex(-1);
-                }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '12px',
-                  padding: '10px 14px', textDecoration: 'none', color: 'inherit',
-                  background: selectedIndex === i ? '#F0F9FF' : 'white',
-                  borderBottom: i < searchResults.length - 1 ? '1px solid #F1F5F9' : 'none',
-                  transition: 'background 0.15s',
-                }}
-                onMouseEnter={() => setSelectedIndex(i)}
-                onMouseLeave={() => setSelectedIndex(-1)}
-              >
-                <img
-                  src={imgUrl}
-                  alt={product.name}
-                  style={{
-                    width: '48px', height: '48px', borderRadius: '8px',
-                    objectFit: 'cover', flexShrink: 0, border: '1px solid #E5E7EB', background: '#F8FAFC'
-                  }}
-                />
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{
-                    margin: 0, fontSize: '0.86rem', fontWeight: '800', color: '#0F172A',
-                    overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                  }}>
-                    {product.name}
-                  </p>
-                  {(product.brand || product.brandName) && (
-                    <p style={{ 
-                      margin: '3px 0 0', fontSize: '0.70rem', color: '#0369A1', fontWeight: '700',
-                      display: 'inline-block', background: '#E0F2FE', padding: '2px 8px', borderRadius: '4px' 
-                    }}>
-                      🏷️ {product.brand || product.brandName}
-                    </p>
-                  )}
-                </div>
-                <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <p style={{ margin: 0, fontSize: '0.90rem', fontWeight: '800', color: '#0369A1' }}>
-                    ₹{price.toLocaleString('en-IN')}
-                  </p>
-                  {oldPrice && (
-                    <p style={{
-                      margin: '2px 0 0', fontSize: '0.68rem', color: '#94A3B8',
-                      textDecoration: 'line-through', fontWeight: '600',
-                    }}>
-                      ₹{oldPrice.toLocaleString('en-IN')}
-                    </p>
-                  )}
-                </div>
-              </Link>
-            );
-          })}
-
-          <button
-            onClick={() => handleSearch()}
-            style={{
-              width: '100%', padding: '12px 16px',
-              background: 'linear-gradient(135deg, #38BDF8, #0369A1)',
-              color: 'white', border: 'none',
-              fontSize: '0.84rem', fontWeight: '800',
-              cursor: 'pointer', display: 'flex',
-              alignItems: 'center', justifyContent: 'center',
-              gap: '6px', borderRadius: '0 0 14px 14px',
-            }}
-          >
-            🔍 View All Results for "{searchQuery}" →
-          </button>
-        </div>
-      )}
-
-      {!searchLoading && searchQuery.length >= 2 && searchResults.length === 0 && (
-        <div style={{ padding: '30px 20px', textAlign: 'center' }}>
-          <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🔍</div>
-          <p style={{ margin: 0, fontSize: '0.90rem', fontWeight: '800', color: '#0F172A' }}>
-            No products found
-          </p>
-          <p style={{ margin: '4px 0 12px', fontSize: '0.80rem', color: '#64748B' }}>
-            Try different keywords or browse categories
-          </p>
-          <Link
-            href="/products"
-            onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
-            style={{
-              display: 'inline-block', padding: '8px 20px',
-              background: '#38BDF8', color: 'white',
-              borderRadius: '8px', textDecoration: 'none',
-              fontSize: '0.80rem', fontWeight: '700',
-            }}
-          >
-            Browse All Products
-          </Link>
-        </div>
-      )}
-
-      {!searchQuery && (
-        <div>
-          {recentSearches.length > 0 && (
-            <div>
-              <div style={{
-                padding: '12px 16px 8px', display: 'flex',
-                alignItems: 'center', justifyContent: 'space-between',
-              }}>
-                <span style={{
-                  fontSize: '0.72rem', fontWeight: '800', color: '#64748B',
-                  textTransform: 'uppercase', letterSpacing: '0.5px',
-                }}>
-                  🕐 Recent Searches
-                </span>
-                <button
-                  onClick={clearRecentSearches}
-                  style={{
-                    background: 'none', border: 'none',
-                    color: '#EF4444', fontSize: '0.72rem',
-                    fontWeight: '700', cursor: 'pointer',
-                  }}
-                >
-                  Clear
-                </button>
-              </div>
-              <div style={{ padding: '0 16px 12px' }}>
-                {recentSearches.map((search, i) => (
-                  <button
-                    key={i}
-                    onClick={() => handleSearch(null, search)}
-                    style={{
-                      width: '100%', padding: '9px 12px',
-                      background: 'transparent', border: '1px solid #E5E7EB',
-                      borderRadius: '8px', textAlign: 'left',
-                      cursor: 'pointer', fontSize: '0.84rem',
-                      color: '#334155', fontWeight: '600',
-                      marginBottom: '5px', display: 'flex',
-                      alignItems: 'center', gap: '10px',
-                      transition: 'all 0.15s',
-                    }}
-                    onMouseEnter={e => {
-                      e.currentTarget.style.background = '#F0F9FF';
-                      e.currentTarget.style.borderColor = '#38BDF8';
-                    }}
-                    onMouseLeave={e => {
-                      e.currentTarget.style.background = 'transparent';
-                      e.currentTarget.style.borderColor = '#E5E7EB';
-                    }}
-                  >
-                    <span style={{ color: '#94A3B8' }}>🕐</span>
-                    {search}
-                    <span style={{ marginLeft: 'auto', color: '#94A3B8', fontSize: '0.72rem' }}>↗</span>
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          <div style={{
-            padding: '12px 16px 8px',
-            borderTop: recentSearches.length > 0 ? '1px solid #F1F5F9' : 'none',
-          }}>
-            <span style={{
-              fontSize: '0.72rem', fontWeight: '800', color: '#0369A1',
-              textTransform: 'uppercase', letterSpacing: '0.5px',
-            }}>
-              🔥 Trending Searches
-            </span>
-          </div>
-          <div style={{
-            padding: '0 16px 16px', display: 'flex',
-            flexWrap: 'wrap', gap: '6px',
-          }}>
-            {TRENDING_SEARCHES.map((trend, i) => (
-              <button
-                key={i}
-                onClick={() => handleSearch(null, trend)}
-                style={{
-                  padding: '6px 12px',
-                  background: 'linear-gradient(135deg, #F0F9FF, #E0F2FE)',
-                  border: '1px solid #BAE6FD', borderRadius: '999px',
-                  cursor: 'pointer', fontSize: '0.78rem',
-                  color: '#0369A1', fontWeight: '700', transition: 'all 0.15s',
-                }}
-                onMouseEnter={e => {
-                  e.currentTarget.style.background = 'linear-gradient(135deg, #38BDF8, #0369A1)';
-                  e.currentTarget.style.color = 'white';
-                }}
-                onMouseLeave={e => {
-                  e.currentTarget.style.background = 'linear-gradient(135deg, #F0F9FF, #E0F2FE)';
-                  e.currentTarget.style.color = '#0369A1';
-                }}
-              >
-                {trend}
-              </button>
-            ))}
-          </div>
-
-          <div style={{
-            padding: '12px 16px', background: '#F8FAFC',
-            borderTop: '1px solid #F1F5F9', borderRadius: '0 0 14px 14px',
-          }}>
-            <p style={{
-              margin: '0 0 8px', fontSize: '0.72rem', fontWeight: '800',
-              color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px',
-            }}>
-              🎯 Quick Categories
-            </p>
-            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
-              {navCategories.slice(0, 6).map(cat => (
-                <Link
-                  key={cat.id}
-                  href={`/products?category=${cat.id}`}
-                  onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
-                  style={{
-                    padding: '5px 10px', background: 'white',
-                    border: '1px solid #E5E7EB', borderRadius: '6px',
-                    fontSize: '0.74rem', color: '#334155',
-                    fontWeight: '700', textDecoration: 'none',
-                    transition: 'all 0.15s',
-                  }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = '#38BDF8'; e.currentTarget.style.color = '#0369A1'; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.color = '#334155'; }}
-                >
-                  {cat.name}
-                </Link>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
 
   return (
     <header className={`${styles.header} ${scrolled ? styles.scrolled : ''}`}>
@@ -574,13 +286,297 @@ export default function Header() {
               </div>
             </form>
 
-            {searchOpen && <SearchDropdown />}
+            {/* ✅ INLINED DROPDOWN (Prevents unmounting/flicker) */}
+            {searchOpen && (
+              <div style={{
+                position: 'absolute',
+                top: 'calc(100% + 8px)',
+                left: 0,
+                right: 0,
+                background: 'white',
+                border: '1.5px solid #38BDF8',
+                borderRadius: '16px',
+                boxShadow: '0 12px 40px rgba(3, 105, 161, 0.15)',
+                maxHeight: '70vh',
+                overflowY: 'auto',
+                zIndex: 999,
+                animation: 'searchFadeIn 0.2s ease-out',
+              }}>
+                {searchLoading && (
+                  <div style={{
+                    padding: '20px', textAlign: 'center',
+                    color: '#0369A1', fontSize: '0.86rem', fontWeight: '600',
+                  }}>
+                    <div style={{
+                      display: 'inline-block',
+                      width: '24px', height: '24px',
+                      border: '3px solid #E0F2FE',
+                      borderTop: '3px solid #0369A1',
+                      borderRadius: '50%',
+                      animation: 'spin 0.8s linear infinite',
+                      marginBottom: '8px',
+                    }} />
+                    <p style={{ margin: 0 }}>Searching...</p>
+                  </div>
+                )}
+
+                {!searchLoading && searchQuery && searchResults.length > 0 && (
+                  <div>
+                    <div style={{
+                      padding: '10px 16px',
+                      background: 'linear-gradient(90deg, #F0F9FF, #E0F2FE)',
+                      borderBottom: '1px solid #BAE6FD',
+                      fontSize: '0.72rem', fontWeight: '800',
+                      color: '#0369A1', textTransform: 'uppercase', letterSpacing: '0.5px',
+                    }}>
+                      🎯 {searchResults.length} Products Found
+                    </div>
+
+                    {searchResults.map((product, i) => {
+                      const imgUrl = product.images?.[0]?.url || product.images?.[0] || product.image || 'https://via.placeholder.com/48';
+                      const price = Math.round(product.discountPrice || product.price || 0);
+                      const oldPrice = product.discountPrice && product.discountPrice < product.price ? Math.round(product.price) : null;
+                      
+                      return (
+                        <Link
+                          key={product.id}
+                          href={`/products/${product.id}`}
+                          onClick={() => {
+                            saveRecentSearch(searchQuery);
+                            setSearchOpen(false);
+                            setSearchQuery('');
+                            setSelectedIndex(-1);
+                          }}
+                          style={{
+                            display: 'flex', alignItems: 'center', gap: '12px',
+                            padding: '10px 14px', textDecoration: 'none', color: 'inherit',
+                            background: selectedIndex === i ? '#F0F9FF' : 'white',
+                            borderBottom: i < searchResults.length - 1 ? '1px solid #F1F5F9' : 'none',
+                            transition: 'background 0.15s',
+                          }}
+                          onMouseEnter={() => setSelectedIndex(i)}
+                        >
+                          <img
+                            src={imgUrl}
+                            alt={product.name}
+                            style={{
+                              width: '48px', height: '48px', borderRadius: '8px',
+                              objectFit: 'cover', flexShrink: 0, border: '1px solid #E5E7EB', background: '#F8FAFC'
+                            }}
+                          />
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <p style={{
+                              margin: 0, fontSize: '0.86rem', fontWeight: '800', color: '#0F172A',
+                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
+                            }}>
+                              {product.name}
+                            </p>
+                            {(product.brand || product.brandName) && (
+                              <p style={{ 
+                                margin: '3px 0 0', fontSize: '0.70rem', color: '#0369A1', fontWeight: '700',
+                                display: 'inline-block', background: '#E0F2FE', padding: '2px 8px', borderRadius: '4px' 
+                              }}>
+                                🏷️ {product.brand || product.brandName}
+                              </p>
+                            )}
+                          </div>
+                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                            <p style={{ margin: 0, fontSize: '0.90rem', fontWeight: '800', color: '#0369A1' }}>
+                              ₹{price.toLocaleString('en-IN')}
+                            </p>
+                            {oldPrice && (
+                              <p style={{
+                                margin: '2px 0 0', fontSize: '0.68rem', color: '#94A3B8',
+                                textDecoration: 'line-through', fontWeight: '600',
+                              }}>
+                                ₹{oldPrice.toLocaleString('en-IN')}
+                              </p>
+                            )}
+                          </div>
+                        </Link>
+                      );
+                    })}
+
+                    <button
+                      onClick={() => handleSearch()}
+                      style={{
+                        width: '100%', padding: '12px 16px',
+                        background: 'linear-gradient(135deg, #38BDF8, #0369A1)',
+                        color: 'white', border: 'none',
+                        fontSize: '0.84rem', fontWeight: '800',
+                        cursor: 'pointer', display: 'flex',
+                        alignItems: 'center', justifyContent: 'center',
+                        gap: '6px', borderRadius: '0 0 14px 14px',
+                      }}
+                    >
+                      🔍 View All Results for "{searchQuery}" →
+                    </button>
+                  </div>
+                )}
+
+                {!searchLoading && searchQuery.length >= 2 && searchResults.length === 0 && (
+                  <div style={{ padding: '30px 20px', textAlign: 'center' }}>
+                    <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🔍</div>
+                    <p style={{ margin: 0, fontSize: '0.90rem', fontWeight: '800', color: '#0F172A' }}>
+                      No products found
+                    </p>
+                    <p style={{ margin: '4px 0 12px', fontSize: '0.80rem', color: '#64748B' }}>
+                      Try different keywords or browse categories
+                    </p>
+                    <Link
+                      href="/products"
+                      onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
+                      style={{
+                        display: 'inline-block', padding: '8px 20px',
+                        background: '#38BDF8', color: 'white',
+                        borderRadius: '8px', textDecoration: 'none',
+                        fontSize: '0.80rem', fontWeight: '700',
+                      }}
+                    >
+                      Browse All Products
+                    </Link>
+                  </div>
+                )}
+
+                {!searchQuery && (
+                  <div>
+                    {recentSearches.length > 0 && (
+                      <div>
+                        <div style={{
+                          padding: '12px 16px 8px', display: 'flex',
+                          alignItems: 'center', justifyContent: 'space-between',
+                        }}>
+                          <span style={{
+                            fontSize: '0.72rem', fontWeight: '800', color: '#64748B',
+                            textTransform: 'uppercase', letterSpacing: '0.5px',
+                          }}>
+                            🕐 Recent Searches
+                          </span>
+                          <button
+                            onClick={clearRecentSearches}
+                            style={{
+                              background: 'none', border: 'none',
+                              color: '#EF4444', fontSize: '0.72rem',
+                              fontWeight: '700', cursor: 'pointer',
+                            }}
+                          >
+                            Clear
+                          </button>
+                        </div>
+                        <div style={{ padding: '0 16px 12px' }}>
+                          {recentSearches.map((search, i) => (
+                            <button
+                              key={i}
+                              onClick={() => handleSearch(null, search)}
+                              style={{
+                                width: '100%', padding: '9px 12px',
+                                background: 'transparent', border: '1px solid #E5E7EB',
+                                borderRadius: '8px', textAlign: 'left',
+                                cursor: 'pointer', fontSize: '0.84rem',
+                                color: '#334155', fontWeight: '600',
+                                marginBottom: '5px', display: 'flex',
+                                alignItems: 'center', gap: '10px',
+                                transition: 'all 0.15s',
+                              }}
+                              onMouseEnter={e => {
+                                e.currentTarget.style.background = '#F0F9FF';
+                                e.currentTarget.style.borderColor = '#38BDF8';
+                              }}
+                              onMouseLeave={e => {
+                                e.currentTarget.style.background = 'transparent';
+                                e.currentTarget.style.borderColor = '#E5E7EB';
+                              }}
+                            >
+                              <span style={{ color: '#94A3B8' }}>🕐</span>
+                              {search}
+                              <span style={{ marginLeft: 'auto', color: '#94A3B8', fontSize: '0.72rem' }}>↗</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div style={{
+                      padding: '12px 16px 8px',
+                      borderTop: recentSearches.length > 0 ? '1px solid #F1F5F9' : 'none',
+                    }}>
+                      <span style={{
+                        fontSize: '0.72rem', fontWeight: '800', color: '#0369A1',
+                        textTransform: 'uppercase', letterSpacing: '0.5px',
+                      }}>
+                        🔥 Trending Searches
+                      </span>
+                    </div>
+                    <div style={{
+                      padding: '0 16px 16px', display: 'flex',
+                      flexWrap: 'wrap', gap: '6px',
+                    }}>
+                      {TRENDING_SEARCHES.map((trend, i) => (
+                        <button
+                          key={i}
+                          onClick={() => handleSearch(null, trend)}
+                          style={{
+                            padding: '6px 12px',
+                            background: 'linear-gradient(135deg, #F0F9FF, #E0F2FE)',
+                            border: '1px solid #BAE6FD', borderRadius: '999px',
+                            cursor: 'pointer', fontSize: '0.78rem',
+                            color: '#0369A1', fontWeight: '700', transition: 'all 0.15s',
+                          }}
+                          onMouseEnter={e => {
+                            e.currentTarget.style.background = 'linear-gradient(135deg, #38BDF8, #0369A1)';
+                            e.currentTarget.style.color = 'white';
+                          }}
+                          onMouseLeave={e => {
+                            e.currentTarget.style.background = 'linear-gradient(135deg, #F0F9FF, #E0F2FE)';
+                            e.currentTarget.style.color = '#0369A1';
+                          }}
+                        >
+                          {trend}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div style={{
+                      padding: '12px 16px', background: '#F8FAFC',
+                      borderTop: '1px solid #F1F5F9', borderRadius: '0 0 14px 14px',
+                    }}>
+                      <p style={{
+                        margin: '0 0 8px', fontSize: '0.72rem', fontWeight: '800',
+                        color: '#64748B', textTransform: 'uppercase', letterSpacing: '0.5px',
+                      }}>
+                        🎯 Quick Categories
+                      </p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                        {navCategories.slice(0, 6).map(cat => (
+                          <Link
+                            key={cat.id}
+                            href={`/products?category=${cat.id}`}
+                            onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
+                            style={{
+                              padding: '5px 10px', background: 'white',
+                              border: '1px solid #E5E7EB', borderRadius: '6px',
+                              fontSize: '0.74rem', color: '#334155',
+                              fontWeight: '700', textDecoration: 'none',
+                              transition: 'all 0.15s',
+                            }}
+                            onMouseEnter={e => { e.currentTarget.style.borderColor = '#38BDF8'; e.currentTarget.style.color = '#0369A1'; }}
+                            onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.color = '#334155'; }}
+                          >
+                            {cat.name}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </div>
 
           {/* Actions */}
           <div className={styles.actions}>
 
-            {/* ✅ Mobile Search Icon (only visible on mobile) */}
+            {/* Mobile Search Icon */}
             <button
               className={styles.mobileSearchBtn}
               onClick={() => setMobileSearchOpen(true)}
@@ -808,7 +804,6 @@ export default function Header() {
                 <p className={styles.mobileSearchLabel}>
                   🎯 {searchResults.length} Products Found
                 </p>
-                {/* ✅ FIXED MOBILE RESULTS (SHOWS BRAND TAG PROPERLY) */}
                 <div className={styles.mobileResultsList}>
                   {searchResults.map(product => {
                     const imgUrl = product.images?.[0]?.url || product.images?.[0] || product.image || 'https://via.placeholder.com/50';
@@ -818,7 +813,7 @@ export default function Header() {
                     return (
                       <Link
                         key={product.id}
-                        href={`/products/${product.slug || product.id}`}
+                        href={`/products/${product.id}`}
                         onClick={() => {
                           saveRecentSearch(searchQuery);
                           setMobileSearchOpen(false);
