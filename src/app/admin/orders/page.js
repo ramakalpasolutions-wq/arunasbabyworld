@@ -387,7 +387,8 @@ export default function AdminOrders() {
                         textDecoration: 'none', whiteSpace: 'nowrap',
                       }}
                     >
-                      👁️
+                        👁️ View
+                  
                     </Link>
                   </div>
                 </td>

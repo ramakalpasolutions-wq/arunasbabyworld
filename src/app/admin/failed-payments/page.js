@@ -341,32 +341,32 @@ export default function FailedPaymentsPage() {
     }
   };
 
-  const handleMarkCancelled = async (orderId) => {
-    if (!confirm('Mark this order as permanently cancelled?')) return;
+ const handleMarkCancelled = async (orderId) => {
+  if (!confirm('Mark this order as permanently cancelled?')) return;
 
-    setProcessing(orderId);
-    try {
-      const res = await fetch(`/api/orders/${orderId}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          orderStatus:  'Cancelled',
-          isCancelled:  true,
-          cancelReason: 'Payment failed — abandoned',
-          cancelledAt:  new Date(),
-        }),
-      });
+  setProcessing(orderId);
+  try {
+    const res = await fetch(`/api/orders/${orderId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        orderStatus: 'Cancelled',
+        paymentStatus: 'cancelled',   // ← important
+        isCancelled: true,
+        cancelReason: 'Payment failed — abandoned',
+        cancelledAt: new Date(),
+      }),
+    });
 
-      if (!res.ok) throw new Error('Failed to cancel');
-      toast.success('✅ Order marked as cancelled');
-      fetchOrders();
-    } catch (err) {
-      toast.error(err.message);
-    } finally {
-      setProcessing(null);
-    }
-  };
-
+    if (!res.ok) throw new Error('Failed to cancel');
+    toast.success('✅ Order marked as cancelled');
+    fetchOrders();
+  } catch (err) {
+    toast.error(err.message);
+  } finally {
+    setProcessing(null);
+  }
+};
   return (
     <div style={{ padding: '20px', fontFamily: 'Nunito, sans-serif' }}>
 
