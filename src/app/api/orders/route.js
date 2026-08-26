@@ -7,6 +7,8 @@ import { sendOrderConfirmation } from '@/lib/nodemailer';
 // ✅ Get next order number safely
 async function getNextOrderNumber() {
   try {
+    // Note: If you don't have a 'counter' model in your schema, this might fail. 
+    // Ensure you handle order numbering according to your existing working setup.
     const counter = await prisma.counter.upsert({
       where:  { name: 'orderNumber' },
       update: { value: { increment: 1 } },
@@ -30,6 +32,8 @@ export async function GET(request) {
     const status                = searchParams.get('status');
     const paymentStatus         = searchParams.get('paymentStatus');
     const excludeFailedPayments = searchParams.get('excludeFailedPayments');
+    const startDate             = searchParams.get('startDate'); // ✅ Added Date filter
+    const endDate               = searchParams.get('endDate');   // ✅ Added Date filter
     const page                  = parseInt(searchParams.get('page')  || '1');
     const limit                 = parseInt(searchParams.get('limit') || '10');
 
@@ -39,10 +43,8 @@ export async function GET(request) {
 
     // ✅ Payment filter logic
     if (paymentStatus) {
-      // Show ONLY these payment statuses
       where.paymentStatus = paymentStatus;
     } else if (excludeFailedPayments === 'true') {
-      // ✅ Hide failed payment orders from main list
       where.NOT = [
         {
           AND: [
@@ -51,6 +53,21 @@ export async function GET(request) {
           ],
         },
       ];
+    }
+
+    // ✅ NEW: MongoDB / Prisma Date Filter Logic
+    if (startDate || endDate) {
+      where.createdAt = {};
+      
+      if (startDate) {
+        // Appends UTC time to start of day
+        where.createdAt.gte = new Date(`${startDate}T00:00:00.000Z`);
+      }
+      
+      if (endDate) {
+        // Appends UTC time to end of day
+        where.createdAt.lte = new Date(`${endDate}T23:59:59.999Z`);
+      }
     }
 
     const total  = await prisma.order.count({ where });
@@ -146,7 +163,7 @@ export async function POST(request) {
 
     console.log('✅ Order created:', order.id, 'Number:', orderNumber, 'PaymentStatus:', order.paymentStatus);
 
-    // ✅ Only send email if COD (Razorpay email sent after payment verified)
+    // ✅ Only send email if COD
     if (paymentMethod === 'COD') {
       try {
         await sendOrderConfirmation(
@@ -164,9 +181,7 @@ export async function POST(request) {
 
   } catch (error) {
     console.error('Order POST error:', error);
-    console.error('Error details:', error.message);
-    console.error('Error code:', error.code);
-
+    
     if (error.code === 'P2002') {
       return NextResponse.json(
         { error: 'Duplicate order detected' },
@@ -188,7 +203,6 @@ export async function POST(request) {
   }
 }
 
-// ✅ DELETE — Admin can bulk delete
 export async function DELETE(request) {
   try {
     const session = await getServerSession(authOptions);

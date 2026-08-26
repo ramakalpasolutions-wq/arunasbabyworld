@@ -81,7 +81,13 @@ function PaymentBadge({ order }) {
 export default function AdminOrders() {
   const [orders,       setOrders]       = useState([]);
   const [loading,      setLoading]      = useState(true);
+  
+  // Filters
   const [filterStatus, setFilterStatus] = useState('');
+  const [startDate,    setStartDate]    = useState('');
+  const [endDate,      setEndDate]      = useState('');
+  
+  // Pagination & Counts
   const [page,         setPage]         = useState(1);
   const [pagination,   setPagination]   = useState({});
   const [statusCounts, setStatusCounts] = useState({});
@@ -90,17 +96,40 @@ export default function AdminOrders() {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      // ✅ Always exclude failed payments from main list
       const params = new URLSearchParams({
-        page, limit: 15,
-        excludeFailedPayments: 'true',  // ✅ NEW — hide failed
-        ...(filterStatus  && { status: filterStatus }),
+        page: String(page),
+        limit: '15',
+        excludeFailedPayments: 'true',
       });
-      const res  = await fetch(`/api/orders?${params}`);
-      const data = await res.json();
+
+      if (filterStatus) params.set('status', filterStatus);
+      if (startDate) params.set('startDate', startDate);
+      if (endDate) params.set('endDate', endDate);
+
+      const res = await fetch(`/api/orders?${params}`);
+      
+      // ✅ Read as text first to prevent JSON parse crash on server error
+      const text = await res.text();
+      let data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch {
+        console.error('API returned non-JSON:', res.status, text.slice(0, 200));
+        toast.error('Server error: Failed to parse orders');
+        setOrders([]);
+        return;
+      }
+
+      if (!res.ok) {
+        toast.error(data.error || 'Failed to fetch orders');
+        setOrders([]);
+        return;
+      }
+
       setOrders(data.orders || []);
       setPagination(data.pagination || {});
 
+      // Only update counts if no status filter is applied
       if (!filterStatus) {
         const counts = {};
         (data.orders || []).forEach(o => {
@@ -110,16 +139,17 @@ export default function AdminOrders() {
       }
     } catch (err) {
       console.error(err);
+      toast.error('Failed to load orders');
     } finally {
       setLoading(false);
     }
   };
 
-  // ✅ Separately fetch failed payments count
   const fetchFailedCount = async () => {
     try {
-      const res  = await fetch('/api/orders?paymentStatus=failed&limit=1');
-      const data = await res.json();
+      const res = await fetch('/api/orders?paymentStatus=failed&limit=1');
+      const text = await res.text();
+      const data = text ? JSON.parse(text) : {};
       setFailedCount(data.pagination?.total || 0);
     } catch {
       setFailedCount(0);
@@ -129,7 +159,7 @@ export default function AdminOrders() {
   useEffect(() => {
     fetchOrders();
     fetchFailedCount();
-  }, [page, filterStatus]);
+  }, [page, filterStatus, startDate, endDate]);
 
   const handleStatusChange = async (orderId, newStatus) => {
     const res = await fetch(`/api/orders/${orderId}`, {
@@ -137,8 +167,12 @@ export default function AdminOrders() {
       headers: { 'Content-Type': 'application/json' },
       body:    JSON.stringify({ orderStatus: newStatus }),
     });
-    if (res.ok) { toast.success('✅ Status updated'); fetchOrders(); }
-    else toast.error('Failed to update');
+    if (res.ok) { 
+      toast.success('✅ Status updated'); 
+      fetchOrders(); 
+    } else {
+      toast.error('Failed to update');
+    }
   };
 
   const statusCardsCfg = [
@@ -161,7 +195,7 @@ export default function AdminOrders() {
         </div>
       </div>
 
-      {/* ✅ FAILED PAYMENTS BANNER — Link to separate page */}
+      {/* FAILED PAYMENTS BANNER */}
       {failedCount > 0 && (
         <div style={{
           background: 'linear-gradient(135deg, #FEF2F2, #FEE2E2)',
@@ -242,13 +276,13 @@ export default function AdminOrders() {
         ))}
       </div>
 
-      {/* ── FILTERS ── */}
-      <div className={styles.filters} style={{ gap: '10px', flexWrap: 'wrap' }}>
+      {/* ── FILTERS (Status + Dates) ── */}
+      <div className={styles.filters} style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
         <select
           className="form-control"
           value={filterStatus}
           onChange={e => { setFilterStatus(e.target.value); setPage(1); }}
-          style={{ maxWidth: 200 }}
+          style={{ maxWidth: 200, padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
         >
           <option value="">All Statuses</option>
           {STATUS_OPTIONS.map(s => (
@@ -256,17 +290,42 @@ export default function AdminOrders() {
           ))}
         </select>
 
-        {filterStatus && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <label style={{ fontSize: '13px', fontWeight: '600', color: '#666' }}>From:</label>
+          <input
+            type="date"
+            value={startDate}
+            onChange={e => { setStartDate(e.target.value); setPage(1); }}
+            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #ddd', outline: 'none', color: '#333' }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <label style={{ fontSize: '13px', fontWeight: '600', color: '#666' }}>To:</label>
+          <input
+            type="date"
+            value={endDate}
+            onChange={e => { setEndDate(e.target.value); setPage(1); }}
+            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #ddd', outline: 'none', color: '#333' }}
+          />
+        </div>
+
+        {(filterStatus || startDate || endDate) && (
           <button
-            onClick={() => { setFilterStatus(''); setPage(1); }}
+            onClick={() => { 
+              setFilterStatus(''); 
+              setStartDate(''); 
+              setEndDate(''); 
+              setPage(1); 
+            }}
             style={{
               background: '#fee2e2', color: '#dc2626',
-              border: 'none', padding: '8px 14px',
+              border: 'none', padding: '9px 16px',
               borderRadius: '8px', fontWeight: '600',
               cursor: 'pointer', fontSize: '13px',
             }}
           >
-            ✕ Clear Filter
+            ✕ Clear Filters
           </button>
         )}
       </div>
