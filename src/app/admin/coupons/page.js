@@ -6,6 +6,7 @@ import couponStyles from './page.module.css';
 
 export default function AdminCoupons() {
   const [coupons, setCoupons] = useState([]);
+  const [categories, setCategories] = useState([]); // ✅ NEW
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -13,6 +14,7 @@ export default function AdminCoupons() {
   const [form, setForm] = useState({
     code: '', description: '', discountType: 'percentage', discountValue: '',
     minOrderValue: '', maxDiscount: '', usageLimit: '', expiryDate: '', isActive: true,
+    applicableCategories: [], // ✅ NEW
   });
 
   const fetchCoupons = () => {
@@ -22,7 +24,6 @@ export default function AdminCoupons() {
       .then(d => {
         setCoupons(d.coupons || []);
         setLoading(false);
-        // ✅ Show toast if auto-deleted
         if (d.deletedExpired > 0) {
           toast.success(`🗑️ Auto-removed ${d.deletedExpired} expired coupon(s)`);
         }
@@ -33,13 +34,30 @@ export default function AdminCoupons() {
       });
   };
 
+  // ✅ NEW: Fetch categories for the multi-select
+  const fetchCategories = () => {
+    fetch('/api/categories')
+      .then(r => r.json())
+      .then(d => setCategories(d.categories || []))
+      .catch(() => toast.error('Failed to load categories'));
+  };
+
   useEffect(() => {
     fetchCoupons();
-
-    // ✅ Auto-refresh every 60 seconds to catch expirations
+    fetchCategories(); // ✅ NEW
     const interval = setInterval(fetchCoupons, 60000);
     return () => clearInterval(interval);
   }, []);
+
+  // ✅ NEW: Toggle category selection
+  const toggleCategory = (categoryId) => {
+    setForm(f => ({
+      ...f,
+      applicableCategories: f.applicableCategories.includes(categoryId)
+        ? f.applicableCategories.filter(id => id !== categoryId)
+        : [...f.applicableCategories, categoryId],
+    }));
+  };
 
   const handleSave = async (e) => {
     e.preventDefault();
@@ -55,6 +73,7 @@ export default function AdminCoupons() {
         minOrderValue: parseFloat(form.minOrderValue || '0'),
         maxDiscount: form.maxDiscount ? parseFloat(form.maxDiscount) : undefined,
         usageLimit: form.usageLimit ? parseInt(form.usageLimit) : undefined,
+        applicableCategories: form.applicableCategories, // ✅ NEW
       };
       const res = await fetch('/api/coupons', {
         method: 'POST',
@@ -68,6 +87,7 @@ export default function AdminCoupons() {
       setForm({
         code: '', description: '', discountType: 'percentage', discountValue: '',
         minOrderValue: '', maxDiscount: '', usageLimit: '', expiryDate: '', isActive: true,
+        applicableCategories: [],
       });
       fetchCoupons();
     } catch (err) {
@@ -77,20 +97,14 @@ export default function AdminCoupons() {
     }
   };
 
-  // ✅ DELETE handler
   const handleDelete = async (coupon) => {
-    if (!confirm(`Are you sure you want to delete coupon "${coupon.code}"?`)) {
-      return;
-    }
+    if (!confirm(`Are you sure you want to delete coupon "${coupon.code}"?`)) return;
     setDeletingId(coupon.id);
     try {
-      const res = await fetch(`/api/coupons?id=${coupon.id}`, {
-        method: 'DELETE',
-      });
+      const res = await fetch(`/api/coupons?id=${coupon.id}`, { method: 'DELETE' });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Delete failed');
       toast.success(`🗑️ Coupon "${coupon.code}" deleted`);
-      // Remove from UI immediately
       setCoupons(prev => prev.filter(c => c.id !== coupon.id));
     } catch (err) {
       toast.error(err.message);
@@ -100,11 +114,18 @@ export default function AdminCoupons() {
   };
 
   const isExpired = (date) => new Date(date) < new Date();
-
-  // ✅ Calculate days until expiry
   const daysUntilExpiry = (date) => {
     const diff = new Date(date) - new Date();
     return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  };
+
+  // ✅ NEW: Get category names from IDs
+  const getCategoryNames = (ids) => {
+    if (!ids || ids.length === 0) return 'All Categories';
+    return ids
+      .map(id => categories.find(c => c.id === id)?.name)
+      .filter(Boolean)
+      .join(', ');
   };
 
   return (
@@ -125,7 +146,6 @@ export default function AdminCoupons() {
         </button>
       </div>
 
-      {/* ════════ FORM MODAL ════════ */}
       {showForm && (
         <div className={styles.modal}>
           <div className={styles.modalCard} style={{ maxWidth: 560 }}>
@@ -225,6 +245,72 @@ export default function AdminCoupons() {
                   placeholder="Internal note about this coupon"
                 />
               </div>
+
+              {/* ✅ NEW: Applicable Categories Multi-Select */}
+              <div className="form-group">
+                <label>
+                  Applicable Categories
+                  <span style={{ fontWeight: 400, color: '#666', marginLeft: 8, fontSize: 13 }}>
+                    (Leave empty for all categories)
+                  </span>
+                </label>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(160px, 1fr))',
+                    gap: 8,
+                    maxHeight: 200,
+                    overflowY: 'auto',
+                    padding: 12,
+                    border: '1px solid #e5e7eb',
+                    borderRadius: 8,
+                    background: '#f9fafb',
+                  }}
+                >
+                  {categories.length === 0 ? (
+                    <p style={{ color: '#999', gridColumn: '1/-1', margin: 0 }}>
+                      No categories found
+                    </p>
+                  ) : (
+                    categories.map(cat => (
+                      <label
+                        key={cat.id}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 6,
+                          padding: '6px 10px',
+                          background: form.applicableCategories.includes(cat.id)
+                            ? '#dbeafe'
+                            : '#fff',
+                          border: form.applicableCategories.includes(cat.id)
+                            ? '1px solid #3b82f6'
+                            : '1px solid #e5e7eb',
+                          borderRadius: 6,
+                          cursor: 'pointer',
+                          fontSize: 13,
+                          transition: 'all 0.2s',
+                        }}
+                      >
+                        <input
+                          type="checkbox"
+                          checked={form.applicableCategories.includes(cat.id)}
+                          onChange={() => toggleCategory(cat.id)}
+                          style={{ margin: 0 }}
+                        />
+                        <span style={{ userSelect: 'none' }}>{cat.name}</span>
+                      </label>
+                    ))
+                  )}
+                </div>
+                {form.applicableCategories.length > 0 && (
+                  <p style={{ fontSize: 12, color: '#3b82f6', marginTop: 6 }}>
+                    ✓ Selected: {form.applicableCategories.length} categor
+                    {form.applicableCategories.length === 1 ? 'y' : 'ies'}
+                  </p>
+                )}
+              </div>
+
               <div className={styles.formActions}>
                 <button type="button" className="btn btn-outline" onClick={() => setShowForm(false)}>
                   Cancel
@@ -238,7 +324,6 @@ export default function AdminCoupons() {
         </div>
       )}
 
-      {/* ════════ COUPONS LIST ════════ */}
       {loading ? (
         <p>Loading...</p>
       ) : (
@@ -258,7 +343,6 @@ export default function AdminCoupons() {
                 key={coupon.id}
                 className={`${couponStyles.couponCard} ${expired ? couponStyles.expired : ''}`}
               >
-                {/* ✅ DELETE BUTTON */}
                 <button
                   className={couponStyles.deleteBtn}
                   onClick={() => handleDelete(coupon)}
@@ -272,9 +356,7 @@ export default function AdminCoupons() {
                   <div className={couponStyles.code}>{coupon.code}</div>
                   <span
                     className={
-                      coupon.isActive && !expired
-                        ? couponStyles.active
-                        : couponStyles.inactive
+                      coupon.isActive && !expired ? couponStyles.active : couponStyles.inactive
                     }
                   >
                     {expired ? 'Expired' : coupon.isActive ? 'Active' : 'Inactive'}
@@ -291,10 +373,23 @@ export default function AdminCoupons() {
                   <p className={couponStyles.desc}>{coupon.description}</p>
                 )}
 
+                {/* ✅ NEW: Show applicable categories */}
+                <div
+                  style={{
+                    fontSize: 12,
+                    color: '#666',
+                    padding: '6px 10px',
+                    background: coupon.applicableCategories?.length > 0 ? '#fef3c7' : '#dcfce7',
+                    borderRadius: 6,
+                    marginBottom: 8,
+                    fontWeight: 600,
+                  }}
+                >
+                  📂 {getCategoryNames(coupon.applicableCategories)}
+                </div>
+
                 <div className={couponStyles.meta}>
-                  {coupon.minOrderValue > 0 && (
-                    <span>Min: ₹{coupon.minOrderValue}</span>
-                  )}
+                  {coupon.minOrderValue > 0 && <span>Min: ₹{coupon.minOrderValue}</span>}
                   <span>
                     Used: {coupon.usedCount}
                     {coupon.usageLimit ? `/${coupon.usageLimit}` : ''}
@@ -304,7 +399,6 @@ export default function AdminCoupons() {
                   </span>
                 </div>
 
-                {/* ✅ Expiring soon warning */}
                 {expiringSoon && (
                   <div className={couponStyles.warning}>
                     ⚠️ Expires in {days} day{days !== 1 ? 's' : ''}
