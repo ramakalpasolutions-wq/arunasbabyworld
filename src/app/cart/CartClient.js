@@ -47,7 +47,7 @@ function AvailableCoupons({ itemsPrice, onApply }) {
                   <span style={{ fontSize: '13px', fontWeight: '700', color: '#ff6b9d' }}>
                     {c.discountType === 'percentage' ? `${c.discountValue}% OFF` : `₹${c.discountValue} OFF`}
                   </span>
-                  {/* ✅ NEW: Show badge if category-specific */}
+                  {/* Show badge if category-specific */}
                   {isCategorySpecific && (
                     <span style={{ fontSize: '10px', fontWeight: '800', color: '#fff', background: '#f59e0b', padding: '2px 6px', borderRadius: '4px' }}>
                       CATEGORY
@@ -58,7 +58,7 @@ function AvailableCoupons({ itemsPrice, onApply }) {
                   {c.minOrderValue > 0 ? `Min order: ₹${c.minOrderValue.toLocaleString('en-IN')}` : 'No minimum order'}
                   {c.maxDiscount ? ` • Max: ₹${c.maxDiscount}` : ''}
                 </p>
-                {/* ✅ NEW: Show description */}
+                {/* Show description */}
                 {c.description && (
                   <p style={{ fontSize: '11px', color: '#7c3aed', fontWeight: '600', margin: '3px 0 0' }}>
                     📢 {c.description}
@@ -113,7 +113,7 @@ export default function CartClient() {
   const [applying, setApplying] = useState(false);
   const [stockMap, setStockMap] = useState({});
 
-  // ✅ Panel states
+  // Panel states
   const [showAddressPanel, setShowAddressPanel] = useState(false);
   const [showPaymentPanel, setShowPaymentPanel] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
@@ -124,20 +124,20 @@ export default function CartClient() {
     name: '', phone: '', address: '', city: '', state: '', pincode: '',
   });
 
-  // ✅ Auto-select first address if only one exists
+  // Auto-select first address if only one exists
   useEffect(() => {
     if (addresses.length === 1 && selectedAddressIndex === null) {
       selectAddress(0);
     }
   }, [addresses.length]);
 
-  // ✅ Body scroll lock
+  // Body scroll lock
   useEffect(() => {
     document.body.style.overflow = (showAddressPanel || showPaymentPanel) ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [showAddressPanel, showPaymentPanel]);
 
-  // ✅ Fetch live stock
+  // Fetch live stock
   useEffect(() => {
     if (items.length === 0) return;
     const ids = items.map(i => i.id || i._id).filter(Boolean);
@@ -171,7 +171,7 @@ export default function CartClient() {
     updateQuantity(item.id || item._id, newQty);
   };
 
-  // ✅ UPDATED: Apply coupon with cart items for category validation
+  // ✅ FIXED PAYLOAD: Send 'items' (not 'cartItems') to match API expectations
   const applyCoupon = async (code) => {
     const codeToApply = code || couponCode;
     if (!codeToApply.trim()) return;
@@ -183,11 +183,12 @@ export default function CartClient() {
         body: JSON.stringify({
           code: codeToApply,
           orderTotal: itemsPrice,
-          // ✅ NEW: Send cart items so backend can validate categories
-          cartItems: items.map(i => ({
+          items: items.map(i => ({
             productId: i.id || i._id,
             quantity: i.quantity,
             price: i.discountPrice || i.price,
+            category: i.category,
+            categoryId: i.categoryId
           })),
         }),
       });
@@ -203,8 +204,7 @@ export default function CartClient() {
     }
   };
 
-  // ✅ NEW: Auto-revalidate coupon when cart items change
-  // Prevents users from exploiting: apply coupon → change/remove items → still get discount
+  // ✅ FIXED PAYLOAD: Revalidation updated to send 'items'
   useEffect(() => {
     if (!coupon?.code || items.length === 0) return;
 
@@ -216,10 +216,12 @@ export default function CartClient() {
           body: JSON.stringify({
             code: coupon.code,
             orderTotal: itemsPrice,
-            cartItems: items.map(i => ({
+            items: items.map(i => ({
               productId: i.id || i._id,
               quantity: i.quantity,
               price: i.discountPrice || i.price,
+              category: i.category,
+              categoryId: i.categoryId
             })),
           }),
         });
@@ -501,7 +503,7 @@ export default function CartClient() {
         🛒 Shopping Cart <span>({items.length} items)</span>
       </h1>
 
-      {/* ✅ DELIVERY ADDRESS STRIP */}
+      {/* DELIVERY ADDRESS STRIP */}
       {session && (
         <div style={{
           background: 'white',
@@ -697,7 +699,7 @@ export default function CartClient() {
             </div>
           )}
 
-          {/* ✅ PLACE ORDER BUTTON */}
+          {/* PLACE ORDER BUTTON */}
           <button
             onClick={handlePlaceOrder}
             disabled={hasStockIssue || processing}
@@ -866,7 +868,7 @@ export default function CartClient() {
             </div>
 
             <div style={{ flex: 1, overflowY: 'auto', padding: '18px 22px' }}>
-              <div style={{ padding: '14px 16px', background: '#F9FAFB', border: '1.5px solid #E5E7EB', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '18px' }}>
+              <div style={{ padding: '14px 16px', background: '#F9FAFB', border: '1.5px solid #E5E7EB', borderRadius: '12px', display: 'flex', justifycontent: 'space-between', alignitems: 'flex-start', gap: '10px', marginBottom: '18px' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: '#1F2937', fontFamily: 'Nunito, sans-serif' }}>
                     📍 Deliver to <span style={{ color: '#FF6B35' }}>{selectedAddress?.name}</span>, {selectedAddress?.pincode}

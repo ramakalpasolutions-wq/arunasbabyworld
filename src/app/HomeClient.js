@@ -5,6 +5,8 @@ import HeroBanner from '@/components/home/HeroBanner';
 import ProductCard from '@/components/products/ProductCard';
 import useScrollReveal from '@/hooks/useScrollReveal';
 import styles from './HomeClient.module.css';
+import OfferPopupModal from "@/components/home/OfferPopupModal";
+
 
 /* ═══════════════════════════════════════
    HOOK
@@ -1373,6 +1375,8 @@ export default function HomeClient({
 
   return (
     <>
+
+     <OfferPopupModal />
       <style jsx global>{`
         .cleanCard {
           display: block;

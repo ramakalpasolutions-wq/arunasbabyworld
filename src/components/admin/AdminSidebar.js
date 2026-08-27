@@ -13,6 +13,7 @@ const navItems = [
     { href: '/admin/failed-payments', icon: '🚨', label: 'Failed Payments' },
   { href: '/admin/orders',     icon: '🛍️', label: 'Orders'     },
   { label: 'Reviews', icon: '⭐', href: '/admin/reviews' },
+  { label: 'Offer Popups', href: '/admin/offer-popups', icon: '🎁' },
   { label: 'Settings', icon: '⚙️', href: '/admin/settings' },
   // { href: '/admin/refunds',    icon: '💰', label: 'Refunds'    }, // ✅ NEW
   { href: '/admin/exchanges',  icon: '🔄', label: 'Exchanges'  }, // ✅ NEW
