@@ -11,7 +11,7 @@ import styles from './CartClient.module.css';
 const fmt = (val) => Math.round(val || 0).toLocaleString('en-IN');
 
 /* ═══════════════════════════════════════
-   AVAILABLE COUPONS (unchanged)
+   AVAILABLE COUPONS (with category info)
 ═══════════════════════════════════════ */
 function AvailableCoupons({ itemsPrice, onApply }) {
   const [coupons, setCoupons] = useState([]);
@@ -36,6 +36,7 @@ function AvailableCoupons({ itemsPrice, onApply }) {
         {displayCoupons.map(c => {
           const eligible = itemsPrice >= (c.minOrderValue || 0);
           const remaining = (c.minOrderValue || 0) - itemsPrice;
+          const isCategorySpecific = c.applicableCategories && c.applicableCategories.length > 0;
           return (
             <div key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: eligible ? '#f0fdf4' : '#fafafa', border: `1.5px dashed ${eligible ? '#10b981' : '#ddd'}`, borderRadius: '10px', opacity: eligible ? 1 : 0.7, gap: '8px' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
@@ -46,11 +47,23 @@ function AvailableCoupons({ itemsPrice, onApply }) {
                   <span style={{ fontSize: '13px', fontWeight: '700', color: '#ff6b9d' }}>
                     {c.discountType === 'percentage' ? `${c.discountValue}% OFF` : `₹${c.discountValue} OFF`}
                   </span>
+                  {/* ✅ NEW: Show badge if category-specific */}
+                  {isCategorySpecific && (
+                    <span style={{ fontSize: '10px', fontWeight: '800', color: '#fff', background: '#f59e0b', padding: '2px 6px', borderRadius: '4px' }}>
+                      CATEGORY
+                    </span>
+                  )}
                 </div>
                 <p style={{ fontSize: '11px', color: '#888', margin: 0 }}>
                   {c.minOrderValue > 0 ? `Min order: ₹${c.minOrderValue.toLocaleString('en-IN')}` : 'No minimum order'}
                   {c.maxDiscount ? ` • Max: ₹${c.maxDiscount}` : ''}
                 </p>
+                {/* ✅ NEW: Show description */}
+                {c.description && (
+                  <p style={{ fontSize: '11px', color: '#7c3aed', fontWeight: '600', margin: '3px 0 0' }}>
+                    📢 {c.description}
+                  </p>
+                )}
               </div>
               <button onClick={() => eligible && onApply(c.code)} disabled={!eligible} style={{ background: eligible ? 'linear-gradient(135deg, #ff6b9d, #7c3aed)' : '#e5e7eb', color: eligible ? 'white' : '#999', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: eligible ? 'pointer' : 'not-allowed', whiteSpace: 'nowrap', flexShrink: 0 }}>
                 {eligible ? 'Apply' : `₹${remaining.toLocaleString('en-IN')} more`}
@@ -158,6 +171,7 @@ export default function CartClient() {
     updateQuantity(item.id || item._id, newQty);
   };
 
+  // ✅ UPDATED: Apply coupon with cart items for category validation
   const applyCoupon = async (code) => {
     const codeToApply = code || couponCode;
     if (!codeToApply.trim()) return;
@@ -166,7 +180,16 @@ export default function CartClient() {
       const res = await fetch('/api/coupons/apply', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ code: codeToApply, orderTotal: itemsPrice }),
+        body: JSON.stringify({
+          code: codeToApply,
+          orderTotal: itemsPrice,
+          // ✅ NEW: Send cart items so backend can validate categories
+          cartItems: items.map(i => ({
+            productId: i.id || i._id,
+            quantity: i.quantity,
+            price: i.discountPrice || i.price,
+          })),
+        }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -179,6 +202,46 @@ export default function CartClient() {
       setApplying(false);
     }
   };
+
+  // ✅ NEW: Auto-revalidate coupon when cart items change
+  // Prevents users from exploiting: apply coupon → change/remove items → still get discount
+  useEffect(() => {
+    if (!coupon?.code || items.length === 0) return;
+
+    const revalidate = async () => {
+      try {
+        const res = await fetch('/api/coupons/apply', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code: coupon.code,
+            orderTotal: itemsPrice,
+            cartItems: items.map(i => ({
+              productId: i.id || i._id,
+              quantity: i.quantity,
+              price: i.discountPrice || i.price,
+            })),
+          }),
+        });
+        const data = await res.json();
+        if (res.ok) {
+          // Update discount if amount changed
+          if (data.discountAmount !== discountAmount) {
+            setCoupon({ code: coupon.code, discountAmount: data.discountAmount });
+          }
+        } else {
+          // Coupon no longer valid — remove it
+          removeCoupon();
+          toast.error(`Coupon "${coupon.code}" removed: ${data.error}`);
+        }
+      } catch (err) {
+        console.error('Coupon revalidation error:', err);
+      }
+    };
+
+    const timer = setTimeout(revalidate, 600); // debounce
+    return () => clearTimeout(timer);
+  }, [items, coupon?.code, itemsPrice]);
 
   const hasStockIssue = items.some(item => {
     const maxStock = getMaxStock(item);
@@ -223,7 +286,7 @@ export default function CartClient() {
       toast.success('✅ Address updated');
     } else {
       addAddress(addressForm);
-      selectAddress(addresses.length); // Auto-select the newly added one
+      selectAddress(addresses.length);
       toast.success('✅ Address saved');
     }
 
@@ -674,7 +737,6 @@ export default function CartClient() {
             background: 'white', zIndex: 9999, display: 'flex', flexDirection: 'column',
             boxShadow: '-10px 0 40px rgba(0,0,0,0.15)', animation: 'slideInRight 0.35s cubic-bezier(0.4, 0, 0.2, 1)', overflow: 'hidden',
           }}>
-            {/* Header */}
             <div style={{ padding: '18px 22px', borderBottom: '1.5px solid #E5E7EB', display: 'flex', alignItems: 'center', gap: '14px', background: 'white', flexShrink: 0 }}>
               <button onClick={() => { setShowAddressPanel(false); setShowAddressForm(false); }} style={{ background: '#F3F4F6', border: 'none', borderRadius: '10px', width: '38px', height: '38px', cursor: 'pointer', fontSize: '1.1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: '800', color: '#1F2937', flexShrink: 0 }}>←</button>
               <h2 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '800', color: '#1F2937', fontFamily: 'Nunito, sans-serif' }}>
@@ -682,10 +744,8 @@ export default function CartClient() {
               </h2>
             </div>
 
-            {/* Content */}
             <div style={{ flex: 1, overflowY: 'auto', padding: '18px 22px' }}>
               {showAddressForm ? (
-                // ✅ ADDRESS FORM
                 <form onSubmit={handleSaveAddress} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   <div>
                     <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '6px', textTransform: 'uppercase' }}>Full Name *</label>
@@ -731,7 +791,6 @@ export default function CartClient() {
                   </div>
                 </form>
               ) : (
-                // ✅ ADDRESS LIST
                 <>
                   {addresses.length === 0 ? (
                     <div style={{ textAlign: 'center', padding: '40px 20px' }}>
@@ -807,7 +866,6 @@ export default function CartClient() {
             </div>
 
             <div style={{ flex: 1, overflowY: 'auto', padding: '18px 22px' }}>
-              {/* Delivery Address */}
               <div style={{ padding: '14px 16px', background: '#F9FAFB', border: '1.5px solid #E5E7EB', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '18px' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: '#1F2937', fontFamily: 'Nunito, sans-serif' }}>
@@ -820,16 +878,13 @@ export default function CartClient() {
                 <button onClick={() => { setShowPaymentPanel(false); setShowAddressPanel(true); }} style={{ padding: '5px 12px', background: 'white', border: '1.5px solid #FF6B35', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '800', color: '#FF6B35', cursor: 'pointer', fontFamily: 'Nunito, sans-serif', letterSpacing: '0.5px', flexShrink: 0 }}>CHANGE</button>
               </div>
 
-              {/* Total */}
               <div style={{ padding: '14px 16px', background: 'linear-gradient(135deg, #FFF5F7, #F3E8FF)', border: '1.5px solid #FFE4EC', borderRadius: '12px', marginBottom: '18px', textAlign: 'center' }}>
                 <p style={{ margin: 0, fontSize: '0.74rem', color: '#6B4E8A', fontWeight: '700', textTransform: 'uppercase', letterSpacing: '0.5px', fontFamily: 'Nunito, sans-serif' }}>Total Amount</p>
                 <p style={{ margin: '4px 0 0', fontSize: '1.6rem', fontWeight: '900', color: '#BE185D', fontFamily: 'Nunito, sans-serif' }}>₹{fmt(totalPrice)}</p>
               </div>
 
-              {/* Section Title */}
               <h3 style={{ margin: '0 0 14px', fontSize: '1rem', fontWeight: '800', color: '#1F2937', fontFamily: 'Nunito, sans-serif' }}>Payment Options</h3>
 
-              {/* Payment Options */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {PAYMENT_OPTIONS.map((opt) => (
                   <button
@@ -895,7 +950,6 @@ export default function CartClient() {
               </div>
             </div>
 
-            {/* Footer Security */}
             <div style={{ padding: '14px 22px', borderTop: '1.5px solid #E5E7EB', background: '#FAFAFA', flexShrink: 0 }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px', textAlign: 'center' }}>
                 {[
