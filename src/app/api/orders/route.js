@@ -4,11 +4,16 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
 import { sendOrderConfirmation } from '@/lib/nodemailer';
 
-// ═══════════════════════════════════════
-// SHIPPING RULES (same as CartContext)
-// ═══════════════════════════════════════
-const SHIPPING_FEE = 50;
+const STANDARD_SHIPPING_FEE = 50;
+const COD_EXTRA_FEE = 20;
 const FREE_SHIPPING_THRESHOLD = 800;
+
+function isGunturLocation(address) {
+  if (!address) return false;
+  const city = (address.city || '').toLowerCase().trim();
+  const pincode = (address.pincode || '').toString().trim();
+  return city.includes('guntur') || pincode.startsWith('522');
+}
 
 function isFoodItem(item) {
   const catSlug = (
@@ -36,12 +41,25 @@ function isFoodItem(item) {
   );
 }
 
-function calculateShipping(orderItems, itemsPrice) {
+function calculateShipping(orderItems, itemsPrice, address, paymentMethod) {
   if (!orderItems || orderItems.length === 0) return 0;
+
+  const isGuntur = isGunturLocation(address);
   const hasFood = orderItems.some(isFoodItem);
-  if (hasFood) return SHIPPING_FEE;
-  if (itemsPrice >= FREE_SHIPPING_THRESHOLD) return 0;
-  return SHIPPING_FEE;
+  const isCOD = paymentMethod === 'COD';
+
+  let baseShipping = 0;
+
+  if (hasFood && !isGuntur) {
+    baseShipping = STANDARD_SHIPPING_FEE;
+  } else if (itemsPrice >= FREE_SHIPPING_THRESHOLD) {
+    baseShipping = 0;
+  } else {
+    baseShipping = STANDARD_SHIPPING_FEE;
+  }
+
+  const codFee = isCOD ? COD_EXTRA_FEE : 0;
+  return baseShipping + codFee;
 }
 
 async function getNextOrderNumber() {
@@ -147,7 +165,7 @@ export async function POST(request) {
       );
     }
 
-    // Enrich order items with category info from DB (for accurate food detection)
+    // Enrich order items with category info from DB for accurate checks
     const enrichedItems = await Promise.all(
       data.orderItems.map(async (item) => {
         try {
@@ -192,14 +210,6 @@ export async function POST(request) {
       0
     );
 
-    // ✅ Server-side shipping recalculation (cannot be bypassed by client)
-    const shippingPrice = calculateShipping(enrichedItems, itemsPrice);
-    const discountAmount = Number(data.discountAmount) || 0;
-    const taxPrice = Number(data.taxPrice) || 0;
-    const totalPrice = Math.round(itemsPrice + shippingPrice + taxPrice - discountAmount);
-
-    const orderNumber = await getNextOrderNumber();
-
     const {
       orderItems,
       shippingAddress,
@@ -211,6 +221,19 @@ export async function POST(request) {
       paymentStatus,
     } = data;
 
+    // Recalculate shipping & total server-side safely
+    const shippingPrice = calculateShipping(
+      enrichedItems,
+      itemsPrice,
+      shippingAddress,
+      paymentMethod
+    );
+    const discountAmount = Number(data.discountAmount) || 0;
+    const taxPrice = Number(data.taxPrice) || 0;
+    const totalPrice = Math.max(0, Math.round(itemsPrice + shippingPrice + taxPrice - discountAmount));
+
+    const orderNumber = await getNextOrderNumber();
+
     const order = await prisma.order.create({
       data: {
         orderNumber:     orderNumber ?? undefined,
@@ -219,10 +242,10 @@ export async function POST(request) {
         shippingAddress: shippingAddress,
         paymentMethod:   paymentMethod || 'Razorpay',
         itemsPrice:      itemsPrice,
-        shippingPrice:   shippingPrice,   // ✅ server-calculated
+        shippingPrice:   shippingPrice,
         taxPrice:        taxPrice,
         discountAmount:  discountAmount,
-        totalPrice:      totalPrice,      // ✅ server-calculated
+        totalPrice:      totalPrice,
         couponCode:      couponCode    || null,
         isPaid:          isPaid        || false,
         paidAt:          paidAt        || null,
@@ -237,8 +260,7 @@ export async function POST(request) {
     console.log(
       '✅ Order created:', order.id,
       '| Shipping:', shippingPrice,
-      '| Total:', totalPrice,
-      '| Food shipping applied:', shippingPrice === SHIPPING_FEE && itemsPrice >= FREE_SHIPPING_THRESHOLD
+      '| Total:', totalPrice
     );
 
     if (paymentMethod === 'COD') {

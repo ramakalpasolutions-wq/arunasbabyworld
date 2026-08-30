@@ -86,6 +86,11 @@ export default function CartClient() {
     removeItem,
     itemsPrice,
     shippingPrice,
+    baseShipping,
+    codFee,
+    isGuntur,
+    hasFoodItems,
+    setPaymentMethod,
     discountAmount,
     totalPrice,
     coupon,
@@ -190,44 +195,6 @@ export default function CartClient() {
       setApplying(false);
     }
   };
-
-  useEffect(() => {
-    if (!coupon?.code || items.length === 0) return;
-
-    const revalidate = async () => {
-      try {
-        const res = await fetch('/api/coupons/apply', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            code: coupon.code,
-            orderTotal: itemsPrice,
-            items: items.map(i => ({
-              productId: i.id || i._id,
-              quantity: i.quantity,
-              price: i.discountPrice || i.price,
-              category: i.category,
-              categoryId: i.categoryId
-            })),
-          }),
-        });
-        const data = await res.json();
-        if (res.ok) {
-          if (data.discountAmount !== discountAmount) {
-            setCoupon({ code: coupon.code, discountAmount: data.discountAmount });
-          }
-        } else {
-          removeCoupon();
-          toast.error(`Coupon "${coupon.code}" removed: ${data.error}`);
-        }
-      } catch (err) {
-        console.error('Coupon revalidation error:', err);
-      }
-    };
-
-    const timer = setTimeout(revalidate, 600);
-    return () => clearTimeout(timer);
-  }, [items, coupon?.code, itemsPrice]);
 
   const hasStockIssue = items.some(item => {
     const maxStock = getMaxStock(item);
@@ -452,6 +419,7 @@ export default function CartClient() {
   };
 
   const handlePaymentSelect = (method) => {
+    setPaymentMethod(method);
     setShowPaymentPanel(false);
     setTimeout(() => {
       if (method === 'COD') handleCODOrder();
@@ -464,7 +432,7 @@ export default function CartClient() {
     { id: 'upi', icon: '📱', title: 'UPI', subtitle: 'GPay, PhonePe, Paytm', color: '#10B981', badge: 'Paytm', method: 'Razorpay', recommended: true },
     { id: 'netbanking', icon: '🏦', title: 'Net Banking', subtitle: totalPrice >= 2000 ? 'All major banks' : 'Available on orders above ₹2000', color: '#F59E0B', method: 'Razorpay', disabled: totalPrice < 2000 },
     { id: 'emi', icon: '📊', title: 'EMI', subtitle: totalPrice >= 3000 ? 'Convert to EMI' : 'Available on orders above ₹3000', color: '#8B5CF6', method: 'Razorpay', disabled: totalPrice < 3000 },
-    { id: 'cod', icon: '💵', title: 'Cash on Delivery', subtitle: 'Pay when you receive', color: '#EF4444', method: 'COD' },
+    { id: 'cod', icon: '💵', title: 'Cash on Delivery', subtitle: 'Pay when you receive (+₹20 COD fee)', color: '#EF4444', method: 'COD' },
   ];
 
   if (items.length === 0) return (
@@ -508,6 +476,11 @@ export default function CartClient() {
               <>
                 <p style={{ margin: 0, fontSize: '0.90rem', fontWeight: '800', color: '#1F2937', fontFamily: 'Nunito, sans-serif' }}>
                   Deliver to <span style={{ color: '#FF6B9D' }}>{selectedAddress.name}</span>, {selectedAddress.pincode}
+                  {isGuntur && (
+                    <span style={{ marginLeft: '8px', padding: '2px 8px', background: '#D1FAE5', color: '#065F46', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>
+                      📍 Guntur Offer Active!
+                    </span>
+                  )}
                 </p>
                 <p style={{ margin: '3px 0 0', fontSize: '0.78rem', color: '#6B7280', fontWeight: '600', fontFamily: 'Nunito, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {selectedAddress.address}, {selectedAddress.city}
@@ -519,7 +492,7 @@ export default function CartClient() {
                   No delivery address selected
                 </p>
                 <p style={{ margin: '3px 0 0', fontSize: '0.78rem', color: '#6B7280', fontWeight: '600', fontFamily: 'Nunito, sans-serif' }}>
-                  Add an address to continue
+                  Add an address to check local offers
                 </p>
               </>
             )}
@@ -633,10 +606,16 @@ export default function CartClient() {
             </div>
             <div className={styles.summaryRow}>
               <span>Shipping</span>
-              <span className={shippingPrice === 0 ? styles.free : ''}>
-                {shippingPrice === 0 ? '🎉 FREE' : `₹${shippingPrice}`}
+              <span className={baseShipping === 0 ? styles.free : ''}>
+                {baseShipping === 0 ? '🎉 FREE' : `₹${baseShipping}`}
               </span>
             </div>
+            {codFee > 0 && (
+              <div className={styles.summaryRow}>
+                <span>COD Fee</span>
+                <span>+ ₹{codFee}</span>
+              </div>
+            )}
             {discountAmount > 0 && (
               <div className={`${styles.summaryRow} ${styles.discountRow}`}>
                 <span>Coupon ({coupon?.code})</span>
@@ -667,27 +646,33 @@ export default function CartClient() {
             <span>₹{totalPrice.toLocaleString('en-IN')}</span>
           </div>
 
-          {/* Dynamic shipping notice */}
+          {/* Dynamic Shipping Helper Badge */}
           {(() => {
-            const hasFood = items.some((item) => {
-              const cat = (item.categorySlug || item.category?.slug || item.category || '').toString().toLowerCase();
-              const catName = (item.categoryName || item.category?.name || '').toLowerCase();
-              return cat.includes('food') || catName.includes('food') || Boolean(item.foodCategory) || item.isFood;
-            });
-
-            if (hasFood) {
+            if (hasFoodItems && !isGuntur) {
               return (
                 <div style={{
                   padding: '10px 12px', marginTop: '8px', borderRadius: '10px',
                   background: '#FFF3E8', border: '1.5px solid #FFD4A8',
                   fontSize: '12px', fontWeight: '700', color: '#C2410C', textAlign: 'center',
                 }}>
-                  🍼 Food items always include ₹50 shipping (any cart value)
+                  🍼 Food items always include ₹50 shipping (Outside Guntur)
                 </div>
               );
             }
 
-            if (shippingPrice === 0) {
+            if (hasFoodItems && isGuntur && baseShipping === 0) {
+              return (
+                <div style={{
+                  padding: '10px 12px', marginTop: '8px', borderRadius: '10px',
+                  background: '#ECFDF5', border: '1.5px solid #A7F3D0',
+                  fontSize: '12px', fontWeight: '700', color: '#065F46', textAlign: 'center',
+                }}>
+                  🎉 Guntur Special: Free delivery unlocked on food items!
+                </div>
+              );
+            }
+
+            if (baseShipping === 0) {
               return (
                 <div className={styles.freeDeliveryMsg}>
                   ✅ You qualify for FREE delivery!
@@ -773,11 +758,11 @@ export default function CartClient() {
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '6px', textTransform: 'uppercase' }}>City *</label>
-                      <input type="text" value={addressForm.city} onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })} placeholder="City" required style={{ width: '100%', padding: '11px 14px', border: '2px solid #EDD9FF', borderRadius: '10px', fontSize: '14px', outline: 'none', fontFamily: 'Nunito, sans-serif' }} />
+                      <input type="text" value={addressForm.city} onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })} placeholder="Guntur / City" required style={{ width: '100%', padding: '11px 14px', border: '2px solid #EDD9FF', borderRadius: '10px', fontSize: '14px', outline: 'none', fontFamily: 'Nunito, sans-serif' }} />
                     </div>
                     <div>
                       <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '6px', textTransform: 'uppercase' }}>Pincode *</label>
-                      <input type="text" value={addressForm.pincode} onChange={(e) => setAddressForm({ ...addressForm, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) })} placeholder="6-digit" required style={{ width: '100%', padding: '11px 14px', border: '2px solid #EDD9FF', borderRadius: '10px', fontSize: '14px', outline: 'none', fontFamily: 'Nunito, sans-serif' }} />
+                      <input type="text" value={addressForm.pincode} onChange={(e) => setAddressForm({ ...addressForm, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) })} placeholder="522xxx" required style={{ width: '100%', padding: '11px 14px', border: '2px solid #EDD9FF', borderRadius: '10px', fontSize: '14px', outline: 'none', fontFamily: 'Nunito, sans-serif' }} />
                     </div>
                   </div>
 
@@ -894,7 +879,12 @@ export default function CartClient() {
                 {PAYMENT_OPTIONS.map((opt) => (
                   <button
                     key={opt.id}
-                    onClick={() => !opt.disabled && !processing && handlePaymentSelect(opt.method)}
+                    onClick={() => {
+                      if (!opt.disabled && !processing) {
+                        setPaymentMethod(opt.method);
+                        handlePaymentSelect(opt.method);
+                      }
+                    }}
                     disabled={opt.disabled || processing}
                     style={{
                       padding: '16px 18px',

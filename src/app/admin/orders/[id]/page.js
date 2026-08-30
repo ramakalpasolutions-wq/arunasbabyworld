@@ -31,6 +31,14 @@ function fmtOrderNum(order) {
     : `#${order?.id?.slice(-8)?.toUpperCase()}`;
 }
 
+// ✅ Check if address is in Guntur
+function isGuntur(address) {
+  if (!address) return false;
+  const city = (address.city || '').toLowerCase().trim();
+  const pincode = (address.pincode || '').toString().trim();
+  return city.includes('guntur') || pincode.startsWith('522');
+}
+
 /* ══════════════════════════════════════════
    SHIP BUTTON
 ══════════════════════════════════════════ */
@@ -952,7 +960,22 @@ export default function AdminOrderDetail({ params }) {
   const canShip = ['Confirmed', 'Processing', 'Shipped'].includes(order.orderStatus);
   const canAdminCancel = !isCancelled && !isReturnRequested && order.orderStatus !== 'Delivered';
 
+  // ✅ Print Bill only for paid orders OR COD orders
   const canPrint = order.isPaid || order.paymentMethod === 'COD';
+
+  const isCOD = order.paymentMethod === 'COD';
+  const gunturLocation = isGuntur(order.shippingAddress);
+  const hasFood = (order.orderItems || []).some((item) => {
+    const cat = (
+      item.categorySlug ||
+      item.categoryName ||
+      item.category ||
+      item.foodCategory ||
+      item.name ||
+      ''
+    ).toString().toLowerCase();
+    return item.isFood === true || cat.includes('food');
+  });
 
   return (
     <div className={styles.page}>
@@ -1290,7 +1313,14 @@ export default function AdminOrderDetail({ params }) {
             <h3>📍 Shipping Address {isReturnRequested && '(Pickup From Here)'}</h3>
             {order.shippingAddress ? (
               <div className={styles.address}>
-                <p style={{ fontWeight: '700', fontSize: '15px', marginBottom: '6px' }}>{order.shippingAddress.name}</p>
+                <p style={{ fontWeight: '700', fontSize: '15px', marginBottom: '6px' }}>
+                  {order.shippingAddress.name}
+                  {gunturLocation && (
+                    <span style={{ marginLeft: '10px', padding: '2px 8px', background: '#D1FAE5', color: '#065F46', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>
+                      📍 Guntur Location
+                    </span>
+                  )}
+                </p>
                 <p>📞 {order.shippingAddress.phone}</p>
                 <p>🏠 {order.shippingAddress.address}</p>
                 <p>{order.shippingAddress.city}, {order.shippingAddress.state} — {order.shippingAddress.pincode}</p>
@@ -1302,7 +1332,6 @@ export default function AdminOrderDetail({ params }) {
         {/* ── RIGHT COLUMN ── */}
         <div className={styles.sideCol}>
 
-          {/* ── PRICE SUMMARY WITH SHIPPING NOTE ── */}
           <div className={styles.card}>
             <h3>💰 Price Summary</h3>
             <div className={styles.priceRows}>
@@ -1310,94 +1339,29 @@ export default function AdminOrderDetail({ params }) {
                 <span>Items ({order.orderItems?.reduce((a, i) => a + i.quantity, 0)})</span>
                 <span>₹{Math.round(order.itemsPrice)?.toLocaleString('en-IN')}</span>
               </div>
-
               <div className={styles.priceRow}>
                 <span>Shipping</span>
-                <span style={{
-                  color: order.shippingPrice === 0 ? '#10b981' : '#C2410C',
-                  fontWeight: '800',
-                }}>
-                  {order.shippingPrice === 0
-                    ? '🎉 FREE'
-                    : `₹${Math.round(order.shippingPrice)?.toLocaleString('en-IN')}`}
+                <span style={{ color: order.shippingPrice === 0 ? '#10b981' : '#C2410C', fontWeight: '800' }}>
+                  {order.shippingPrice === 0 ? '🎉 FREE' : `₹${Math.round(order.shippingPrice)?.toLocaleString('en-IN')}`}
                 </span>
               </div>
 
-              {/* Shipping reason note */}
-              {(() => {
-                const ship = Number(order.shippingPrice) || 0;
-                const sub  = Number(order.itemsPrice) || 0;
-                const FREE_THRESHOLD = 800;
+              {/* Dynamic Breakdown Note */}
+              <div style={{ marginTop: '8px', padding: '8px 10px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', fontSize: '11px', color: '#475569', lineHeight: 1.5 }}>
+                {gunturLocation && hasFood ? (
+                  <p style={{ margin: 0, color: '#065F46', fontWeight: '700' }}>📍 Guntur Offer: Food items qualify for free shipping!</p>
+                ) : hasFood ? (
+                  <p style={{ margin: 0, color: '#C2410C', fontWeight: '700' }}>🍼 Food item shipping applied (Outside Guntur)</p>
+                ) : order.shippingPrice === 0 ? (
+                  <p style={{ margin: 0, color: '#065F46', fontWeight: '700' }}>✅ Free delivery (non-food order ≥ ₹800)</p>
+                ) : (
+                  <p style={{ margin: 0, color: '#6B21A8', fontWeight: '700' }}>📦 Standard shipping (order below ₹800)</p>
+                )}
 
-                const hasFood = (order.orderItems || []).some((item) => {
-                  const cat = (
-                    item.categorySlug ||
-                    item.categoryName ||
-                    item.category ||
-                    item.foodCategory ||
-                    item.name ||
-                    ''
-                  ).toString().toLowerCase();
-                  return (
-                    item.isFood === true ||
-                    cat.includes('food') ||
-                    cat.includes('baby food') ||
-                    cat.includes('baby-food')
-                  );
-                });
-
-                if (ship === 0) {
-                  return (
-                    <div style={{
-                      marginTop: '8px',
-                      padding: '8px 10px',
-                      background: '#ECFDF5',
-                      border: '1.5px solid #A7F3D0',
-                      borderRadius: '8px',
-                      fontSize: '11px',
-                      fontWeight: '700',
-                      color: '#065F46',
-                      textAlign: 'center',
-                    }}>
-                      ✅ Free delivery (non-food order ≥ ₹{FREE_THRESHOLD})
-                    </div>
-                  );
-                }
-
-                if (hasFood || sub >= FREE_THRESHOLD) {
-                  return (
-                    <div style={{
-                      marginTop: '8px',
-                      padding: '8px 10px',
-                      background: '#FFF7ED',
-                      border: '1.5px solid #FED7AA',
-                      borderRadius: '8px',
-                      fontSize: '11px',
-                      fontWeight: '700',
-                      color: '#9A3412',
-                      textAlign: 'center',
-                    }}>
-                      🍼 Food category — shipping always applies (any cart value)
-                    </div>
-                  );
-                }
-
-                return (
-                  <div style={{
-                    marginTop: '8px',
-                    padding: '8px 10px',
-                    background: '#F3E8FF',
-                    border: '1.5px solid #E9D5FF',
-                    borderRadius: '8px',
-                    fontSize: '11px',
-                    fontWeight: '700',
-                    color: '#6B21A8',
-                    textAlign: 'center',
-                  }}>
-                    📦 Standard shipping (order below ₹{FREE_THRESHOLD})
-                  </div>
-                );
-              })()}
+                {isCOD && (
+                  <p style={{ margin: '4px 0 0', color: '#92400E', fontWeight: '700' }}>💵 Includes +₹20 COD Handling Fee</p>
+                )}
+              </div>
 
               {order.discountAmount > 0 && (
                 <div className={`${styles.priceRow} ${styles.discountRow}`}>
@@ -1405,7 +1369,6 @@ export default function AdminOrderDetail({ params }) {
                   <span>− ₹{Math.round(order.discountAmount)?.toLocaleString('en-IN')}</span>
                 </div>
               )}
-
               {order.taxPrice > 0 && (
                 <div className={styles.priceRow}>
                   <span>Tax</span>
@@ -1413,7 +1376,6 @@ export default function AdminOrderDetail({ params }) {
                 </div>
               )}
             </div>
-
             <div className={styles.totalRow}>
               <span>Total</span>
               <strong style={{ color: '#ff6b9d', fontSize: '1.2rem' }}>

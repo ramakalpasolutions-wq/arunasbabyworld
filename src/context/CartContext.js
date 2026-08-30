@@ -1,18 +1,20 @@
 'use client';
-import { createContext, useContext, useReducer, useEffect } from 'react';
+import { createContext, useContext, useReducer, useEffect, useState } from 'react';
 
 const CartContext = createContext();
 
-// ═══════════════════════════════════════
-// SHIPPING RULES
-// - Food category → ALWAYS ₹50 (any cart value)
-// - Non-food ≥ ₹800 → FREE
-// - Non-food < ₹800 → ₹50
-// ═══════════════════════════════════════
-const SHIPPING_FEE = 50;
-const FREE_SHIPPING_THRESHOLD = 800;
+export const STANDARD_SHIPPING_FEE = 50;
+export const COD_EXTRA_FEE = 20;
+export const FREE_SHIPPING_THRESHOLD = 800;
 
-const isFoodItem = (item) => {
+export function isGunturAddress(address) {
+  if (!address) return false;
+  const city = (address.city || '').toLowerCase().trim();
+  const pincode = (address.pincode || '').toString().trim();
+  return city.includes('guntur') || pincode.startsWith('522');
+}
+
+export function isFoodItem(item) {
   const catSlug = (
     item.categorySlug ||
     item.category?.slug ||
@@ -36,21 +38,42 @@ const isFoodItem = (item) => {
     Boolean(foodCat) ||
     item.isFood === true
   );
-};
+}
 
-const calculateShipping = (items, subtotal) => {
-  if (!items || items.length === 0) return 0;
+export function calculateShippingFee({ items, subtotal, address, paymentMethod }) {
+  if (!items || items.length === 0) {
+    return { baseShipping: 0, codFee: 0, totalShipping: 0, isGuntur: false, hasFood: false, isCOD: false };
+  }
 
+  const isGuntur = isGunturAddress(address);
   const hasFood = items.some(isFoodItem);
+  const isCOD = paymentMethod === 'COD';
 
-  // Food items → always charge shipping
-  if (hasFood) return SHIPPING_FEE;
+  let baseShipping = 0;
 
-  // Non-food → free above ₹800
-  if (subtotal >= FREE_SHIPPING_THRESHOLD) return 0;
+  if (hasFood && !isGuntur) {
+    // Outside Guntur → Food items always incur base shipping fee ₹50
+    baseShipping = STANDARD_SHIPPING_FEE;
+  } else if (subtotal >= FREE_SHIPPING_THRESHOLD) {
+    // Free delivery threshold met (Non-food anywhere OR all items in Guntur)
+    baseShipping = 0;
+  } else {
+    // Subtotal below ₹800 threshold
+    baseShipping = STANDARD_SHIPPING_FEE;
+  }
 
-  return SHIPPING_FEE;
-};
+  const codFee = isCOD ? COD_EXTRA_FEE : 0;
+  const totalShipping = baseShipping + codFee;
+
+  return {
+    baseShipping,
+    codFee,
+    totalShipping,
+    isGuntur,
+    hasFood,
+    isCOD,
+  };
+}
 
 const cartReducer = (state, action) => {
   switch (action.type) {
@@ -139,6 +162,7 @@ const initialState = {
 
 export function CartProvider({ children }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
+  const [paymentMethod, setPaymentMethod] = useState('Razorpay');
 
   useEffect(() => {
     const saved = localStorage.getItem('cart');
@@ -153,23 +177,28 @@ export function CartProvider({ children }) {
     localStorage.setItem('cart', JSON.stringify(state));
   }, [state]);
 
-  const itemsPrice = state.items.reduce(
-    (acc, i) => acc + (i.discountPrice || i.price) * i.quantity, 0
-  );
-
-  // ✅ NEW shipping logic
-  const shippingPrice = calculateShipping(state.items, itemsPrice);
-  const hasFoodItems = state.items.some(isFoodItem);
-
-  const taxPrice = 0;
-  const discountAmount = state.coupon ? state.coupon.discountAmount || 0 : 0;
-  const totalPrice = Math.round(itemsPrice + shippingPrice - discountAmount);
-  const totalItems = state.items.reduce((acc, i) => acc + i.quantity, 0);
-
   const selectedAddress =
     state.selectedAddressIndex !== null && state.addresses?.[state.selectedAddressIndex]
       ? state.addresses[state.selectedAddressIndex]
       : null;
+
+  const itemsPrice = state.items.reduce(
+    (acc, i) => acc + (i.discountPrice || i.price) * i.quantity, 0
+  );
+
+  // Dynamic Shipping Calculation
+  const shippingInfo = calculateShippingFee({
+    items: state.items,
+    subtotal: itemsPrice,
+    address: selectedAddress,
+    paymentMethod,
+  });
+
+  const shippingPrice = shippingInfo.totalShipping;
+  const taxPrice = 0;
+  const discountAmount = state.coupon ? state.coupon.discountAmount || 0 : 0;
+  const totalPrice = Math.max(0, Math.round(itemsPrice + shippingPrice - discountAmount));
+  const totalItems = state.items.reduce((acc, i) => acc + i.quantity, 0);
 
   return (
     <CartContext.Provider
@@ -179,7 +208,12 @@ export function CartProvider({ children }) {
         coupon: state.coupon,
         itemsPrice,
         shippingPrice,
-        hasFoodItems, // ✅ exposed for UI messages
+        baseShipping: shippingInfo.baseShipping,
+        codFee: shippingInfo.codFee,
+        isGuntur: shippingInfo.isGuntur,
+        hasFoodItems: shippingInfo.hasFood,
+        paymentMethod,
+        setPaymentMethod,
         freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
         taxPrice,
         discountAmount,
