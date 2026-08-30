@@ -9,6 +9,7 @@ import toast from 'react-hot-toast';
 import styles from './CartClient.module.css';
 
 const fmt = (val) => Math.round(val || 0).toLocaleString('en-IN');
+const BABY_FOOD_CATEGORY_ID = '6a5473f71736df8447776561';
 
 function AvailableCoupons({ itemsPrice, onApply }) {
   const [coupons, setCoupons] = useState([]);
@@ -277,23 +278,27 @@ export default function CartClient() {
     document.body.appendChild(script);
   });
 
-  const mapOrderItems = () => items.map(i => ({
-    productId: i.id || i._id,
-    name: i.name,
-    image: i.images?.[0]?.url || '',
-    price: i.discountPrice || i.price,
-    quantity: i.quantity,
-    categorySlug: i.categorySlug || i.category?.slug || '',
-    categoryName: i.categoryName || i.category?.name || '',
-    categoryId: i.categoryId || i.category?.id || '',
-    foodCategory: i.foodCategory || null,
-    isFood: !!(
-      i.isFood ||
-      (i.categorySlug || i.category?.slug || '').toString().toLowerCase().includes('food') ||
-      (i.categoryName || i.category?.name || '').toString().toLowerCase().includes('food') ||
-      i.foodCategory
-    ),
-  }));
+  const mapOrderItems = () => items.map(i => {
+    const catId = String(i.categoryId || i.category?.id || i.category?._id || i.category || '');
+    return {
+      productId: i.id || i._id,
+      name: i.name,
+      image: i.images?.[0]?.url || '',
+      price: i.discountPrice || i.price,
+      quantity: i.quantity,
+      categorySlug: i.categorySlug || i.category?.slug || '',
+      categoryName: i.categoryName || i.category?.name || '',
+      categoryId: catId,
+      foodCategory: i.foodCategory || null,
+      isFood: !!(
+        i.isFood ||
+        catId === BABY_FOOD_CATEGORY_ID ||
+        (i.categorySlug || i.category?.slug || '').toString().toLowerCase().includes('food') ||
+        (i.categoryName || i.category?.name || '').toString().toLowerCase().includes('food') ||
+        i.foodCategory
+      ),
+    };
+  });
 
   const handleCODOrder = async () => {
     setProcessing(true);
@@ -646,7 +651,6 @@ export default function CartClient() {
             <span>₹{totalPrice.toLocaleString('en-IN')}</span>
           </div>
 
-          {/* Dynamic Shipping Helper Badge */}
           {(() => {
             if (hasFoodItems && !isGuntur) {
               return (
@@ -655,7 +659,7 @@ export default function CartClient() {
                   background: '#FFF3E8', border: '1.5px solid #FFD4A8',
                   fontSize: '12px', fontWeight: '700', color: '#C2410C', textAlign: 'center',
                 }}>
-                  🍼 Food items always include ₹50 shipping (Outside Guntur)
+                  🍼 Baby Food items always include ₹50 shipping (Outside Guntur)
                 </div>
               );
             }
@@ -856,7 +860,7 @@ export default function CartClient() {
             </div>
 
             <div style={{ flex: 1, overflowY: 'auto', padding: '18px 22px' }}>
-              <div style={{ padding: '14px 16px', background: '#F9FAFB', border: '1.5px solid #E5E7EB', borderRadius: '12px', display: 'flex', justifycontent: 'space-between', alignitems: 'flex-start', gap: '10px', marginBottom: '18px' }}>
+              <div style={{ padding: '14px 16px', background: '#F9FAFB', border: '1.5px solid #E5E7EB', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '18px' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: '#1F2937', fontFamily: 'Nunito, sans-serif' }}>
                     📍 Deliver to <span style={{ color: '#FF6B35' }}>{selectedAddress?.name}</span>, {selectedAddress?.pincode}

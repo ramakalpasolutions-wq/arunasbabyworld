@@ -7,6 +7,7 @@ import { sendOrderConfirmation } from '@/lib/nodemailer';
 const STANDARD_SHIPPING_FEE = 50;
 const COD_EXTRA_FEE = 20;
 const FREE_SHIPPING_THRESHOLD = 800;
+const BABY_FOOD_CATEGORY_ID = '6a5473f71736df8447776561';
 
 function isGunturLocation(address) {
   if (!address) return false;
@@ -16,28 +17,19 @@ function isGunturLocation(address) {
 }
 
 function isFoodItem(item) {
-  const catSlug = (
-    item.categorySlug ||
-    item.category?.slug ||
-    (typeof item.category === 'string' ? item.category : '') ||
-    ''
-  ).toLowerCase();
-
-  const catName = (
-    item.categoryName ||
-    item.category?.name ||
-    ''
-  ).toLowerCase();
-
+  const catId = String(item.categoryId || item.category?.id || item.category?._id || item.category || '');
+  const catSlug = (item.categorySlug || item.category?.slug || '').toString().toLowerCase();
+  const catName = (item.categoryName || item.category?.name || '').toString().toLowerCase();
   const foodCat = (item.foodCategory || '').toLowerCase();
 
   return (
+    item.isFood === true ||
+    catId === BABY_FOOD_CATEGORY_ID ||
     catSlug.includes('food') ||
     catName.includes('food') ||
     catSlug.includes('baby-food') ||
     catName.includes('baby food') ||
-    Boolean(foodCat) ||
-    item.isFood === true
+    Boolean(foodCat)
   );
 }
 
@@ -165,7 +157,6 @@ export async function POST(request) {
       );
     }
 
-    // Enrich order items with category info from DB for accurate checks
     const enrichedItems = await Promise.all(
       data.orderItems.map(async (item) => {
         try {
@@ -180,11 +171,12 @@ export async function POST(request) {
 
           let categorySlug = '';
           let categoryName = '';
+          let categoryId = product?.categoryId || item.categoryId || '';
 
-          if (product?.categoryId) {
+          if (categoryId) {
             try {
               const cat = await prisma.category.findUnique({
-                where: { id: product.categoryId },
+                where: { id: categoryId },
                 select: { slug: true, name: true },
               });
               categorySlug = cat?.slug || '';
@@ -194,6 +186,7 @@ export async function POST(request) {
 
           return {
             ...item,
+            categoryId,
             categorySlug,
             categoryName,
             category: categorySlug || categoryName || item.category,
@@ -221,7 +214,6 @@ export async function POST(request) {
       paymentStatus,
     } = data;
 
-    // Recalculate shipping & total server-side safely
     const shippingPrice = calculateShipping(
       enrichedItems,
       itemsPrice,
@@ -238,7 +230,7 @@ export async function POST(request) {
       data: {
         orderNumber:     orderNumber ?? undefined,
         userId:          session.user.id,
-        orderItems:      orderItems || [],
+        orderItems:      enrichedItems || orderItems || [],
         shippingAddress: shippingAddress,
         paymentMethod:   paymentMethod || 'Razorpay',
         itemsPrice:      itemsPrice,

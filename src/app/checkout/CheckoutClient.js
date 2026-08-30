@@ -8,6 +8,7 @@ import Link from 'next/link';
 import styles from './CheckoutClient.module.css';
 
 const fmt = (val) => Math.round(val || 0).toLocaleString('en-IN');
+const BABY_FOOD_CATEGORY_ID = '6a5473f71736df8447776561';
 
 const STEPS = ['Address', 'Review', 'Payment'];
 
@@ -22,6 +23,7 @@ export default function CheckoutClient() {
     totalPrice,
     coupon,
     clearCart,
+    setPaymentMethod: setCartPaymentMethod,
   } = useCart();
 
   const [step, setStep] = useState(0);
@@ -81,23 +83,27 @@ export default function CheckoutClient() {
     });
   };
 
-  const mapOrderItems = () => items.map(i => ({
-    productId: i.id || i._id,
-    name: i.name,
-    image: i.images?.[0]?.url || '',
-    price: i.discountPrice || i.price,
-    quantity: i.quantity,
-    categorySlug: i.categorySlug || i.category?.slug || '',
-    categoryName: i.categoryName || i.category?.name || '',
-    categoryId: i.categoryId || i.category?.id || '',
-    foodCategory: i.foodCategory || null,
-    isFood: !!(
-      i.isFood ||
-      (i.categorySlug || i.category?.slug || '').toString().toLowerCase().includes('food') ||
-      (i.categoryName || i.category?.name || '').toString().toLowerCase().includes('food') ||
-      i.foodCategory
-    ),
-  }));
+  const mapOrderItems = () => items.map(i => {
+    const catId = String(i.categoryId || i.category?.id || i.category?._id || i.category || '');
+    return {
+      productId: i.id || i._id,
+      name: i.name,
+      image: i.images?.[0]?.url || '',
+      price: i.discountPrice || i.price,
+      quantity: i.quantity,
+      categorySlug: i.categorySlug || i.category?.slug || '',
+      categoryName: i.categoryName || i.category?.name || '',
+      categoryId: catId,
+      foodCategory: i.foodCategory || null,
+      isFood: !!(
+        i.isFood ||
+        catId === BABY_FOOD_CATEGORY_ID ||
+        (i.categorySlug || i.category?.slug || '').toString().toLowerCase().includes('food') ||
+        (i.categoryName || i.category?.name || '').toString().toLowerCase().includes('food') ||
+        i.foodCategory
+      ),
+    };
+  });
 
   const handleCODOrder = async () => {
     setLoading(true);
@@ -280,6 +286,7 @@ export default function CheckoutClient() {
 
   const handlePaymentMethodSelect = (method) => {
     setPaymentMethod(method);
+    if (setCartPaymentMethod) setCartPaymentMethod(method);
     setShowPaymentPanel(false);
 
     setTimeout(() => {
@@ -332,7 +339,7 @@ export default function CheckoutClient() {
       id: 'cod',
       icon: '💵',
       title: 'Cash on Delivery',
-      subtitle: 'Pay when you receive',
+      subtitle: 'Pay when you receive (+₹20 COD fee)',
       color: '#EF4444',
       method: 'COD',
     },
@@ -888,6 +895,11 @@ export default function CheckoutClient() {
           </div>
         </>
       )}
+
+      <style jsx global>{`
+        @keyframes slideInRight { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      `}</style>
     </div>
   );
 }

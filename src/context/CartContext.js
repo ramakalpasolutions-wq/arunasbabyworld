@@ -6,6 +6,7 @@ const CartContext = createContext();
 export const STANDARD_SHIPPING_FEE = 50;
 export const COD_EXTRA_FEE = 20;
 export const FREE_SHIPPING_THRESHOLD = 800;
+export const BABY_FOOD_CATEGORY_ID = '6a5473f71736df8447776561';
 
 export function isGunturAddress(address) {
   if (!address) return false;
@@ -15,28 +16,19 @@ export function isGunturAddress(address) {
 }
 
 export function isFoodItem(item) {
-  const catSlug = (
-    item.categorySlug ||
-    item.category?.slug ||
-    (typeof item.category === 'string' ? item.category : '') ||
-    ''
-  ).toLowerCase();
-
-  const catName = (
-    item.categoryName ||
-    item.category?.name ||
-    ''
-  ).toLowerCase();
-
+  const catId = String(item.categoryId || item.category?.id || item.category?._id || item.category || '');
+  const catSlug = (item.categorySlug || item.category?.slug || '').toString().toLowerCase();
+  const catName = (item.categoryName || item.category?.name || '').toString().toLowerCase();
   const foodCat = (item.foodCategory || '').toLowerCase();
 
   return (
+    item.isFood === true ||
+    catId === BABY_FOOD_CATEGORY_ID ||
     catSlug.includes('food') ||
     catName.includes('food') ||
     catSlug.includes('baby-food') ||
     catName.includes('baby food') ||
-    Boolean(foodCat) ||
-    item.isFood === true
+    Boolean(foodCat)
   );
 }
 
@@ -52,13 +44,10 @@ export function calculateShippingFee({ items, subtotal, address, paymentMethod }
   let baseShipping = 0;
 
   if (hasFood && !isGuntur) {
-    // Outside Guntur → Food items always incur base shipping fee ₹50
     baseShipping = STANDARD_SHIPPING_FEE;
   } else if (subtotal >= FREE_SHIPPING_THRESHOLD) {
-    // Free delivery threshold met (Non-food anywhere OR all items in Guntur)
     baseShipping = 0;
   } else {
-    // Subtotal below ₹800 threshold
     baseShipping = STANDARD_SHIPPING_FEE;
   }
 
@@ -186,7 +175,6 @@ export function CartProvider({ children }) {
     (acc, i) => acc + (i.discountPrice || i.price) * i.quantity, 0
   );
 
-  // Dynamic Shipping Calculation
   const shippingInfo = calculateShippingFee({
     items: state.items,
     subtotal: itemsPrice,
