@@ -24,6 +24,7 @@ const STATUS_COLOR = {
 };
 
 const STATUS_STEPS = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered'];
+const BABY_FOOD_CATEGORY_ID = '6a5473f71736df8447776561';
 
 function fmtOrderNum(order) {
   return order?.orderNumber
@@ -31,12 +32,25 @@ function fmtOrderNum(order) {
     : `#${order?.id?.slice(-8)?.toUpperCase()}`;
 }
 
-// ✅ Check if address is in Guntur
 function isGuntur(address) {
   if (!address) return false;
   const city = (address.city || '').toLowerCase().trim();
   const pincode = (address.pincode || '').toString().trim();
   return city.includes('guntur') || pincode.startsWith('522');
+}
+
+function hasFoodInOrder(orderItems) {
+  return (orderItems || []).some((item) => {
+    const catId = String(item.categoryId || item.category?.id || item.category?._id || item.category || '');
+    const catName = (item.categoryName || item.name || '').toString().toLowerCase();
+    const catSlug = (item.categorySlug || '').toString().toLowerCase();
+    return (
+      item.isFood === true ||
+      catId === BABY_FOOD_CATEGORY_ID ||
+      catName.includes('food') ||
+      catSlug.includes('food')
+    );
+  });
 }
 
 /* ══════════════════════════════════════════
@@ -960,22 +974,11 @@ export default function AdminOrderDetail({ params }) {
   const canShip = ['Confirmed', 'Processing', 'Shipped'].includes(order.orderStatus);
   const canAdminCancel = !isCancelled && !isReturnRequested && order.orderStatus !== 'Delivered';
 
-  // ✅ Print Bill only for paid orders OR COD orders
   const canPrint = order.isPaid || order.paymentMethod === 'COD';
 
   const isCOD = order.paymentMethod === 'COD';
   const gunturLocation = isGuntur(order.shippingAddress);
-  const hasFood = (order.orderItems || []).some((item) => {
-    const cat = (
-      item.categorySlug ||
-      item.categoryName ||
-      item.category ||
-      item.foodCategory ||
-      item.name ||
-      ''
-    ).toString().toLowerCase();
-    return item.isFood === true || cat.includes('food');
-  });
+  const hasFood = hasFoodInOrder(order.orderItems);
 
   return (
     <div className={styles.page}>
@@ -1349,9 +1352,9 @@ export default function AdminOrderDetail({ params }) {
               {/* Dynamic Breakdown Note */}
               <div style={{ marginTop: '8px', padding: '8px 10px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', fontSize: '11px', color: '#475569', lineHeight: 1.5 }}>
                 {gunturLocation && hasFood ? (
-                  <p style={{ margin: 0, color: '#065F46', fontWeight: '700' }}>📍 Guntur Offer: Food items qualify for free shipping!</p>
+                  <p style={{ margin: 0, color: '#065F46', fontWeight: '700' }}>📍 Guntur Offer: Baby Food items qualify for free shipping!</p>
                 ) : hasFood ? (
-                  <p style={{ margin: 0, color: '#C2410C', fontWeight: '700' }}>🍼 Food item shipping applied (Outside Guntur)</p>
+                  <p style={{ margin: 0, color: '#C2410C', fontWeight: '700' }}>🍼 Baby Food item shipping applied (Outside Guntur)</p>
                 ) : order.shippingPrice === 0 ? (
                   <p style={{ margin: 0, color: '#065F46', fontWeight: '700' }}>✅ Free delivery (non-food order ≥ ₹800)</p>
                 ) : (
@@ -1485,5 +1488,3 @@ export default function AdminOrderDetail({ params }) {
     </div>
   );
 }
-
-
