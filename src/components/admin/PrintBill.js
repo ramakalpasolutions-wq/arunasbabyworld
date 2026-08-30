@@ -648,3 +648,4 @@ function InvoiceBody({ order, company, invoiceNumber, subtotal, shipping, discou
     </>
   );
 }
+
