@@ -1,5 +1,5 @@
 'use client';
-import { useState, useRef } from 'react';
+import { useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
@@ -25,6 +25,7 @@ const CATEGORY_ACCENTS = {
   'electric-vehicles': { color: '#059669', emoji: '🚗', pastel: '#ECFDF5' },
   'electric':          { color: '#059669', emoji: '🚗', pastel: '#ECFDF5' },
   'food':              { color: '#F97316', emoji: '🍎', pastel: '#FFF7ED' },
+  'baby-food':         { color: '#F97316', emoji: '🍼', pastel: '#FFF7ED' },
   'default':           { color: '#FF6B35', emoji: '🎁', pastel: '#FFF2EB' },
 };
 
@@ -115,7 +116,22 @@ export default function ProductCard({ product }) {
     if (cartAdding || product.stock === 0) return;
     setCartAdding(true);
     const addFn = addItem || addToCart;
-    addFn({ ...product, quantity: 1 });
+
+    // ✅ Resolve category fields so CartContext can accurately apply shipping rules
+    const categorySlug = product.category?.slug || product.categorySlug || (typeof product.category === 'string' ? product.category : '');
+    const categoryName = product.category?.name || product.categoryName || '';
+    const categoryId   = product.categoryId || product.category?.id || product.category?._id || '';
+
+    addFn({
+      ...product,
+      quantity: 1,
+      categorySlug,
+      categoryName,
+      categoryId,
+      foodCategory: product.foodCategory || null,
+      category: categorySlug || categoryName || product.category,
+    });
+
     toast.success('Added to cart! 🛒', {
       style: {
         background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',

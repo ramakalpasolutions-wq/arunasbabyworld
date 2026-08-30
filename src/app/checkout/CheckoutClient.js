@@ -37,7 +37,6 @@ export default function CheckoutClient() {
     pincode: '',
   });
 
-  // Lock body scroll when panel open
   useEffect(() => {
     document.body.style.overflow = showPaymentPanel ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
@@ -82,6 +81,24 @@ export default function CheckoutClient() {
     });
   };
 
+  const mapOrderItems = () => items.map(i => ({
+    productId: i.id || i._id,
+    name: i.name,
+    image: i.images?.[0]?.url || '',
+    price: i.discountPrice || i.price,
+    quantity: i.quantity,
+    categorySlug: i.categorySlug || i.category?.slug || '',
+    categoryName: i.categoryName || i.category?.name || '',
+    categoryId: i.categoryId || i.category?.id || '',
+    foodCategory: i.foodCategory || null,
+    isFood: !!(
+      i.isFood ||
+      (i.categorySlug || i.category?.slug || '').toString().toLowerCase().includes('food') ||
+      (i.categoryName || i.category?.name || '').toString().toLowerCase().includes('food') ||
+      i.foodCategory
+    ),
+  }));
+
   const handleCODOrder = async () => {
     setLoading(true);
     try {
@@ -89,13 +106,7 @@ export default function CheckoutClient() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orderItems: items.map(i => ({
-            productId: i.id || i._id,
-            name: i.name,
-            image: i.images?.[0]?.url || '',
-            price: i.discountPrice || i.price,
-            quantity: i.quantity,
-          })),
+          orderItems: mapOrderItems(),
           shippingAddress: address,
           paymentMethod: 'COD',
           itemsPrice,
@@ -141,13 +152,7 @@ export default function CheckoutClient() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orderItems: items.map(i => ({
-            productId: i.id || i._id,
-            name: i.name,
-            image: i.images?.[0]?.url || '',
-            price: i.discountPrice || i.price,
-            quantity: i.quantity,
-          })),
+          orderItems: mapOrderItems(),
           shippingAddress: address,
           paymentMethod: 'Razorpay',
           itemsPrice,
@@ -273,23 +278,19 @@ export default function CheckoutClient() {
     }
   };
 
-  // ✅ Handle payment method selection from panel
   const handlePaymentMethodSelect = (method) => {
     setPaymentMethod(method);
     setShowPaymentPanel(false);
 
-    // Auto-trigger payment based on method
     setTimeout(() => {
       if (method === 'COD') {
         handleCODOrder();
       } else {
-        // Card, UPI, NetBanking, EMI → all go through Razorpay
         handleRazorpayPayment();
       }
     }, 300);
   };
 
-  // ✅ Payment options
   const PAYMENT_OPTIONS = [
     {
       id: 'card',
@@ -341,7 +342,6 @@ export default function CheckoutClient() {
     <div className={`container ${styles.page}`}>
       <h1 className={styles.title}>Checkout</h1>
 
-      {/* ===== STEPS ===== */}
       <div className={styles.steps}>
         {STEPS.map((s, i) => (
           <div
@@ -362,7 +362,6 @@ export default function CheckoutClient() {
       <div className={styles.layout}>
         <div className={styles.main}>
 
-          {/* ===== STEP 0: ADDRESS ===== */}
           {step === 0 && (
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>📍 Delivery Address</h2>
@@ -450,7 +449,6 @@ export default function CheckoutClient() {
             </div>
           )}
 
-          {/* ===== STEP 1: REVIEW ===== */}
           {step === 1 && (
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>📋 Order Review</h2>
@@ -493,7 +491,6 @@ export default function CheckoutClient() {
             </div>
           )}
 
-          {/* ===== STEP 2: PAYMENT — FirstCry-style ===== */}
           {step === 2 && (
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>💳 Ready to Pay</h2>
@@ -550,7 +547,6 @@ export default function CheckoutClient() {
           )}
         </div>
 
-        {/* ===== SUMMARY SIDEBAR ===== */}
         <div className={styles.summary}>
           <h3>Price Details</h3>
           <div className={styles.summaryRows}>
@@ -583,12 +579,8 @@ export default function CheckoutClient() {
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════
-          🎨 SLIDE-IN PAYMENT PANEL (FirstCry-style)
-          ═══════════════════════════════════════ */}
       {showPaymentPanel && (
         <>
-          {/* Overlay */}
           <div
             onClick={() => setShowPaymentPanel(false)}
             style={{
@@ -600,7 +592,6 @@ export default function CheckoutClient() {
             }}
           />
 
-          {/* Panel */}
           <div style={{
             position: 'fixed',
             top: 0,
@@ -617,7 +608,6 @@ export default function CheckoutClient() {
             overflow: 'hidden',
           }}>
 
-            {/* HEADER */}
             <div style={{
               padding: '18px 22px',
               borderBottom: '1.5px solid #E5E7EB',
@@ -658,13 +648,11 @@ export default function CheckoutClient() {
               </h2>
             </div>
 
-            {/* SCROLLABLE CONTENT */}
             <div style={{
               flex: 1,
               overflowY: 'auto',
               padding: '18px 22px',
             }}>
-              {/* Delivery Address */}
               <div style={{
                 padding: '14px 16px',
                 background: '#F9FAFB',
@@ -722,66 +710,6 @@ export default function CheckoutClient() {
                 </button>
               </div>
 
-              {/* Bank Offer Banner (Optional) */}
-              <div style={{
-                padding: '10px 14px',
-                background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)',
-                border: '1.5px solid #BFDBFE',
-                borderRadius: '10px',
-                marginBottom: '18px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-              }}>
-                <div style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '6px',
-                  background: 'white',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  fontSize: '1rem',
-                  border: '1px solid #BFDBFE',
-                  flexShrink: 0,
-                }}>
-                  🏦
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <p style={{
-                    margin: 0,
-                    fontSize: '0.80rem',
-                    fontWeight: '800',
-                    color: '#1E40AF',
-                    fontFamily: 'Nunito, sans-serif',
-                  }}>
-                    5% Off upto ₹500
-                  </p>
-                  <p style={{
-                    margin: '2px 0 0',
-                    fontSize: '0.68rem',
-                    color: '#3B82F6',
-                    fontWeight: '600',
-                    fontFamily: 'Nunito, sans-serif',
-                  }}>
-                    On Federal Bank Cards | Over ₹1,999
-                  </p>
-                </div>
-                <span style={{
-                  fontSize: '0.68rem',
-                  fontWeight: '800',
-                  color: '#1E40AF',
-                  background: 'white',
-                  padding: '3px 8px',
-                  borderRadius: '999px',
-                  border: '1px solid #BFDBFE',
-                  flexShrink: 0,
-                }}>
-                  1/4
-                </span>
-              </div>
-
-              {/* Section Title */}
               <h3 style={{
                 margin: '0 0 14px',
                 fontSize: '1rem',
@@ -792,7 +720,6 @@ export default function CheckoutClient() {
                 Payment Options
               </h3>
 
-              {/* Payment Options List */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                 {PAYMENT_OPTIONS.map((opt) => (
                   <button
@@ -815,24 +742,7 @@ export default function CheckoutClient() {
                       width: '100%',
                       position: 'relative',
                     }}
-                    onMouseEnter={(e) => {
-                      if (!opt.disabled) {
-                        e.currentTarget.style.borderColor = opt.color;
-                        e.currentTarget.style.background = `${opt.color}08`;
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                        e.currentTarget.style.boxShadow = `0 6px 16px ${opt.color}20`;
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!opt.disabled) {
-                        e.currentTarget.style.borderColor = '#E5E7EB';
-                        e.currentTarget.style.background = 'white';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }
-                    }}
                   >
-                    {/* Icon */}
                     <div style={{
                       width: '42px',
                       height: '42px',
@@ -847,7 +757,6 @@ export default function CheckoutClient() {
                       {opt.icon}
                     </div>
 
-                    {/* Text */}
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                         <p style={{
@@ -882,7 +791,6 @@ export default function CheckoutClient() {
                       </p>
                     </div>
 
-                    {/* Arrow */}
                     <span style={{
                       fontSize: '1.3rem',
                       color: '#9CA3AF',
@@ -892,7 +800,6 @@ export default function CheckoutClient() {
                       ›
                     </span>
 
-                    {/* Recommended Ribbon */}
                     {opt.recommended && (
                       <div style={{
                         position: 'absolute',
@@ -914,7 +821,6 @@ export default function CheckoutClient() {
                 ))}
               </div>
 
-              {/* Trust Message */}
               <div style={{
                 marginTop: '18px',
                 padding: '10px 14px',
@@ -938,7 +844,6 @@ export default function CheckoutClient() {
               </div>
             </div>
 
-            {/* FOOTER — Security Badges */}
             <div style={{
               padding: '14px 22px',
               borderTop: '1.5px solid #E5E7EB',
@@ -981,17 +886,6 @@ export default function CheckoutClient() {
               </div>
             </div>
           </div>
-
-          <style>{`
-            @keyframes slideInRight {
-              from { transform: translateX(100%); }
-              to   { transform: translateX(0);    }
-            }
-            @keyframes fadeIn {
-              from { opacity: 0; }
-              to   { opacity: 1; }
-            }
-          `}</style>
         </>
       )}
     </div>

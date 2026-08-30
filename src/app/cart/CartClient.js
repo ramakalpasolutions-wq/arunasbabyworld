@@ -10,9 +10,6 @@ import styles from './CartClient.module.css';
 
 const fmt = (val) => Math.round(val || 0).toLocaleString('en-IN');
 
-/* ═══════════════════════════════════════
-   AVAILABLE COUPONS (with category info)
-═══════════════════════════════════════ */
 function AvailableCoupons({ itemsPrice, onApply }) {
   const [coupons, setCoupons] = useState([]);
   const [showAll, setShowAll] = useState(false);
@@ -47,7 +44,6 @@ function AvailableCoupons({ itemsPrice, onApply }) {
                   <span style={{ fontSize: '13px', fontWeight: '700', color: '#ff6b9d' }}>
                     {c.discountType === 'percentage' ? `${c.discountValue}% OFF` : `₹${c.discountValue} OFF`}
                   </span>
-                  {/* Show badge if category-specific */}
                   {isCategorySpecific && (
                     <span style={{ fontSize: '10px', fontWeight: '800', color: '#fff', background: '#f59e0b', padding: '2px 6px', borderRadius: '4px' }}>
                       CATEGORY
@@ -58,7 +54,6 @@ function AvailableCoupons({ itemsPrice, onApply }) {
                   {c.minOrderValue > 0 ? `Min order: ₹${c.minOrderValue.toLocaleString('en-IN')}` : 'No minimum order'}
                   {c.maxDiscount ? ` • Max: ₹${c.maxDiscount}` : ''}
                 </p>
-                {/* Show description */}
                 {c.description && (
                   <p style={{ fontSize: '11px', color: '#7c3aed', fontWeight: '600', margin: '3px 0 0' }}>
                     📢 {c.description}
@@ -81,9 +76,6 @@ function AvailableCoupons({ itemsPrice, onApply }) {
   );
 }
 
-/* ═══════════════════════════════════════
-   MAIN CART CLIENT
-═══════════════════════════════════════ */
 export default function CartClient() {
   const router = useRouter();
   const { data: session } = useSession();
@@ -94,8 +86,6 @@ export default function CartClient() {
     removeItem,
     itemsPrice,
     shippingPrice,
-    hasFoodItems,        
-    freeShippingThreshold,
     discountAmount,
     totalPrice,
     coupon,
@@ -115,7 +105,6 @@ export default function CartClient() {
   const [applying, setApplying] = useState(false);
   const [stockMap, setStockMap] = useState({});
 
-  // Panel states
   const [showAddressPanel, setShowAddressPanel] = useState(false);
   const [showPaymentPanel, setShowPaymentPanel] = useState(false);
   const [showAddressForm, setShowAddressForm] = useState(false);
@@ -126,20 +115,17 @@ export default function CartClient() {
     name: '', phone: '', address: '', city: '', state: '', pincode: '',
   });
 
-  // Auto-select first address if only one exists
   useEffect(() => {
     if (addresses.length === 1 && selectedAddressIndex === null) {
       selectAddress(0);
     }
   }, [addresses.length]);
 
-  // Body scroll lock
   useEffect(() => {
     document.body.style.overflow = (showAddressPanel || showPaymentPanel) ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [showAddressPanel, showPaymentPanel]);
 
-  // Fetch live stock
   useEffect(() => {
     if (items.length === 0) return;
     const ids = items.map(i => i.id || i._id).filter(Boolean);
@@ -173,7 +159,6 @@ export default function CartClient() {
     updateQuantity(item.id || item._id, newQty);
   };
 
-  // ✅ FIXED PAYLOAD: Send 'items' (not 'cartItems') to match API expectations
   const applyCoupon = async (code) => {
     const codeToApply = code || couponCode;
     if (!codeToApply.trim()) return;
@@ -206,7 +191,6 @@ export default function CartClient() {
     }
   };
 
-  // ✅ FIXED PAYLOAD: Revalidation updated to send 'items'
   useEffect(() => {
     if (!coupon?.code || items.length === 0) return;
 
@@ -229,12 +213,10 @@ export default function CartClient() {
         });
         const data = await res.json();
         if (res.ok) {
-          // Update discount if amount changed
           if (data.discountAmount !== discountAmount) {
             setCoupon({ code: coupon.code, discountAmount: data.discountAmount });
           }
         } else {
-          // Coupon no longer valid — remove it
           removeCoupon();
           toast.error(`Coupon "${coupon.code}" removed: ${data.error}`);
         }
@@ -243,7 +225,7 @@ export default function CartClient() {
       }
     };
 
-    const timer = setTimeout(revalidate, 600); // debounce
+    const timer = setTimeout(revalidate, 600);
     return () => clearTimeout(timer);
   }, [items, coupon?.code, itemsPrice]);
 
@@ -252,9 +234,6 @@ export default function CartClient() {
     return item.quantity > maxStock || maxStock === 0;
   });
 
-  // ═══════════════════════════════════════
-  // ADDRESS HANDLERS
-  // ═══════════════════════════════════════
   const openAddAddress = () => {
     setAddressForm({ name: '', phone: '', address: '', city: '', state: '', pincode: '' });
     setEditingIndex(null);
@@ -304,9 +283,6 @@ export default function CartClient() {
     toast.success('📍 Address selected');
   };
 
-  // ═══════════════════════════════════════
-  // PLACE ORDER FLOW
-  // ═══════════════════════════════════════
   const handlePlaceOrder = () => {
     if (!session) {
       toast.error('Please login first');
@@ -325,9 +301,6 @@ export default function CartClient() {
     setShowPaymentPanel(true);
   };
 
-  // ═══════════════════════════════════════
-  // PAYMENT HANDLERS
-  // ═══════════════════════════════════════
   const loadRazorpay = () => new Promise((resolve) => {
     if (window.Razorpay) { resolve(true); return; }
     const script = document.createElement('script');
@@ -337,6 +310,24 @@ export default function CartClient() {
     document.body.appendChild(script);
   });
 
+  const mapOrderItems = () => items.map(i => ({
+    productId: i.id || i._id,
+    name: i.name,
+    image: i.images?.[0]?.url || '',
+    price: i.discountPrice || i.price,
+    quantity: i.quantity,
+    categorySlug: i.categorySlug || i.category?.slug || '',
+    categoryName: i.categoryName || i.category?.name || '',
+    categoryId: i.categoryId || i.category?.id || '',
+    foodCategory: i.foodCategory || null,
+    isFood: !!(
+      i.isFood ||
+      (i.categorySlug || i.category?.slug || '').toString().toLowerCase().includes('food') ||
+      (i.categoryName || i.category?.name || '').toString().toLowerCase().includes('food') ||
+      i.foodCategory
+    ),
+  }));
+
   const handleCODOrder = async () => {
     setProcessing(true);
     try {
@@ -344,13 +335,7 @@ export default function CartClient() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orderItems: items.map(i => ({
-            productId: i.id || i._id,
-            name: i.name,
-            image: i.images?.[0]?.url || '',
-            price: i.discountPrice || i.price,
-            quantity: i.quantity,
-          })),
+          orderItems: mapOrderItems(),
           shippingAddress: selectedAddress,
           paymentMethod: 'COD',
           itemsPrice,
@@ -386,13 +371,7 @@ export default function CartClient() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          orderItems: items.map(i => ({
-            productId: i.id || i._id,
-            name: i.name,
-            image: i.images?.[0]?.url || '',
-            price: i.discountPrice || i.price,
-            quantity: i.quantity,
-          })),
+          orderItems: mapOrderItems(),
           shippingAddress: selectedAddress,
           paymentMethod: 'Razorpay',
           itemsPrice, shippingPrice, taxPrice: 0, discountAmount, totalPrice,
@@ -505,7 +484,6 @@ export default function CartClient() {
         🛒 Shopping Cart <span>({items.length} items)</span>
       </h1>
 
-      {/* DELIVERY ADDRESS STRIP */}
       {session && (
         <div style={{
           background: 'white',
@@ -568,7 +546,6 @@ export default function CartClient() {
         </div>
       )}
 
-      {/* Login prompt */}
       {!session && (
         <div style={{
           background: 'linear-gradient(135deg, #FFF5F7, #F3E8FF)',
@@ -605,7 +582,6 @@ export default function CartClient() {
 
       <div className={styles.layout}>
 
-        {/* ===== CART ITEMS ===== */}
         <div className={styles.itemsList}>
           {items.map((item) => {
             const itemId = item.id || item._id;
@@ -648,7 +624,6 @@ export default function CartClient() {
           })}
         </div>
 
-        {/* ===== ORDER SUMMARY ===== */}
         <div className={styles.summary}>
           <h3 className={styles.summaryTitle}>Order Summary</h3>
           <div className={styles.summaryRows}>
@@ -692,48 +667,48 @@ export default function CartClient() {
             <span>₹{totalPrice.toLocaleString('en-IN')}</span>
           </div>
 
-          {/* Shipping messages */}
-{(() => {
-  const hasFood = items.some((item) => {
-    const cat = (item.categorySlug || item.category?.slug || item.category || '').toString().toLowerCase();
-    const catName = (item.categoryName || item.category?.name || '').toLowerCase();
-    return cat.includes('food') || catName.includes('food') || Boolean(item.foodCategory) || item.isFood;
-  });
+          {/* Dynamic shipping notice */}
+          {(() => {
+            const hasFood = items.some((item) => {
+              const cat = (item.categorySlug || item.category?.slug || item.category || '').toString().toLowerCase();
+              const catName = (item.categoryName || item.category?.name || '').toLowerCase();
+              return cat.includes('food') || catName.includes('food') || Boolean(item.foodCategory) || item.isFood;
+            });
 
-  if (hasFood) {
-    return (
-      <div style={{
-        padding: '10px 12px', marginTop: '8px', borderRadius: '10px',
-        background: '#FFF3E8', border: '1.5px solid #FFD4A8',
-        fontSize: '12px', fontWeight: '700', color: '#C2410C', textAlign: 'center',
-      }}>
-        🍼 Food items always include ₹50 shipping (any cart value)
-      </div>
-    );
-  }
+            if (hasFood) {
+              return (
+                <div style={{
+                  padding: '10px 12px', marginTop: '8px', borderRadius: '10px',
+                  background: '#FFF3E8', border: '1.5px solid #FFD4A8',
+                  fontSize: '12px', fontWeight: '700', color: '#C2410C', textAlign: 'center',
+                }}>
+                  🍼 Food items always include ₹50 shipping (any cart value)
+                </div>
+              );
+            }
 
-  if (shippingPrice === 0) {
-    return (
-      <div className={styles.freeDeliveryMsg}>
-        ✅ You qualify for FREE delivery!
-      </div>
-    );
-  }
+            if (shippingPrice === 0) {
+              return (
+                <div className={styles.freeDeliveryMsg}>
+                  ✅ You qualify for FREE delivery!
+                </div>
+              );
+            }
 
-  const remaining = Math.max(0, 800 - itemsPrice);
-  return (
-    <div className={styles.freeDeliveryHint}>
-      Add ₹{remaining.toLocaleString('en-IN')} more for FREE delivery
-    </div>
-  );
-})()}
+            const remaining = Math.max(0, 800 - itemsPrice);
+            return (
+              <div className={styles.freeDeliveryHint}>
+                Add ₹{remaining.toLocaleString('en-IN')} more for FREE delivery
+              </div>
+            );
+          })()}
+
           {hasStockIssue && (
             <div style={{ padding: '12px 14px', background: '#fef2f2', border: '2px solid #dc2626', borderRadius: '10px', marginTop: '10px', fontSize: '13px', color: '#991b1b', fontWeight: '700', textAlign: 'center' }}>
               ⚠️ Please fix stock issues before checkout
             </div>
           )}
 
-          {/* PLACE ORDER BUTTON */}
           <button
             onClick={handlePlaceOrder}
             disabled={hasStockIssue || processing}
@@ -762,9 +737,6 @@ export default function CartClient() {
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════
-          📍 ADDRESS PANEL
-          ═══════════════════════════════════════ */}
       {showAddressPanel && (
         <>
           <div onClick={() => { setShowAddressPanel(false); setShowAddressForm(false); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9998, animation: 'fadeIn 0.3s ease' }} />
@@ -885,9 +857,6 @@ export default function CartClient() {
         </>
       )}
 
-      {/* ═══════════════════════════════════════
-          💳 PAYMENT PANEL
-          ═══════════════════════════════════════ */}
       {showPaymentPanel && (
         <>
           <div onClick={() => setShowPaymentPanel(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 9998, animation: 'fadeIn 0.3s ease' }} />
@@ -942,20 +911,6 @@ export default function CartClient() {
                       textAlign: 'left',
                       width: '100%',
                       position: 'relative',
-                    }}
-                    onMouseEnter={(e) => {
-                      if (!opt.disabled && !processing) {
-                        e.currentTarget.style.borderColor = opt.color;
-                        e.currentTarget.style.background = `${opt.color}08`;
-                        e.currentTarget.style.transform = 'translateY(-2px)';
-                      }
-                    }}
-                    onMouseLeave={(e) => {
-                      if (!opt.disabled && !processing) {
-                        e.currentTarget.style.borderColor = '#E5E7EB';
-                        e.currentTarget.style.background = 'white';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                      }
                     }}
                   >
                     <div style={{ width: '42px', height: '42px', borderRadius: '10px', background: `${opt.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '1.4rem', flexShrink: 0 }}>

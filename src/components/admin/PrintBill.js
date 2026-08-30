@@ -48,7 +48,6 @@ export default function PrintBill({ order, onClose }) {
       .catch(() => setLoading(false));
   }, []);
 
-  // Lock body scroll while modal open
   useEffect(() => {
     const prev = document.body.style.overflow;
     document.body.style.overflow = 'hidden';
@@ -56,7 +55,6 @@ export default function PrintBill({ order, onClose }) {
   }, []);
 
   const handlePrint = () => {
-    // Give browser a tick so styles are applied
     setTimeout(() => window.print(), 100);
   };
 
@@ -80,7 +78,6 @@ export default function PrintBill({ order, onClose }) {
 
   return (
     <>
-      {/* SCREEN-ONLY OVERLAY CONTROLS */}
       <div className="printbill-overlay no-print">
         <div className="printbill-toolbar no-print">
           <button type="button" onClick={handlePrint} className="printbill-btn print">
@@ -107,7 +104,6 @@ export default function PrintBill({ order, onClose }) {
         </div>
       </div>
 
-      {/* PRINT-ONLY COPY (always in DOM, only visible when printing) */}
       <div id="print-root" className="print-only">
         <div className="a5-invoice">
           <InvoiceBody
@@ -124,7 +120,6 @@ export default function PrintBill({ order, onClose }) {
       </div>
 
       <style jsx global>{`
-        /* ========== SCREEN ========== */
         .printbill-overlay {
           position: fixed;
           inset: 0;
@@ -179,7 +174,6 @@ export default function PrintBill({ order, onClose }) {
           line-height: 1.4;
         }
 
-        /* ========== PRINT ========== */
         @media print {
           @page {
             size: A5 portrait;
@@ -197,12 +191,10 @@ export default function PrintBill({ order, onClose }) {
             print-color-adjust: exact !important;
           }
 
-          /* Hide EVERYTHING by default */
           body * {
             visibility: hidden !important;
           }
 
-          /* Hide screen overlay completely */
           .printbill-overlay,
           .printbill-overlay *,
           .no-print,
@@ -211,7 +203,6 @@ export default function PrintBill({ order, onClose }) {
             visibility: hidden !important;
           }
 
-          /* Show ONLY print root + children */
           #print-root,
           #print-root * {
             visibility: visible !important;
@@ -241,7 +232,6 @@ export default function PrintBill({ order, onClose }) {
             overflow: visible !important;
           }
 
-          /* Keep table header black */
           #print-root table thead tr,
           #print-root table thead th {
             background: #000000 !important;
@@ -255,14 +245,12 @@ export default function PrintBill({ order, onClose }) {
             border-color: #000000 !important;
           }
 
-          /* Avoid clipping images */
           #print-root img {
             max-width: 55px !important;
             print-color-adjust: exact !important;
             -webkit-print-color-adjust: exact !important;
           }
 
-          /* Hide common admin chrome if present */
           nav, aside, header, footer,
           [class*="sidebar"], [class*="Sidebar"],
           [class*="AdminSidebar"], [class*="admin-sidebar"] {
@@ -275,13 +263,9 @@ export default function PrintBill({ order, onClose }) {
   );
 }
 
-/* ═══════════════════════════════════════
-   INVOICE BODY (shared screen + print)
-═══════════════════════════════════════ */
 function InvoiceBody({ order, company, invoiceNumber, subtotal, shipping, discount, tax, total }) {
   return (
     <>
-      {/* HEADER */}
       <div style={{
         borderBottom: '2px solid #000',
         paddingBottom: '8px',
@@ -334,7 +318,6 @@ function InvoiceBody({ order, company, invoiceNumber, subtotal, shipping, discou
         </div>
       </div>
 
-      {/* TITLE */}
       <div style={{
         textAlign: 'center',
         padding: '4px',
@@ -349,7 +332,6 @@ function InvoiceBody({ order, company, invoiceNumber, subtotal, shipping, discou
         TAX INVOICE
       </div>
 
-      {/* BILL TO + DETAILS */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
@@ -433,7 +415,6 @@ function InvoiceBody({ order, company, invoiceNumber, subtotal, shipping, discou
         </div>
       </div>
 
-      {/* ITEMS */}
       <table style={{
         width: '100%',
         borderCollapse: 'collapse',
@@ -477,7 +458,6 @@ function InvoiceBody({ order, company, invoiceNumber, subtotal, shipping, discou
         </tbody>
       </table>
 
-      {/* TOTALS */}
       <div style={{
         display: 'grid',
         gridTemplateColumns: '1fr 1fr',
@@ -526,7 +506,29 @@ function InvoiceBody({ order, company, invoiceNumber, subtotal, shipping, discou
                 </td>
               </tr>
               <tr>
-                <td style={{ padding: '3px 0' }}>Shipping:</td>
+                <td style={{ padding: '3px 0' }}>
+                  Shipping
+                  {(() => {
+                    const ship = Number(shipping) || 0;
+                    const sub  = Number(subtotal) || 0;
+                    const hasFood = (order.orderItems || []).some((item) => {
+                      const cat = (
+                        item.categorySlug ||
+                        item.categoryName ||
+                        item.category ||
+                        item.foodCategory ||
+                        item.name ||
+                        ''
+                      ).toString().toLowerCase();
+                      return item.isFood === true || cat.includes('food');
+                    });
+
+                    if (ship === 0) return ' (Free)';
+                    if (hasFood || sub >= 800) return ' (Food Category)';
+                    return ' (Standard)';
+                  })()}
+                  :
+                </td>
                 <td style={{ padding: '3px 0', textAlign: 'right', fontFamily: 'monospace' }}>
                   {shipping === 0 ? 'FREE' : `₹${Math.round(shipping).toLocaleString('en-IN')}`}
                 </td>
@@ -573,7 +575,6 @@ function InvoiceBody({ order, company, invoiceNumber, subtotal, shipping, discou
         </div>
       </div>
 
-      {/* TERMS */}
       {company?.termsAndConditions && (
         <div style={{
           border: '1px solid #000',
@@ -592,7 +593,6 @@ function InvoiceBody({ order, company, invoiceNumber, subtotal, shipping, discou
         </div>
       )}
 
-      {/* FOOTER */}
       <div style={{
         marginTop: '10px',
         borderTop: '2px solid #000',

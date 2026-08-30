@@ -952,7 +952,6 @@ export default function AdminOrderDetail({ params }) {
   const canShip = ['Confirmed', 'Processing', 'Shipped'].includes(order.orderStatus);
   const canAdminCancel = !isCancelled && !isReturnRequested && order.orderStatus !== 'Delivered';
 
-  // ✅ Print Bill only for paid orders OR COD orders
   const canPrint = order.isPaid || order.paymentMethod === 'COD';
 
   return (
@@ -993,7 +992,6 @@ export default function AdminOrderDetail({ params }) {
             {order.orderStatus?.replace('_', ' ')}
           </span>
 
-          {/* ✅ Print Bill Button */}
           {canPrint && (
             <button
               onClick={() => setShowPrintBill(true)}
@@ -1012,7 +1010,6 @@ export default function AdminOrderDetail({ params }) {
             </button>
           )}
 
-          {/* Admin Cancel & Refund button */}
           {canAdminCancel && (
             <button
               onClick={() => setShowAdminCancelModal(true)}
@@ -1305,6 +1302,7 @@ export default function AdminOrderDetail({ params }) {
         {/* ── RIGHT COLUMN ── */}
         <div className={styles.sideCol}>
 
+          {/* ── PRICE SUMMARY WITH SHIPPING NOTE ── */}
           <div className={styles.card}>
             <h3>💰 Price Summary</h3>
             <div className={styles.priceRows}>
@@ -1312,19 +1310,110 @@ export default function AdminOrderDetail({ params }) {
                 <span>Items ({order.orderItems?.reduce((a, i) => a + i.quantity, 0)})</span>
                 <span>₹{Math.round(order.itemsPrice)?.toLocaleString('en-IN')}</span>
               </div>
+
               <div className={styles.priceRow}>
                 <span>Shipping</span>
-                <span style={{ color: order.shippingPrice === 0 ? '#10b981' : 'inherit' }}>
-                  {order.shippingPrice === 0 ? '🎉 FREE' : `₹${order.shippingPrice}`}
+                <span style={{
+                  color: order.shippingPrice === 0 ? '#10b981' : '#C2410C',
+                  fontWeight: '800',
+                }}>
+                  {order.shippingPrice === 0
+                    ? '🎉 FREE'
+                    : `₹${Math.round(order.shippingPrice)?.toLocaleString('en-IN')}`}
                 </span>
               </div>
+
+              {/* Shipping reason note */}
+              {(() => {
+                const ship = Number(order.shippingPrice) || 0;
+                const sub  = Number(order.itemsPrice) || 0;
+                const FREE_THRESHOLD = 800;
+
+                const hasFood = (order.orderItems || []).some((item) => {
+                  const cat = (
+                    item.categorySlug ||
+                    item.categoryName ||
+                    item.category ||
+                    item.foodCategory ||
+                    item.name ||
+                    ''
+                  ).toString().toLowerCase();
+                  return (
+                    item.isFood === true ||
+                    cat.includes('food') ||
+                    cat.includes('baby food') ||
+                    cat.includes('baby-food')
+                  );
+                });
+
+                if (ship === 0) {
+                  return (
+                    <div style={{
+                      marginTop: '8px',
+                      padding: '8px 10px',
+                      background: '#ECFDF5',
+                      border: '1.5px solid #A7F3D0',
+                      borderRadius: '8px',
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      color: '#065F46',
+                      textAlign: 'center',
+                    }}>
+                      ✅ Free delivery (non-food order ≥ ₹{FREE_THRESHOLD})
+                    </div>
+                  );
+                }
+
+                if (hasFood || sub >= FREE_THRESHOLD) {
+                  return (
+                    <div style={{
+                      marginTop: '8px',
+                      padding: '8px 10px',
+                      background: '#FFF7ED',
+                      border: '1.5px solid #FED7AA',
+                      borderRadius: '8px',
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      color: '#9A3412',
+                      textAlign: 'center',
+                    }}>
+                      🍼 Food category — shipping always applies (any cart value)
+                    </div>
+                  );
+                }
+
+                return (
+                  <div style={{
+                    marginTop: '8px',
+                    padding: '8px 10px',
+                    background: '#F3E8FF',
+                    border: '1.5px solid #E9D5FF',
+                    borderRadius: '8px',
+                    fontSize: '11px',
+                    fontWeight: '700',
+                    color: '#6B21A8',
+                    textAlign: 'center',
+                  }}>
+                    📦 Standard shipping (order below ₹{FREE_THRESHOLD})
+                  </div>
+                );
+              })()}
+
               {order.discountAmount > 0 && (
                 <div className={`${styles.priceRow} ${styles.discountRow}`}>
                   <span>Coupon ({order.couponCode})</span>
                   <span>− ₹{Math.round(order.discountAmount)?.toLocaleString('en-IN')}</span>
                 </div>
               )}
+
+              {order.taxPrice > 0 && (
+                <div className={styles.priceRow}>
+                  <span>Tax</span>
+                  <span>₹{Math.round(order.taxPrice)?.toLocaleString('en-IN')}</span>
+                </div>
+              )}
             </div>
+
             <div className={styles.totalRow}>
               <span>Total</span>
               <strong style={{ color: '#ff6b9d', fontSize: '1.2rem' }}>
