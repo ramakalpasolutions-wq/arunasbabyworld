@@ -4,11 +4,48 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
 import { sendOrderConfirmation } from '@/lib/nodemailer';
 
-// ✅ Get next order number safely
+// ═══════════════════════════════════════
+// SHIPPING RULES (same as CartContext)
+// ═══════════════════════════════════════
+const SHIPPING_FEE = 50;
+const FREE_SHIPPING_THRESHOLD = 800;
+
+function isFoodItem(item) {
+  const catSlug = (
+    item.categorySlug ||
+    item.category?.slug ||
+    (typeof item.category === 'string' ? item.category : '') ||
+    ''
+  ).toLowerCase();
+
+  const catName = (
+    item.categoryName ||
+    item.category?.name ||
+    ''
+  ).toLowerCase();
+
+  const foodCat = (item.foodCategory || '').toLowerCase();
+
+  return (
+    catSlug.includes('food') ||
+    catName.includes('food') ||
+    catSlug.includes('baby-food') ||
+    catName.includes('baby food') ||
+    Boolean(foodCat) ||
+    item.isFood === true
+  );
+}
+
+function calculateShipping(orderItems, itemsPrice) {
+  if (!orderItems || orderItems.length === 0) return 0;
+  const hasFood = orderItems.some(isFoodItem);
+  if (hasFood) return SHIPPING_FEE;
+  if (itemsPrice >= FREE_SHIPPING_THRESHOLD) return 0;
+  return SHIPPING_FEE;
+}
+
 async function getNextOrderNumber() {
   try {
-    // Note: If you don't have a 'counter' model in your schema, this might fail. 
-    // Ensure you handle order numbering according to your existing working setup.
     const counter = await prisma.counter.upsert({
       where:  { name: 'orderNumber' },
       update: { value: { increment: 1 } },
@@ -32,8 +69,8 @@ export async function GET(request) {
     const status                = searchParams.get('status');
     const paymentStatus         = searchParams.get('paymentStatus');
     const excludeFailedPayments = searchParams.get('excludeFailedPayments');
-    const startDate             = searchParams.get('startDate'); // ✅ Added Date filter
-    const endDate               = searchParams.get('endDate');   // ✅ Added Date filter
+    const startDate             = searchParams.get('startDate');
+    const endDate               = searchParams.get('endDate');
     const page                  = parseInt(searchParams.get('page')  || '1');
     const limit                 = parseInt(searchParams.get('limit') || '10');
 
@@ -41,7 +78,6 @@ export async function GET(request) {
     if (session.user.role !== 'admin') where.userId = session.user.id;
     if (status) where.orderStatus = status;
 
-    // ✅ Payment filter logic
     if (paymentStatus) {
       where.paymentStatus = paymentStatus;
     } else if (excludeFailedPayments === 'true') {
@@ -55,19 +91,10 @@ export async function GET(request) {
       ];
     }
 
-    // ✅ NEW: MongoDB / Prisma Date Filter Logic
     if (startDate || endDate) {
       where.createdAt = {};
-      
-      if (startDate) {
-        // Appends UTC time to start of day
-        where.createdAt.gte = new Date(`${startDate}T00:00:00.000Z`);
-      }
-      
-      if (endDate) {
-        // Appends UTC time to end of day
-        where.createdAt.lte = new Date(`${endDate}T23:59:59.999Z`);
-      }
+      if (startDate) where.createdAt.gte = new Date(`${startDate}T00:00:00.000Z`);
+      if (endDate)   where.createdAt.lte = new Date(`${endDate}T23:59:59.999Z`);
     }
 
     const total  = await prisma.order.count({ where });
@@ -120,17 +147,63 @@ export async function POST(request) {
       );
     }
 
+    // Enrich order items with category info from DB (for accurate food detection)
+    const enrichedItems = await Promise.all(
+      data.orderItems.map(async (item) => {
+        try {
+          const product = await prisma.product.findUnique({
+            where: { id: item.productId },
+            select: {
+              categoryId: true,
+              category: true,
+              foodCategory: true,
+            },
+          });
+
+          let categorySlug = '';
+          let categoryName = '';
+
+          if (product?.categoryId) {
+            try {
+              const cat = await prisma.category.findUnique({
+                where: { id: product.categoryId },
+                select: { slug: true, name: true },
+              });
+              categorySlug = cat?.slug || '';
+              categoryName = cat?.name || '';
+            } catch {}
+          }
+
+          return {
+            ...item,
+            categorySlug,
+            categoryName,
+            category: categorySlug || categoryName || item.category,
+            foodCategory: product?.foodCategory || item.foodCategory || null,
+          };
+        } catch {
+          return item;
+        }
+      })
+    );
+
+    const itemsPrice = enrichedItems.reduce(
+      (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1),
+      0
+    );
+
+    // ✅ Server-side shipping recalculation (cannot be bypassed by client)
+    const shippingPrice = calculateShipping(enrichedItems, itemsPrice);
+    const discountAmount = Number(data.discountAmount) || 0;
+    const taxPrice = Number(data.taxPrice) || 0;
+    const totalPrice = Math.round(itemsPrice + shippingPrice + taxPrice - discountAmount);
+
     const orderNumber = await getNextOrderNumber();
 
     const {
       orderItems,
       shippingAddress,
       paymentMethod,
-      itemsPrice,
-      shippingPrice,
-      taxPrice,
-      discountAmount,
-      totalPrice,
       couponCode,
       isPaid,
       paidAt,
@@ -145,11 +218,11 @@ export async function POST(request) {
         orderItems:      orderItems || [],
         shippingAddress: shippingAddress,
         paymentMethod:   paymentMethod || 'Razorpay',
-        itemsPrice:      itemsPrice    || 0,
-        shippingPrice:   shippingPrice || 0,
-        taxPrice:        taxPrice      || 0,
-        discountAmount:  discountAmount || 0,
-        totalPrice:      totalPrice    || 0,
+        itemsPrice:      itemsPrice,
+        shippingPrice:   shippingPrice,   // ✅ server-calculated
+        taxPrice:        taxPrice,
+        discountAmount:  discountAmount,
+        totalPrice:      totalPrice,      // ✅ server-calculated
         couponCode:      couponCode    || null,
         isPaid:          isPaid        || false,
         paidAt:          paidAt        || null,
@@ -161,9 +234,13 @@ export async function POST(request) {
       },
     });
 
-    console.log('✅ Order created:', order.id, 'Number:', orderNumber, 'PaymentStatus:', order.paymentStatus);
+    console.log(
+      '✅ Order created:', order.id,
+      '| Shipping:', shippingPrice,
+      '| Total:', totalPrice,
+      '| Food shipping applied:', shippingPrice === SHIPPING_FEE && itemsPrice >= FREE_SHIPPING_THRESHOLD
+    );
 
-    // ✅ Only send email if COD
     if (paymentMethod === 'COD') {
       try {
         await sendOrderConfirmation(
@@ -171,7 +248,6 @@ export async function POST(request) {
           session.user.email,
           session.user.name
         );
-        console.log('✅ Email sent to:', session.user.email);
       } catch (emailErr) {
         console.error('❌ Email error (non-fatal):', emailErr);
       }
@@ -181,7 +257,7 @@ export async function POST(request) {
 
   } catch (error) {
     console.error('Order POST error:', error);
-    
+
     if (error.code === 'P2002') {
       return NextResponse.json(
         { error: 'Duplicate order detected' },

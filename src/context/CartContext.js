@@ -3,6 +3,55 @@ import { createContext, useContext, useReducer, useEffect } from 'react';
 
 const CartContext = createContext();
 
+// ═══════════════════════════════════════
+// SHIPPING RULES
+// - Food category → ALWAYS ₹50 (any cart value)
+// - Non-food ≥ ₹800 → FREE
+// - Non-food < ₹800 → ₹50
+// ═══════════════════════════════════════
+const SHIPPING_FEE = 50;
+const FREE_SHIPPING_THRESHOLD = 800;
+
+const isFoodItem = (item) => {
+  const catSlug = (
+    item.categorySlug ||
+    item.category?.slug ||
+    (typeof item.category === 'string' ? item.category : '') ||
+    ''
+  ).toLowerCase();
+
+  const catName = (
+    item.categoryName ||
+    item.category?.name ||
+    ''
+  ).toLowerCase();
+
+  const foodCat = (item.foodCategory || '').toLowerCase();
+
+  return (
+    catSlug.includes('food') ||
+    catName.includes('food') ||
+    catSlug.includes('baby-food') ||
+    catName.includes('baby food') ||
+    Boolean(foodCat) ||
+    item.isFood === true
+  );
+};
+
+const calculateShipping = (items, subtotal) => {
+  if (!items || items.length === 0) return 0;
+
+  const hasFood = items.some(isFoodItem);
+
+  // Food items → always charge shipping
+  if (hasFood) return SHIPPING_FEE;
+
+  // Non-food → free above ₹800
+  if (subtotal >= FREE_SHIPPING_THRESHOLD) return 0;
+
+  return SHIPPING_FEE;
+};
+
 const cartReducer = (state, action) => {
   switch (action.type) {
     case 'ADD_ITEM': {
@@ -49,7 +98,6 @@ const cartReducer = (state, action) => {
     case 'REMOVE_COUPON':
       return { ...state, coupon: null };
 
-    // ✅ NEW: Address actions
     case 'SET_ADDRESSES':
       return { ...state, addresses: action.payload };
     case 'ADD_ADDRESS':
@@ -108,13 +156,16 @@ export function CartProvider({ children }) {
   const itemsPrice = state.items.reduce(
     (acc, i) => acc + (i.discountPrice || i.price) * i.quantity, 0
   );
-  const shippingPrice = itemsPrice > 499 ? 0 : 49;
+
+  // ✅ NEW shipping logic
+  const shippingPrice = calculateShipping(state.items, itemsPrice);
+  const hasFoodItems = state.items.some(isFoodItem);
+
   const taxPrice = 0;
   const discountAmount = state.coupon ? state.coupon.discountAmount || 0 : 0;
   const totalPrice = Math.round(itemsPrice + shippingPrice - discountAmount);
   const totalItems = state.items.reduce((acc, i) => acc + i.quantity, 0);
 
-  // ✅ Get selected address object
   const selectedAddress =
     state.selectedAddressIndex !== null && state.addresses?.[state.selectedAddressIndex]
       ? state.addresses[state.selectedAddressIndex]
@@ -128,6 +179,8 @@ export function CartProvider({ children }) {
         coupon: state.coupon,
         itemsPrice,
         shippingPrice,
+        hasFoodItems, // ✅ exposed for UI messages
+        freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
         taxPrice,
         discountAmount,
         totalPrice,
@@ -145,7 +198,6 @@ export function CartProvider({ children }) {
         setCoupon: (coupon) => dispatch({ type: 'SET_COUPON', payload: coupon }),
         removeCoupon: () => dispatch({ type: 'REMOVE_COUPON' }),
 
-        // ✅ Address helpers
         addresses: state.addresses || [],
         selectedAddressIndex: state.selectedAddressIndex,
         selectedAddress,

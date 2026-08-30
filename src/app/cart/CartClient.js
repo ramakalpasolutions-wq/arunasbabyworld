@@ -94,6 +94,8 @@ export default function CartClient() {
     removeItem,
     itemsPrice,
     shippingPrice,
+    hasFoodItems,        
+    freeShippingThreshold,
     discountAmount,
     totalPrice,
     coupon,
@@ -690,9 +692,41 @@ export default function CartClient() {
             <span>₹{totalPrice.toLocaleString('en-IN')}</span>
           </div>
 
-          {shippingPrice === 0 && <div className={styles.freeDeliveryMsg}>✅ You qualify for FREE delivery!</div>}
-          {shippingPrice > 0 && itemsPrice < 499 && <div className={styles.freeDeliveryHint}>Add ₹{(499 - itemsPrice).toLocaleString('en-IN')} more for FREE delivery</div>}
+          {/* Shipping messages */}
+{(() => {
+  const hasFood = items.some((item) => {
+    const cat = (item.categorySlug || item.category?.slug || item.category || '').toString().toLowerCase();
+    const catName = (item.categoryName || item.category?.name || '').toLowerCase();
+    return cat.includes('food') || catName.includes('food') || Boolean(item.foodCategory) || item.isFood;
+  });
 
+  if (hasFood) {
+    return (
+      <div style={{
+        padding: '10px 12px', marginTop: '8px', borderRadius: '10px',
+        background: '#FFF3E8', border: '1.5px solid #FFD4A8',
+        fontSize: '12px', fontWeight: '700', color: '#C2410C', textAlign: 'center',
+      }}>
+        🍼 Food items always include ₹50 shipping (any cart value)
+      </div>
+    );
+  }
+
+  if (shippingPrice === 0) {
+    return (
+      <div className={styles.freeDeliveryMsg}>
+        ✅ You qualify for FREE delivery!
+      </div>
+    );
+  }
+
+  const remaining = Math.max(0, 800 - itemsPrice);
+  return (
+    <div className={styles.freeDeliveryHint}>
+      Add ₹{remaining.toLocaleString('en-IN')} more for FREE delivery
+    </div>
+  );
+})()}
           {hasStockIssue && (
             <div style={{ padding: '12px 14px', background: '#fef2f2', border: '2px solid #dc2626', borderRadius: '10px', marginTop: '10px', fontSize: '13px', color: '#991b1b', fontWeight: '700', textAlign: 'center' }}>
               ⚠️ Please fix stock issues before checkout
