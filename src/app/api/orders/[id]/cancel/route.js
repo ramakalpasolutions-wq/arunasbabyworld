@@ -9,15 +9,23 @@ import {
   sendAdminCancelNotification,
 } from '@/lib/nodemailer';
 
-export async function POST(request, { params }) {
+export async function POST(request, context) {
   try {
     const session = await getServerSession(authOptions);
     if (!session) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const { id } = await params;
-    const body = await request.json();
+    // Await params safely for compatibility with Next.js 14 and Next.js 15
+    const params = await Promise.resolve(context.params);
+    const { id } = params;
+
+    let body = {};
+    try {
+      body = await request.json();
+    } catch {
+      body = {};
+    }
     const { reason, bankDetails } = body;
 
     // ✅ Get order
@@ -30,8 +38,8 @@ export async function POST(request, { params }) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    // ✅ Verify ownership (or admin)
-    if (session.user.role !== 'admin' && order.userId !== session.user.id) {
+    // ✅ Verify ownership safely by casting ObjectIds to Strings
+    if (session.user.role !== 'admin' && String(order.userId) !== String(session.user.id)) {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
@@ -147,7 +155,28 @@ export async function POST(request, { params }) {
         },
       });
     }
-    // CASE: COD + Not delivered → just cancel, no refund needed
+
+    // ✅ Automatically restore product stock levels
+    if (order.orderItems && order.orderItems.length > 0) {
+      await Promise.allSettled(
+        order.orderItems.map(async (item) => {
+          if (item.productId) {
+            try {
+              await prisma.product.update({
+                where: { id: item.productId },
+                data: {
+                  stock: {
+                    increment: Number(item.quantity) || 1,
+                  },
+                },
+              });
+            } catch (stockErr) {
+              console.error(`❌ Failed to restore stock for item ${item.productId}:`, stockErr);
+            }
+          }
+        })
+      );
+    }
 
     // ✅ Update Order
     const updatedOrder = await prisma.order.update({
@@ -171,7 +200,7 @@ export async function POST(request, { params }) {
         updatedOrder,
         updatedOrder.user.email,
         updatedOrder.user.name,
-        reason
+        reason || 'Customer requested cancellation'
       );
 
       // 2. If Razorpay refund created → send refund processed email
@@ -188,8 +217,8 @@ export async function POST(request, { params }) {
       await sendAdminCancelNotification(
         updatedOrder,
         updatedOrder.user,
-        reason,
-        refundRecord  // ✅ Pass refund record so admin sees UPI/bank details
+        reason || 'Customer requested cancellation',
+        refundRecord
       );
 
       console.log('✅ All cancellation emails sent');

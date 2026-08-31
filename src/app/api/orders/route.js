@@ -17,10 +17,9 @@ function isGunturLocation(address) {
 }
 
 function isFoodItem(item) {
-  const catId = String(item.categoryId || item.category?.id || item.category?._id || item.category || '');
-  const catSlug = (item.categorySlug || item.category?.slug || '').toString().toLowerCase();
-  const catName = (item.categoryName || item.category?.name || '').toString().toLowerCase();
-  const foodCat = (item.foodCategory || '').toLowerCase();
+  const catId = String(item.categoryId || '');
+  const catSlug = (item.categorySlug || '').toLowerCase();
+  const catName = (item.categoryName || '').toLowerCase();
 
   return (
     item.isFood === true ||
@@ -28,8 +27,7 @@ function isFoodItem(item) {
     catSlug.includes('food') ||
     catName.includes('food') ||
     catSlug.includes('baby-food') ||
-    catName.includes('baby food') ||
-    Boolean(foodCat)
+    catName.includes('baby baby-food')
   );
 }
 
@@ -54,17 +52,18 @@ function calculateShipping(orderItems, itemsPrice, address, paymentMethod) {
   return baseShipping + codFee;
 }
 
+// Dynamically queries the highest existing sequence number from orders
 async function getNextOrderNumber() {
   try {
-    const counter = await prisma.counter.upsert({
-      where:  { name: 'orderNumber' },
-      update: { value: { increment: 1 } },
-      create: { name: 'orderNumber', value: 40001 },
+    const lastOrder = await prisma.order.findFirst({
+      orderBy: { orderNumber: 'desc' },
+      select: { orderNumber: true },
     });
-    return counter.value;
+    return lastOrder?.orderNumber ? lastOrder.orderNumber + 1 : 40001;
   } catch (err) {
-    console.error('Counter error:', err);
-    return null;
+    console.error('Error fetching last order number sequence:', err);
+    // Fail-safe random sequence number if database is unreachable or empty
+    return Math.floor(40000 + Math.random() * 50000);
   }
 }
 
@@ -157,6 +156,7 @@ export async function POST(request) {
       );
     }
 
+    // Enrich order items with valid product and category data for tax & shipping calculations
     const enrichedItems = await Promise.all(
       data.orderItems.map(async (item) => {
         try {
@@ -164,16 +164,21 @@ export async function POST(request) {
             where: { id: item.productId },
             select: {
               categoryId: true,
-              category: true,
-              foodCategory: true,
+              category: {
+                select: {
+                  slug: true,
+                  name: true,
+                },
+              },
             },
           });
 
-          let categorySlug = '';
-          let categoryName = '';
+          let categorySlug = product?.category?.slug || '';
+          let categoryName = product?.category?.name || '';
           let categoryId = product?.categoryId || item.categoryId || '';
 
-          if (categoryId) {
+          // Fallback manual category fetch if not resolved via relation query
+          if (!categorySlug && categoryId) {
             try {
               const cat = await prisma.category.findUnique({
                 where: { id: categoryId },
@@ -189,10 +194,9 @@ export async function POST(request) {
             categoryId,
             categorySlug,
             categoryName,
-            category: categorySlug || categoryName || item.category,
-            foodCategory: product?.foodCategory || item.foodCategory || null,
           };
-        } catch {
+        } catch (enrichErr) {
+          console.error(`Error enriching item ${item.productId}:`, enrichErr);
           return item;
         }
       })
@@ -204,7 +208,6 @@ export async function POST(request) {
     );
 
     const {
-      orderItems,
       shippingAddress,
       paymentMethod,
       couponCode,
@@ -226,12 +229,28 @@ export async function POST(request) {
 
     const orderNumber = await getNextOrderNumber();
 
+    // Sanitize item details to fit strict type schemas of MongoDB embedding inside Prisma
+    const sanitizedOrderItems = enrichedItems.map((item) => ({
+      productId: item.productId || null,
+      name: item.name || '',
+      image: item.image || '',
+      price: Number(item.price) || 0,
+      quantity: Number(item.quantity) || 1,
+    }));
+
     const order = await prisma.order.create({
       data: {
-        orderNumber:     orderNumber ?? undefined,
+        orderNumber:     orderNumber,
         userId:          session.user.id,
-        orderItems:      enrichedItems || orderItems || [],
-        shippingAddress: shippingAddress,
+        orderItems:      sanitizedOrderItems,
+        shippingAddress: {
+          name:    shippingAddress.name || '',
+          phone:   shippingAddress.phone || '',
+          address: shippingAddress.address || '',
+          city:    shippingAddress.city || '',
+          state:   shippingAddress.state || '',
+          pincode: shippingAddress.pincode || '',
+        },
         paymentMethod:   paymentMethod || 'Razorpay',
         itemsPrice:      itemsPrice,
         shippingPrice:   shippingPrice,

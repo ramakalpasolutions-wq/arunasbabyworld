@@ -1248,10 +1248,295 @@ function CloseBtn({ onClose, color = '#6B7280' }) {
 }
 
 /* Cancel Order & Exchange Status Components remain the same ... */
+/* ══════════════════════════════════════════
+   CANCEL ORDER MODAL COMPONENT
+══════════════════════════════════════════ */
 function CancelOrderModal({ order, onClose, onSuccess }) {
-  // Keeping this minimal for brevity, use your existing logic here if you want
-  return null; 
+  const [reason, setReason] = useState('Changed my mind');
+  const [customReason, setCustomReason] = useState('');
+  const [refundMethod, setRefundMethod] = useState('upi');
+  const [upiId, setUpiId] = useState('');
+  const [accountHolderName, setAccountHolderName] = useState('');
+  const [accountNumber, setAccountNumber] = useState('');
+  const [ifscCode, setIfscCode] = useState('');
+  const [bankName, setBankName] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const isCOD = order?.paymentMethod === 'COD';
+  const isDelivered = order?.orderStatus === 'Delivered' || order?.isDelivered;
+  const requiresBankDetails = isCOD && isDelivered;
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+
+    const finalReason = reason === 'Other' ? customReason : reason;
+
+    const body = {
+      reason: finalReason,
+    };
+
+    if (requiresBankDetails) {
+      body.bankDetails = {
+        refundMethod,
+        upiId: refundMethod === 'upi' ? upiId : undefined,
+        accountHolderName: refundMethod === 'bank' ? accountHolderName : undefined,
+        accountNumber: refundMethod === 'bank' ? accountNumber : undefined,
+        ifscCode: refundMethod === 'bank' ? ifscCode : undefined,
+        bankName: refundMethod === 'bank' ? bankName : undefined,
+      };
+    }
+
+    try {
+      const res = await fetch(`/api/orders/${order.id}/cancel`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to cancel order');
+
+      toast.success('🎉 Order cancelled successfully!');
+      onSuccess();
+    } catch (err) {
+      toast.error(err.message || 'An error occurred.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <div style={{
+      background: 'rgba(0,0,0,0.6)', position: 'fixed', inset: 0,
+      zIndex: 9999999, display: 'flex', alignItems: 'center', justifyContent: 'center',
+      padding: '16px', backdropFilter: 'blur(5px)',
+    }}>
+      <div style={{
+        background: 'white', borderRadius: '24px', width: '100%', maxWidth: '480px',
+        maxHeight: '90vh', overflowY: 'auto', boxShadow: '0 20px 50px rgba(0,0,0,0.3)',
+        fontFamily: 'Nunito, sans-serif',
+      }}>
+        {/* Header */}
+        <div style={{
+          padding: '20px 24px', borderBottom: '1.5px solid #F3E8FF',
+          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+          background: 'linear-gradient(135deg, #FFF5F7, #F3E8FF)',
+          borderRadius: '24px 24px 0 0',
+        }}>
+          <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '900', color: '#1F0F3A' }}>
+            Cancel Order
+          </h3>
+          <button onClick={onClose} style={{
+            background: 'white', border: '1px solid #E5E7EB',
+            width: '32px', height: '32px', borderRadius: '50%', cursor: 'pointer',
+            fontWeight: 'bold', color: '#6B7280', display: 'flex', alignItems: 'center', justifyContent: 'center',
+          }}>✕</button>
+        </div>
+
+        {/* Form */}
+        <form onSubmit={handleSubmit} style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <div>
+            <label style={{ fontSize: '0.85rem', fontWeight: '900', color: '#6B4E8A', marginBottom: '8px', display: 'block' }}>
+              Reason for Cancellation
+            </label>
+            <select
+              value={reason}
+              onChange={e => setReason(e.target.value)}
+              style={{
+                width: '100%', padding: '12px', border: '2px solid #EDD9FF', borderRadius: '12px',
+                fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', background: 'white',
+              }}
+            >
+              <option value="Changed my mind">Changed my mind</option>
+              <option value="Ordered wrong item/size">Ordered wrong item/size</option>
+              <option value="Found a better price elsewhere">Found a better price elsewhere</option>
+              <option value="Delivery taking too long">Delivery taking too long</option>
+              <option value="Other">Other (Please specify)</option>
+            </select>
+          </div>
+
+          {reason === 'Other' && (
+            <div>
+              <label style={{ fontSize: '0.85rem', fontWeight: '900', color: '#6B4E8A', marginBottom: '8px', display: 'block' }}>
+                Specify Reason
+              </label>
+              <input
+                type="text"
+                required
+                value={customReason}
+                onChange={e => setCustomReason(e.target.value)}
+                placeholder="Please specify why you are cancelling..."
+                style={{
+                  width: '100%', padding: '12px', border: '2px solid #EDD9FF', borderRadius: '12px',
+                  fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
+                }}
+              />
+            </div>
+          )}
+
+          {requiresBankDetails && (
+            <div style={{
+              background: '#F9F6FF', border: '1.5px dashed #D6BCFA', borderRadius: '16px',
+              padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px',
+            }}>
+              <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: '800', color: '#5B21B6' }}>
+                💵 COD Refund Details Required
+              </p>
+              <p style={{ margin: 0, fontSize: '0.72rem', color: '#6B7280', fontWeight: '600' }}>
+                Since this is a cash-on-delivery order, please select your preferred refund method:
+              </p>
+
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <button
+                  type="button"
+                  onClick={() => setRefundMethod('upi')}
+                  style={{
+                    flex: 1, padding: '8px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '800',
+                    cursor: 'pointer', border: refundMethod === 'upi' ? '2px solid #7B2FBE' : '1px solid #E5E7EB',
+                    background: refundMethod === 'upi' ? '#F3E8FF' : 'white',
+                    color: refundMethod === 'upi' ? '#7B2FBE' : '#6B7280',
+                  }}
+                >
+                  UPI Transfer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setRefundMethod('bank')}
+                  style={{
+                    flex: 1, padding: '8px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '800',
+                    cursor: 'pointer', border: refundMethod === 'bank' ? '2px solid #7B2FBE' : '1px solid #E5E7EB',
+                    background: refundMethod === 'bank' ? '#F3E8FF' : 'white',
+                    color: refundMethod === 'bank' ? '#7B2FBE' : '#6B7280',
+                  }}
+                >
+                  Bank Transfer
+                </button>
+              </div>
+
+              {refundMethod === 'upi' ? (
+                <div>
+                  <label style={{ fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '6px', display: 'block' }}>
+                    UPI ID (e.g. name@upi)
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={upiId}
+                    onChange={e => setUpiId(e.target.value)}
+                    placeholder="Enter your UPI ID"
+                    style={{
+                      width: '100%', padding: '10px', border: '2px solid #EDD9FF', borderRadius: '10px',
+                      fontSize: '0.85rem', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
+                    }}
+                  />
+                </div>
+              ) : (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div>
+                    <label style={{ fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '4px', display: 'block' }}>
+                      Account Holder Name
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={accountHolderName}
+                      onChange={e => setAccountHolderName(e.target.value)}
+                      placeholder="Full Name"
+                      style={{
+                        width: '100%', padding: '10px', border: '2px solid #EDD9FF', borderRadius: '10px',
+                        fontSize: '0.85rem', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+                  <div>
+                    <label style={{ fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '4px', display: 'block' }}>
+                      Account Number
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      value={accountNumber}
+                      onChange={e => setAccountNumber(e.target.value)}
+                      placeholder="Account Number"
+                      style={{
+                        width: '100%', padding: '10px', border: '2px solid #EDD9FF', borderRadius: '10px',
+                        fontSize: '0.85rem', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
+                      }}
+                    />
+                  </div>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div>
+                      <label style={{ fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '4px', display: 'block' }}>
+                        IFSC Code
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={ifscCode}
+                        onChange={e => setIfscCode(e.target.value.toUpperCase())}
+                        placeholder="IFSC Code"
+                        style={{
+                          width: '100%', padding: '10px', border: '2px solid #EDD9FF', borderRadius: '10px',
+                          fontSize: '0.85rem', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '4px', display: 'block' }}>
+                        Bank Name
+                      </label>
+                      <input
+                        type="text"
+                        required
+                        value={bankName}
+                        onChange={e => setBankName(e.target.value)}
+                        placeholder="Bank Name"
+                        style={{
+                          width: '100%', padding: '10px', border: '2px solid #EDD9FF', borderRadius: '10px',
+                          fontSize: '0.85rem', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
+                        }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          <div style={{ display: 'flex', gap: '12px', marginTop: '10px' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              disabled={loading}
+              style={{
+                flex: 1, padding: '12px', background: 'white', border: '2px solid #E5E7EB',
+                borderRadius: '12px', color: '#6B7280', fontSize: '0.9rem', fontWeight: '800',
+                cursor: 'pointer', fontFamily: 'inherit',
+              }}
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={loading}
+              style={{
+                flex: 1.5, padding: '12px', background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+                color: 'white', border: 'none', borderRadius: '12px', fontSize: '0.9rem',
+                fontWeight: '900', cursor: 'pointer', fontFamily: 'inherit',
+                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.25)',
+              }}
+            >
+              {loading ? '⏳ Processing...' : 'Confirm Cancellation'}
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  );
 }
+
+
 
 function ExchangeStatusBanner({ orderId, exchangeId }) {
    return null;
