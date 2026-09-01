@@ -4,19 +4,11 @@ import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useCart } from '@/context/CartContext';
+import { useCart, getEffectiveItemPrice, isFoodItem } from '@/context/CartContext';
 import toast from 'react-hot-toast';
 import styles from './CartClient.module.css';
 
 const fmt = (val) => Math.round(val || 0).toLocaleString('en-IN');
-const BABY_FOOD_CATEGORY_ID = '6a5473f71736df8447776561';
-
-function isGunturLocation(address) {
-  if (!address) return false;
-  const city = (address.city || '').toLowerCase().trim();
-  const pincode = (address.pincode || '').toString().trim();
-  return city.includes('guntur') || pincode.startsWith('522');
-}
 
 function AvailableCoupons({ itemsPrice, onApply }) {
   const [coupons, setCoupons] = useState([]);
@@ -93,21 +85,31 @@ export default function CartClient() {
     updateQuantity,
     removeItem,
     itemsPrice,
+    shippingPrice,
     baseShipping,
     codFee,
+    isGuntur,
+    hasFoodItems,
+    paymentMethod,
     setPaymentMethod,
     discountAmount,
+    totalPrice,
     coupon,
     setCoupon,
     removeCoupon,
     clearCart,
-    paymentMethod,
-  } = useCart();
 
-  // Database-backed state variables instead of in-memory context state
-  const [addresses, setAddresses] = useState([]);
-  const [selectedAddressIndex, setSelectedAddressIndex] = useState(null);
-  const [loadingAddresses, setLoadingAddresses] = useState(false);
+    // Server-side Address Actions from global context
+    addresses,
+    selectedAddressIndex,
+    selectedAddress,
+    addAddress,
+    updateAddress,
+    deleteAddress,
+    setDefaultAddress,
+    selectAddress,
+    loadingAddresses
+  } = useCart();
 
   const [couponCode, setCouponCode] = useState('');
   const [applying, setApplying] = useState(false);
@@ -123,76 +125,12 @@ export default function CartClient() {
     name: '', phone: '', address: '', city: '', state: '', pincode: '', isDefault: false
   });
 
-  const selectedAddress = selectedAddressIndex !== null ? addresses[selectedAddressIndex] : null;
-  const isAddressGuntur = selectedAddress ? isGunturLocation(selectedAddress) : false;
-
-  const foodItemsList = items.filter(i => {
-    const catId = String(i.categoryId || i.category?.id || i.category?._id || i.category || '');
-    return (
-      i.isFood === true ||
-      catId === BABY_FOOD_CATEGORY_ID ||
-      (i.categorySlug || i.category?.slug || '').toString().toLowerCase().includes('food') ||
-      (i.categoryName || i.category?.name || '').toString().toLowerCase().includes('food') ||
-      i.foodCategory
-    );
-  });
-
-  const nonFoodItemsList = items.filter(i => {
-    const catId = String(i.categoryId || i.category?.id || i.category?._id || i.category || '');
-    const isFood = (
-      i.isFood === true ||
-      catId === BABY_FOOD_CATEGORY_ID ||
-      (i.categorySlug || i.category?.slug || '').toString().toLowerCase().includes('food') ||
-      (i.categoryName || i.category?.name || '').toString().toLowerCase().includes('food') ||
-      i.foodCategory
-    );
-    return !isFood;
-  });
-
+  const foodItemsList = items.filter(isFoodItem);
+  const nonFoodItemsList = items.filter(i => !isFoodItem(i));
   const isOnlyFood = foodItemsList.length > 0 && nonFoodItemsList.length === 0;
   const totalFoodQty = foodItemsList.reduce((sum, item) => sum + (item.quantity || 1), 0);
-  const hasFoodItems = foodItemsList.length > 0;
 
-  const isFoodBlocked = isOnlyFood && !isAddressGuntur && totalFoodQty < 4;
-
-  const calculatedShippingPrice = (() => {
-    if (isOnlyFood) {
-      if (isAddressGuntur) return 0;
-      if (totalFoodQty >= 4) return 0;
-    }
-    if (hasFoodItems && !isAddressGuntur) return 50;
-    return baseShipping;
-  })();
-
-  const totalPrice = Math.max(0, Math.round(itemsPrice + calculatedShippingPrice + (showPaymentPanel && paymentMethod === 'COD' ? codFee : 0) - discountAmount));
-
-  // Sync addresses directly from server database (Amazon & Flipkart persistent style)
-  useEffect(() => {
-    if (session) {
-      setLoadingAddresses(true);
-      fetch('/api/users/addresses')
-        .then(res => res.json())
-        .then(data => {
-          const addrs = data.addresses || [];
-          setAddresses(addrs);
-          
-          // Auto-select Default address first. Fallback to index 0.
-          const defIndex = addrs.findIndex(a => a.isDefault);
-          if (defIndex !== -1) {
-            setSelectedAddressIndex(defIndex);
-          } else if (addrs.length > 0) {
-            setSelectedAddressIndex(0);
-          }
-        })
-        .catch(err => console.error("Error fetching user addresses:", err))
-        .finally(() => setLoadingAddresses(false));
-    }
-  }, [session]);
-
-  useEffect(() => {
-    document.body.style.overflow = (showAddressPanel || showPaymentPanel) ? 'hidden' : '';
-    return () => { document.body.style.overflow = ''; };
-  }, [showAddressPanel, showPaymentPanel]);
+  const isFoodBlocked = isOnlyFood && !isGuntur && totalFoodQty < 4;
 
   useEffect(() => {
     if (items.length === 0) return;
@@ -241,7 +179,7 @@ export default function CartClient() {
           items: items.map(i => ({
             productId: i.id || i._id,
             quantity: i.quantity,
-            price: i.discountPrice || i.price,
+            price: getEffectiveItemPrice(i, isGuntur),
             category: i.category,
             categoryId: i.categoryId
           })),
@@ -280,15 +218,7 @@ export default function CartClient() {
 
   const handleDeleteAddress = async (index) => {
     try {
-      const res = await fetch(`/api/users/addresses?index=${index}`, {
-        method: 'DELETE',
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to delete address');
-
-      setAddresses(data.addresses || []);
-      const defIdx = (data.addresses || []).findIndex(a => a.isDefault);
-      setSelectedAddressIndex(defIdx !== -1 ? defIdx : (data.addresses?.length > 0 ? 0 : null));
+      await deleteAddress(index);
       toast.success('🗑️ Address deleted successfully');
     } catch (err) {
       toast.error(err.message);
@@ -297,14 +227,7 @@ export default function CartClient() {
 
   const handleSetDefaultAddress = async (index) => {
     try {
-      const res = await fetch(`/api/users/addresses?index=${index}&action=setDefault`, {
-        method: 'PUT',
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to select default address');
-
-      setAddresses(data.addresses || []);
-      setSelectedAddressIndex(index);
+      await setDefaultAddress(index);
       toast.success('👑 Default address updated');
     } catch (err) {
       toast.error(err.message);
@@ -313,7 +236,7 @@ export default function CartClient() {
 
   const handleSaveAddress = async (e) => {
     e.preventDefault();
-    const { name, phone, address, city, state, pincode, isDefault } = addressForm;
+    const { name, phone, address, city, state, pincode } = addressForm;
     if (!name || !phone || !address || !city || !state || !pincode) {
       toast.error('Please fill all fields');
       return;
@@ -330,29 +253,14 @@ export default function CartClient() {
     setProcessing(true);
     try {
       const isEditing = editingIndex !== null;
-      const url = isEditing ? `/api/users/addresses?index=${editingIndex}` : '/api/users/addresses';
-      const method = isEditing ? 'PUT' : 'POST';
-
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(addressForm),
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Failed to save address');
-
-      setAddresses(data.addresses || []);
-      
       if (isEditing) {
+        await updateAddress(editingIndex, addressForm);
         toast.success('✅ Address updated successfully');
       } else {
+        await addAddress(addressForm);
         toast.success('✅ Address saved permanently');
       }
 
-      const activeIdx = data.addresses.findIndex(a => a.isDefault);
-      setSelectedAddressIndex(activeIdx !== -1 ? activeIdx : (isEditing ? selectedAddressIndex : data.addresses.length - 1));
-      
       setShowAddressForm(false);
       setEditingIndex(null);
     } catch (err) {
@@ -363,7 +271,7 @@ export default function CartClient() {
   };
 
   const handleSelectAddress = (index) => {
-    setSelectedAddressIndex(index);
+    selectAddress(index);
     setShowAddressPanel(false);
     toast.success('📍 Delivery destination updated');
   };
@@ -405,19 +313,13 @@ export default function CartClient() {
       productId: i.id || i._id,
       name: i.name,
       image: i.images?.[0]?.url || '',
-      price: i.discountPrice || i.price,
+      price: getEffectiveItemPrice(i, isGuntur),
       quantity: i.quantity,
       categorySlug: i.categorySlug || i.category?.slug || '',
       categoryName: i.categoryName || i.category?.name || '',
       categoryId: catId,
       foodCategory: i.foodCategory || null,
-      isFood: !!(
-        i.isFood ||
-        catId === BABY_FOOD_CATEGORY_ID ||
-        (i.categorySlug || i.category?.slug || '').toString().toLowerCase().includes('food') ||
-        (i.categoryName || i.category?.name || '').toString().toLowerCase().includes('food') ||
-        i.foodCategory
-      ),
+      isFood: isFoodItem(i)
     };
   });
 
@@ -432,7 +334,7 @@ export default function CartClient() {
           shippingAddress: selectedAddress,
           paymentMethod: 'COD',
           itemsPrice,
-          shippingPrice: calculatedShippingPrice,
+          shippingPrice,
           taxPrice: 0,
           discountAmount,
           totalPrice,
@@ -467,13 +369,15 @@ export default function CartClient() {
           orderItems: mapOrderItems(),
           shippingAddress: selectedAddress,
           paymentMethod: 'Razorpay',
-          itemsPrice, 
-          shippingPrice: calculatedShippingPrice, 
-          taxPrice: 0, 
-          discountAmount, 
+          itemsPrice,
+          shippingPrice,
+          taxPrice: 0,
+          discountAmount,
           totalPrice: totalPrice,
           couponCode: coupon?.code || null,
-          isPaid: false, paymentStatus: 'pending', orderStatus: 'Pending',
+          isPaid: false,
+          paymentStatus: 'pending',
+          orderStatus: 'Pending',
         }),
       });
       const dbData = await dbRes.json();
@@ -523,9 +427,9 @@ export default function CartClient() {
           }
         },
         prefill: {
-          name: selectedAddress.name,
-          email: session.user.email,
-          contact: selectedAddress.phone,
+          name: selectedAddress?.name,
+          email: session?.user?.email,
+          contact: selectedAddress?.phone,
         },
         theme: { color: '#ff6b9d' },
         modal: {
@@ -608,7 +512,7 @@ export default function CartClient() {
               <>
                 <p style={{ margin: 0, fontSize: '0.90rem', fontWeight: '800', color: '#1F2937', fontFamily: 'Nunito, sans-serif' }}>
                   Deliver to <span style={{ color: '#FF6B9D' }}>{selectedAddress.name}</span>, {selectedAddress.pincode}
-                  {isAddressGuntur && (
+                  {isGuntur && (
                     <span style={{ marginLeft: '8px', padding: '2px 8px', background: '#D1FAE5', color: '#065F46', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>
                       📍 Guntur Offer Active!
                     </span>
@@ -706,7 +610,7 @@ export default function CartClient() {
           <div>
             <h4 style={{ margin: 0, fontSize: '0.94rem', fontWeight: '900', color: '#991B1B' }}>Baby Food Order Limit</h4>
             <p style={{ margin: '4px 0 0', fontSize: '0.82rem', fontWeight: '700', color: '#B91C1C', lineHeight: 1.4 }}>
-              To order food items for delivery outside of Guntur, you must purchase a minimum of **4 food items**. 
+              To order food items for delivery outside of Guntur, you must purchase a minimum of **4 food items**.
               (Currently in your cart: **{totalFoodQty}** items)
             </p>
           </div>
@@ -718,7 +622,10 @@ export default function CartClient() {
         <div className={styles.itemsList}>
           {items.map((item) => {
             const itemId = item.id || item._id;
-            const price = item.discountPrice || item.price;
+            const originalPrice = item.discountPrice || item.price;
+            const price = getEffectiveItemPrice(item, isGuntur);
+            const hasGunturDiscount = isGuntur && isFoodItem(item);
+
             const image = item.images?.[0]?.url || `https://via.placeholder.com/100`;
             const maxStock = getMaxStock(item);
             const isOutOfStock = maxStock === 0;
@@ -736,9 +643,24 @@ export default function CartClient() {
                 </div>
                 <div className={styles.itemInfo}>
                   <Link href={`/products/${itemId}`} className={styles.itemName}>{item.name}</Link>
-                  <div className={styles.itemPrice}>₹{price.toLocaleString('en-IN')} each</div>
-                  {item.discountPrice && <div className={styles.itemOriginal}>MRP: ₹{item.price.toLocaleString('en-IN')}</div>}
+
+                  <div className={styles.itemPrice}>
+                    ₹{price.toLocaleString('en-IN')} each
+                    {hasGunturDiscount && (
+                      <span style={{ textDecoration: 'line-through', color: '#94A3B8', fontSize: '11px', marginLeft: '6px', fontWeight: '600' }}>
+                        ₹{originalPrice.toLocaleString('en-IN')}
+                      </span>
+                    )}
+                  </div>
+
+                  {item.discountPrice && !hasGunturDiscount && <div className={styles.itemOriginal}>MRP: ₹{item.price.toLocaleString('en-IN')}</div>}
                   {item.ageGroup && <div style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>👶 {item.ageGroup}</div>}
+
+                  {hasGunturDiscount && (
+                    <div style={{ display: 'inline-block', marginTop: '6px', padding: '3px 10px', background: '#D1FAE5', color: '#065F46', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>
+                      🎉 10% Guntur Food Discount Applied
+                    </div>
+                  )}
                   {isOutOfStock && <div style={{ display: 'inline-block', marginTop: '6px', padding: '3px 10px', background: '#dc2626', color: 'white', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>❌ OUT OF STOCK</div>}
                   {exceedsStock && !isOutOfStock && <div style={{ display: 'inline-block', marginTop: '6px', padding: '3px 10px', background: '#dc2626', color: 'white', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>⚠️ Only {maxStock} available</div>}
                   {!exceedsStock && !isOutOfStock && isLowStock && <div style={{ display: 'inline-block', marginTop: '6px', padding: '3px 10px', background: '#fef3c7', color: '#92400e', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>⚠️ Only {maxStock} left</div>}
@@ -766,8 +688,8 @@ export default function CartClient() {
             </div>
             <div className={styles.summaryRow}>
               <span>Shipping</span>
-              <span className={calculatedShippingPrice === 0 ? styles.free : ''}>
-                {calculatedShippingPrice === 0 ? '🎉 FREE' : `₹${calculatedShippingPrice}`}
+              <span className={baseShipping === 0 ? styles.free : ''}>
+                {baseShipping === 0 ? '🎉 FREE' : `₹${baseShipping}`}
               </span>
             </div>
             {codFee > 0 && (
@@ -808,14 +730,14 @@ export default function CartClient() {
 
           {(() => {
             if (isOnlyFood) {
-              if (isAddressGuntur) {
+              if (isGuntur) {
                 return (
                   <div style={{
                     padding: '10px 12px', marginTop: '8px', borderRadius: '10px',
                     background: '#ECFDF5', border: '1.5px solid #A7F3D0',
                     fontSize: '12px', fontWeight: '700', color: '#065F46', textAlign: 'center',
                   }}>
-                    🎉 Guntur Special: Free delivery unlocked on food items!
+                    🎉 Guntur Special: Free delivery + 10% Off Food items unlocked!
                   </div>
                 );
               }
@@ -841,7 +763,7 @@ export default function CartClient() {
               );
             }
 
-            if (hasFoodItems && !isAddressGuntur) {
+            if (hasFoodItems && !isGuntur) {
               return (
                 <div style={{
                   padding: '10px 12px', marginTop: '8px', borderRadius: '10px',
@@ -853,7 +775,7 @@ export default function CartClient() {
               );
             }
 
-            if (calculatedShippingPrice === 0) {
+            if (baseShipping === 0) {
               return (
                 <div className={styles.freeDeliveryMsg}>
                   ✅ You qualify for FREE delivery!
@@ -957,12 +879,11 @@ export default function CartClient() {
                     </select>
                   </div>
 
-                  {/* Amazon & Flipkart Save as Default Switch Box */}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0' }}>
                     <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', fontWeight: '800', color: '#6B4E8A', cursor: 'pointer' }}>
-                      <input 
-                        type="checkbox" 
-                        checked={addressForm.isDefault} 
+                      <input
+                        type="checkbox"
+                        checked={addressForm.isDefault}
                         onChange={(e) => setAddressForm({ ...addressForm, isDefault: e.target.checked })}
                         style={{ width: '16px', height: '16px', cursor: 'pointer' }}
                       />

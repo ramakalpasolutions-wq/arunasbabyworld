@@ -45,19 +45,18 @@ function calculateShipping(orderItems, itemsPrice, address, paymentMethod) {
 
   if (isOnlyFood) {
     if (isGuntur) {
-      baseShipping = 0; // In Guntur, food only = free shipping
+      baseShipping = 0;
     } else {
       if (totalFoodQty >= 4) {
-        baseShipping = 0; // Outside Guntur, >= 4 food items = free shipping
+        baseShipping = 0;
       } else {
-        baseShipping = STANDARD_SHIPPING_FEE; // Fallback (blocked by POST check anyway)
+        baseShipping = STANDARD_SHIPPING_FEE;
       }
     }
   } else {
-    // Mixed or Non-food order calculations
     const hasFood = foodItems.length > 0;
     if (hasFood && !isGuntur) {
-      baseShipping = STANDARD_SHIPPING_FEE; // Mixed orders outside Guntur containing food carry fee
+      baseShipping = STANDARD_SHIPPING_FEE;
     } else if (itemsPrice >= FREE_SHIPPING_THRESHOLD) {
       baseShipping = 0;
     } else {
@@ -69,7 +68,6 @@ function calculateShipping(orderItems, itemsPrice, address, paymentMethod) {
   return baseShipping + codFee;
 }
 
-// Dynamically queries the highest existing sequence number from orders
 async function getNextOrderNumber() {
   try {
     const lastOrder = await prisma.order.findFirst({
@@ -142,10 +140,7 @@ export async function GET(request) {
     });
   } catch (error) {
     console.error('Orders GET error:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
 }
 
@@ -159,26 +154,24 @@ export async function POST(request) {
     const data = await request.json();
 
     if (!data.orderItems || data.orderItems.length === 0) {
-      return NextResponse.json(
-        { error: 'Order items are required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Order items are required' }, { status: 400 });
     }
 
     if (!data.shippingAddress) {
-      return NextResponse.json(
-        { error: 'Shipping address is required' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Shipping address is required' }, { status: 400 });
     }
 
-    // Enrich order items with valid product and category data for tax & shipping calculations
+    const isGuntur = isGunturLocation(data.shippingAddress);
+
+    // Enrich order items and securely calculate dynamic discount prices on the backend
     const enrichedItems = await Promise.all(
       data.orderItems.map(async (item) => {
         try {
           const product = await prisma.product.findUnique({
             where: { id: item.productId },
             select: {
+              price: true,
+              discountPrice: true,
               categoryId: true,
               category: {
                 select: {
@@ -193,7 +186,6 @@ export async function POST(request) {
           let categoryName = product?.category?.name || '';
           let categoryId = product?.categoryId || item.categoryId || '';
 
-          // Fallback manual category fetch if not resolved via relation query
           if (!categorySlug && categoryId) {
             try {
               const cat = await prisma.category.findUnique({
@@ -205,11 +197,27 @@ export async function POST(request) {
             } catch {}
           }
 
+          // ✅ Backend Verification: Check if food item
+          const itemIsFood = !!(
+            item.isFood ||
+            categoryId === BABY_FOOD_CATEGORY_ID ||
+            categorySlug.toLowerCase().includes('food') ||
+            categoryName.toLowerCase().includes('food')
+          );
+
+          // Get master database pricing
+          const baseDbPrice = product ? (product.discountPrice || product.price) : (item.price || 0);
+          
+          // Securely apply Guntur 10% discount
+          const finalVerifiedPrice = (itemIsFood && isGuntur) ? Math.round(baseDbPrice * 0.9) : baseDbPrice;
+
           return {
             ...item,
+            price: finalVerifiedPrice, // Override with secure calculated price
             categoryId,
             categorySlug,
             categoryName,
+            isFood: itemIsFood
           };
         } catch (enrichErr) {
           console.error(`Error enriching item ${item.productId}:`, enrichErr);
@@ -218,10 +226,7 @@ export async function POST(request) {
       })
     );
 
-    // =========================================================================
-    // ✅ FOOD QUANTITY & SHIPPING CONSTRAINTS FOR NON-GUNTUR RESIDENTS
-    // =========================================================================
-    const isGuntur = isGunturLocation(data.shippingAddress);
+    // Minimum food item checks for non-guntur residents
     const foodItems = enrichedItems.filter(isFoodItem);
     const nonFoodItems = enrichedItems.filter(item => !isFoodItem(item));
     const isOnlyFood = foodItems.length > 0 && nonFoodItems.length === 0;
@@ -261,7 +266,6 @@ export async function POST(request) {
 
     const orderNumber = await getNextOrderNumber();
 
-    // Sanitize item details to fit strict type schemas of MongoDB embedding inside Prisma
     const sanitizedOrderItems = enrichedItems.map((item) => ({
       productId: item.productId || null,
       name: item.name || '',
@@ -301,7 +305,7 @@ export async function POST(request) {
     });
 
     console.log(
-      '✅ Order created:', order.id,
+      '✅ Order created secure:', order.id,
       '| Shipping:', shippingPrice,
       '| Total:', totalPrice
     );
@@ -324,23 +328,14 @@ export async function POST(request) {
     console.error('Order POST error:', error);
 
     if (error.code === 'P2002') {
-      return NextResponse.json(
-        { error: 'Duplicate order detected' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Duplicate order detected' }, { status: 400 });
     }
 
     if (error.code === 'P2025') {
-      return NextResponse.json(
-        { error: 'Related record not found' },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: 'Related record not found' }, { status: 400 });
     }
 
-    return NextResponse.json(
-      { error: error.message || 'Internal server error' },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
   }
 }
 

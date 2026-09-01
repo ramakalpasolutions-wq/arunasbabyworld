@@ -1,5 +1,6 @@
 'use client';
-import { createContext, useContext, useReducer, useEffect, useState } from 'react';
+import { createContext, useContext, useReducer, useEffect, useState, useMemo } from 'react';
+import { useSession } from 'next-auth/react';
 
 const CartContext = createContext();
 
@@ -32,6 +33,15 @@ export function isFoodItem(item) {
   );
 }
 
+// ✅ Dynamic Pricing Utility: Guntur residents get 10% discount on food items
+export function getEffectiveItemPrice(item, isGuntur) {
+  const basePrice = Number(item.discountPrice || item.price || 0);
+  if (isGuntur && isFoodItem(item)) {
+    return Math.round(basePrice * 0.9); // Apply 10% discount and round off float issues
+  }
+  return basePrice;
+}
+
 export function calculateShippingFee({ items, subtotal, address, paymentMethod }) {
   if (!items || items.length === 0) {
     return { baseShipping: 0, codFee: 0, totalShipping: 0, isGuntur: false, hasFood: false, isCOD: false };
@@ -48,16 +58,15 @@ export function calculateShippingFee({ items, subtotal, address, paymentMethod }
 
   if (isOnlyFood) {
     if (isGuntur) {
-      baseShipping = 0; // Guntur residents get free shipping for food-only orders
+      baseShipping = 0; // Free shipping for Guntur residents
     } else {
       if (totalFoodQty >= 4) {
-        baseShipping = 0; // Food-only orders with 4 or more items get free shipping outside Guntur
+        baseShipping = 0; // Free shipping for food orders of 4+ items outside Guntur
       } else {
-        baseShipping = STANDARD_SHIPPING_FEE; // Standard fee for food orders under 4 items
+        baseShipping = STANDARD_SHIPPING_FEE;
       }
     }
   } else {
-    // Mixed or Non-food order rules
     const hasFood = foodItems.length > 0;
     if (hasFood && !isGuntur) {
       baseShipping = STANDARD_SHIPPING_FEE;
@@ -127,33 +136,24 @@ const cartReducer = (state, action) => {
     case 'REMOVE_COUPON':
       return { ...state, coupon: null };
 
-    case 'SET_ADDRESSES':
-      return { ...state, addresses: action.payload };
-    case 'ADD_ADDRESS':
-      return { ...state, addresses: [...(state.addresses || []), action.payload] };
-    case 'UPDATE_ADDRESS':
-      return {
-        ...state,
-        addresses: (state.addresses || []).map((a, i) =>
-          i === action.payload.index ? action.payload.address : a
-        ),
-      };
-    case 'DELETE_ADDRESS':
-      return {
-        ...state,
-        addresses: (state.addresses || []).filter((_, i) => i !== action.payload),
-        selectedAddressIndex:
-          state.selectedAddressIndex === action.payload
-            ? null
-            : state.selectedAddressIndex > action.payload
-              ? state.selectedAddressIndex - 1
-              : state.selectedAddressIndex,
-      };
+    case 'SET_ADDRESSES': {
+      const addresses = action.payload || [];
+      let selectedIndex = state.selectedAddressIndex;
+      
+      // Auto-set the index to the default address if we just fetched addresses
+      if (addresses.length > 0) {
+        const defIdx = addresses.findIndex(a => a.isDefault);
+        selectedIndex = defIdx !== -1 ? defIdx : 0;
+      } else {
+        selectedIndex = null;
+      }
+      return { ...state, addresses, selectedAddressIndex: selectedIndex };
+    }
     case 'SELECT_ADDRESS':
       return { ...state, selectedAddressIndex: action.payload };
 
     case 'HYDRATE':
-      return { ...initialState, ...action.payload };
+      return { ...initialState, ...action.payload, addresses: state.addresses, selectedAddressIndex: state.selectedAddressIndex };
     default:
       return state;
   }
@@ -167,48 +167,117 @@ const initialState = {
 };
 
 export function CartProvider({ children }) {
+  const { data: session } = useSession();
   const [state, dispatch] = useReducer(cartReducer, initialState);
   const [paymentMethod, setPaymentMethod] = useState('Razorpay');
   const [isHydrated, setIsHydrated] = useState(false);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
 
-  // 1. Hydrate once on mount safely
+  // 1. Hydrate Cart from LocalStorage
   useEffect(() => {
     const saved = localStorage.getItem('cart');
     if (saved) {
       try {
         dispatch({ type: 'HYDRATE', payload: JSON.parse(saved) });
-      } catch (err) {
-        console.error("Hydration error:", err);
-      }
+      } catch {}
     }
     setIsHydrated(true);
   }, []);
 
-  // 2. Save only AFTER hydration is complete to prevent empty array overwrites
+  // 2. Save Cart changes to LocalStorage safely
   useEffect(() => {
     if (isHydrated) {
-      localStorage.setItem('cart', JSON.stringify(state));
+      const { items, coupon } = state;
+      localStorage.setItem('cart', JSON.stringify({ items, coupon }));
     }
-  }, [state, isHydrated]);
+  }, [state.items, state.coupon, isHydrated]);
 
-  const selectedAddress =
-    state.selectedAddressIndex !== null && state.addresses?.[state.selectedAddressIndex]
+  // 3. Fetch persistent address list from DB on login (Amazon / Flipkart Style)
+  useEffect(() => {
+    if (session) {
+      setLoadingAddresses(true);
+      fetch('/api/users/addresses')
+        .then(res => res.json())
+        .then(data => {
+          dispatch({ type: 'SET_ADDRESSES', payload: data.addresses || [] });
+        })
+        .catch(err => console.error("Error fetching addresses:", err))
+        .finally(() => setLoadingAddresses(false));
+    }
+  }, [session]);
+
+  // Persistent DB Address Mutation Helpers
+  const addAddress = async (addressForm) => {
+    const res = await fetch('/api/users/addresses', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(addressForm),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to save address');
+    dispatch({ type: 'SET_ADDRESSES', payload: data.addresses });
+  };
+
+  const updateAddress = async (index, addressForm) => {
+    const res = await fetch(`/api/users/addresses?index=${index}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(addressForm),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to update address');
+    dispatch({ type: 'SET_ADDRESSES', payload: data.addresses });
+  };
+
+  const deleteAddress = async (index) => {
+    const res = await fetch(`/api/users/addresses?index=${index}`, {
+      method: 'DELETE',
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to delete address');
+    dispatch({ type: 'SET_ADDRESSES', payload: data.addresses });
+  };
+
+  const setDefaultAddress = async (index) => {
+    const res = await fetch(`/api/users/addresses?index=${index}&action=setDefault`, {
+      method: 'PUT',
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Failed to update default address');
+    dispatch({ type: 'SET_ADDRESSES', payload: data.addresses });
+  };
+
+  const selectAddress = (index) => {
+    dispatch({ type: 'SELECT_ADDRESS', payload: index });
+  };
+
+  const selectedAddress = useMemo(() => {
+    return state.selectedAddressIndex !== null && state.addresses?.[state.selectedAddressIndex]
       ? state.addresses[state.selectedAddressIndex]
       : null;
+  }, [state.selectedAddressIndex, state.addresses]);
 
-  const itemsPrice = state.items.reduce(
-    (acc, i) => acc + (i.discountPrice || i.price) * i.quantity, 0
-  );
+  const isGuntur = useMemo(() => {
+    return selectedAddress ? isGunturAddress(selectedAddress) : false;
+  }, [selectedAddress]);
 
-  const shippingInfo = calculateShippingFee({
-    items: state.items,
-    subtotal: itemsPrice,
-    address: selectedAddress,
-    paymentMethod,
-  });
+  // ✅ Secure Price calculations with Guntur discount applied in cart context
+  const itemsPrice = useMemo(() => {
+    return state.items.reduce(
+      (acc, i) => acc + getEffectiveItemPrice(i, isGuntur) * i.quantity, 0
+    );
+  }, [state.items, isGuntur]);
+
+  const shippingInfo = useMemo(() => {
+    return calculateShippingFee({
+      items: state.items,
+      subtotal: itemsPrice,
+      address: selectedAddress,
+      paymentMethod,
+    });
+  }, [state.items, itemsPrice, selectedAddress, paymentMethod]);
 
   const shippingPrice = shippingInfo.totalShipping;
-  const taxPrice = 0;
   const discountAmount = state.coupon ? state.coupon.discountAmount || 0 : 0;
   const totalPrice = Math.max(0, Math.round(itemsPrice + shippingPrice - discountAmount));
   const totalItems = state.items.reduce((acc, i) => acc + i.quantity, 0);
@@ -223,18 +292,30 @@ export function CartProvider({ children }) {
         shippingPrice,
         baseShipping: shippingInfo.baseShipping,
         codFee: shippingInfo.codFee,
-        isGuntur: shippingInfo.isGuntur,
+        isGuntur,
         hasFoodItems: shippingInfo.hasFood,
         paymentMethod,
         setPaymentMethod,
         freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
-        taxPrice,
+        taxPrice: 0,
         discountAmount,
         totalPrice,
         totalItems,
         cartCount: totalItems,
         cartTotal: totalPrice,
-        dispatch,
+        loadingAddresses,
+        
+        // Permanent Address API State triggers
+        addresses: state.addresses || [],
+        selectedAddressIndex: state.selectedAddressIndex,
+        selectedAddress,
+        addAddress,
+        updateAddress,
+        deleteAddress,
+        setDefaultAddress,
+        selectAddress,
+        
+        // Cart Reducer Dispatches
         addItem: (item) => dispatch({ type: 'ADD_ITEM', payload: item }),
         addToCart: (item) => dispatch({ type: 'ADD_ITEM', payload: item }),
         removeItem: (id) => dispatch({ type: 'REMOVE_ITEM', payload: id }),
@@ -244,16 +325,6 @@ export function CartProvider({ children }) {
         clearCart: () => dispatch({ type: 'CLEAR_CART' }),
         setCoupon: (coupon) => dispatch({ type: 'SET_COUPON', payload: coupon }),
         removeCoupon: () => dispatch({ type: 'REMOVE_COUPON' }),
-
-        addresses: state.addresses || [],
-        selectedAddressIndex: state.selectedAddressIndex,
-        selectedAddress,
-        addAddress: (address) => dispatch({ type: 'ADD_ADDRESS', payload: address }),
-        updateAddress: (index, address) =>
-          dispatch({ type: 'UPDATE_ADDRESS', payload: { index, address } }),
-        deleteAddress: (index) => dispatch({ type: 'DELETE_ADDRESS', payload: index }),
-        selectAddress: (index) => dispatch({ type: 'SELECT_ADDRESS', payload: index }),
-        setAddresses: (addresses) => dispatch({ type: 'SET_ADDRESSES', payload: addresses }),
       }}
     >
       {children}
