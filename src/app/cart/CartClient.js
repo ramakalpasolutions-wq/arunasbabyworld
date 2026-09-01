@@ -113,7 +113,6 @@ export default function CartClient() {
 
   const [couponCode, setCouponCode] = useState('');
   const [applying, setApplying] = useState(false);
-  const [stockMap, setStockMap] = useState({});
 
   const [showAddressPanel, setShowAddressPanel] = useState(false);
   const [showPaymentPanel, setShowPaymentPanel] = useState(false);
@@ -130,32 +129,11 @@ export default function CartClient() {
   const isOnlyFood = foodItemsList.length > 0 && nonFoodItemsList.length === 0;
   const totalFoodQty = foodItemsList.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
-  // ✅ Updated constraint: minimum 2 food items required outside Guntur
   const isFoodBlocked = isOnlyFood && !isGuntur && totalFoodQty < 2;
 
-  useEffect(() => {
-    if (items.length === 0) return;
-    const ids = items.map(i => i.id || i._id).filter(Boolean);
-    if (ids.length === 0) return;
-
-    Promise.all(
-      ids.map(id =>
-        fetch(`/api/products/${id}`)
-          .then(r => r.json())
-          .then(d => ({ id, stock: d.product?.stock ?? 0 }))
-          .catch(() => ({ id, stock: 0 }))
-      )
-    ).then(results => {
-      const map = {};
-      results.forEach(r => { map[r.id] = r.stock; });
-      setStockMap(map);
-    });
-  }, [items.length]);
-
+  // Since context handles real-time stock sync with DB, we read directly from item.stock
   const getMaxStock = (item) => {
-    const id = item.id || item._id;
-    if (stockMap[id] !== undefined) return stockMap[id];
-    return item.stock ?? 999;
+    return item.stock !== undefined ? item.stock : 999;
   };
 
   const handleQtyChange = (item, newQty) => {

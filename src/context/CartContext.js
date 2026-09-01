@@ -37,7 +37,7 @@ export function isFoodItem(item) {
 export function getEffectiveItemPrice(item, isGuntur) {
   const basePrice = Number(item.discountPrice || item.price || 0);
   if (isGuntur && isFoodItem(item)) {
-    return Math.round(basePrice * 0.9);
+    return Math.round(basePrice * 0.9); // Apply 10% discount and round off float issues
   }
   return basePrice;
 }
@@ -151,6 +151,35 @@ const cartReducer = (state, action) => {
     case 'SELECT_ADDRESS':
       return { ...state, selectedAddressIndex: action.payload };
 
+    // ✅ Sync prices, stock levels, names, and images directly from the Master Database
+    case 'SYNC_ITEMS': {
+      const syncedItems = state.items.map(item => {
+        const itemId = item.id || item._id;
+        const freshDbProduct = action.payload.find(p => p.id === itemId);
+        if (freshDbProduct) {
+          return {
+            ...item,
+            name: freshDbProduct.name,
+            price: freshDbProduct.price,
+            discountPrice: freshDbProduct.discountPrice,
+            stock: freshDbProduct.stock,
+            images: freshDbProduct.images || item.images,
+            image: freshDbProduct.images?.[0]?.url || item.image,
+          };
+        }
+        return item;
+      }).filter(item => {
+        // Automatically eject products that have been disabled (isActive: false) or deleted by admin
+        const freshDbProduct = action.payload.find(p => p.id === (item.id || item._id));
+        if (freshDbProduct) {
+          return freshDbProduct.isActive !== false;
+        }
+        return true;
+      });
+
+      return { ...state, items: syncedItems };
+    }
+
     case 'HYDRATE':
       return { ...initialState, ...action.payload, addresses: state.addresses, selectedAddressIndex: state.selectedAddressIndex };
     default:
@@ -172,6 +201,7 @@ export function CartProvider({ children }) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
 
+  // 1. Hydrate Cart from LocalStorage
   useEffect(() => {
     const saved = localStorage.getItem('cart');
     if (saved) {
@@ -182,6 +212,7 @@ export function CartProvider({ children }) {
     setIsHydrated(true);
   }, []);
 
+  // 2. Save Cart changes to LocalStorage safely
   useEffect(() => {
     if (isHydrated) {
       const { items, coupon } = state;
@@ -189,6 +220,49 @@ export function CartProvider({ children }) {
     }
   }, [state.items, state.coupon, isHydrated]);
 
+  // 3. ✅ REAL-TIME DB PRICING & STOCK SYNCER
+  // Runs immediately after hydration is completed to fetch and apply correct database modifications
+  useEffect(() => {
+    if (!isHydrated || state.items.length === 0) return;
+
+    const syncCartWithDatabase = async () => {
+      try {
+        const ids = state.items.map(i => i.id || i._id).filter(Boolean);
+        const syncedResults = await Promise.all(
+          ids.map(async (id) => {
+            try {
+              const res = await fetch(`/api/products/${id}`);
+              if (!res.ok) return null;
+              const data = await res.json();
+              if (!data.product) return null;
+              return {
+                id,
+                name: data.product.name,
+                price: data.product.price,
+                discountPrice: data.product.discountPrice,
+                stock: data.product.stock,
+                images: data.product.images,
+                isActive: data.product.isActive
+              };
+            } catch {
+              return null;
+            }
+          })
+        );
+
+        const freshData = syncedResults.filter(Boolean);
+        if (freshData.length > 0) {
+          dispatch({ type: 'SYNC_ITEMS', payload: freshData });
+        }
+      } catch (err) {
+        console.error("Cart price sync error:", err);
+      }
+    };
+
+    syncCartWithDatabase();
+  }, [isHydrated]);
+
+  // 4. Fetch persistent address list from DB on login (Amazon / Flipkart Style)
   useEffect(() => {
     if (session) {
       setLoadingAddresses(true);
@@ -202,6 +276,7 @@ export function CartProvider({ children }) {
     }
   }, [session]);
 
+  // Persistent DB Address Mutation Helpers
   const addAddress = async (addressForm) => {
     const res = await fetch('/api/users/addresses', {
       method: 'POST',
