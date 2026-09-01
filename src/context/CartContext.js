@@ -38,17 +38,34 @@ export function calculateShippingFee({ items, subtotal, address, paymentMethod }
   }
 
   const isGuntur = isGunturAddress(address);
-  const hasFood = items.some(isFoodItem);
+  const foodItems = items.filter(isFoodItem);
+  const nonFoodItems = items.filter(item => !isFoodItem(item));
+  const isOnlyFood = foodItems.length > 0 && nonFoodItems.length === 0;
+  const totalFoodQty = foodItems.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
   const isCOD = paymentMethod === 'COD';
 
   let baseShipping = 0;
 
-  if (hasFood && !isGuntur) {
-    baseShipping = STANDARD_SHIPPING_FEE;
-  } else if (subtotal >= FREE_SHIPPING_THRESHOLD) {
-    baseShipping = 0;
+  if (isOnlyFood) {
+    if (isGuntur) {
+      baseShipping = 0; // Guntur residents get free shipping for food-only orders
+    } else {
+      if (totalFoodQty >= 4) {
+        baseShipping = 0; // Food-only orders with 4 or more items get free shipping outside Guntur
+      } else {
+        baseShipping = STANDARD_SHIPPING_FEE; // Standard fee for food orders under 4 items
+      }
+    }
   } else {
-    baseShipping = STANDARD_SHIPPING_FEE;
+    // Mixed or Non-food order rules
+    const hasFood = foodItems.length > 0;
+    if (hasFood && !isGuntur) {
+      baseShipping = STANDARD_SHIPPING_FEE;
+    } else if (subtotal >= FREE_SHIPPING_THRESHOLD) {
+      baseShipping = 0;
+    } else {
+      baseShipping = STANDARD_SHIPPING_FEE;
+    }
   }
 
   const codFee = isCOD ? COD_EXTRA_FEE : 0;
@@ -59,7 +76,7 @@ export function calculateShippingFee({ items, subtotal, address, paymentMethod }
     codFee,
     totalShipping,
     isGuntur,
-    hasFood,
+    hasFood: foodItems.length > 0,
     isCOD,
   };
 }
@@ -152,19 +169,27 @@ const initialState = {
 export function CartProvider({ children }) {
   const [state, dispatch] = useReducer(cartReducer, initialState);
   const [paymentMethod, setPaymentMethod] = useState('Razorpay');
+  const [isHydrated, setIsHydrated] = useState(false);
 
+  // 1. Hydrate once on mount safely
   useEffect(() => {
     const saved = localStorage.getItem('cart');
     if (saved) {
       try {
         dispatch({ type: 'HYDRATE', payload: JSON.parse(saved) });
-      } catch {}
+      } catch (err) {
+        console.error("Hydration error:", err);
+      }
     }
+    setIsHydrated(true);
   }, []);
 
+  // 2. Save only AFTER hydration is complete to prevent empty array overwrites
   useEffect(() => {
-    localStorage.setItem('cart', JSON.stringify(state));
-  }, [state]);
+    if (isHydrated) {
+      localStorage.setItem('cart', JSON.stringify(state));
+    }
+  }, [state, isHydrated]);
 
   const selectedAddress =
     state.selectedAddressIndex !== null && state.addresses?.[state.selectedAddressIndex]

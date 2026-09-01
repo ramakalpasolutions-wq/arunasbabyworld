@@ -35,17 +35,34 @@ function calculateShipping(orderItems, itemsPrice, address, paymentMethod) {
   if (!orderItems || orderItems.length === 0) return 0;
 
   const isGuntur = isGunturLocation(address);
-  const hasFood = orderItems.some(isFoodItem);
+  const foodItems = orderItems.filter(isFoodItem);
+  const nonFoodItems = orderItems.filter(item => !isFoodItem(item));
+  const isOnlyFood = foodItems.length > 0 && nonFoodItems.length === 0;
+  const totalFoodQty = foodItems.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
   const isCOD = paymentMethod === 'COD';
 
   let baseShipping = 0;
 
-  if (hasFood && !isGuntur) {
-    baseShipping = STANDARD_SHIPPING_FEE;
-  } else if (itemsPrice >= FREE_SHIPPING_THRESHOLD) {
-    baseShipping = 0;
+  if (isOnlyFood) {
+    if (isGuntur) {
+      baseShipping = 0; // In Guntur, food only = free shipping
+    } else {
+      if (totalFoodQty >= 4) {
+        baseShipping = 0; // Outside Guntur, >= 4 food items = free shipping
+      } else {
+        baseShipping = STANDARD_SHIPPING_FEE; // Fallback (blocked by POST check anyway)
+      }
+    }
   } else {
-    baseShipping = STANDARD_SHIPPING_FEE;
+    // Mixed or Non-food order calculations
+    const hasFood = foodItems.length > 0;
+    if (hasFood && !isGuntur) {
+      baseShipping = STANDARD_SHIPPING_FEE; // Mixed orders outside Guntur containing food carry fee
+    } else if (itemsPrice >= FREE_SHIPPING_THRESHOLD) {
+      baseShipping = 0;
+    } else {
+      baseShipping = STANDARD_SHIPPING_FEE;
+    }
   }
 
   const codFee = isCOD ? COD_EXTRA_FEE : 0;
@@ -62,7 +79,6 @@ async function getNextOrderNumber() {
     return lastOrder?.orderNumber ? lastOrder.orderNumber + 1 : 40001;
   } catch (err) {
     console.error('Error fetching last order number sequence:', err);
-    // Fail-safe random sequence number if database is unreachable or empty
     return Math.floor(40000 + Math.random() * 50000);
   }
 }
@@ -201,6 +217,22 @@ export async function POST(request) {
         }
       })
     );
+
+    // =========================================================================
+    // ✅ FOOD QUANTITY & SHIPPING CONSTRAINTS FOR NON-GUNTUR RESIDENTS
+    // =========================================================================
+    const isGuntur = isGunturLocation(data.shippingAddress);
+    const foodItems = enrichedItems.filter(isFoodItem);
+    const nonFoodItems = enrichedItems.filter(item => !isFoodItem(item));
+    const isOnlyFood = foodItems.length > 0 && nonFoodItems.length === 0;
+    const totalFoodQty = foodItems.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+
+    if (isOnlyFood && !isGuntur && totalFoodQty < 4) {
+      return NextResponse.json(
+        { error: 'Minimum order of 4 food items is required for delivery outside Guntur.' },
+        { status: 400 }
+      );
+    }
 
     const itemsPrice = enrichedItems.reduce(
       (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1),

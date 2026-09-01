@@ -49,7 +49,6 @@ const RATING_OPTIONS = [
 
 const EXCLUDED_SLUGS = ['maternity', 'nursery'];
 
-// ✅ PRICE SLIDER CONFIG
 const PRICE_MIN  = 0;
 const PRICE_MAX  = 10000;
 const PRICE_STEP = 50;
@@ -81,7 +80,7 @@ function LoadMoreTrigger({ loading, onLoadMore }) {
 /* ============================================================
    AUTO SCROLL CATEGORY BAR (Mobile)
 ============================================================ */
-function AutoScrollCatBar({ categories, filters, handleCategoryClick, catLoading }) {
+function AutoScrollCatBar({ categories, currentCategory, handleCategoryClick, catLoading }) {
   const trackRef = useRef(null);
   const isPaused = useRef(false);
   const posRef = useRef(0);
@@ -109,7 +108,7 @@ function AutoScrollCatBar({ categories, filters, handleCategoryClick, catLoading
   }, [catLoading, categories.length]);
 
   const isCatActive = (cat) =>
-    cat.id === '' ? !filters.category : filters.category === cat.id;
+    cat.id === '' ? !currentCategory : currentCategory === cat.id;
 
   if (catLoading) {
     return (
@@ -163,6 +162,21 @@ export default function ProductsClient() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
 
+  // Parse directly from URL Search Parameters (Single Source of Truth)
+  const categoryFilter = searchParams.get('category') || '';
+  const searchFilter   = searchParams.get('search')   || '';
+  const brandFilter    = searchParams.get('brand')    || '';
+  const genderFilter   = searchParams.get('gender')   || '';
+  const sortFilter     = searchParams.get('sort')     || 'createdAt-desc';
+  const minPriceFilter = searchParams.get('minPrice') || '';
+  const maxPriceFilter = searchParams.get('maxPrice') || '';
+  const featuredFilter = searchParams.get('featured') || '';
+  const trendingFilter = searchParams.get('trending') || '';
+  const discountFilter = searchParams.get('discount') || '';
+  const ratingFilter   = searchParams.get('rating')   || '';
+  const inStockFilter  = searchParams.get('inStock') === 'true';
+
+  // Local React States
   const [allProducts,   setAllProducts]   = useState([]);
   const [categories,    setCategories]    = useState([]);
   const [brands,        setBrands]        = useState([]);
@@ -170,32 +184,43 @@ export default function ProductsClient() {
   const [loading,       setLoading]       = useState(true);
   const [loadingMore,   setLoadingMore]   = useState(false);
   const [catLoading,    setCatLoading]    = useState(true);
+  const [page,          setPage]          = useState(1);
   const [pagination,    setPagination]    = useState({ page: 1, pages: 1, total: 0 });
   const [sidebarOpen,   setSidebarOpen]   = useState(false);
   const [activeQuick,   setActiveQuick]   = useState('all');
 
-  const [localMin,   setLocalMin]   = useState(searchParams.get('minPrice') || String(PRICE_MIN));
-  const [localMax,   setLocalMax]   = useState(searchParams.get('maxPrice') || String(PRICE_MAX));
-  const [appliedMin, setAppliedMin] = useState(searchParams.get('minPrice') || '');
-  const [appliedMax, setAppliedMax] = useState(searchParams.get('maxPrice') || '');
+  // Input states (not updated on every keystroke to prevent re-fetching loops)
+  const [localMin, setLocalMin] = useState(minPriceFilter || String(PRICE_MIN));
+  const [localMax, setLocalMax] = useState(maxPriceFilter || String(PRICE_MAX));
 
-  const [filters, setFilters] = useState({
-    search:   searchParams.get('search')   || '',
-    category: searchParams.get('category') || '',
-    brand:    searchParams.get('brand')    || '',
-    gender:   searchParams.get('gender')   || '',
-    sort:     searchParams.get('sort')     || 'createdAt-desc',
-    minPrice: searchParams.get('minPrice') || '',
-    maxPrice: searchParams.get('maxPrice') || '',
-    featured: searchParams.get('featured') || '',
-    trending: searchParams.get('trending') || '',
-    discount: searchParams.get('discount') || '',
-    rating:   searchParams.get('rating')   || '',
-    inStock:  searchParams.get('inStock') === 'true',
-    page:     1,
-  });
+  const lastQueryString = useRef('');
 
-  const prevFiltersRef = useRef(filters);
+  // Handle updates to the URL query parameters cleanly
+  const updateUrl = useCallback((newParams) => {
+    const params = new URLSearchParams(window.location.search);
+    
+    Object.entries(newParams).forEach(([key, value]) => {
+      if (value === null || value === undefined || value === '') {
+        params.delete(key);
+      } else {
+        params.set(key, String(value));
+      }
+    });
+
+    const qs = params.toString();
+    const newUrl = qs ? `${pathname}?${qs}` : pathname;
+    
+    // Smooth URL swap without heavy layout flashing
+    window.history.replaceState(null, '', newUrl);
+    // Dispatch navigation event immediately to alert URL observers
+    window.dispatchEvent(new PopStateEvent('popstate'));
+  }, [pathname]);
+
+  // Sync range slider display with URL adjustments
+  useEffect(() => {
+    setLocalMin(minPriceFilter || String(PRICE_MIN));
+    setLocalMax(maxPriceFilter || String(PRICE_MAX));
+  }, [minPriceFilter, maxPriceFilter]);
 
   // Body scroll lock
   useEffect(() => {
@@ -203,14 +228,14 @@ export default function ProductsClient() {
     return () => { document.body.style.overflow = ''; };
   }, [sidebarOpen]);
 
-  // ESC key
+  // ESC key listener
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape' && sidebarOpen) setSidebarOpen(false); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [sidebarOpen]);
 
-  // Fetch categories
+  // Fetch categories initially
   useEffect(() => {
     setCatLoading(true);
     fetch('/api/categories?withCount=true&all=true')
@@ -229,30 +254,32 @@ export default function ProductsClient() {
       .finally(() => setCatLoading(false));
   }, []);
 
-  // Dynamic brand fetch
+  // Fetch contextual active brands
   useEffect(() => {
     const controller = new AbortController();
     const fetchBrands = async () => {
       setBrandsLoading(true);
       try {
         const paramObj = {};
-        if (filters.category) paramObj.category = filters.category;
-        if (filters.search)   paramObj.search = filters.search;
-        if (filters.gender)   paramObj.gender = filters.gender;
-        if (filters.featured) paramObj.featured = filters.featured;
-        if (filters.trending) paramObj.trending = filters.trending;
-        if (filters.minPrice) paramObj.minPrice = filters.minPrice;
-        if (filters.maxPrice) paramObj.maxPrice = filters.maxPrice;
-        if (filters.discount) paramObj.discount = filters.discount;
-        if (filters.rating)   paramObj.rating = filters.rating;
-        if (filters.inStock)  paramObj.inStock = 'true';
+        if (categoryFilter) paramObj.category = categoryFilter;
+        if (searchFilter)   paramObj.search = searchFilter;
+        if (genderFilter)   paramObj.gender = genderFilter;
+        if (featuredFilter) paramObj.featured = featuredFilter;
+        if (trendingFilter) paramObj.trending = trendingFilter;
+        if (minPriceFilter) paramObj.minPrice = minPriceFilter;
+        if (maxPriceFilter) paramObj.maxPrice = maxPriceFilter;
+        if (discountFilter) paramObj.discount = discountFilter;
+        if (ratingFilter)   paramObj.rating = ratingFilter;
+        if (inStockFilter)  paramObj.inStock = 'true';
 
         const res = await fetch(`/api/products/brands?${new URLSearchParams(paramObj)}`, { signal: controller.signal });
         const data = await res.json();
         const uniqueBrands = data.brands || [];
         setBrands(uniqueBrands);
-        if (filters.brand && !uniqueBrands.includes(filters.brand)) {
-          setFilters(prev => ({ ...prev, brand: '', page: 1 }));
+
+        // Safely clear active brand filter if no longer matching brand options list
+        if (brandFilter && !uniqueBrands.includes(brandFilter)) {
+          updateUrl({ brand: '' });
         }
       } catch (err) {
         if (err.name !== 'AbortError') setBrands([]);
@@ -263,66 +290,13 @@ export default function ProductsClient() {
     fetchBrands();
     return () => controller.abort();
   }, [
-    filters.category || '', filters.search || '', filters.gender || '', filters.featured || '',
-    filters.trending || '', filters.minPrice || '', filters.maxPrice || '',
-    filters.discount || '', filters.rating || '', !!filters.inStock,
+    categoryFilter, searchFilter, genderFilter, featuredFilter,
+    trendingFilter, minPriceFilter, maxPriceFilter,
+    discountFilter, ratingFilter, inStockFilter, brandFilter, updateUrl
   ]);
 
-  // Sync URL → filters
-  useEffect(() => {
-    const urlMin = searchParams.get('minPrice') || '';
-    const urlMax = searchParams.get('maxPrice') || '';
-    setFilters(prev => ({
-      ...prev,
-      category: searchParams.get('category') || '',
-      search:   searchParams.get('search') || '',
-      brand:    searchParams.get('brand') || '',
-      gender:   searchParams.get('gender') || '',
-      featured: searchParams.get('featured') || '',
-      trending: searchParams.get('trending') || '',
-      discount: searchParams.get('discount') || '',
-      rating:   searchParams.get('rating') || '',
-      inStock:  searchParams.get('inStock') === 'true',
-      sort:     searchParams.get('sort') || 'createdAt-desc',
-      minPrice: urlMin,
-      maxPrice: urlMax,
-      page: 1,
-    }));
-    setLocalMin(urlMin || String(PRICE_MIN));
-    setLocalMax(urlMax || String(PRICE_MAX));
-    setAppliedMin(urlMin);
-    setAppliedMax(urlMax);
-    setAllProducts([]);
-  }, [searchParams]);
-
-  // Sync filters → URL
-  useEffect(() => {
-    const params = new URLSearchParams();
-    if (filters.category) params.set('category', filters.category);
-    if (filters.search?.trim()) params.set('search', filters.search.trim());
-    if (filters.brand) params.set('brand', filters.brand);
-    if (filters.gender) params.set('gender', filters.gender);
-    if (filters.minPrice) params.set('minPrice', filters.minPrice);
-    if (filters.maxPrice) params.set('maxPrice', filters.maxPrice);
-    if (filters.featured === 'true') params.set('featured', 'true');
-    if (filters.trending === 'true') params.set('trending', 'true');
-    if (filters.discount) params.set('discount', filters.discount);
-    if (filters.rating) params.set('rating', filters.rating);
-    if (filters.inStock) params.set('inStock', 'true');
-    if (filters.sort && filters.sort !== 'createdAt-desc') params.set('sort', filters.sort);
-
-    const qs = params.toString();
-    const newUrl = qs ? `${pathname}?${qs}` : pathname;
-    const cur = window.location.pathname + window.location.search;
-    if (cur !== newUrl) window.history.replaceState({}, '', newUrl);
-  }, [
-    filters.category, filters.search, filters.brand, filters.gender, filters.minPrice,
-    filters.maxPrice, filters.featured, filters.trending, filters.discount,
-    filters.rating, filters.inStock, filters.sort, pathname,
-  ]);
-
-  // ✅ Fetch products
-  const fetchProducts = useCallback(async (isLoadMore = false) => {
+  // Fetch core products list logic
+  const fetchProducts = useCallback(async (targetPage = 1, isLoadMore = false) => {
     if (isLoadMore) {
       setLoadingMore(true);
     } else {
@@ -330,27 +304,27 @@ export default function ProductsClient() {
     }
 
     try {
-      const [sortField, sortOrder] = filters.sort.split('-');
-      let minP = filters.minPrice ? parseFloat(filters.minPrice) : null;
-      let maxP = filters.maxPrice ? parseFloat(filters.maxPrice) : null;
+      const [sortField, sortOrder] = sortFilter.split('-');
+      let minP = minPriceFilter ? parseFloat(minPriceFilter) : null;
+      let maxP = maxPriceFilter ? parseFloat(maxPriceFilter) : null;
       if (minP !== null && maxP !== null && minP > maxP) [minP, maxP] = [maxP, minP];
 
       const paramObj = {
-        page: String(filters.page),
+        page: String(targetPage),
         limit: '24',
         sort: sortField,
         order: sortOrder,
       };
 
-      if (filters.search?.trim()) paramObj.search = filters.search.trim();
-      if (filters.category)       paramObj.category = filters.category;
-      if (filters.brand)          paramObj.brand = filters.brand;
-      if (filters.gender)         paramObj.gender = filters.gender;
-      if (filters.featured)       paramObj.featured = filters.featured;
-      if (filters.trending)       paramObj.trending = filters.trending;
-      if (filters.discount)       paramObj.discount = filters.discount;
-      if (filters.rating)         paramObj.rating = filters.rating;
-      if (filters.inStock)        paramObj.inStock = 'true';
+      if (searchFilter?.trim()) paramObj.search = searchFilter.trim();
+      if (categoryFilter)       paramObj.category = categoryFilter;
+      if (brandFilter)          paramObj.brand = brandFilter;
+      if (genderFilter)         paramObj.gender = genderFilter;
+      if (featuredFilter)       paramObj.featured = featuredFilter;
+      if (trendingFilter)       paramObj.trending = trendingFilter;
+      if (discountFilter)       paramObj.discount = discountFilter;
+      if (ratingFilter)         paramObj.rating = ratingFilter;
+      if (inStockFilter)        paramObj.inStock = 'true';
       if (minP !== null)          paramObj.minPrice = String(minP);
       if (maxP !== null)          paramObj.maxPrice = String(maxP);
 
@@ -376,165 +350,145 @@ export default function ProductsClient() {
       setLoading(false);
       setLoadingMore(false);
     }
-  }, [filters]);
+  }, [
+    sortFilter, minPriceFilter, maxPriceFilter, searchFilter,
+    categoryFilter, brandFilter, genderFilter, featuredFilter,
+    trendingFilter, discountFilter, ratingFilter, inStockFilter
+  ]);
 
+  // Re-fetch products cleanly only when URL search parameters change
   useEffect(() => {
-    const prev = prevFiltersRef.current;
-    const isPageOnly = prev && filters.page !== prev.page &&
-      filters.search === prev.search && filters.category === prev.category &&
-      filters.brand === prev.brand && filters.gender === prev.gender && filters.sort === prev.sort &&
-      filters.featured === prev.featured && filters.trending === prev.trending &&
-      filters.discount === prev.discount && filters.rating === prev.rating &&
-      filters.inStock === prev.inStock && filters.minPrice === prev.minPrice &&
-      filters.maxPrice === prev.maxPrice;
-
-    if (isPageOnly && filters.page > 1) {
-      fetchProducts(true);
-    } else {
-      fetchProducts(false);
+    const currentQs = searchParams.toString();
+    if (currentQs !== lastQueryString.current) {
+      // Clean reload on new filters applied
+      setPage(1);
+      fetchProducts(1, false);
+      lastQueryString.current = currentQs;
     }
-    prevFiltersRef.current = { ...filters };
-  }, [filters]);
+  }, [searchParams, fetchProducts]);
 
+  // Load more trigger action
   const loadMoreProducts = useCallback(() => {
-    if (loadingMore || pagination.page >= pagination.pages) return;
-    setFilters(prev => ({ ...prev, page: prev.page + 1 }));
-  }, [loadingMore, pagination]);
+    if (loadingMore || page >= pagination.pages) return;
+    const nextPage = page + 1;
+    setPage(nextPage);
+    fetchProducts(nextPage, true);
+  }, [loadingMore, page, pagination.pages, fetchProducts]);
 
-  const updateFilter = (key, value) => {
-    if (key !== 'page') setAllProducts([]);
-    setFilters(prev => ({
-      ...prev,
-      [key]: value,
-      page: key !== 'page' ? 1 : value,
-    }));
-  };
-
-  // ✅ Commit slider — applies filter when user releases the thumb
   const handleSliderCommit = () => {
     const minV = Number(localMin || PRICE_MIN);
     const maxV = Number(localMax || PRICE_MAX);
 
     const atDefault = minV <= PRICE_MIN && maxV >= PRICE_MAX;
     if (atDefault) {
-      if (appliedMin || appliedMax) handleClearPrice();
+      handleClearPrice();
       return;
     }
 
     const ms = minV > PRICE_MIN ? String(minV) : '';
     const xs = maxV < PRICE_MAX ? String(maxV) : '';
 
-    setAppliedMin(ms);
-    setAppliedMax(xs);
-    setAllProducts([]);
-    setFilters(prev => ({ ...prev, minPrice: ms, maxPrice: xs, page: 1 }));
+    updateUrl({ minPrice: ms, maxPrice: xs });
   };
 
   const handleClearPrice = () => {
     setLocalMin(String(PRICE_MIN));
     setLocalMax(String(PRICE_MAX));
-    setAppliedMin('');
-    setAppliedMax('');
-    setAllProducts([]);
-    setFilters(prev => ({ ...prev, minPrice: '', maxPrice: '', page: 1 }));
+    updateUrl({ minPrice: '', maxPrice: '' });
   };
 
   const clearAll = () => {
     setLocalMin(String(PRICE_MIN));
     setLocalMax(String(PRICE_MAX));
-    setAppliedMin('');
-    setAppliedMax('');
     setActiveQuick('all');
-    setAllProducts([]);
-    setFilters({
-      search: '', category: '', brand: '', gender: '', sort: 'createdAt-desc',
-      minPrice: '', maxPrice: '', featured: '', trending: '',
-      discount: '', rating: '', inStock: false, page: 1,
-    });
+    
+    // Wipes all active query parameters cleanly
+    window.history.replaceState(null, '', pathname);
+    window.dispatchEvent(new PopStateEvent('popstate'));
   };
 
   const handleCategoryClick = useCallback((categoryId) => {
-    setAllProducts([]);
-    setFilters(prev => ({ ...prev, category: categoryId, brand: '', page: 1 }));
+    updateUrl({ category: categoryId, brand: '' });
     setSidebarOpen(false);
     setActiveQuick('all');
-  }, []);
+  }, [updateUrl]);
 
-  const isCategoryActive = (cat) => filters.category === cat.id;
-  const selectedCategory = categories.find(c => c.id === filters.category);
+  const isCategoryActive = (cat) => categoryFilter === cat.id;
+  const selectedCategory = categories.find(c => c.id === categoryFilter);
   const selectedCategoryName = selectedCategory?.name || '';
 
-  const pageTitle = filters.search
-    ? `Results for "${filters.search}"`
-    : filters.featured === 'true' ? 'Featured Products'
-    : filters.trending === 'true' ? 'Trending Products'
+  const pageTitle = searchFilter
+    ? `Results for "${searchFilter}"`
+    : featuredFilter === 'true' ? 'Featured Products'
+    : trendingFilter === 'true' ? 'Trending Products'
     : selectedCategoryName || 'All Products';
 
   const quickFilters = [
     { key: 'all', label: 'All', icon: '🌟', action: () => { clearAll(); setActiveQuick('all'); } },
-    { key: 'trending', label: 'Trending', icon: '🔥', action: () => { setAllProducts([]); setFilters(prev => ({ ...prev, trending: 'true', featured: '', page: 1 })); setActiveQuick('trending'); } },
-    { key: 'featured', label: 'Featured', icon: '⭐', action: () => { setAllProducts([]); setFilters(prev => ({ ...prev, featured: 'true', trending: '', page: 1 })); setActiveQuick('featured'); } },
-    { key: 'new', label: 'New', icon: '✨', action: () => { setFilters(prev => ({ ...prev, sort: 'createdAt-desc', page: 1 })); setActiveQuick('new'); } },
-    { key: 'deals', label: 'Deals', icon: '💰', action: () => { setAllProducts([]); setFilters(prev => ({ ...prev, discount: '20', sort: 'discountPercent-desc', page: 1 })); setActiveQuick('deals'); } },
+    { key: 'trending', label: 'Trending', icon: '🔥', action: () => { updateUrl({ trending: 'true', featured: '' }); setActiveQuick('trending'); } },
+    { key: 'featured', label: 'Featured', icon: '⭐', action: () => { updateUrl({ featured: 'true', trending: '' }); setActiveQuick('featured'); } },
+    { key: 'new', label: 'New', icon: '✨', action: () => { updateUrl({ sort: 'createdAt-desc' }); setActiveQuick('new'); } },
+    { key: 'deals', label: 'Deals', icon: '💰', action: () => { updateUrl({ discount: '20', sort: 'discountPercent-desc' }); setActiveQuick('deals'); } },
   ];
 
   const hasActiveFilters = !!(
-    filters.category || filters.brand || filters.gender || filters.minPrice || filters.maxPrice ||
-    filters.featured || filters.trending || filters.discount || filters.rating || filters.inStock
+    categoryFilter || brandFilter || genderFilter || minPriceFilter || maxPriceFilter ||
+    featuredFilter || trendingFilter || discountFilter || ratingFilter || inStockFilter
   );
 
   const activeFilterCount = [
-    filters.category, filters.brand, filters.gender, filters.minPrice || filters.maxPrice,
-    filters.featured, filters.trending, filters.discount, filters.rating,
-    filters.inStock ? 'x' : '',
+    categoryFilter, brandFilter, genderFilter, minPriceFilter || maxPriceFilter,
+    featuredFilter, trendingFilter, discountFilter, ratingFilter,
+    inStockFilter ? 'x' : '',
   ].filter(Boolean).length;
 
-  // ✅ Slider % positions
   const minPct = ((Number(localMin || PRICE_MIN) - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100;
   const maxPct = ((Number(localMax || PRICE_MAX) - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100;
 
   /* ============================================================
-     FILTER CONTENT - Changed to a normal function to prevent unmount
+     FILTER SIDEBAR VIEW LAYOUT
   ============================================================ */
   const renderFilterContent = () => (
     <>
-      {/* GENDER FILTER BLOCK */}
+      {/* GENDER */}
       <div className={styles.filterBlock}>
         <div className={styles.filterBlockTitle}><span className={styles.filterBlockIcon}>👦👧</span>Gender</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
           {GENDER_OPTIONS.map(g => (
             <button
               key={g.value}
-              onClick={() => updateFilter('gender', g.value === filters.gender ? '' : g.value)}
+              type="button"
+              onClick={() => updateUrl({ gender: g.value === genderFilter ? '' : g.value })}
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 width: '100%', padding: '7px 10px', textAlign: 'left',
-                background: filters.gender === g.value ? '#FFF0F5' : 'transparent',
-                border: filters.gender === g.value ? '1.5px solid #FF3F6C' : '1px solid transparent',
+                background: genderFilter === g.value ? '#FFF0F5' : 'transparent',
+                border: genderFilter === g.value ? '1.5px solid #FF3F6C' : '1px solid transparent',
                 borderRadius: '8px', fontSize: '0.84rem',
-                fontWeight: filters.gender === g.value ? '800' : '600',
-                color: filters.gender === g.value ? '#FF3F6C' : '#535766',
+                fontWeight: genderFilter === g.value ? '800' : '600',
+                color: genderFilter === g.value ? '#FF3F6C' : '#535766',
                 cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s Ease',
               }}
             >
               <span>{g.label}</span>
-              {filters.gender === g.value && <span style={{ fontSize: '0.9rem', color: '#FF3F6C' }}>✓</span>}
+              {genderFilter === g.value && <span style={{ fontSize: '0.9rem', color: '#FF3F6C' }}>✓</span>}
             </button>
           ))}
         </div>
       </div>
 
+      {/* CATEGORIES */}
       <div className={styles.filterBlock}>
         <div className={styles.filterBlockTitle}><span className={styles.filterBlockIcon}>📂</span>Categories</div>
         {catLoading ? (
           <div className={styles.catList}>{[...Array(8)].map((_, i) => <div key={i} className={styles.catSkeleton} />)}</div>
         ) : (
           <div className={styles.catList}>
-            <button className={`${styles.catBtn} ${!filters.category ? styles.catBtnActive : ''}`} onClick={() => handleCategoryClick('')}>
+            <button key="all-category" type="button" className={`${styles.catBtn} ${!categoryFilter ? styles.catBtnActive : ''}`} onClick={() => handleCategoryClick('')}>
               <span className={styles.catIcon}>🌟</span><span className={styles.catName}>All</span>
             </button>
             {categories.map(cat => (
-              <button key={cat.id} className={`${styles.catBtn} ${isCategoryActive(cat) ? styles.catBtnActive : ''}`} onClick={() => handleCategoryClick(cat.id)}>
+              <button key={cat.id} type="button" className={`${styles.catBtn} ${isCategoryActive(cat) ? styles.catBtnActive : ''}`} onClick={() => handleCategoryClick(cat.id)}>
                 <span className={styles.catIcon}>{cat.icon || CATEGORY_ICONS[cat.slug] || '📦'}</span>
                 <span className={styles.catName}>{cat.name}</span>
                 {cat.productCount > 0 && <span className={styles.catCount}>({cat.productCount})</span>}
@@ -544,6 +498,7 @@ export default function ProductsClient() {
         )}
       </div>
 
+      {/* BRANDS */}
       <div className={styles.filterBlock}>
         <div className={styles.filterBlockTitle}><span className={styles.filterBlockIcon}>🏷️</span>Brand</div>
         {brandsLoading ? (
@@ -551,21 +506,21 @@ export default function ProductsClient() {
         ) : brands.length > 0 ? (
           <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {brands.map(b => (
-              <button key={b} onClick={() => updateFilter('brand', b === filters.brand ? '' : b)} style={{
-                padding: '6px 8px', textAlign: 'left', background: filters.brand === b ? '#FFF0F5' : 'transparent',
-                border: 'none', borderRadius: '4px', fontSize: '0.82rem', fontWeight: filters.brand === b ? '800' : '600',
-                color: filters.brand === b ? '#FF3F6C' : '#535766', cursor: 'pointer', fontFamily: 'inherit',
+              <button key={b} type="button" onClick={() => updateUrl({ brand: b === brandFilter ? '' : b })} style={{
+                padding: '6px 8px', textAlign: 'left', background: brandFilter === b ? '#FFF0F5' : 'transparent',
+                border: 'none', borderRadius: '4px', fontSize: '0.82rem', fontWeight: brandFilter === b ? '800' : '600',
+                color: brandFilter === b ? '#FF3F6C' : '#535766', cursor: 'pointer', fontFamily: 'inherit',
               }}>
-                {b} {filters.brand === b && '✓'}
+                {b} {brandFilter === b && '✓'}
               </button>
             ))}
           </div>
         ) : (
-          <p style={{ fontSize: '0.78rem', color: '#94969F' }}>No brands</p>
+          <p style={{ fontSize: '0.78rem', color: '#94969F' }}>No brands available</p>
         )}
       </div>
 
-      {/* ✅ NEW PRICE RANGE SLIDER */}
+      {/* PRICE RANGE DUAL RANGE SLIDER */}
       <div className={styles.filterBlock}>
         <div className={styles.filterBlockTitle}>
           <span className={styles.filterBlockIcon}>💰</span>Price
@@ -588,7 +543,6 @@ export default function ProductsClient() {
             display: 'flex',
             alignItems: 'center',
           }}>
-            {/* Track background */}
             <div style={{
               position: 'absolute',
               left: 0, right: 0,
@@ -597,7 +551,6 @@ export default function ProductsClient() {
               background: '#CED4DA',
             }} />
 
-            {/* Active track */}
             <div style={{
               position: 'absolute',
               left:  `${minPct}%`,
@@ -607,7 +560,6 @@ export default function ProductsClient() {
               background: '#2563EB',
             }} />
 
-            {/* Min thumb */}
             <input
               type="range"
               min={PRICE_MIN}
@@ -624,7 +576,6 @@ export default function ProductsClient() {
               style={{ zIndex: Number(localMin || PRICE_MIN) > PRICE_MAX - PRICE_STEP * 2 ? 5 : 3 }}
             />
 
-            {/* Max thumb */}
             <input
               type="range"
               min={PRICE_MIN}
@@ -655,63 +606,66 @@ export default function ProductsClient() {
           </div>
         </div>
 
-        {(appliedMin || appliedMax) && (
+        {(minPriceFilter || maxPriceFilter) && (
           <div className={styles.appliedPrice} style={{ marginTop: '10px' }}>
-            <span>₹{appliedMin || PRICE_MIN} — ₹{appliedMax || `${PRICE_MAX}+`}</span>
-            <button className={styles.clearPriceBtn} onClick={handleClearPrice}>✕</button>
+            <span>₹{minPriceFilter || PRICE_MIN} — ₹{maxPriceFilter || `${PRICE_MAX}+`}</span>
+            <button type="button" className={styles.clearPriceBtn} onClick={handleClearPrice}>✕</button>
           </div>
         )}
       </div>
 
+      {/* DISCOUNTS */}
       <div className={styles.filterBlock}>
         <div className={styles.filterBlockTitle}><span className={styles.filterBlockIcon}>🔥</span>Discount</div>
         {DISCOUNT_TIERS.map(t => (
-          <button key={t.value} onClick={() => updateFilter('discount', t.value === filters.discount ? '' : t.value)} style={{
+          <button key={t.value} type="button" onClick={() => updateUrl({ discount: t.value === discountFilter ? '' : t.value })} style={{
             display: 'block', width: '100%', padding: '6px 8px', textAlign: 'left',
-            background: filters.discount === t.value ? '#FFF0F5' : 'transparent',
+            background: discountFilter === t.value ? '#FFF0F5' : 'transparent',
             border: 'none', borderRadius: '4px', fontSize: '0.82rem',
-            fontWeight: filters.discount === t.value ? '800' : '600',
-            color: filters.discount === t.value ? '#FF3F6C' : '#535766',
+            fontWeight: discountFilter === t.value ? '800' : '600',
+            color: discountFilter === t.value ? '#FF3F6C' : '#535766',
             cursor: 'pointer', fontFamily: 'inherit', marginBottom: '2px',
           }}>
-            {t.label} {filters.discount === t.value && '✓'}
+            {t.label} {discountFilter === t.value && '✓'}
           </button>
         ))}
       </div>
 
+      {/* RATINGS */}
       <div className={styles.filterBlock}>
         <div className={styles.filterBlockTitle}><span className={styles.filterBlockIcon}>⭐</span>Rating</div>
         {RATING_OPTIONS.map(o => (
-          <button key={o.value} onClick={() => updateFilter('rating', o.value === filters.rating ? '' : o.value)} style={{
+          <button key={o.value} type="button" onClick={() => updateUrl({ rating: o.value === ratingFilter ? '' : o.value })} style={{
             display: 'block', width: '100%', padding: '6px 8px', textAlign: 'left',
-            background: filters.rating === o.value ? '#FFF0F5' : 'transparent',
+            background: ratingFilter === o.value ? '#FFF0F5' : 'transparent',
             border: 'none', borderRadius: '4px', fontSize: '0.82rem',
-            fontWeight: filters.rating === o.value ? '800' : '600',
-            color: filters.rating === o.value ? '#FF3F6C' : '#535766',
+            fontWeight: ratingFilter === o.value ? '800' : '600',
+            color: ratingFilter === o.value ? '#FF3F6C' : '#535766',
             cursor: 'pointer', fontFamily: 'inherit', marginBottom: '2px',
           }}>
-            {o.stars} & above {filters.rating === o.value && '✓'}
+            {o.stars} & above {ratingFilter === o.value && '✓'}
           </button>
         ))}
       </div>
 
+      {/* STOCK CONTROL */}
       <div className={styles.filterBlock}>
-        <label className={styles.toggleRow}>
+        <label className={styles.toggleRow} style={{ cursor: 'pointer' }}>
           <span>In Stock Only</span>
-          <div className={`${styles.toggle} ${filters.inStock ? styles.toggleOn : ''}`}
-            onClick={() => updateFilter('inStock', !filters.inStock)} />
+          <div className={`${styles.toggle} ${inStockFilter ? styles.toggleOn : ''}`}
+            onClick={() => updateUrl({ inStock: !inStockFilter })} />
         </label>
       </div>
     </>
   );
 
   /* ============================================================
-     RENDER
+     RENDER VIEWPORT LAYOUT
   ============================================================ */
   return (
     <div className={styles.pageRoot}>
 
-      {/* HERO */}
+      {/* HERO STRIP */}
       <div className={styles.heroStrip}>
         <div className={styles.heroStripInner}>
           <div className={styles.heroStripLeft}>
@@ -725,6 +679,7 @@ export default function ProductsClient() {
             <div className={styles.quickPills}>
               {quickFilters.map(q => (
                 <button key={q.key}
+                  type="button"
                   className={`${styles.quickPill} ${activeQuick === q.key ? styles.quickPillActive : ''}`}
                   onClick={q.action}>
                   {q.label}
@@ -741,18 +696,19 @@ export default function ProductsClient() {
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
             <span style={{ fontWeight: '800', fontSize: '0.84rem', color: '#282C3F', textTransform: 'uppercase' }}>Filters</span>
             {hasActiveFilters && (
-              <button onClick={clearAll} className={styles.clearAllTagBtn}>Clear All</button>
+              <button type="button" onClick={clearAll} className={styles.clearAllTagBtn}>Clear All</button>
             )}
           </div>
 
           <div className={styles.toolbarRight}>
             <div className={styles.sortWrap}>
               <span style={{ fontSize: '0.82rem', color: '#94969F', fontWeight: '600' }}>Sort by:</span>
-              <select value={filters.sort} onChange={e => updateFilter('sort', e.target.value)} className={styles.sortSelect}>
+              <select value={sortFilter} onChange={e => updateUrl({ sort: e.target.value })} className={styles.sortSelect}>
                 {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
             <button
+              type="button"
               className={`${styles.filterToggle} ${hasActiveFilters ? styles.filterToggleActive : ''}`}
               onClick={() => setSidebarOpen(prev => !prev)}>
               <span>☰</span>
@@ -769,29 +725,29 @@ export default function ProductsClient() {
         {hasActiveFilters && (
           <div className={styles.activeFiltersRow}>
             <div className={styles.activeFilterTags}>
-              {filters.gender && (
+              {genderFilter && (
                 <span className={styles.activeTag}>
-                  {GENDER_OPTIONS.find(g => g.value === filters.gender)?.label || filters.gender}
-                  <button onClick={() => updateFilter('gender', '')}>✕</button>
+                  {GENDER_OPTIONS.find(g => g.value === genderFilter)?.label || genderFilter}
+                  <button type="button" onClick={() => updateUrl({ gender: '' })}>✕</button>
                 </span>
               )}
-              {filters.category && selectedCategoryName && (
-                <span className={styles.activeTag}>{selectedCategoryName}<button onClick={() => handleCategoryClick('')}>✕</button></span>
+              {categoryFilter && selectedCategoryName && (
+                <span className={styles.activeTag}>{selectedCategoryName}<button type="button" onClick={() => handleCategoryClick('')}>✕</button></span>
               )}
-              {filters.brand && (
-                <span className={styles.activeTag}>{filters.brand}<button onClick={() => updateFilter('brand', '')}>✕</button></span>
+              {brandFilter && (
+                <span className={styles.activeTag}>{brandFilter}<button type="button" onClick={() => updateUrl({ brand: '' })}>✕</button></span>
               )}
-              {filters.discount && (
-                <span className={styles.activeTag}>{filters.discount}% And Above<button onClick={() => updateFilter('discount', '')}>✕</button></span>
+              {discountFilter && (
+                <span className={styles.activeTag}>{discountFilter}% And Above<button type="button" onClick={() => updateUrl({ discount: '' })}>✕</button></span>
               )}
-              {filters.rating && (
-                <span className={styles.activeTag}>{filters.rating}★ & above<button onClick={() => updateFilter('rating', '')}>✕</button></span>
+              {ratingFilter && (
+                <span className={styles.activeTag}>{ratingFilter}★ & above<button type="button" onClick={() => updateUrl({ rating: '' })}>✕</button></span>
               )}
-              {(appliedMin || appliedMax) && (
-                <span className={styles.activeTag}>₹{appliedMin || '0'}-₹{appliedMax || '∞'}<button onClick={handleClearPrice}>✕</button></span>
+              {(minPriceFilter || maxPriceFilter) && (
+                <span className={styles.activeTag}>₹{minPriceFilter || '0'}-₹{maxPriceFilter || '∞'}<button type="button" onClick={handleClearPrice}>✕</button></span>
               )}
-              {filters.inStock && (
-                <span className={styles.activeTag}>In Stock<button onClick={() => updateFilter('inStock', false)}>✕</button></span>
+              {inStockFilter && (
+                <span className={styles.activeTag}>In Stock<button type="button" onClick={() => updateUrl({ inStock: null })}>✕</button></span>
               )}
             </div>
           </div>
@@ -800,16 +756,16 @@ export default function ProductsClient() {
 
       {/* MOBILE CATEGORY BAR */}
       <div className={styles.mobileCatBar}>
-        <AutoScrollCatBar categories={categories} filters={filters} handleCategoryClick={handleCategoryClick} catLoading={catLoading} />
-        {filters.category && selectedCategoryName && (
+        <AutoScrollCatBar categories={categories} currentCategory={categoryFilter} handleCategoryClick={handleCategoryClick} catLoading={catLoading} />
+        {categoryFilter && selectedCategoryName && (
           <div className={styles.activeCatBanner}>
             <span>Showing: <strong>{selectedCategoryName}</strong></span>
-            <button className={styles.activeCatClear} onClick={() => handleCategoryClick('')}>✕ Clear</button>
+            <button type="button" className={styles.activeCatClear} onClick={() => handleCategoryClick('')}>✕ Clear</button>
           </div>
         )}
       </div>
 
-      {/* MAIN LAYOUT */}
+      {/* MAIN CONTAINER */}
       <div className={styles.container}>
         <div className={styles.layout}>
 
@@ -817,18 +773,17 @@ export default function ProductsClient() {
           <aside className={`${styles.sidebar} ${styles.sidebarDesktop}`}>
             <div className={styles.sidebarTop}>
               <div className={styles.sidebarTitle}>Filters</div>
-              <button className={styles.clearAllBtn} onClick={clearAll}>Clear All</button>
+              <button type="button" className={styles.clearAllBtn} onClick={clearAll}>Clear All</button>
             </div>
-            {/* ✅ CALLED AS A FUNCTION HERE */}
             {renderFilterContent()}
           </aside>
 
-          {/* PRODUCTS */}
+          {/* PRODUCTS LIST */}
           <main className={styles.main}>
             {loading && allProducts.length === 0 ? (
               <div className={styles.skeletonGrid}>
                 {Array(24).fill(0).map((_, i) => (
-                  <div key={i} className={styles.skeletonCard}>
+                  <div key={`skel-${i}`} className={styles.skeletonCard}>
                     <div className={styles.skeletonImg} />
                     <div className={styles.skeletonBody}>
                       <div className={styles.skeletonLine} style={{ width: '70%' }} />
@@ -872,11 +827,11 @@ export default function ProductsClient() {
                 <span className={styles.emptyEmoji}>🔍</span>
                 <h3>No products found</h3>
                 <p>
-                  {filters.search ? `No results for "${filters.search}"`
+                  {searchFilter ? `No results for "${searchFilter}"`
                     : selectedCategoryName ? `No products in "${selectedCategoryName}"`
                     : 'Try adjusting your filters'}
                 </p>
-                <button className={styles.emptyBtn} onClick={clearAll}>Clear All Filters</button>
+                <button type="button" className={styles.emptyBtn} onClick={clearAll}>Clear All Filters</button>
               </div>
             )}
           </main>
@@ -890,10 +845,9 @@ export default function ProductsClient() {
           <aside className={`${styles.mobileDrawer} ${styles.mobileDrawerOpen}`}>
             <div className={styles.sidebarTop}>
               <div className={styles.sidebarTitle}>Filters</div>
-              <button className={styles.clearAllBtn} onClick={clearAll}>Clear All</button>
-              <button className={styles.closeSidebar} onClick={() => setSidebarOpen(false)}>✕</button>
+              <button type="button" className={styles.clearAllBtn} onClick={clearAll}>Clear All</button>
+              <button type="button" className={styles.closeSidebar} onClick={() => setSidebarOpen(false)}>✕</button>
             </div>
-            {/* ✅ CALLED AS A FUNCTION HERE */}
             {renderFilterContent()}
           </aside>
         </>
@@ -902,7 +856,7 @@ export default function ProductsClient() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* ✅ Dual Range Slider Thumbs */
+        /* Dual Range Slider styling */
         .priceRangeThumb {
           position: absolute;
           left: 0;

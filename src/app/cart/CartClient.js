@@ -11,6 +11,13 @@ import styles from './CartClient.module.css';
 const fmt = (val) => Math.round(val || 0).toLocaleString('en-IN');
 const BABY_FOOD_CATEGORY_ID = '6a5473f71736df8447776561';
 
+function isGunturLocation(address) {
+  if (!address) return false;
+  const city = (address.city || '').toLowerCase().trim();
+  const pincode = (address.pincode || '').toString().trim();
+  return city.includes('guntur') || pincode.startsWith('522');
+}
+
 function AvailableCoupons({ itemsPrice, onApply }) {
   const [coupons, setCoupons] = useState([]);
   const [showAll, setShowAll] = useState(false);
@@ -86,26 +93,21 @@ export default function CartClient() {
     updateQuantity,
     removeItem,
     itemsPrice,
-    shippingPrice,
     baseShipping,
     codFee,
-    isGuntur,
-    hasFoodItems,
     setPaymentMethod,
     discountAmount,
-    totalPrice,
     coupon,
     setCoupon,
     removeCoupon,
     clearCart,
-    addresses,
-    selectedAddress,
-    selectedAddressIndex,
-    addAddress,
-    updateAddress,
-    deleteAddress,
-    selectAddress,
+    paymentMethod,
   } = useCart();
+
+  // Database-backed state variables instead of in-memory context state
+  const [addresses, setAddresses] = useState([]);
+  const [selectedAddressIndex, setSelectedAddressIndex] = useState(null);
+  const [loadingAddresses, setLoadingAddresses] = useState(false);
 
   const [couponCode, setCouponCode] = useState('');
   const [applying, setApplying] = useState(false);
@@ -118,14 +120,74 @@ export default function CartClient() {
   const [processing, setProcessing] = useState(false);
 
   const [addressForm, setAddressForm] = useState({
-    name: '', phone: '', address: '', city: '', state: '', pincode: '',
+    name: '', phone: '', address: '', city: '', state: '', pincode: '', isDefault: false
   });
 
-  useEffect(() => {
-    if (addresses.length === 1 && selectedAddressIndex === null) {
-      selectAddress(0);
+  const selectedAddress = selectedAddressIndex !== null ? addresses[selectedAddressIndex] : null;
+  const isAddressGuntur = selectedAddress ? isGunturLocation(selectedAddress) : false;
+
+  const foodItemsList = items.filter(i => {
+    const catId = String(i.categoryId || i.category?.id || i.category?._id || i.category || '');
+    return (
+      i.isFood === true ||
+      catId === BABY_FOOD_CATEGORY_ID ||
+      (i.categorySlug || i.category?.slug || '').toString().toLowerCase().includes('food') ||
+      (i.categoryName || i.category?.name || '').toString().toLowerCase().includes('food') ||
+      i.foodCategory
+    );
+  });
+
+  const nonFoodItemsList = items.filter(i => {
+    const catId = String(i.categoryId || i.category?.id || i.category?._id || i.category || '');
+    const isFood = (
+      i.isFood === true ||
+      catId === BABY_FOOD_CATEGORY_ID ||
+      (i.categorySlug || i.category?.slug || '').toString().toLowerCase().includes('food') ||
+      (i.categoryName || i.category?.name || '').toString().toLowerCase().includes('food') ||
+      i.foodCategory
+    );
+    return !isFood;
+  });
+
+  const isOnlyFood = foodItemsList.length > 0 && nonFoodItemsList.length === 0;
+  const totalFoodQty = foodItemsList.reduce((sum, item) => sum + (item.quantity || 1), 0);
+  const hasFoodItems = foodItemsList.length > 0;
+
+  const isFoodBlocked = isOnlyFood && !isAddressGuntur && totalFoodQty < 4;
+
+  const calculatedShippingPrice = (() => {
+    if (isOnlyFood) {
+      if (isAddressGuntur) return 0;
+      if (totalFoodQty >= 4) return 0;
     }
-  }, [addresses.length]);
+    if (hasFoodItems && !isAddressGuntur) return 50;
+    return baseShipping;
+  })();
+
+  const totalPrice = Math.max(0, Math.round(itemsPrice + calculatedShippingPrice + (showPaymentPanel && paymentMethod === 'COD' ? codFee : 0) - discountAmount));
+
+  // Sync addresses directly from server database (Amazon & Flipkart persistent style)
+  useEffect(() => {
+    if (session) {
+      setLoadingAddresses(true);
+      fetch('/api/users/addresses')
+        .then(res => res.json())
+        .then(data => {
+          const addrs = data.addresses || [];
+          setAddresses(addrs);
+          
+          // Auto-select Default address first. Fallback to index 0.
+          const defIndex = addrs.findIndex(a => a.isDefault);
+          if (defIndex !== -1) {
+            setSelectedAddressIndex(defIndex);
+          } else if (addrs.length > 0) {
+            setSelectedAddressIndex(0);
+          }
+        })
+        .catch(err => console.error("Error fetching user addresses:", err))
+        .finally(() => setLoadingAddresses(false));
+    }
+  }, [session]);
 
   useEffect(() => {
     document.body.style.overflow = (showAddressPanel || showPaymentPanel) ? 'hidden' : '';
@@ -203,7 +265,7 @@ export default function CartClient() {
   });
 
   const openAddAddress = () => {
-    setAddressForm({ name: '', phone: '', address: '', city: '', state: '', pincode: '' });
+    setAddressForm({ name: '', phone: '', address: '', city: '', state: '', pincode: '', isDefault: addresses.length === 0 });
     setEditingIndex(null);
     setShowAddressForm(true);
     setShowAddressPanel(true);
@@ -216,9 +278,42 @@ export default function CartClient() {
     setShowAddressPanel(true);
   };
 
-  const handleSaveAddress = (e) => {
+  const handleDeleteAddress = async (index) => {
+    try {
+      const res = await fetch(`/api/users/addresses?index=${index}`, {
+        method: 'DELETE',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to delete address');
+
+      setAddresses(data.addresses || []);
+      const defIdx = (data.addresses || []).findIndex(a => a.isDefault);
+      setSelectedAddressIndex(defIdx !== -1 ? defIdx : (data.addresses?.length > 0 ? 0 : null));
+      toast.success('🗑️ Address deleted successfully');
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleSetDefaultAddress = async (index) => {
+    try {
+      const res = await fetch(`/api/users/addresses?index=${index}&action=setDefault`, {
+        method: 'PUT',
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to select default address');
+
+      setAddresses(data.addresses || []);
+      setSelectedAddressIndex(index);
+      toast.success('👑 Default address updated');
+    } catch (err) {
+      toast.error(err.message);
+    }
+  };
+
+  const handleSaveAddress = async (e) => {
     e.preventDefault();
-    const { name, phone, address, city, state, pincode } = addressForm;
+    const { name, phone, address, city, state, pincode, isDefault } = addressForm;
     if (!name || !phone || !address || !city || !state || !pincode) {
       toast.error('Please fill all fields');
       return;
@@ -232,23 +327,45 @@ export default function CartClient() {
       return;
     }
 
-    if (editingIndex !== null) {
-      updateAddress(editingIndex, addressForm);
-      toast.success('✅ Address updated');
-    } else {
-      addAddress(addressForm);
-      selectAddress(addresses.length);
-      toast.success('✅ Address saved');
-    }
+    setProcessing(true);
+    try {
+      const isEditing = editingIndex !== null;
+      const url = isEditing ? `/api/users/addresses?index=${editingIndex}` : '/api/users/addresses';
+      const method = isEditing ? 'PUT' : 'POST';
 
-    setShowAddressForm(false);
-    setEditingIndex(null);
+      const res = await fetch(url, {
+        method,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(addressForm),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed to save address');
+
+      setAddresses(data.addresses || []);
+      
+      if (isEditing) {
+        toast.success('✅ Address updated successfully');
+      } else {
+        toast.success('✅ Address saved permanently');
+      }
+
+      const activeIdx = data.addresses.findIndex(a => a.isDefault);
+      setSelectedAddressIndex(activeIdx !== -1 ? activeIdx : (isEditing ? selectedAddressIndex : data.addresses.length - 1));
+      
+      setShowAddressForm(false);
+      setEditingIndex(null);
+    } catch (err) {
+      toast.error(err.message);
+    } finally {
+      setProcessing(false);
+    }
   };
 
   const handleSelectAddress = (index) => {
-    selectAddress(index);
+    setSelectedAddressIndex(index);
     setShowAddressPanel(false);
-    toast.success('📍 Address selected');
+    toast.success('📍 Delivery destination updated');
   };
 
   const handlePlaceOrder = () => {
@@ -264,6 +381,10 @@ export default function CartClient() {
     if (!selectedAddress) {
       toast.error('Please select delivery address');
       setShowAddressPanel(true);
+      return;
+    }
+    if (isFoodBlocked) {
+      toast.error('Minimum order of 4 food items is required for delivery outside Guntur.');
       return;
     }
     setShowPaymentPanel(true);
@@ -311,7 +432,7 @@ export default function CartClient() {
           shippingAddress: selectedAddress,
           paymentMethod: 'COD',
           itemsPrice,
-          shippingPrice,
+          shippingPrice: calculatedShippingPrice,
           taxPrice: 0,
           discountAmount,
           totalPrice,
@@ -346,7 +467,11 @@ export default function CartClient() {
           orderItems: mapOrderItems(),
           shippingAddress: selectedAddress,
           paymentMethod: 'Razorpay',
-          itemsPrice, shippingPrice, taxPrice: 0, discountAmount, totalPrice,
+          itemsPrice, 
+          shippingPrice: calculatedShippingPrice, 
+          taxPrice: 0, 
+          discountAmount, 
+          totalPrice: totalPrice,
           couponCode: coupon?.code || null,
           isPaid: false, paymentStatus: 'pending', orderStatus: 'Pending',
         }),
@@ -477,13 +602,20 @@ export default function CartClient() {
           }}>📍</div>
 
           <div style={{ flex: 1, minWidth: 0 }}>
-            {selectedAddress ? (
+            {loadingAddresses ? (
+              <p style={{ margin: 0, fontSize: '0.85rem', color: '#9CA3AF', fontWeight: '700' }}>⏳ Loading your addresses...</p>
+            ) : selectedAddress ? (
               <>
                 <p style={{ margin: 0, fontSize: '0.90rem', fontWeight: '800', color: '#1F2937', fontFamily: 'Nunito, sans-serif' }}>
                   Deliver to <span style={{ color: '#FF6B9D' }}>{selectedAddress.name}</span>, {selectedAddress.pincode}
-                  {isGuntur && (
+                  {isAddressGuntur && (
                     <span style={{ marginLeft: '8px', padding: '2px 8px', background: '#D1FAE5', color: '#065F46', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>
                       📍 Guntur Offer Active!
+                    </span>
+                  )}
+                  {selectedAddress.isDefault && (
+                    <span style={{ marginLeft: '6px', padding: '2px 8px', background: '#FEF3C7', color: '#D97706', borderRadius: '999px', fontSize: '10px', fontWeight: '800' }}>
+                      ⭐ DEFAULT
                     </span>
                   )}
                 </p>
@@ -519,7 +651,7 @@ export default function CartClient() {
               flexShrink: 0,
             }}
           >
-            {selectedAddress ? 'CHANGE' : '+ ADD'}
+            {addresses.length > 0 ? 'CHANGE' : '+ ADD'}
           </button>
         </div>
       )}
@@ -555,6 +687,29 @@ export default function CartClient() {
             fontFamily: 'Nunito, sans-serif',
             textDecoration: 'none',
           }}>Login</Link>
+        </div>
+      )}
+
+      {isFoodBlocked && (
+        <div style={{
+          background: '#FEF2F2',
+          border: '2.5px solid #EF4444',
+          borderRadius: '14px',
+          padding: '16px 20px',
+          marginBottom: '20px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '14px',
+          boxShadow: '0 4px 15px rgba(239, 68, 68, 0.1)',
+        }}>
+          <div style={{ fontSize: '1.8rem' }}>⚠️</div>
+          <div>
+            <h4 style={{ margin: 0, fontSize: '0.94rem', fontWeight: '900', color: '#991B1B' }}>Baby Food Order Limit</h4>
+            <p style={{ margin: '4px 0 0', fontSize: '0.82rem', fontWeight: '700', color: '#B91C1C', lineHeight: 1.4 }}>
+              To order food items for delivery outside of Guntur, you must purchase a minimum of **4 food items**. 
+              (Currently in your cart: **{totalFoodQty}** items)
+            </p>
+          </div>
         </div>
       )}
 
@@ -611,8 +766,8 @@ export default function CartClient() {
             </div>
             <div className={styles.summaryRow}>
               <span>Shipping</span>
-              <span className={baseShipping === 0 ? styles.free : ''}>
-                {baseShipping === 0 ? '🎉 FREE' : `₹${baseShipping}`}
+              <span className={calculatedShippingPrice === 0 ? styles.free : ''}>
+                {calculatedShippingPrice === 0 ? '🎉 FREE' : `₹${calculatedShippingPrice}`}
               </span>
             </div>
             {codFee > 0 && (
@@ -652,31 +807,53 @@ export default function CartClient() {
           </div>
 
           {(() => {
-            if (hasFoodItems && !isGuntur) {
+            if (isOnlyFood) {
+              if (isAddressGuntur) {
+                return (
+                  <div style={{
+                    padding: '10px 12px', marginTop: '8px', borderRadius: '10px',
+                    background: '#ECFDF5', border: '1.5px solid #A7F3D0',
+                    fontSize: '12px', fontWeight: '700', color: '#065F46', textAlign: 'center',
+                  }}>
+                    🎉 Guntur Special: Free delivery unlocked on food items!
+                  </div>
+                );
+              }
+              if (totalFoodQty >= 4) {
+                return (
+                  <div style={{
+                    padding: '10px 12px', marginTop: '8px', borderRadius: '10px',
+                    background: '#ECFDF5', border: '1.5px solid #A7F3D0',
+                    fontSize: '12px', fontWeight: '700', color: '#065F46', textAlign: 'center',
+                  }}>
+                    🎉 Food Special: Free shipping unlocked (min 4 items met)!
+                  </div>
+                );
+              }
               return (
                 <div style={{
                   padding: '10px 12px', marginTop: '8px', borderRadius: '10px',
                   background: '#FFF3E8', border: '1.5px solid #FFD4A8',
                   fontSize: '12px', fontWeight: '700', color: '#C2410C', textAlign: 'center',
                 }}>
-                  🍼 Baby Food items always include ₹50 shipping (Outside Guntur)
+                  🍼 Minimum 4 food items required for Free Shipping (Outside Guntur).
                 </div>
               );
             }
 
-            if (hasFoodItems && isGuntur && baseShipping === 0) {
+            if (hasFoodItems && !isAddressGuntur) {
               return (
                 <div style={{
                   padding: '10px 12px', marginTop: '8px', borderRadius: '10px',
-                  background: '#ECFDF5', border: '1.5px solid #A7F3D0',
-                  fontSize: '12px', fontWeight: '700', color: '#065F46', textAlign: 'center',
+                  background: '#FFF3E8', border: '1.5px solid #FFD4A8',
+                  fontSize: '12px', fontWeight: '700', color: '#C2410C', textAlign: 'center',
                 }}>
-                  🎉 Guntur Special: Free delivery unlocked on food items!
+                  🍼 Mixed orders containing Baby Food carry ₹50 delivery fee (Outside Guntur).
                 </div>
               );
             }
 
-            if (baseShipping === 0) {
+            if (calculatedShippingPrice === 0) {
               return (
                 <div className={styles.freeDeliveryMsg}>
                   ✅ You qualify for FREE delivery!
@@ -700,12 +877,12 @@ export default function CartClient() {
 
           <button
             onClick={handlePlaceOrder}
-            disabled={hasStockIssue || processing}
+            disabled={hasStockIssue || processing || isFoodBlocked}
             className={styles.checkoutBtn}
             style={{
               width: '100%',
               padding: '14px 20px',
-              background: (hasStockIssue || processing)
+              background: (hasStockIssue || processing || isFoodBlocked)
                 ? '#9ca3af'
                 : 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
               color: 'white',
@@ -713,13 +890,13 @@ export default function CartClient() {
               borderRadius: '12px',
               fontSize: '1rem',
               fontWeight: '800',
-              cursor: (hasStockIssue || processing) ? 'not-allowed' : 'pointer',
+              cursor: (hasStockIssue || processing || isFoodBlocked) ? 'not-allowed' : 'pointer',
               fontFamily: 'Nunito, sans-serif',
-              boxShadow: (hasStockIssue || processing) ? 'none' : '0 6px 20px rgba(255,107,53,0.30)',
+              boxShadow: (hasStockIssue || processing || isFoodBlocked) ? 'none' : '0 6px 20px rgba(255,107,53,0.30)',
               marginTop: '10px',
             }}
           >
-            {processing ? '⏳ Processing...' : `₹${fmt(totalPrice)}  PLACE ORDER`}
+            {processing ? '⏳ Processing...' : isFoodBlocked ? '👶 Minimum 4 Food Items Required' : `₹${fmt(totalPrice)}  PLACE ORDER`}
           </button>
 
           <Link href="/products" className={styles.continueShopping}>← Continue Shopping</Link>
@@ -780,10 +957,23 @@ export default function CartClient() {
                     </select>
                   </div>
 
+                  {/* Amazon & Flipkart Save as Default Switch Box */}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0' }}>
+                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', fontWeight: '800', color: '#6B4E8A', cursor: 'pointer' }}>
+                      <input 
+                        type="checkbox" 
+                        checked={addressForm.isDefault} 
+                        onChange={(e) => setAddressForm({ ...addressForm, isDefault: e.target.checked })}
+                        style={{ width: '16px', height: '16px', cursor: 'pointer' }}
+                      />
+                      Save this address as my primary default address
+                    </label>
+                  </div>
+
                   <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                     <button type="button" onClick={() => setShowAddressForm(false)} style={{ padding: '12px 18px', background: 'white', border: '2px solid #E5E7EB', borderRadius: '10px', fontWeight: '700', color: '#6B7280', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>Cancel</button>
-                    <button type="submit" style={{ flex: 1, padding: '12px 18px', background: 'linear-gradient(135deg, #FF6B9D, #7B2FBE)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>
-                      {editingIndex !== null ? '💾 Update Address' : '✨ Save Address'}
+                    <button type="submit" disabled={processing} style={{ flex: 1, padding: '12px 18px', background: 'linear-gradient(135deg, #FF6B9D, #7B2FBE)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', cursor: processing ? 'not-allowed' : 'pointer', fontFamily: 'Nunito, sans-serif' }}>
+                      {processing ? '⏳ Saving...' : (editingIndex !== null ? '💾 Update Address' : '✨ Save Address')}
                     </button>
                   </div>
                 </form>
@@ -818,6 +1008,9 @@ export default function CartClient() {
                               )}
                               <p style={{ margin: 0, fontSize: '0.92rem', fontWeight: '800', color: '#1F2937', fontFamily: 'Nunito, sans-serif' }}>
                                 {addr.name}
+                                {addr.isDefault && (
+                                  <span style={{ marginLeft: '8px', padding: '1px 8px', background: '#FEF3C7', color: '#D97706', borderRadius: '999px', fontSize: '9px', fontWeight: '900' }}>⭐ DEFAULT</span>
+                                )}
                               </p>
                               <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#6B7280', fontWeight: '600', fontFamily: 'Nunito, sans-serif' }}>
                                 📱 {addr.phone}
@@ -826,9 +1019,12 @@ export default function CartClient() {
                                 {addr.address}<br />
                                 {addr.city}, {addr.state} - {addr.pincode}
                               </p>
-                              <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-                                <button onClick={(e) => { e.stopPropagation(); openEditAddress(index); }} style={{ padding: '5px 12px', background: 'white', border: '1.5px solid #7B2FBE', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '800', color: '#7B2FBE', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>✏️ EDIT</button>
-                                <button onClick={(e) => { e.stopPropagation(); if (confirm('Delete this address?')) deleteAddress(index); }} style={{ padding: '5px 12px', background: 'white', border: '1.5px solid #DC2626', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '800', color: '#DC2626', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>🗑️ DELETE</button>
+                              <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }} onClick={(e) => e.stopPropagation()}>
+                                <button onClick={() => openEditAddress(index)} style={{ padding: '5px 12px', background: 'white', border: '1.5px solid #7B2FBE', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '800', color: '#7B2FBE', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>✏️ EDIT</button>
+                                <button onClick={() => { if (confirm('Delete this address permanently?')) handleDeleteAddress(index); }} style={{ padding: '5px 12px', background: 'white', border: '1.5px solid #DC2626', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '800', color: '#DC2626', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>🗑️ DELETE</button>
+                                {!addr.isDefault && (
+                                  <button onClick={() => handleSetDefaultAddress(index)} style={{ padding: '5px 12px', background: 'white', border: '1.5px solid #D97706', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '800', color: '#D97706', cursor: 'pointer', fontFamily: 'Nunito, sans-serif', marginLeft: 'auto' }}>👑 SET DEFAULT</button>
+                                )}
                               </div>
                             </div>
                           );
