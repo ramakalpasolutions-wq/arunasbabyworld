@@ -47,7 +47,7 @@ function calculateShipping(orderItems, itemsPrice, address, paymentMethod) {
     if (isGuntur) {
       baseShipping = 0;
     } else {
-      if (totalFoodQty >= 4) {
+      if (totalFoodQty >= 2) {
         baseShipping = 0;
       } else {
         baseShipping = STANDARD_SHIPPING_FEE;
@@ -163,7 +163,6 @@ export async function POST(request) {
 
     const isGuntur = isGunturLocation(data.shippingAddress);
 
-    // Enrich order items and securely calculate dynamic discount prices on the backend
     const enrichedItems = await Promise.all(
       data.orderItems.map(async (item) => {
         try {
@@ -197,7 +196,6 @@ export async function POST(request) {
             } catch {}
           }
 
-          // ✅ Backend Verification: Check if food item
           const itemIsFood = !!(
             item.isFood ||
             categoryId === BABY_FOOD_CATEGORY_ID ||
@@ -205,15 +203,12 @@ export async function POST(request) {
             categoryName.toLowerCase().includes('food')
           );
 
-          // Get master database pricing
           const baseDbPrice = product ? (product.discountPrice || product.price) : (item.price || 0);
-          
-          // Securely apply Guntur 10% discount
           const finalVerifiedPrice = (itemIsFood && isGuntur) ? Math.round(baseDbPrice * 0.9) : baseDbPrice;
 
           return {
             ...item,
-            price: finalVerifiedPrice, // Override with secure calculated price
+            price: finalVerifiedPrice,
             categoryId,
             categorySlug,
             categoryName,
@@ -226,15 +221,15 @@ export async function POST(request) {
       })
     );
 
-    // Minimum food item checks for non-guntur residents
     const foodItems = enrichedItems.filter(isFoodItem);
     const nonFoodItems = enrichedItems.filter(item => !isFoodItem(item));
     const isOnlyFood = foodItems.length > 0 && nonFoodItems.length === 0;
     const totalFoodQty = foodItems.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
 
-    if (isOnlyFood && !isGuntur && totalFoodQty < 4) {
+    // ✅ Minimum 2 food items required outside Guntur
+    if (isOnlyFood && !isGuntur && totalFoodQty < 2) {
       return NextResponse.json(
-        { error: 'Minimum order of 4 food items is required for delivery outside Guntur.' },
+        { error: 'Minimum order of 2 food items is required for delivery outside Guntur.' },
         { status: 400 }
       );
     }

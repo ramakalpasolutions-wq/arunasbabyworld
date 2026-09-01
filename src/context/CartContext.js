@@ -33,11 +33,11 @@ export function isFoodItem(item) {
   );
 }
 
-// ✅ Dynamic Pricing Utility: Guntur residents get 10% discount on food items
+// Dynamic Pricing Utility: Guntur residents get 10% discount on food items
 export function getEffectiveItemPrice(item, isGuntur) {
   const basePrice = Number(item.discountPrice || item.price || 0);
   if (isGuntur && isFoodItem(item)) {
-    return Math.round(basePrice * 0.9); // Apply 10% discount and round off float issues
+    return Math.round(basePrice * 0.9);
   }
   return basePrice;
 }
@@ -60,8 +60,8 @@ export function calculateShippingFee({ items, subtotal, address, paymentMethod }
     if (isGuntur) {
       baseShipping = 0; // Free shipping for Guntur residents
     } else {
-      if (totalFoodQty >= 4) {
-        baseShipping = 0; // Free shipping for food orders of 4+ items outside Guntur
+      if (totalFoodQty >= 2) {
+        baseShipping = 0; // Free shipping for food orders of 2+ items outside Guntur
       } else {
         baseShipping = STANDARD_SHIPPING_FEE;
       }
@@ -140,7 +140,6 @@ const cartReducer = (state, action) => {
       const addresses = action.payload || [];
       let selectedIndex = state.selectedAddressIndex;
       
-      // Auto-set the index to the default address if we just fetched addresses
       if (addresses.length > 0) {
         const defIdx = addresses.findIndex(a => a.isDefault);
         selectedIndex = defIdx !== -1 ? defIdx : 0;
@@ -173,7 +172,6 @@ export function CartProvider({ children }) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
 
-  // 1. Hydrate Cart from LocalStorage
   useEffect(() => {
     const saved = localStorage.getItem('cart');
     if (saved) {
@@ -184,7 +182,6 @@ export function CartProvider({ children }) {
     setIsHydrated(true);
   }, []);
 
-  // 2. Save Cart changes to LocalStorage safely
   useEffect(() => {
     if (isHydrated) {
       const { items, coupon } = state;
@@ -192,7 +189,6 @@ export function CartProvider({ children }) {
     }
   }, [state.items, state.coupon, isHydrated]);
 
-  // 3. Fetch persistent address list from DB on login (Amazon / Flipkart Style)
   useEffect(() => {
     if (session) {
       setLoadingAddresses(true);
@@ -206,7 +202,6 @@ export function CartProvider({ children }) {
     }
   }, [session]);
 
-  // Persistent DB Address Mutation Helpers
   const addAddress = async (addressForm) => {
     const res = await fetch('/api/users/addresses', {
       method: 'POST',
@@ -261,7 +256,6 @@ export function CartProvider({ children }) {
     return selectedAddress ? isGunturAddress(selectedAddress) : false;
   }, [selectedAddress]);
 
-  // ✅ Secure Price calculations with Guntur discount applied in cart context
   const itemsPrice = useMemo(() => {
     return state.items.reduce(
       (acc, i) => acc + getEffectiveItemPrice(i, isGuntur) * i.quantity, 0
@@ -305,7 +299,6 @@ export function CartProvider({ children }) {
         cartTotal: totalPrice,
         loadingAddresses,
         
-        // Permanent Address API State triggers
         addresses: state.addresses || [],
         selectedAddressIndex: state.selectedAddressIndex,
         selectedAddress,
@@ -315,7 +308,6 @@ export function CartProvider({ children }) {
         setDefaultAddress,
         selectAddress,
         
-        // Cart Reducer Dispatches
         addItem: (item) => dispatch({ type: 'ADD_ITEM', payload: item }),
         addToCart: (item) => dispatch({ type: 'ADD_ITEM', payload: item }),
         removeItem: (id) => dispatch({ type: 'REMOVE_ITEM', payload: id }),

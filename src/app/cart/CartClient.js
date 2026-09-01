@@ -130,7 +130,8 @@ export default function CartClient() {
   const isOnlyFood = foodItemsList.length > 0 && nonFoodItemsList.length === 0;
   const totalFoodQty = foodItemsList.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
-  const isFoodBlocked = isOnlyFood && !isGuntur && totalFoodQty < 4;
+  // ✅ Updated constraint: minimum 2 food items required outside Guntur
+  const isFoodBlocked = isOnlyFood && !isGuntur && totalFoodQty < 2;
 
   useEffect(() => {
     if (items.length === 0) return;
@@ -292,7 +293,7 @@ export default function CartClient() {
       return;
     }
     if (isFoodBlocked) {
-      toast.error('Minimum order of 4 food items is required for delivery outside Guntur.');
+      toast.error('Minimum order of 2 food items is required for delivery outside Guntur.');
       return;
     }
     setShowPaymentPanel(true);
@@ -610,7 +611,7 @@ export default function CartClient() {
           <div>
             <h4 style={{ margin: 0, fontSize: '0.94rem', fontWeight: '900', color: '#991B1B' }}>Baby Food Order Limit</h4>
             <p style={{ margin: '4px 0 0', fontSize: '0.82rem', fontWeight: '700', color: '#B91C1C', lineHeight: 1.4 }}>
-              To order food items for delivery outside of Guntur, you must purchase a minimum of **4 food items**.
+              To order food items for delivery outside of Guntur, you must purchase a minimum of **2 food items**.
               (Currently in your cart: **{totalFoodQty}** items)
             </p>
           </div>
@@ -741,14 +742,14 @@ export default function CartClient() {
                   </div>
                 );
               }
-              if (totalFoodQty >= 4) {
+              if (totalFoodQty >= 2) {
                 return (
                   <div style={{
                     padding: '10px 12px', marginTop: '8px', borderRadius: '10px',
                     background: '#ECFDF5', border: '1.5px solid #A7F3D0',
                     fontSize: '12px', fontWeight: '700', color: '#065F46', textAlign: 'center',
                   }}>
-                    🎉 Food Special: Free shipping unlocked (min 4 items met)!
+                    🎉 Food Special: Free shipping unlocked (min 2 items met)!
                   </div>
                 );
               }
@@ -758,7 +759,7 @@ export default function CartClient() {
                   background: '#FFF3E8', border: '1.5px solid #FFD4A8',
                   fontSize: '12px', fontWeight: '700', color: '#C2410C', textAlign: 'center',
                 }}>
-                  🍼 Minimum 4 food items required for Free Shipping (Outside Guntur).
+                  🍼 Minimum 2 food items required for Free Shipping (Outside Guntur).
                 </div>
               );
             }
@@ -818,7 +819,7 @@ export default function CartClient() {
               marginTop: '10px',
             }}
           >
-            {processing ? '⏳ Processing...' : isFoodBlocked ? '👶 Minimum 4 Food Items Required' : `₹${fmt(totalPrice)}  PLACE ORDER`}
+            {processing ? '⏳ Processing...' : isFoodBlocked ? '👶 Minimum 2 Food Items Required' : `₹${fmt(totalPrice)}  PLACE ORDER`}
           </button>
 
           <Link href="/products" className={styles.continueShopping}>← Continue Shopping</Link>
