@@ -297,12 +297,12 @@ model CompanySettings {
   accountNumber      String?
   ifscCode           String?
   upiId              String?
+  codEnabled         Boolean  @default(true) // ✅ Added: COD Master Switch
   createdAt          DateTime @default(now())
   updatedAt          DateTime @updatedAt
 
   @@map("company_settings")
 }
-
 type OrderItem {
   productId String?
   name      String?
