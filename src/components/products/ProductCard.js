@@ -4,8 +4,11 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
+import { useLocation } from '@/context/LocationContext';
 import toast from 'react-hot-toast';
 import styles from './ProductCard.module.css';
+
+const BABY_FOOD_CATEGORY_ID = '6a5473f71736df8447776561';
 
 const CATEGORY_ACCENTS = {
   'clothing':          { color: '#FF6B35', emoji: '👗', pastel: '#FFF2EB' },
@@ -48,6 +51,23 @@ function getCategoryAccent(categoryName = '', categorySlug = '') {
   return CATEGORY_ACCENTS.default;
 }
 
+function isFoodProduct(product) {
+  const catId = String(product.categoryId || product.category?.id || product.category?._id || product.category || '');
+  const catSlug = (product.category?.slug || product.categorySlug || '').toLowerCase();
+  const catName = (product.category?.name || product.categoryName || (typeof product.category === 'string' ? product.category : '')).toLowerCase();
+  const foodCat = (product.foodCategory || '').toLowerCase();
+
+  return (
+    product.isFood === true ||
+    catId === BABY_FOOD_CATEGORY_ID ||
+    catSlug.includes('food') ||
+    catName.includes('food') ||
+    catSlug.includes('baby-food') ||
+    catName.includes('baby food') ||
+    Boolean(foodCat)
+  );
+}
+
 export function ProductCardSkeleton() {
   return (
     <div className={styles.skeleton}>
@@ -65,7 +85,11 @@ export default function ProductCard({ product }) {
   const { addItem, addToCart } = useCart();
   const { toggle, isWishlisted, isInWishlist } = useWishlist();
 
-  const [imgLoaded,  setImgLoaded]  = useState(false);
+  // ✅ Location Context for Guntur discount detection
+  const locationCtx = useLocation();
+  const isGuntur = locationCtx?.isGuntur || false;
+
+  const [imgLoaded, setImgLoaded] = useState(false);
   const [cartAdding, setCartAdding] = useState(false);
 
   if (!product) return null;
@@ -76,7 +100,6 @@ export default function ProductCard({ product }) {
       ? isInWishlist(product.id)
       : false;
 
-  // ✅ Smart image resolver (checks color variants too)
   const getProductImage = () => {
     if (product.images?.[0]?.url) return product.images[0].url;
     if (product.hasVariants && product.colorVariants?.length > 0) {
@@ -87,23 +110,36 @@ export default function ProductCard({ product }) {
     return null;
   };
 
-  // ✅ Smart price resolver
   const getProductPrice = () => {
     if (product.hasVariants && product.colorVariants?.length > 0) {
       const firstVariant = product.colorVariants[0];
       return {
-        price:         firstVariant.price         ?? product.price,
+        price: firstVariant.price ?? product.price,
         discountPrice: firstVariant.discountPrice ?? product.discountPrice,
       };
     }
     return {
-      price:         product.price,
+      price: product.price,
       discountPrice: product.discountPrice,
     };
   };
 
   const imageUrl = getProductImage();
   const { price: displayPrice, discountPrice: displayDiscountPrice } = getProductPrice();
+
+  const isFood = isFoodProduct(product);
+  const hasGunturDiscount = isGuntur && isFood;
+
+  const standardActivePrice = displayDiscountPrice || displayPrice;
+  const finalPrice = hasGunturDiscount ? Math.round(standardActivePrice * 0.9) : standardActivePrice;
+
+  const showOldPrice = hasGunturDiscount
+    ? (displayPrice > finalPrice ? displayPrice : (standardActivePrice > finalPrice ? standardActivePrice : null))
+    : (displayDiscountPrice && displayDiscountPrice < displayPrice ? displayPrice : null);
+
+  const discountPercent = displayPrice > finalPrice
+    ? Math.round(((displayPrice - finalPrice) / displayPrice) * 100)
+    : 0;
 
   const accent = getCategoryAccent(
     product.category?.name || '',
@@ -117,10 +153,9 @@ export default function ProductCard({ product }) {
     setCartAdding(true);
     const addFn = addItem || addToCart;
 
-    // ✅ Resolve category fields so CartContext can accurately apply shipping rules
     const categorySlug = product.category?.slug || product.categorySlug || (typeof product.category === 'string' ? product.category : '');
     const categoryName = product.category?.name || product.categoryName || '';
-    const categoryId   = product.categoryId || product.category?.id || product.category?._id || '';
+    const categoryId = product.categoryId || product.category?.id || product.category?._id || '';
 
     addFn({
       ...product,
@@ -130,6 +165,7 @@ export default function ProductCard({ product }) {
       categoryId,
       foodCategory: product.foodCategory || null,
       category: categorySlug || categoryName || product.category,
+      isFood,
     });
 
     toast.success('Added to cart! 🛒', {
@@ -167,18 +203,12 @@ export default function ProductCard({ product }) {
     }
   };
 
-  const discount = product.discountPercent > 0
-    ? product.discountPercent
-    : displayDiscountPrice && displayPrice
-      ? Math.round((1 - displayDiscountPrice / displayPrice) * 100)
-      : 0;
-
   return (
     <Link
       href={`/products/${product.id}`}
       className={styles.card}
       style={{
-        '--accent':        accent.color,
+        '--accent': accent.color,
         '--accent-pastel': accent.pastel,
       }}
     >
@@ -197,6 +227,8 @@ export default function ProductCard({ product }) {
               alt={product.name}
               width={240}
               height={240}
+              unoptimized={true} // ✅ Bypasses Next.js image server, delivers from Cloudflare CDN directly
+              loading="lazy"
               className={`${styles.image} ${imgLoaded ? styles.imageVisible : styles.imageHidden}`}
               style={{ objectFit: 'cover' }}
               onLoad={() => setImgLoaded(true)}
@@ -208,12 +240,24 @@ export default function ProductCard({ product }) {
           </div>
         )}
 
-        {/* Discount badge */}
-        {discount > 0 && (
-          <span className={styles.badgeDiscount}>-{discount}%</span>
-        )}
+        {/* Guntur Special or Standard Discount Badge */}
+        {hasGunturDiscount ? (
+          <span
+            className={styles.badgeDiscount}
+            style={{
+              background: 'linear-gradient(135deg, #10B981, #059669)',
+              color: 'white',
+              boxShadow: '0 2px 8px rgba(16,185,129,0.35)',
+              fontSize: '0.72rem',
+              fontWeight: '900',
+            }}
+          >
+            🎉 -{discountPercent}% GUNTUR
+          </span>
+        ) : discountPercent > 0 ? (
+          <span className={styles.badgeDiscount}>-{discountPercent}%</span>
+        ) : null}
 
-        {/* Wishlist button */}
         <button
           className={`${styles.wishBtn} ${inWishlist ? styles.wishActive : ''}`}
           onClick={handleWishlist}
@@ -223,7 +267,6 @@ export default function ProductCard({ product }) {
           <span className={styles.wishIcon}>{inWishlist ? '❤️' : '🤍'}</span>
         </button>
 
-        {/* OOS Overlay */}
         {product.stock === 0 && (
           <div className={styles.oos}>
             <span>Out of Stock</span>
@@ -231,28 +274,24 @@ export default function ProductCard({ product }) {
         )}
       </div>
 
-      {/* ═══ INFO — COMPACT ═══ */}
+      {/* ═══ INFO ═══ */}
       <div className={styles.info}>
-
-        {/* Title */}
         <h3 className={styles.name} title={product.name}>
           {product.name}
         </h3>
 
-        {/* Prices */}
         <div className={styles.priceRow}>
           <span className={styles.price}>
-            ₹{Math.round(displayDiscountPrice || displayPrice)?.toLocaleString('en-IN')}
+            ₹{Math.round(finalPrice)?.toLocaleString('en-IN')}
           </span>
 
-          {displayDiscountPrice && displayDiscountPrice < displayPrice && (
+          {showOldPrice && (
             <span className={styles.priceOld}>
-              ₹{Math.round(displayPrice)?.toLocaleString('en-IN')}
+              ₹{Math.round(showOldPrice)?.toLocaleString('en-IN')}
             </span>
           )}
         </div>
 
-        {/* Add to Cart Button */}
         <button
           className={`
             ${styles.cartBtn}

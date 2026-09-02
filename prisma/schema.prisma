@@ -330,20 +330,21 @@ type PayResult {
 }
 
 model Coupon {
-  id                   String   @id @default(auto()) @map("_id") @db.ObjectId
-  code                 String   @unique
-  description          String?
-  discountType         String   @default("percentage")
-  discountValue        Float
-  minOrderValue        Float    @default(0)
-  maxDiscount          Float?
-  usageLimit           Int?
-  usedCount            Int      @default(0)
-  expiryDate           DateTime
-  isActive             Boolean  @default(true)
-  applicableCategories String[]
-  createdAt            DateTime @default(now())
-  updatedAt            DateTime @updatedAt
+  id                      String   @id @default(auto()) @map("_id") @db.ObjectId
+  code                    String   @unique
+  description             String?
+  discountType            String   @default("percentage")
+  discountValue           Float
+  minOrderValue           Float    @default(0)
+  maxDiscount             Float?
+  usageLimit              Int?
+  usedCount               Int      @default(0)
+  expiryDate              DateTime
+  isActive                Boolean  @default(true)
+  applicableCategories    String[]
+  categoryBrandExclusions Json?    // ✅ Per-category brand exclusions
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
 }
 
 model Contact {

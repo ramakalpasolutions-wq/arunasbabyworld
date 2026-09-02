@@ -98,8 +98,8 @@ export default function CartClient() {
     setCoupon,
     removeCoupon,
     clearCart,
+    syncCartPrices, // ✅ On-demand sync function from context
 
-    // Server-side Address Actions from global context
     addresses,
     selectedAddressIndex,
     selectedAddress,
@@ -130,6 +130,14 @@ export default function CartClient() {
   const totalFoodQty = foodItemsList.reduce((sum, item) => sum + (item.quantity || 1), 0);
 
   const isFoodBlocked = isOnlyFood && !isGuntur && totalFoodQty < 2;
+
+  // ✅ Sync cart prices only when this cart page loads (once)
+  useEffect(() => {
+    if (syncCartPrices) {
+      syncCartPrices();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Since context handles real-time stock sync with DB, we read directly from item.stock
   const getMaxStock = (item) => {
@@ -618,7 +626,14 @@ export default function CartClient() {
                 background: exceedsStock || isOutOfStock ? '#fef2f2' : undefined,
               }}>
                 <div className={styles.itemImage}>
-                  <Image src={image} alt={item.name} width={100} height={100} style={{ objectFit: 'cover', borderRadius: '8px' }} />
+                  <Image 
+                    src={image} 
+                    alt={item.name} 
+                    width={100} 
+                    height={100} 
+                    unoptimized={true}
+                    style={{ objectFit: 'cover', borderRadius: '8px' }} 
+                  />
                 </div>
                 <div className={styles.itemInfo}>
                   <Link href={`/products/${itemId}`} className={styles.itemName}>{item.name}</Link>

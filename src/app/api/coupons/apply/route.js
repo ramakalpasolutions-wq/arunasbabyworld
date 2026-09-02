@@ -1,132 +1,147 @@
 import { NextResponse } from 'next/server';
-import { getServerSession } from 'next-auth';
-import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
 
 export async function POST(request) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    const body = await request.json();
+    const { code, orderTotal, items = [] } = body;
 
-    const { code, orderTotal = 0, items = [] } = await request.json();
-    if (!code) return NextResponse.json({ error: 'Coupon code is required' }, { status: 400 });
+    if (!code) {
+      return NextResponse.json({ error: 'Coupon code is required' }, { status: 400 });
+    }
 
-    // 1. Fetch the Coupon
-    const coupon = await prisma.coupon.findUnique({
-      where: { code: code.trim().toUpperCase() },
+    const coupon = await prisma.coupon.findFirst({
+      where: {
+        code: { equals: code.toUpperCase(), mode: 'insensitive' },
+      },
     });
 
-    if (!coupon) return NextResponse.json({ error: 'Invalid coupon code' }, { status: 404 });
-    if (!coupon.isActive) return NextResponse.json({ error: 'Coupon is inactive' }, { status: 400 });
-    
-    if (coupon.expiryDate && new Date(coupon.expiryDate) < new Date()) {
-      return NextResponse.json({ error: 'Coupon is expired' }, { status: 400 });
+    if (!coupon) {
+      return NextResponse.json({ error: 'Invalid coupon code' }, { status: 400 });
     }
-    
+
+    if (!coupon.isActive) {
+      return NextResponse.json({ error: 'This coupon is no longer active' }, { status: 400 });
+    }
+
+    if (new Date() > new Date(coupon.expiryDate)) {
+      return NextResponse.json({ error: 'This coupon has expired' }, { status: 400 });
+    }
+
     if (coupon.usageLimit && coupon.usedCount >= coupon.usageLimit) {
       return NextResponse.json({ error: 'Coupon usage limit reached' }, { status: 400 });
     }
 
-    // 2. Extract applicable categories (array of IDs)
-    const applicableCategories = coupon.applicableCategories || [];
-    const hasCategoryRestriction = applicableCategories.length > 0;
+    if (coupon.minOrderValue && orderTotal < coupon.minOrderValue) {
+      return NextResponse.json({
+        error: `Minimum order of ₹${coupon.minOrderValue.toLocaleString('en-IN')} required`
+      }, { status: 400 });
+    }
 
-    let eligibleTotal = 0;
+    let eligibleItemsTotal = 0;
     let eligibleItemsCount = 0;
+    let excludedCount = 0;
+    const isCategorySpecific = coupon.applicableCategories?.length > 0;
 
-    // 3. Verify Cart Items against coupon category restrictions
-    if (hasCategoryRestriction) {
-      if (!items || items.length === 0) {
-        return NextResponse.json(
-          { error: 'Cart items are required to verify this category coupon.' },
-          { status: 400 }
-        );
-      }
+    // ✅ Parse per-category brand exclusions
+    const brandExclusions = coupon.categoryBrandExclusions || {};
+    // brandExclusions format: { "categoryId1": ["Brand A", "Brand B"], "categoryId2": ["Brand C"] }
 
-      // Fetch products from database to ensure category definitions are genuine and tamper-proof
-      const productIds = items.map((i) => i.productId || i.id).filter(Boolean);
-      const dbProducts = await prisma.product.findMany({
+    if (items.length > 0) {
+      const productIds = items.map(i => i.productId).filter(Boolean);
+
+      const products = await prisma.product.findMany({
         where: { id: { in: productIds } },
-        select: { id: true, price: true, discountPrice: true, categoryId: true },
+        select: {
+          id: true,
+          brand: true,
+          categoryId: true,
+          category: { select: { id: true, name: true, slug: true } }
+        }
       });
 
-      const productMap = new Map(dbProducts.map((p) => [p.id, p]));
+      const productMap = {};
+      products.forEach(p => { productMap[p.id] = p; });
 
-      for (const item of items) {
-        const pid = item.productId || item.id;
-        const dbProduct = productMap.get(pid);
+      eligibleItemsTotal = items.reduce((sum, item) => {
+        const product = productMap[item.productId];
+        if (!product) return sum;
 
-        if (!dbProduct) continue;
+        const brandName = (product.brand || item.brand || '').trim();
+        const brandLower = brandName.toLowerCase();
+        const categoryId = String(product.categoryId || item.categoryId || '');
+        const categorySlug = (product.category?.slug || item.categorySlug || '').toLowerCase();
+        const categoryName = (product.category?.name || item.categoryName || '').toLowerCase();
 
-        // Retrieve Category ID directly from database record
-        const productCategoryId = dbProduct.categoryId;
-
-        // Determine correct item price from secure DB data falling back to client payload safely
-        const securePrice = Number(dbProduct.discountPrice || dbProduct.price || item.price || 0);
-        const itemQty = Number(item.quantity ?? 1);
-
-        // Verify if product's category is included in coupon's applicableCategories list
-        if (productCategoryId && applicableCategories.includes(productCategoryId)) {
-          eligibleTotal += securePrice * itemQty;
-          eligibleItemsCount += itemQty;
+        // 1. Check Category Restriction
+        if (isCategorySpecific) {
+          const isCategoryMatch = coupon.applicableCategories.some(catId => {
+            const catIdLower = String(catId).toLowerCase();
+            return (
+              String(catId) === categoryId ||
+              catIdLower === categorySlug ||
+              catIdLower === categoryName.replace(/\s+/g, '-')
+            );
+          });
+          if (!isCategoryMatch) return sum;
         }
-      }
 
-      // If no items in the cart match any of the allowed coupon categories
-      if (eligibleItemsCount === 0 || eligibleTotal === 0) {
-        // Fetch category names for a user-friendly error message
-        const categoriesInDb = await prisma.category.findMany({
-          where: { id: { in: applicableCategories } },
-          select: { name: true },
-        });
-        const categoryNames = categoriesInDb.map(c => c.name).join(', ');
+        // 2. ✅ Check Per-Category Brand Exclusion
+        // Only exclude brand if it's in the exclusion list FOR THIS SPECIFIC CATEGORY
+        const excludedBrandsForThisCategory = brandExclusions[categoryId] || [];
+        if (excludedBrandsForThisCategory.length > 0) {
+          const isBrandExcluded = excludedBrandsForThisCategory.some(
+            b => b.trim().toLowerCase() === brandLower
+          );
+          if (isBrandExcluded) {
+            excludedCount += (item.quantity || 1);
+            return sum; // Skip this item from discount
+          }
+        }
 
-        return NextResponse.json(
-          {
-            error: `This coupon is only valid for items in: "${categoryNames || 'selected categories'}". None found in your cart.`,
-          },
-          { status: 400 }
-        );
+        // ✅ Item is eligible
+        eligibleItemsCount += (item.quantity || 1);
+        return sum + (Number(item.price) || 0) * (Number(item.quantity) || 1);
+      }, 0);
+
+      if (eligibleItemsTotal === 0) {
+        return NextResponse.json({
+          error: excludedCount > 0
+            ? 'All items in your cart are from excluded brands for this coupon.'
+            : 'No eligible items found for this coupon.'
+        }, { status: 400 });
       }
     } else {
-      // No category restriction: entire order is eligible
-      eligibleTotal = Number(orderTotal) > 0 ? Number(orderTotal) : items.reduce((acc, i) => acc + (Number(i.price) * Number(i.quantity || 1)), 0);
+      eligibleItemsTotal = orderTotal;
     }
 
-    // 4. Check Minimum Order Value against the eligible subtotal (the category item total only)
-    if (coupon.minOrderValue && eligibleTotal < coupon.minOrderValue) {
-      return NextResponse.json(
-        {
-          error: `Minimum order value of ₹${coupon.minOrderValue} required for eligible category items (Current: ₹${Math.round(eligibleTotal)})`,
-        },
-        { status: 400 }
-      );
-    }
-
-    // 5. Calculate Discount strictly based on the ELIGIBLE amount only
     let discountAmount = 0;
-    if (coupon.discountType === 'percentage' || coupon.discountType === 'PERCENTAGE') {
-      discountAmount = (eligibleTotal * coupon.discountValue) / 100;
-      if (coupon.maxDiscount) {
-        discountAmount = Math.min(discountAmount, coupon.maxDiscount);
+    if (coupon.discountType === 'percentage') {
+      discountAmount = Math.round((eligibleItemsTotal * coupon.discountValue) / 100);
+      if (coupon.maxDiscount && discountAmount > coupon.maxDiscount) {
+        discountAmount = coupon.maxDiscount;
       }
     } else {
-      // Fixed Amount Discount (cannot exceed eligible total)
-      discountAmount = Math.min(coupon.discountValue, eligibleTotal);
+      discountAmount = Math.min(coupon.discountValue, eligibleItemsTotal);
     }
 
     return NextResponse.json({
-      coupon: {
-        code: coupon.code,
-        discountType: coupon.discountType,
-        discountValue: coupon.discountValue,
-        applicableCategories,
-      },
-      eligibleTotal: Math.round(eligibleTotal),
-      discountAmount: Math.round(discountAmount),
+      success: true,
+      discountAmount,
+      couponCode: coupon.code,
+      couponDescription: coupon.description || '',
+      discountType: coupon.discountType,
+      discountValue: coupon.discountValue,
+      maxDiscount: coupon.maxDiscount,
+      isCategorySpecific,
+      eligibleItemsCount,
+      eligibleItemsTotal,
+      message: excludedCount > 0
+        ? `🎉 Saved ₹${discountAmount} (${excludedCount} excluded brand items skipped).`
+        : `🎉 Coupon applied! You saved ₹${discountAmount}.`,
     });
   } catch (error) {
     console.error('Coupon apply error:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ error: 'Failed to apply coupon' }, { status: 500 });
   }
 }

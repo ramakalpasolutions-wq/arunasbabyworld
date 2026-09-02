@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, useReducer, useEffect, useState, useMemo } from 'react';
+import { createContext, useContext, useReducer, useEffect, useState, useMemo, useCallback } from 'react';
 import { useSession } from 'next-auth/react';
 
 const CartContext = createContext();
@@ -37,7 +37,7 @@ export function isFoodItem(item) {
 export function getEffectiveItemPrice(item, isGuntur) {
   const basePrice = Number(item.discountPrice || item.price || 0);
   if (isGuntur && isFoodItem(item)) {
-    return Math.round(basePrice * 0.9); // Apply 10% discount and round off float issues
+    return Math.round(basePrice * 0.9);
   }
   return basePrice;
 }
@@ -58,10 +58,10 @@ export function calculateShippingFee({ items, subtotal, address, paymentMethod }
 
   if (isOnlyFood) {
     if (isGuntur) {
-      baseShipping = 0; // Free shipping for Guntur residents
+      baseShipping = 0;
     } else {
       if (totalFoodQty >= 2) {
-        baseShipping = 0; // Free shipping for food orders of 2+ items outside Guntur
+        baseShipping = 0;
       } else {
         baseShipping = STANDARD_SHIPPING_FEE;
       }
@@ -139,7 +139,6 @@ const cartReducer = (state, action) => {
     case 'SET_ADDRESSES': {
       const addresses = action.payload || [];
       let selectedIndex = state.selectedAddressIndex;
-      
       if (addresses.length > 0) {
         const defIdx = addresses.findIndex(a => a.isDefault);
         selectedIndex = defIdx !== -1 ? defIdx : 0;
@@ -151,30 +150,26 @@ const cartReducer = (state, action) => {
     case 'SELECT_ADDRESS':
       return { ...state, selectedAddressIndex: action.payload };
 
-    // ✅ Sync prices, stock levels, names, and images directly from the Master Database
+    // ✅ Sync prices, stock, images from database
     case 'SYNC_ITEMS': {
       const syncedItems = state.items.map(item => {
         const itemId = item.id || item._id;
-        const freshDbProduct = action.payload.find(p => p.id === itemId);
-        if (freshDbProduct) {
+        const fresh = action.payload.find(p => p.id === itemId);
+        if (fresh) {
           return {
             ...item,
-            name: freshDbProduct.name,
-            price: freshDbProduct.price,
-            discountPrice: freshDbProduct.discountPrice,
-            stock: freshDbProduct.stock,
-            images: freshDbProduct.images || item.images,
-            image: freshDbProduct.images?.[0]?.url || item.image,
+            name: fresh.name || item.name,
+            price: fresh.price ?? item.price,
+            discountPrice: fresh.discountPrice ?? item.discountPrice,
+            stock: fresh.stock ?? item.stock,
+            images: fresh.images || item.images,
+            image: fresh.images?.[0]?.url || item.image,
           };
         }
         return item;
       }).filter(item => {
-        // Automatically eject products that have been disabled (isActive: false) or deleted by admin
-        const freshDbProduct = action.payload.find(p => p.id === (item.id || item._id));
-        if (freshDbProduct) {
-          return freshDbProduct.isActive !== false;
-        }
-        return true;
+        const fresh = action.payload.find(p => p.id === (item.id || item._id));
+        return fresh ? fresh.isActive !== false : true;
       });
 
       return { ...state, items: syncedItems };
@@ -201,70 +196,67 @@ export function CartProvider({ children }) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
 
-  // 1. Hydrate Cart from LocalStorage
+  // 1. Hydrate cart from localStorage instantly (no blocking)
   useEffect(() => {
-    const saved = localStorage.getItem('cart');
-    if (saved) {
-      try {
+    try {
+      const saved = localStorage.getItem('cart');
+      if (saved) {
         dispatch({ type: 'HYDRATE', payload: JSON.parse(saved) });
-      } catch {}
-    }
+      }
+    } catch {}
     setIsHydrated(true);
   }, []);
 
-  // 2. Save Cart changes to LocalStorage safely
+  // 2. Save cart changes to localStorage (debounced)
   useEffect(() => {
-    if (isHydrated) {
-      const { items, coupon } = state;
-      localStorage.setItem('cart', JSON.stringify({ items, coupon }));
-    }
+    if (!isHydrated) return;
+    const timeout = setTimeout(() => {
+      try {
+        const { items, coupon } = state;
+        localStorage.setItem('cart', JSON.stringify({ items, coupon }));
+      } catch {}
+    }, 150);
+    return () => clearTimeout(timeout);
   }, [state.items, state.coupon, isHydrated]);
 
-  // 3. ✅ REAL-TIME DB PRICING & STOCK SYNCER
-  // Runs immediately after hydration is completed to fetch and apply correct database modifications
-  useEffect(() => {
-    if (!isHydrated || state.items.length === 0) return;
-
-    const syncCartWithDatabase = async () => {
-      try {
-        const ids = state.items.map(i => i.id || i._id).filter(Boolean);
-        const syncedResults = await Promise.all(
-          ids.map(async (id) => {
-            try {
-              const res = await fetch(`/api/products/${id}`);
-              if (!res.ok) return null;
-              const data = await res.json();
-              if (!data.product) return null;
-              return {
-                id,
-                name: data.product.name,
-                price: data.product.price,
-                discountPrice: data.product.discountPrice,
-                stock: data.product.stock,
-                images: data.product.images,
-                isActive: data.product.isActive
-              };
-            } catch {
-              return null;
-            }
-          })
-        );
-
-        const freshData = syncedResults.filter(Boolean);
-        if (freshData.length > 0) {
-          dispatch({ type: 'SYNC_ITEMS', payload: freshData });
-        }
-      } catch (err) {
-        console.error("Cart price sync error:", err);
+  // 3. ✅ SYNC ON DEMAND — Only when user visits /cart or /checkout
+  const syncCartPrices = useCallback(async () => {
+    if (state.items.length === 0) return;
+    try {
+      const ids = state.items.map(i => i.id || i._id).filter(Boolean);
+      const results = await Promise.all(
+        ids.map(async (id) => {
+          try {
+            const res = await fetch(`/api/products/${id}`);
+            if (!res.ok) return null;
+            const data = await res.json();
+            if (!data.product) return null;
+            return {
+              id,
+              name: data.product.name,
+              price: data.product.price,
+              discountPrice: data.product.discountPrice,
+              stock: data.product.stock,
+              images: data.product.images,
+              isActive: data.product.isActive,
+            };
+          } catch {
+            return null;
+          }
+        })
+      );
+      const fresh = results.filter(Boolean);
+      if (fresh.length > 0) {
+        dispatch({ type: 'SYNC_ITEMS', payload: fresh });
       }
-    };
+    } catch (err) {
+      console.error("Cart price sync error:", err);
+    }
+  }, [state.items]);
 
-    syncCartWithDatabase();
-  }, [isHydrated]);
-
-  // 4. Fetch persistent address list from DB on login (Amazon / Flipkart Style)
+  // 4. Fetch persistent address list from DB on login
   useEffect(() => {
-    if (session) {
+    if (session?.user) {
       setLoadingAddresses(true);
       fetch('/api/users/addresses')
         .then(res => res.json())
@@ -274,7 +266,7 @@ export function CartProvider({ children }) {
         .catch(err => console.error("Error fetching addresses:", err))
         .finally(() => setLoadingAddresses(false));
     }
-  }, [session]);
+  }, [session?.user?.email]);
 
   // Persistent DB Address Mutation Helpers
   const addAddress = async (addressForm) => {
@@ -373,7 +365,8 @@ export function CartProvider({ children }) {
         cartCount: totalItems,
         cartTotal: totalPrice,
         loadingAddresses,
-        
+        syncCartPrices, // ✅ Exposed for on-demand sync from cart page
+
         addresses: state.addresses || [],
         selectedAddressIndex: state.selectedAddressIndex,
         selectedAddress,
@@ -382,7 +375,7 @@ export function CartProvider({ children }) {
         deleteAddress,
         setDefaultAddress,
         selectAddress,
-        
+
         addItem: (item) => dispatch({ type: 'ADD_ITEM', payload: item }),
         addToCart: (item) => dispatch({ type: 'ADD_ITEM', payload: item }),
         removeItem: (id) => dispatch({ type: 'REMOVE_ITEM', payload: id }),

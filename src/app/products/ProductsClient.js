@@ -1,9 +1,8 @@
 'use client';
-import { useState, useEffect, useCallback, useRef } from 'react';
-import { useSearchParams, usePathname } from 'next/navigation';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
+import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 import ProductCard from '@/components/products/ProductCard';
 import styles from './ProductsClient.module.css';
-import React from 'react';
 
 const SORT_OPTIONS = [
   { value: 'createdAt-desc',       label: '✨ Newest First' },
@@ -49,8 +48,8 @@ const RATING_OPTIONS = [
 
 const EXCLUDED_SLUGS = ['maternity', 'nursery'];
 
-const PRICE_MIN  = 0;
-const PRICE_MAX  = 10000;
+const PRICE_MIN = 0;
+const PRICE_MAX = 10000;
 const PRICE_STEP = 50;
 
 /* ============================================================
@@ -161,46 +160,51 @@ function AutoScrollCatBar({ categories, currentCategory, handleCategoryClick, ca
 export default function ProductsClient() {
   const searchParams = useSearchParams();
   const pathname = usePathname();
+  const router = useRouter();
 
-  // Parse directly from URL Search Parameters (Single Source of Truth)
-  const categoryFilter = searchParams.get('category') || '';
-  const searchFilter   = searchParams.get('search')   || '';
-  const brandFilter    = searchParams.get('brand')    || '';
-  const genderFilter   = searchParams.get('gender')   || '';
-  const sortFilter     = searchParams.get('sort')     || 'createdAt-desc';
-  const minPriceFilter = searchParams.get('minPrice') || '';
-  const maxPriceFilter = searchParams.get('maxPrice') || '';
-  const featuredFilter = searchParams.get('featured') || '';
-  const trendingFilter = searchParams.get('trending') || '';
-  const discountFilter = searchParams.get('discount') || '';
-  const ratingFilter   = searchParams.get('rating')   || '';
-  const inStockFilter  = searchParams.get('inStock') === 'true';
+  // ✅ Build stable filter query string as string primitive to avoid loops
+  const filterQueryString = searchParams.toString();
 
-  // Local React States
-  const [allProducts,   setAllProducts]   = useState([]);
-  const [categories,    setCategories]    = useState([]);
-  const [brands,        setBrands]        = useState([]);
+  // Parse filters as memoized object based on URL state
+  const filters = useMemo(() => ({
+    category: searchParams.get('category') || '',
+    search: searchParams.get('search') || '',
+    brand: searchParams.get('brand') || '',
+    gender: searchParams.get('gender') || '',
+    sort: searchParams.get('sort') || 'createdAt-desc',
+    minPrice: searchParams.get('minPrice') || '',
+    maxPrice: searchParams.get('maxPrice') || '',
+    featured: searchParams.get('featured') || '',
+    trending: searchParams.get('trending') || '',
+    discount: searchParams.get('discount') || '',
+    rating: searchParams.get('rating') || '',
+    inStock: searchParams.get('inStock') === 'true',
+  }), [filterQueryString]); // Only rebuild when URL changes
+
+  const [allProducts, setAllProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [brandsLoading, setBrandsLoading] = useState(false);
-  const [loading,       setLoading]       = useState(true);
-  const [loadingMore,   setLoadingMore]   = useState(false);
-  const [catLoading,    setCatLoading]    = useState(true);
-  const [page,          setPage]          = useState(1);
-  const [pagination,    setPagination]    = useState({ page: 1, pages: 1, total: 0 });
-  const [sidebarOpen,   setSidebarOpen]   = useState(false);
-  const [activeQuick,   setActiveQuick]   = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [catLoading, setCatLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [activeQuick, setActiveQuick] = useState('all');
 
-  // Input states (not updated on every keystroke to prevent re-fetching loops)
-  const [localMin, setLocalMin] = useState(minPriceFilter || String(PRICE_MIN));
-  const [localMax, setLocalMax] = useState(maxPriceFilter || String(PRICE_MAX));
+  const [localMin, setLocalMin] = useState(filters.minPrice || String(PRICE_MIN));
+  const [localMax, setLocalMax] = useState(filters.maxPrice || String(PRICE_MAX));
 
-  const lastQueryString = useRef('');
+  // ✅ Ref to track abortion for outdated requests (prevents old ones overwriting new state)
+  const abortRef = useRef(null);
 
-  // Handle updates to the URL query parameters cleanly
+  // Central URL update helper: clean, immediate, no double-fetches
   const updateUrl = useCallback((newParams) => {
     const params = new URLSearchParams(window.location.search);
-    
+
     Object.entries(newParams).forEach(([key, value]) => {
-      if (value === null || value === undefined || value === '') {
+      if (value === null || value === undefined || value === '' || value === false) {
         params.delete(key);
       } else {
         params.set(key, String(value));
@@ -209,18 +213,14 @@ export default function ProductsClient() {
 
     const qs = params.toString();
     const newUrl = qs ? `${pathname}?${qs}` : pathname;
-    
-    // Smooth URL swap without heavy layout flashing
-    window.history.replaceState(null, '', newUrl);
-    // Dispatch navigation event immediately to alert URL observers
-    window.dispatchEvent(new PopStateEvent('popstate'));
-  }, [pathname]);
+    router.replace(newUrl, { scroll: false });
+  }, [pathname, router]);
 
-  // Sync range slider display with URL adjustments
+  // Sync price slider display
   useEffect(() => {
-    setLocalMin(minPriceFilter || String(PRICE_MIN));
-    setLocalMax(maxPriceFilter || String(PRICE_MAX));
-  }, [minPriceFilter, maxPriceFilter]);
+    setLocalMin(filters.minPrice || String(PRICE_MIN));
+    setLocalMax(filters.maxPrice || String(PRICE_MAX));
+  }, [filters.minPrice, filters.maxPrice]);
 
   // Body scroll lock
   useEffect(() => {
@@ -228,14 +228,13 @@ export default function ProductsClient() {
     return () => { document.body.style.overflow = ''; };
   }, [sidebarOpen]);
 
-  // ESC key listener
   useEffect(() => {
     const onKey = (e) => { if (e.key === 'Escape' && sidebarOpen) setSidebarOpen(false); };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, [sidebarOpen]);
 
-  // Fetch categories initially
+  // Fetch categories only once
   useEffect(() => {
     setCatLoading(true);
     fetch('/api/categories?withCount=true&all=true')
@@ -254,31 +253,30 @@ export default function ProductsClient() {
       .finally(() => setCatLoading(false));
   }, []);
 
-  // Fetch contextual active brands
+  // Fetch brands based on current filters
   useEffect(() => {
     const controller = new AbortController();
     const fetchBrands = async () => {
       setBrandsLoading(true);
       try {
         const paramObj = {};
-        if (categoryFilter) paramObj.category = categoryFilter;
-        if (searchFilter)   paramObj.search = searchFilter;
-        if (genderFilter)   paramObj.gender = genderFilter;
-        if (featuredFilter) paramObj.featured = featuredFilter;
-        if (trendingFilter) paramObj.trending = trendingFilter;
-        if (minPriceFilter) paramObj.minPrice = minPriceFilter;
-        if (maxPriceFilter) paramObj.maxPrice = maxPriceFilter;
-        if (discountFilter) paramObj.discount = discountFilter;
-        if (ratingFilter)   paramObj.rating = ratingFilter;
-        if (inStockFilter)  paramObj.inStock = 'true';
+        if (filters.category) paramObj.category = filters.category;
+        if (filters.search) paramObj.search = filters.search;
+        if (filters.gender) paramObj.gender = filters.gender;
+        if (filters.featured) paramObj.featured = filters.featured;
+        if (filters.trending) paramObj.trending = filters.trending;
+        if (filters.minPrice) paramObj.minPrice = filters.minPrice;
+        if (filters.maxPrice) paramObj.maxPrice = filters.maxPrice;
+        if (filters.discount) paramObj.discount = filters.discount;
+        if (filters.rating) paramObj.rating = filters.rating;
+        if (filters.inStock) paramObj.inStock = 'true';
 
         const res = await fetch(`/api/products/brands?${new URLSearchParams(paramObj)}`, { signal: controller.signal });
         const data = await res.json();
         const uniqueBrands = data.brands || [];
         setBrands(uniqueBrands);
 
-        // Safely clear active brand filter if no longer matching brand options list
-        if (brandFilter && !uniqueBrands.includes(brandFilter)) {
+        if (filters.brand && !uniqueBrands.includes(filters.brand)) {
           updateUrl({ brand: '' });
         }
       } catch (err) {
@@ -289,14 +287,15 @@ export default function ProductsClient() {
     };
     fetchBrands();
     return () => controller.abort();
-  }, [
-    categoryFilter, searchFilter, genderFilter, featuredFilter,
-    trendingFilter, minPriceFilter, maxPriceFilter,
-    discountFilter, ratingFilter, inStockFilter, brandFilter, updateUrl
-  ]);
+  }, [filterQueryString]); // Simple stable dep 
 
-  // Fetch core products list logic
+  // ✅ Core product fetcher — with abort-safe protection to fix glitch
   const fetchProducts = useCallback(async (targetPage = 1, isLoadMore = false) => {
+    // Abort any pending request to prevent stale response overwriting active filter
+    if (abortRef.current) abortRef.current.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+
     if (isLoadMore) {
       setLoadingMore(true);
     } else {
@@ -304,9 +303,9 @@ export default function ProductsClient() {
     }
 
     try {
-      const [sortField, sortOrder] = sortFilter.split('-');
-      let minP = minPriceFilter ? parseFloat(minPriceFilter) : null;
-      let maxP = maxPriceFilter ? parseFloat(maxPriceFilter) : null;
+      const [sortField, sortOrder] = filters.sort.split('-');
+      let minP = filters.minPrice ? parseFloat(filters.minPrice) : null;
+      let maxP = filters.maxPrice ? parseFloat(filters.maxPrice) : null;
       if (minP !== null && maxP !== null && minP > maxP) [minP, maxP] = [maxP, minP];
 
       const paramObj = {
@@ -316,21 +315,24 @@ export default function ProductsClient() {
         order: sortOrder,
       };
 
-      if (searchFilter?.trim()) paramObj.search = searchFilter.trim();
-      if (categoryFilter)       paramObj.category = categoryFilter;
-      if (brandFilter)          paramObj.brand = brandFilter;
-      if (genderFilter)         paramObj.gender = genderFilter;
-      if (featuredFilter)       paramObj.featured = featuredFilter;
-      if (trendingFilter)       paramObj.trending = trendingFilter;
-      if (discountFilter)       paramObj.discount = discountFilter;
-      if (ratingFilter)         paramObj.rating = ratingFilter;
-      if (inStockFilter)        paramObj.inStock = 'true';
-      if (minP !== null)          paramObj.minPrice = String(minP);
-      if (maxP !== null)          paramObj.maxPrice = String(maxP);
+      if (filters.search?.trim()) paramObj.search = filters.search.trim();
+      if (filters.category) paramObj.category = filters.category;
+      if (filters.brand) paramObj.brand = filters.brand;
+      if (filters.gender) paramObj.gender = filters.gender;
+      if (filters.featured) paramObj.featured = filters.featured;
+      if (filters.trending) paramObj.trending = filters.trending;
+      if (filters.discount) paramObj.discount = filters.discount;
+      if (filters.rating) paramObj.rating = filters.rating;
+      if (filters.inStock) paramObj.inStock = 'true';
+      if (minP !== null) paramObj.minPrice = String(minP);
+      if (maxP !== null) paramObj.maxPrice = String(maxP);
 
-      const res = await fetch(`/api/products?${new URLSearchParams(paramObj)}`);
+      const res = await fetch(`/api/products?${new URLSearchParams(paramObj)}`, { signal: controller.signal });
       const data = await res.json();
       const newProducts = data.products || [];
+
+      // Sanity check - do not overwrite state if request was aborted
+      if (controller.signal.aborted) return;
 
       if (isLoadMore) {
         setAllProducts(prev => {
@@ -344,30 +346,24 @@ export default function ProductsClient() {
 
       setPagination(data.pagination || { page: 1, pages: 1, total: 0 });
     } catch (err) {
-      console.error('Fetch error:', err);
-      if (!isLoadMore) setAllProducts([]);
+      if (err.name !== 'AbortError') {
+        console.error('Fetch error:', err);
+        if (!isLoadMore) setAllProducts([]);
+      }
     } finally {
-      setLoading(false);
-      setLoadingMore(false);
+      if (!controller.signal.aborted) {
+        setLoading(false);
+        setLoadingMore(false);
+      }
     }
-  }, [
-    sortFilter, minPriceFilter, maxPriceFilter, searchFilter,
-    categoryFilter, brandFilter, genderFilter, featuredFilter,
-    trendingFilter, discountFilter, ratingFilter, inStockFilter
-  ]);
+  }, [filters]);
 
-  // Re-fetch products cleanly only when URL search parameters change
+  // ✅ Fires new fetch every URL change - single source of truth
   useEffect(() => {
-    const currentQs = searchParams.toString();
-    if (currentQs !== lastQueryString.current) {
-      // Clean reload on new filters applied
-      setPage(1);
-      fetchProducts(1, false);
-      lastQueryString.current = currentQs;
-    }
-  }, [searchParams, fetchProducts]);
+    setPage(1);
+    fetchProducts(1, false);
+  }, [filterQueryString]);
 
-  // Load more trigger action
   const loadMoreProducts = useCallback(() => {
     if (loadingMore || page >= pagination.pages) return;
     const nextPage = page + 1;
@@ -401,10 +397,7 @@ export default function ProductsClient() {
     setLocalMin(String(PRICE_MIN));
     setLocalMax(String(PRICE_MAX));
     setActiveQuick('all');
-    
-    // Wipes all active query parameters cleanly
-    window.history.replaceState(null, '', pathname);
-    window.dispatchEvent(new PopStateEvent('popstate'));
+    router.replace(pathname, { scroll: false });
   };
 
   const handleCategoryClick = useCallback((categoryId) => {
@@ -413,15 +406,15 @@ export default function ProductsClient() {
     setActiveQuick('all');
   }, [updateUrl]);
 
-  const isCategoryActive = (cat) => categoryFilter === cat.id;
-  const selectedCategory = categories.find(c => c.id === categoryFilter);
+  const isCategoryActive = (cat) => filters.category === cat.id;
+  const selectedCategory = categories.find(c => c.id === filters.category);
   const selectedCategoryName = selectedCategory?.name || '';
 
-  const pageTitle = searchFilter
-    ? `Results for "${searchFilter}"`
-    : featuredFilter === 'true' ? 'Featured Products'
-    : trendingFilter === 'true' ? 'Trending Products'
-    : selectedCategoryName || 'All Products';
+  const pageTitle = filters.search
+    ? `Results for "${filters.search}"`
+    : filters.featured === 'true' ? 'Featured Products'
+      : filters.trending === 'true' ? 'Trending Products'
+      : selectedCategoryName || 'All Products';
 
   const quickFilters = [
     { key: 'all', label: 'All', icon: '🌟', action: () => { clearAll(); setActiveQuick('all'); } },
@@ -432,25 +425,21 @@ export default function ProductsClient() {
   ];
 
   const hasActiveFilters = !!(
-    categoryFilter || brandFilter || genderFilter || minPriceFilter || maxPriceFilter ||
-    featuredFilter || trendingFilter || discountFilter || ratingFilter || inStockFilter
+    filters.category || filters.brand || filters.gender || filters.minPrice || filters.maxPrice ||
+    filters.featured || filters.trending || filters.discount || filters.rating || filters.inStock
   );
 
   const activeFilterCount = [
-    categoryFilter, brandFilter, genderFilter, minPriceFilter || maxPriceFilter,
-    featuredFilter, trendingFilter, discountFilter, ratingFilter,
-    inStockFilter ? 'x' : '',
+    filters.category, filters.brand, filters.gender, filters.minPrice || filters.maxPrice,
+    filters.featured, filters.trending, filters.discount, filters.rating,
+    filters.inStock ? 'x' : '',
   ].filter(Boolean).length;
 
   const minPct = ((Number(localMin || PRICE_MIN) - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100;
   const maxPct = ((Number(localMax || PRICE_MAX) - PRICE_MIN) / (PRICE_MAX - PRICE_MIN)) * 100;
 
-  /* ============================================================
-     FILTER SIDEBAR VIEW LAYOUT
-  ============================================================ */
   const renderFilterContent = () => (
     <>
-      {/* GENDER */}
       <div className={styles.filterBlock}>
         <div className={styles.filterBlockTitle}><span className={styles.filterBlockIcon}>👦👧</span>Gender</div>
         <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
@@ -458,33 +447,32 @@ export default function ProductsClient() {
             <button
               key={g.value}
               type="button"
-              onClick={() => updateUrl({ gender: g.value === genderFilter ? '' : g.value })}
+              onClick={() => updateUrl({ gender: g.value === filters.gender ? '' : g.value })}
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 width: '100%', padding: '7px 10px', textAlign: 'left',
-                background: genderFilter === g.value ? '#FFF0F5' : 'transparent',
-                border: genderFilter === g.value ? '1.5px solid #FF3F6C' : '1px solid transparent',
+                background: filters.gender === g.value ? '#FFF0F5' : 'transparent',
+                border: filters.gender === g.value ? '1.5px solid #FF3F6C' : '1px solid transparent',
                 borderRadius: '8px', fontSize: '0.84rem',
-                fontWeight: genderFilter === g.value ? '800' : '600',
-                color: genderFilter === g.value ? '#FF3F6C' : '#535766',
+                fontWeight: filters.gender === g.value ? '800' : '600',
+                color: filters.gender === g.value ? '#FF3F6C' : '#535766',
                 cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s Ease',
               }}
             >
               <span>{g.label}</span>
-              {genderFilter === g.value && <span style={{ fontSize: '0.9rem', color: '#FF3F6C' }}>✓</span>}
+              {filters.gender === g.value && <span style={{ fontSize: '0.9rem', color: '#FF3F6C' }}>✓</span>}
             </button>
           ))}
         </div>
       </div>
 
-      {/* CATEGORIES */}
       <div className={styles.filterBlock}>
         <div className={styles.filterBlockTitle}><span className={styles.filterBlockIcon}>📂</span>Categories</div>
         {catLoading ? (
           <div className={styles.catList}>{[...Array(8)].map((_, i) => <div key={i} className={styles.catSkeleton} />)}</div>
         ) : (
           <div className={styles.catList}>
-            <button key="all-category" type="button" className={`${styles.catBtn} ${!categoryFilter ? styles.catBtnActive : ''}`} onClick={() => handleCategoryClick('')}>
+            <button key="all-category" type="button" className={`${styles.catBtn} ${!filters.category ? styles.catBtnActive : ''}`} onClick={() => handleCategoryClick('')}>
               <span className={styles.catIcon}>🌟</span><span className={styles.catName}>All</span>
             </button>
             {categories.map(cat => (
@@ -498,7 +486,6 @@ export default function ProductsClient() {
         )}
       </div>
 
-      {/* BRANDS */}
       <div className={styles.filterBlock}>
         <div className={styles.filterBlockTitle}><span className={styles.filterBlockIcon}>🏷️</span>Brand</div>
         {brandsLoading ? (
@@ -506,12 +493,12 @@ export default function ProductsClient() {
         ) : brands.length > 0 ? (
           <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {brands.map(b => (
-              <button key={b} type="button" onClick={() => updateUrl({ brand: b === brandFilter ? '' : b })} style={{
-                padding: '6px 8px', textAlign: 'left', background: brandFilter === b ? '#FFF0F5' : 'transparent',
-                border: 'none', borderRadius: '4px', fontSize: '0.82rem', fontWeight: brandFilter === b ? '800' : '600',
-                color: brandFilter === b ? '#FF3F6C' : '#535766', cursor: 'pointer', fontFamily: 'inherit',
+              <button key={b} type="button" onClick={() => updateUrl({ brand: b === filters.brand ? '' : b })} style={{
+                padding: '6px 8px', textAlign: 'left', background: filters.brand === b ? '#FFF0F5' : 'transparent',
+                border: 'none', borderRadius: '4px', fontSize: '0.82rem', fontWeight: filters.brand === b ? '800' : '600',
+                color: filters.brand === b ? '#FF3F6C' : '#535766', cursor: 'pointer', fontFamily: 'inherit',
               }}>
-                {b} {brandFilter === b && '✓'}
+                {b} {filters.brand === b && '✓'}
               </button>
             ))}
           </div>
@@ -520,7 +507,6 @@ export default function ProductsClient() {
         )}
       </div>
 
-      {/* PRICE RANGE DUAL RANGE SLIDER */}
       <div className={styles.filterBlock}>
         <div className={styles.filterBlockTitle}>
           <span className={styles.filterBlockIcon}>💰</span>Price
@@ -553,7 +539,7 @@ export default function ProductsClient() {
 
             <div style={{
               position: 'absolute',
-              left:  `${minPct}%`,
+              left: `${minPct}%`,
               right: `${100 - maxPct}%`,
               height: '5px',
               borderRadius: '999px',
@@ -606,66 +592,58 @@ export default function ProductsClient() {
           </div>
         </div>
 
-        {(minPriceFilter || maxPriceFilter) && (
+        {(filters.minPrice || filters.maxPrice) && (
           <div className={styles.appliedPrice} style={{ marginTop: '10px' }}>
-            <span>₹{minPriceFilter || PRICE_MIN} — ₹{maxPriceFilter || `${PRICE_MAX}+`}</span>
+            <span>₹{filters.minPrice || PRICE_MIN} — ₹{filters.maxPrice || `${PRICE_MAX}+`}</span>
             <button type="button" className={styles.clearPriceBtn} onClick={handleClearPrice}>✕</button>
           </div>
         )}
       </div>
 
-      {/* DISCOUNTS */}
       <div className={styles.filterBlock}>
         <div className={styles.filterBlockTitle}><span className={styles.filterBlockIcon}>🔥</span>Discount</div>
         {DISCOUNT_TIERS.map(t => (
-          <button key={t.value} type="button" onClick={() => updateUrl({ discount: t.value === discountFilter ? '' : t.value })} style={{
+          <button key={t.value} type="button" onClick={() => updateUrl({ discount: t.value === filters.discount ? '' : t.value })} style={{
             display: 'block', width: '100%', padding: '6px 8px', textAlign: 'left',
-            background: discountFilter === t.value ? '#FFF0F5' : 'transparent',
+            background: filters.discount === t.value ? '#FFF0F5' : 'transparent',
             border: 'none', borderRadius: '4px', fontSize: '0.82rem',
-            fontWeight: discountFilter === t.value ? '800' : '600',
-            color: discountFilter === t.value ? '#FF3F6C' : '#535766',
+            fontWeight: filters.discount === t.value ? '800' : '600',
+            color: filters.discount === t.value ? '#FF3F6C' : '#535766',
             cursor: 'pointer', fontFamily: 'inherit', marginBottom: '2px',
           }}>
-            {t.label} {discountFilter === t.value && '✓'}
+            {t.label} {filters.discount === t.value && '✓'}
           </button>
         ))}
       </div>
 
-      {/* RATINGS */}
       <div className={styles.filterBlock}>
         <div className={styles.filterBlockTitle}><span className={styles.filterBlockIcon}>⭐</span>Rating</div>
         {RATING_OPTIONS.map(o => (
-          <button key={o.value} type="button" onClick={() => updateUrl({ rating: o.value === ratingFilter ? '' : o.value })} style={{
+          <button key={o.value} type="button" onClick={() => updateUrl({ rating: o.value === filters.rating ? '' : o.value })} style={{
             display: 'block', width: '100%', padding: '6px 8px', textAlign: 'left',
-            background: ratingFilter === o.value ? '#FFF0F5' : 'transparent',
+            background: filters.rating === o.value ? '#FFF0F5' : 'transparent',
             border: 'none', borderRadius: '4px', fontSize: '0.82rem',
-            fontWeight: ratingFilter === o.value ? '800' : '600',
-            color: ratingFilter === o.value ? '#FF3F6C' : '#535766',
+            fontWeight: filters.rating === o.value ? '800' : '600',
+            color: filters.rating === o.value ? '#FF3F6C' : '#535766',
             cursor: 'pointer', fontFamily: 'inherit', marginBottom: '2px',
           }}>
-            {o.stars} & above {ratingFilter === o.value && '✓'}
+            {o.stars} & above {filters.rating === o.value && '✓'}
           </button>
         ))}
       </div>
 
-      {/* STOCK CONTROL */}
       <div className={styles.filterBlock}>
         <label className={styles.toggleRow} style={{ cursor: 'pointer' }}>
           <span>In Stock Only</span>
-          <div className={`${styles.toggle} ${inStockFilter ? styles.toggleOn : ''}`}
-            onClick={() => updateUrl({ inStock: !inStockFilter })} />
+          <div className={`${styles.toggle} ${filters.inStock ? styles.toggleOn : ''}`}
+            onClick={() => updateUrl({ inStock: filters.inStock ? '' : 'true' })} />
         </label>
       </div>
     </>
   );
 
-  /* ============================================================
-     RENDER VIEWPORT LAYOUT
-  ============================================================ */
   return (
     <div className={styles.pageRoot}>
-
-      {/* HERO STRIP */}
       <div className={styles.heroStrip}>
         <div className={styles.heroStripInner}>
           <div className={styles.heroStripLeft}>
@@ -678,8 +656,7 @@ export default function ProductsClient() {
           <div className={styles.quickPillsWrap}>
             <div className={styles.quickPills}>
               {quickFilters.map(q => (
-                <button key={q.key}
-                  type="button"
+                <button key={q.key} type="button"
                   className={`${styles.quickPill} ${activeQuick === q.key ? styles.quickPillActive : ''}`}
                   onClick={q.action}>
                   {q.label}
@@ -690,7 +667,6 @@ export default function ProductsClient() {
         </div>
       </div>
 
-      {/* TOOLBAR */}
       <div className={styles.toolbar}>
         <div className={styles.toolbarInner}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1 }}>
@@ -703,7 +679,7 @@ export default function ProductsClient() {
           <div className={styles.toolbarRight}>
             <div className={styles.sortWrap}>
               <span style={{ fontSize: '0.82rem', color: '#94969F', fontWeight: '600' }}>Sort by:</span>
-              <select value={sortFilter} onChange={e => updateUrl({ sort: e.target.value })} className={styles.sortSelect}>
+              <select value={filters.sort} onChange={e => updateUrl({ sort: e.target.value })} className={styles.sortSelect}>
                 {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
@@ -725,39 +701,38 @@ export default function ProductsClient() {
         {hasActiveFilters && (
           <div className={styles.activeFiltersRow}>
             <div className={styles.activeFilterTags}>
-              {genderFilter && (
+              {filters.gender && (
                 <span className={styles.activeTag}>
-                  {GENDER_OPTIONS.find(g => g.value === genderFilter)?.label || genderFilter}
+                  {GENDER_OPTIONS.find(g => g.value === filters.gender)?.label || filters.gender}
                   <button type="button" onClick={() => updateUrl({ gender: '' })}>✕</button>
                 </span>
               )}
-              {categoryFilter && selectedCategoryName && (
+              {filters.category && selectedCategoryName && (
                 <span className={styles.activeTag}>{selectedCategoryName}<button type="button" onClick={() => handleCategoryClick('')}>✕</button></span>
               )}
-              {brandFilter && (
-                <span className={styles.activeTag}>{brandFilter}<button type="button" onClick={() => updateUrl({ brand: '' })}>✕</button></span>
+              {filters.brand && (
+                <span className={styles.activeTag}>{filters.brand}<button type="button" onClick={() => updateUrl({ brand: '' })}>✕</button></span>
               )}
-              {discountFilter && (
-                <span className={styles.activeTag}>{discountFilter}% And Above<button type="button" onClick={() => updateUrl({ discount: '' })}>✕</button></span>
+              {filters.discount && (
+                <span className={styles.activeTag}>{filters.discount}% And Above<button type="button" onClick={() => updateUrl({ discount: '' })}>✕</button></span>
               )}
-              {ratingFilter && (
-                <span className={styles.activeTag}>{ratingFilter}★ & above<button type="button" onClick={() => updateUrl({ rating: '' })}>✕</button></span>
+              {filters.rating && (
+                <span className={styles.activeTag}>{filters.rating}★ & above<button type="button" onClick={() => updateUrl({ rating: '' })}>✕</button></span>
               )}
-              {(minPriceFilter || maxPriceFilter) && (
-                <span className={styles.activeTag}>₹{minPriceFilter || '0'}-₹{maxPriceFilter || '∞'}<button type="button" onClick={handleClearPrice}>✕</button></span>
+              {(filters.minPrice || filters.maxPrice) && (
+                <span className={styles.activeTag}>₹{filters.minPrice || '0'}-₹{filters.maxPrice || '∞'}<button type="button" onClick={handleClearPrice}>✕</button></span>
               )}
-              {inStockFilter && (
-                <span className={styles.activeTag}>In Stock<button type="button" onClick={() => updateUrl({ inStock: null })}>✕</button></span>
+              {filters.inStock && (
+                <span className={styles.activeTag}>In Stock<button type="button" onClick={() => updateUrl({ inStock: '' })}>✕</button></span>
               )}
             </div>
           </div>
         )}
       </div>
 
-      {/* MOBILE CATEGORY BAR */}
       <div className={styles.mobileCatBar}>
-        <AutoScrollCatBar categories={categories} currentCategory={categoryFilter} handleCategoryClick={handleCategoryClick} catLoading={catLoading} />
-        {categoryFilter && selectedCategoryName && (
+        <AutoScrollCatBar categories={categories} currentCategory={filters.category} handleCategoryClick={handleCategoryClick} catLoading={catLoading} />
+        {filters.category && selectedCategoryName && (
           <div className={styles.activeCatBanner}>
             <span>Showing: <strong>{selectedCategoryName}</strong></span>
             <button type="button" className={styles.activeCatClear} onClick={() => handleCategoryClick('')}>✕ Clear</button>
@@ -765,11 +740,8 @@ export default function ProductsClient() {
         )}
       </div>
 
-      {/* MAIN CONTAINER */}
       <div className={styles.container}>
         <div className={styles.layout}>
-
-          {/* DESKTOP SIDEBAR */}
           <aside className={`${styles.sidebar} ${styles.sidebarDesktop}`}>
             <div className={styles.sidebarTop}>
               <div className={styles.sidebarTitle}>Filters</div>
@@ -778,7 +750,6 @@ export default function ProductsClient() {
             {renderFilterContent()}
           </aside>
 
-          {/* PRODUCTS LIST */}
           <main className={styles.main}>
             {loading && allProducts.length === 0 ? (
               <div className={styles.skeletonGrid}>
@@ -827,9 +798,9 @@ export default function ProductsClient() {
                 <span className={styles.emptyEmoji}>🔍</span>
                 <h3>No products found</h3>
                 <p>
-                  {searchFilter ? `No results for "${searchFilter}"`
+                  {filters.search ? `No results for "${filters.search}"`
                     : selectedCategoryName ? `No products in "${selectedCategoryName}"`
-                    : 'Try adjusting your filters'}
+                      : 'Try adjusting your filters'}
                 </p>
                 <button type="button" className={styles.emptyBtn} onClick={clearAll}>Clear All Filters</button>
               </div>
@@ -838,7 +809,6 @@ export default function ProductsClient() {
         </div>
       </div>
 
-      {/* MOBILE DRAWER */}
       {sidebarOpen && (
         <>
           <div className={styles.overlay} onClick={() => setSidebarOpen(false)} />
@@ -856,7 +826,6 @@ export default function ProductsClient() {
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
 
-        /* Dual Range Slider styling */
         .priceRangeThumb {
           position: absolute;
           left: 0;
