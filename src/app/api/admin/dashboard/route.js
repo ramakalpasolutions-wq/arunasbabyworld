@@ -12,21 +12,46 @@ export async function GET() {
       return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
-    // ✅ Fetch all active products with variant info
-    const products = await prisma.product.findMany({
-      where: { isActive: true },
-      select: {
-        id:            true,
-        name:          true,
-        stock:         true,
-        hasVariants:   true,
-        colorVariants: true,
-        images:        true,
-        price:         true,
-        discountPrice: true,
-        category:      { select: { name: true } },
-      },
-    });
+    // ✅ Run primary database queries in parallel
+    const [products, totalOrders, revenueAggregate, categoriesCount] = await Promise.all([
+      // 1. Fetch only essential fields for variant stock evaluation (Optimized Select & Limit)
+      prisma.product.findMany({
+        where: { isActive: true },
+        select: {
+          id:            true,
+          name:          true,
+          stock:         true,
+          hasVariants:   true,
+          price:         true,
+          discountPrice: true,
+          images:        { select: { url: true }, take: 1 }, // ✅ Only load the first image URL
+          category:      { select: { name: true } },
+          colorVariants: {
+            select: {
+              colorName:     true,
+              colorHex:      true,
+              stock:         true,
+              price:         true,
+              discountPrice: true,
+              sku:           true,
+              images:        { select: { url: true }, take: 1 } // ✅ Only load variant's first image URL
+            }
+          }
+        },
+      }),
+
+      // 2. Count total orders
+      prisma.order.count(),
+
+      // 3. ✅ DB-Level Aggregated Sum (Replaces memory-heavy findMany + reduce)
+      prisma.order.aggregate({
+        where: { orderStatus: { notIn: ['Cancelled', 'Refunded'] } },
+        _sum: { totalPrice: true },
+      }),
+
+      // 4. Count active categories
+      prisma.category.count({ where: { isActive: true } }),
+    ]);
 
     // ✅ COUNT LOGIC — Each variant counts separately
     let totalProductUnits = 0;
@@ -77,13 +102,15 @@ export async function GET() {
         totalProductUnits += 1;
 
         const stock = p.stock || 0;
+        const mainImage = p.images?.[0]?.url || null;
+
         if (stock === 0) {
           outOfStockItems.push({
             id:            p.id,
             name:          p.name,
             variantName:   null,
             stock:         0,
-            image:         p.images?.[0]?.url || null,
+            image:         mainImage,
             category:      p.category?.name || 'Uncategorized',
             price:         p.price,
             discountPrice: p.discountPrice,
@@ -95,7 +122,7 @@ export async function GET() {
             name:          p.name,
             variantName:   null,
             stock,
-            image:         p.images?.[0]?.url || null,
+            image:         mainImage,
             category:      p.category?.name || 'Uncategorized',
             price:         p.price,
             discountPrice: p.discountPrice,
@@ -108,23 +135,13 @@ export async function GET() {
     // ✅ Sort low stock items by stock (lowest first)
     lowStockItems.sort((a, b) => a.stock - b.stock);
 
-    // ✅ Get orders count + revenue
-    const [totalOrders, allOrders, categoriesCount] = await Promise.all([
-      prisma.order.count(),
-      prisma.order.findMany({
-        select: { totalPrice: true, orderStatus: true },
-        where:  { orderStatus: { notIn: ['Cancelled', 'Refunded'] } },
-      }),
-      prisma.category.count({ where: { isActive: true } }),
-    ]);
-
-    const totalRevenue = allOrders.reduce((a, o) => a + (o.totalPrice || 0), 0);
+    const totalRevenue = revenueAggregate._sum.totalPrice || 0;
 
     return NextResponse.json({
       stats: {
         totalOrders,
         totalProductUnits,      // ✅ Variants counted separately
-        totalUniqueProducts: products.length, // ✅ Bonus: unique products count
+        totalUniqueProducts: products.length, 
         categories:  categoriesCount,
         revenue:     totalRevenue,
         lowStockCount: lowStockItems.length,

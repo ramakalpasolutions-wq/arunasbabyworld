@@ -1,5 +1,5 @@
 'use client';
-import { createContext, useContext, useReducer, useEffect, useState, useMemo, useCallback } from 'react';
+import { createContext, useContext, useReducer, useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
 
 const CartContext = createContext();
@@ -37,7 +37,7 @@ export function isFoodItem(item) {
 export function getEffectiveItemPrice(item, isGuntur) {
   const basePrice = Number(item.discountPrice || item.price || 0);
   if (isGuntur && isFoodItem(item)) {
-    return Math.round(basePrice * 0.9);
+    return Math.round(basePrice * 0.9); // Apply 10% discount and round off float issues
   }
   return basePrice;
 }
@@ -150,7 +150,6 @@ const cartReducer = (state, action) => {
     case 'SELECT_ADDRESS':
       return { ...state, selectedAddressIndex: action.payload };
 
-    // ✅ Sync prices, stock, images from database
     case 'SYNC_ITEMS': {
       const syncedItems = state.items.map(item => {
         const itemId = item.id || item._id;
@@ -196,7 +195,11 @@ export function CartProvider({ children }) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
 
-  // 1. Hydrate cart from localStorage instantly (no blocking)
+  const userEmail = session?.user?.email;
+  // ✅ Ref to prevent double fetch runs during render loops
+  const addressFetchedRef = useRef(false);
+
+  // 1. Hydrate Cart from LocalStorage
   useEffect(() => {
     try {
       const saved = localStorage.getItem('cart');
@@ -207,7 +210,7 @@ export function CartProvider({ children }) {
     setIsHydrated(true);
   }, []);
 
-  // 2. Save cart changes to localStorage (debounced)
+  // 2. Save Cart changes to LocalStorage (debounced)
   useEffect(() => {
     if (!isHydrated) return;
     const timeout = setTimeout(() => {
@@ -219,7 +222,7 @@ export function CartProvider({ children }) {
     return () => clearTimeout(timeout);
   }, [state.items, state.coupon, isHydrated]);
 
-  // 3. ✅ SYNC ON DEMAND — Only when user visits /cart or /checkout
+  // 3. ON-DEMAND REAL-TIME SYNCER — Runs ONLY on checkout or on /cart page
   const syncCartPrices = useCallback(async () => {
     if (state.items.length === 0) return;
     try {
@@ -238,35 +241,42 @@ export function CartProvider({ children }) {
               discountPrice: data.product.discountPrice,
               stock: data.product.stock,
               images: data.product.images,
-              isActive: data.product.isActive,
+              isActive: data.product.isActive
             };
           } catch {
             return null;
           }
         })
       );
-      const fresh = results.filter(Boolean);
-      if (fresh.length > 0) {
-        dispatch({ type: 'SYNC_ITEMS', payload: fresh });
+
+      const freshData = results.filter(Boolean);
+      if (freshData.length > 0) {
+        dispatch({ type: 'SYNC_ITEMS', payload: freshData });
       }
     } catch (err) {
-      console.error("Cart price sync error:", err);
+      console.error("Cart sync error:", err);
     }
   }, [state.items]);
 
-  // 4. Fetch persistent address list from DB on login
+  // 4. Fetch persistent address list from DB on login (Guarded to prevent duplicate requests)
   useEffect(() => {
-    if (session?.user) {
-      setLoadingAddresses(true);
-      fetch('/api/users/addresses')
-        .then(res => res.json())
-        .then(data => {
-          dispatch({ type: 'SET_ADDRESSES', payload: data.addresses || [] });
-        })
-        .catch(err => console.error("Error fetching addresses:", err))
-        .finally(() => setLoadingAddresses(false));
+    if (!userEmail) {
+      addressFetchedRef.current = false;
+      return;
     }
-  }, [session?.user?.email]);
+
+    if (addressFetchedRef.current) return;
+    addressFetchedRef.current = true;
+
+    setLoadingAddresses(true);
+    fetch('/api/users/addresses')
+      .then(res => res.json())
+      .then(data => {
+        dispatch({ type: 'SET_ADDRESSES', payload: data.addresses || [] });
+      })
+      .catch(err => console.error("Error fetching addresses:", err))
+      .finally(() => setLoadingAddresses(false));
+  }, [userEmail]);
 
   // Persistent DB Address Mutation Helpers
   const addAddress = async (addressForm) => {
@@ -365,7 +375,7 @@ export function CartProvider({ children }) {
         cartCount: totalItems,
         cartTotal: totalPrice,
         loadingAddresses,
-        syncCartPrices, // ✅ Exposed for on-demand sync from cart page
+        syncCartPrices,
 
         addresses: state.addresses || [],
         selectedAddressIndex: state.selectedAddressIndex,

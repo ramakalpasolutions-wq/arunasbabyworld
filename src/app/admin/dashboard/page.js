@@ -1,4 +1,3 @@
-// src/app/admin/dashboard/page.js
 'use client';
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
@@ -24,6 +23,7 @@ export default function AdminDashboard() {
   const [showAllLow,      setShowAllLow]      = useState(false);
 
   useEffect(() => {
+    // ✅ Parallel DB execution: Pulls stats and orders together
     Promise.all([
       fetch('/api/orders?limit=5').then(r => r.json()),
       fetch('/api/admin/dashboard').then(r => r.json()),
@@ -88,6 +88,20 @@ export default function AdminDashboard() {
 
   const displayLowStock = showAllLow ? lowStockItems : lowStockItems.slice(0, 6);
 
+  if (loading) {
+    return (
+      <div style={{ padding: '60px', textAlign: 'center', fontFamily: 'Nunito, sans-serif' }}>
+        <div style={{
+          width: '50px', height: '50px', margin: '0 auto 16px',
+          border: '4px solid #F3E8FF', borderTop: '4px solid #7B2FBE',
+          borderRadius: '50%', animation: 'spin 1s linear infinite'
+        }} />
+        <p style={{ color: '#9585B0', fontWeight: '800' }}>Preparing dashboard details...</p>
+        <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      </div>
+    );
+  }
+
   return (
     <div className={styles.dashboard}>
 
@@ -123,12 +137,10 @@ export default function AdminDashboard() {
             </div>
             <div className={styles.cardBody}>
               <div className={styles.cardValue}>
-                {loading
-                  ? <span className={styles.shimmer} />
-                  : card.value}
+                {card.value}
               </div>
               <div className={styles.cardLabel}>{card.label}</div>
-              {card.subtitle && !loading && (
+              {card.subtitle && (
                 <div style={{
                   fontSize: '11px',
                   color: '#9ca3af',
@@ -146,7 +158,7 @@ export default function AdminDashboard() {
       {/* ═══════════════════════════════════════
           ⚠️ INVENTORY ALERTS SECTION
           ═══════════════════════════════════════ */}
-      {!loading && (stats?.lowStockCount > 0 || stats?.outOfStockCount > 0) && (
+      {(stats?.lowStockCount > 0 || stats?.outOfStockCount > 0) && (
         <div className={styles.section}>
           <div className={styles.sectionHeader}>
             <h2 className={styles.sectionTitle}>
@@ -322,11 +334,7 @@ export default function AdminDashboard() {
               </tr>
             </thead>
             <tbody>
-              {loading ? (
-                <tr>
-                  <td colSpan={6} className={styles.emptyCell}>Loading…</td>
-                </tr>
-              ) : orders.length === 0 ? (
+              {orders.length === 0 ? (
                 <tr>
                   <td colSpan={6} className={styles.emptyCell}>No orders yet</td>
                 </tr>
@@ -377,9 +385,7 @@ export default function AdminDashboard() {
 
         {/* Mobile Cards */}
         <div className={styles.mobileOrders}>
-          {loading ? (
-            <div className={styles.emptyCell}>Loading…</div>
-          ) : orders.length === 0 ? (
+          {orders.length === 0 ? (
             <div className={styles.emptyCell}>No orders yet</div>
           ) : orders.map((order) => {
             const sc = STATUS_CFG[order.orderStatus] || STATUS_CFG.Refunded;

@@ -95,7 +95,7 @@ export async function GET(request) {
     const startDate             = searchParams.get('startDate');
     const endDate               = searchParams.get('endDate');
     const page                  = parseInt(searchParams.get('page')  || '1');
-    const limit                 = parseInt(searchParams.get('limit') || '10');
+    const limit                 = Math.min(parseInt(searchParams.get('limit') || '10'), 50); // Cap limits to prevent RAM overheads
 
     const where = {};
     if (session.user.role !== 'admin') where.userId = session.user.id;
@@ -120,14 +120,46 @@ export async function GET(request) {
       if (endDate)   where.createdAt.lte = new Date(`${endDate}T23:59:59.999Z`);
     }
 
-    const total  = await prisma.order.count({ where });
-    const orders = await prisma.order.findMany({
-      where,
-      include: { user: { select: { name: true, email: true } } },
-      orderBy: { createdAt: 'desc' },
-      skip: (page - 1) * limit,
-      take: limit,
-    });
+    // ✅ OPTIMIZATION: Query count and find in parallel using Promise.all
+    const [total, orders] = await Promise.all([
+      prisma.order.count({ where }),
+      prisma.order.findMany({
+        where,
+        select: {
+          id: true,
+          orderNumber: true,
+          userId: true,
+          paymentMethod: true,
+          itemsPrice: true,
+          shippingPrice: true,
+          taxPrice: true,
+          discountAmount: true,
+          totalPrice: true,
+          couponCode: true,
+          isPaid: true,
+          paidAt: true,
+          orderStatus: true,
+          paymentStatus: true,
+          createdAt: true,
+          orderItems: {
+            select: {
+              productId: true,
+              name: true,
+              image: true,
+              price: true,
+              quantity: true,
+            }
+          },
+          shippingAddress: true,
+          user: {
+            select: { name: true, email: true }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      })
+    ]);
 
     return NextResponse.json({
       orders,
@@ -161,8 +193,34 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Shipping address is required' }, { status: 400 });
     }
 
-    const isGuntur = isGunturLocation(data.shippingAddress);
+    const {
+      shippingAddress,
+      paymentMethod,
+      couponCode,
+      isPaid,
+      paidAt,
+      orderStatus,
+      paymentStatus,
+    } = data;
 
+    // ════════════════════════════════════════════════════════════
+    // ✅ BACKEND SECURITY CONTROL SWITCH: CODE-BYPASS PREVENTION
+    // ════════════════════════════════════════════════════════════
+    if (paymentMethod === 'COD') {
+      const companySettings = await prisma.companySettings.findFirst({
+        select: { codEnabled: true }
+      });
+      if (companySettings && companySettings.codEnabled === false) {
+        return NextResponse.json(
+          { error: 'Cash on Delivery (COD) is currently disabled. Please choose another payment method.' },
+          { status: 400 }
+        );
+      }
+    }
+
+    const isGuntur = isGunturLocation(shippingAddress);
+
+    // Securely pull catalog values directly from database and verify Guntur 10% food discount calculations
     const enrichedItems = await Promise.all(
       data.orderItems.map(async (item) => {
         try {
@@ -226,7 +284,7 @@ export async function POST(request) {
     const isOnlyFood = foodItems.length > 0 && nonFoodItems.length === 0;
     const totalFoodQty = foodItems.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
 
-    // ✅ Minimum 2 food items required outside Guntur
+    // Minimum 2 food items required outside Guntur
     if (isOnlyFood && !isGuntur && totalFoodQty < 2) {
       return NextResponse.json(
         { error: 'Minimum order of 2 food items is required for delivery outside Guntur.' },
@@ -238,16 +296,6 @@ export async function POST(request) {
       (sum, item) => sum + (Number(item.price) || 0) * (Number(item.quantity) || 1),
       0
     );
-
-    const {
-      shippingAddress,
-      paymentMethod,
-      couponCode,
-      isPaid,
-      paidAt,
-      orderStatus,
-      paymentStatus,
-    } = data;
 
     const shippingPrice = calculateShipping(
       enrichedItems,
