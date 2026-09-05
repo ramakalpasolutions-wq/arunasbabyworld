@@ -16,7 +16,7 @@ export async function POST(request, context) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    // Await params safely for compatibility with Next.js 14 and Next.js 15
+    // Safely resolve dynamic routes params across Next.js versions
     const params = await Promise.resolve(context.params);
     const { id } = params;
 
@@ -28,7 +28,7 @@ export async function POST(request, context) {
     }
     const { reason, bankDetails } = body;
 
-    // ✅ Get order
+    // Fetch order details
     const order = await prisma.order.findUnique({
       where: { id },
       include: { user: { select: { name: true, email: true } } },
@@ -38,100 +38,111 @@ export async function POST(request, context) {
       return NextResponse.json({ error: 'Order not found' }, { status: 404 });
     }
 
-    // ✅ Verify ownership safely by casting ObjectIds to Strings
-    if (session.user.role !== 'admin' && String(order.userId) !== String(session.user.id)) {
-      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+    // Verify customer owner or admin authorization
+    const isOwner = String(order.userId) === String(session.user.id);
+    const isAdmin = session.user.role === 'admin';
+
+    if (!isOwner && !isAdmin) {
+      return NextResponse.json({ error: 'Not authorized to modify this order' }, { status: 403 });
     }
 
-    // ✅ Check if already cancelled
+    // Prevent duplicate processing
     if (order.isCancelled || order.orderStatus === 'Cancelled') {
       return NextResponse.json({ error: 'Order already cancelled' }, { status: 400 });
     }
 
-    // ✅ Determine refund flow
-    const isRazorpay = order.paymentMethod === 'Razorpay';
-    const isCOD = order.paymentMethod === 'COD';
-    const isPaid = order.isPaid;
-    const isDelivered = order.isDelivered;
+    const isCOD = order.paymentMethod?.toUpperCase() === 'COD';
+    const isPaid = Boolean(order.isPaid || order.paymentStatus === 'paid');
 
     let refundType = 'not_required';
     let refundStatus = 'not_required';
     let refundRecord = null;
     let razorpayRefund = null;
+    let refundWarning = null;
+
+    // Extract payment ID from nested payment result properties securely
+    const paymentId =
+      order.paymentResult?.razorpayPaymentId ||
+      order.paymentResult?.id ||
+      order.paymentResult?.razorpay_payment_id ||
+      null;
 
     // ============================================================
-    // CASE 1: Razorpay paid + not delivered → Auto refund
-    // CASE 2: Razorpay paid + delivered → Auto refund (return)
-    // CASE 3: COD + not delivered → No refund (no money taken)
-    // CASE 4: COD + delivered → Manual refund (UPI or Bank Transfer)
+    // CASE 1: ONLINE PAID ORDER -> TRIGGERS RESILIENT AUTO REFUND
     // ============================================================
-
-    if (isRazorpay && isPaid) {
-      // ✅ AUTO REFUND via Razorpay
-      const paymentId = order.paymentResult?.razorpayPaymentId;
+    if (!isCOD && isPaid) {
+      refundType = 'razorpay';
 
       if (!paymentId) {
-        return NextResponse.json({
-          error: 'Payment ID not found. Cannot process refund.',
-        }, { status: 400 });
-      }
+        console.warn(`⚠️ Paid order ${order.id} has no payment ID. Initializing manual pending refund.`);
+        refundStatus = 'pending_manual_review';
+        refundWarning = 'Refund initiated manually because online transaction ID was not located.';
 
-      console.log('🔄 Initiating Razorpay refund for payment:', paymentId);
-
-      const refundResult = await createRefund(paymentId, order.totalPrice, {
-        reason: reason || 'Customer cancellation',
-        orderId: order.id,
-      });
-
-      if (!refundResult.success) {
-        return NextResponse.json({
-          error: refundResult.error || 'Refund failed. Please contact support.',
-        }, { status: 500 });
-      }
-
-      razorpayRefund = refundResult.refund;
-      refundType = 'razorpay';
-      refundStatus = 'processing';
-
-      // ✅ Create Refund record in DB
-      refundRecord = await prisma.refund.create({
-        data: {
-          orderId: order.id,
-          userId: order.userId,
-          amount: order.totalPrice,
+        refundRecord = await prisma.refund.create({
+          data: {
+            orderId: order.id,
+            userId: order.userId,
+            amount: order.totalPrice,
+            reason: reason || 'Customer cancellation',
+            refundType: 'razorpay_manual_pending',
+            refundStatus: 'pending',
+            notes: 'Requires review: payment details missing.',
+          },
+        });
+      } else {
+        // Trigger automated refund via our updated helper
+        const refundResult = await createRefund(paymentId, order.totalPrice, {
           reason: reason || 'Customer cancellation',
-          refundType: 'razorpay',
-          refundStatus: 'processing',
-          razorpayRefundId: razorpayRefund.id,
-          razorpayPaymentId: paymentId,
-        },
-      });
+          orderId: order.id,
+        });
+
+        if (refundResult.success) {
+          razorpayRefund = refundResult.refund;
+          refundStatus = razorpayRefund.status === 'processed' ? 'completed' : 'processing';
+
+          // Log transaction in Refund table
+          refundRecord = await prisma.refund.create({
+            data: {
+              orderId: order.id,
+              userId: order.userId,
+              amount: order.totalPrice,
+              reason: reason || 'Customer cancellation',
+              refundType: 'razorpay',
+              refundStatus: refundStatus,
+              razorpayRefundId: razorpayRefund.id,
+              razorpayPaymentId: paymentId,
+              processedAt: new Date(),
+            },
+          });
+        } else {
+          // ✅ RESILIENT FALLBACK: Convert to manual pending review if Razorpay rejects ID
+          console.warn(`⚠️ Razorpay refund failed for payment ${paymentId}: ${refundResult.error}`);
+          refundStatus = 'pending_manual_review';
+          refundWarning = `Automatic refund failed: "${refundResult.error}". Our support will process manually.`;
+
+          refundRecord = await prisma.refund.create({
+            data: {
+              orderId: order.id,
+              userId: order.userId,
+              amount: order.totalPrice,
+              reason: reason || 'Customer cancellation',
+              refundType: 'razorpay_manual_pending',
+              refundStatus: 'pending',
+              notes: `Razorpay rejected refund: "${refundResult.error}". Support must refund manually.`,
+            },
+          });
+        }
+      }
     }
-    else if (isCOD && isDelivered) {
-      // ✅ COD + Delivered → UPI or Bank Transfer needed
+    // ============================================================
+    // CASE 2: COD ORDER AFTER DELIVERY -> REQUESTS BANK MANUALLY
+    // ============================================================
+    else if (isCOD && order.isDelivered) {
       if (!bankDetails) {
         return NextResponse.json({
-          error: 'Refund details required for COD returns',
+          error: 'Bank transfer or UPI details are required for COD returns.',
           requiresBankDetails: true,
         }, { status: 400 });
-      }
-
-      // ✅ Validate based on refund method
-      if (bankDetails.refundMethod === 'upi') {
-        if (!bankDetails.upiId) {
-          return NextResponse.json({
-            error: 'UPI ID is required',
-            requiresBankDetails: true,
-          }, { status: 400 });
-        }
-      } else {
-        // Bank transfer
-        if (!bankDetails.accountNumber || !bankDetails.ifscCode || !bankDetails.accountHolderName) {
-          return NextResponse.json({
-            error: 'Complete bank details required',
-            requiresBankDetails: true,
-          }, { status: 400 });
-        }
       }
 
       refundType = bankDetails.refundMethod === 'upi' ? 'upi_transfer' : 'bank_transfer';
@@ -143,7 +154,7 @@ export async function POST(request, context) {
           userId: order.userId,
           amount: order.totalPrice,
           reason: reason || 'Customer return after delivery',
-          refundType: refundType,
+          refundType,
           refundStatus: 'pending',
           bankDetails: {
             accountHolderName: bankDetails.accountHolderName || '',
@@ -156,7 +167,7 @@ export async function POST(request, context) {
       });
     }
 
-    // ✅ Automatically restore product stock levels
+    // Automatically restore product stock levels
     if (order.orderItems && order.orderItems.length > 0) {
       await Promise.allSettled(
         order.orderItems.map(async (item) => {
@@ -178,7 +189,7 @@ export async function POST(request, context) {
       );
     }
 
-    // ✅ Update Order
+    // Update order status fields in DB
     const updatedOrder = await prisma.order.update({
       where: { id },
       data: {
@@ -189,41 +200,39 @@ export async function POST(request, context) {
         refundId: refundRecord?.id || null,
         refundStatus: refundStatus,
         refundAmount: refundType !== 'not_required' ? order.totalPrice : 0,
+        refundedAt: refundStatus === 'completed' || refundStatus === 'processing' ? new Date() : null,
       },
       include: { user: { select: { name: true, email: true } } },
     });
 
-    // ✅ Send emails
+    // Send emails (Non-blocking)
     try {
-      // 1. Customer email - Order cancelled
-      await sendOrderCancelled(
-        updatedOrder,
-        updatedOrder.user.email,
-        updatedOrder.user.name,
-        reason || 'Customer requested cancellation'
-      );
-
-      // 2. If Razorpay refund created → send refund processed email
-      if (razorpayRefund && refundRecord) {
-        await sendRefundProcessed(
+      if (updatedOrder.user?.email) {
+        await sendOrderCancelled(
           updatedOrder,
-          refundRecord,
           updatedOrder.user.email,
-          updatedOrder.user.name
+          updatedOrder.user.name,
+          reason || 'Customer requested cancellation'
         );
+
+        if (razorpayRefund && refundRecord) {
+          await sendRefundProcessed(
+            updatedOrder,
+            refundRecord,
+            updatedOrder.user.email,
+            updatedOrder.user.name
+          );
+        }
       }
 
-      // 3. Admin notification (with refund details)
       await sendAdminCancelNotification(
         updatedOrder,
         updatedOrder.user,
         reason || 'Customer requested cancellation',
         refundRecord
       );
-
-      console.log('✅ All cancellation emails sent');
     } catch (emailErr) {
-      console.error('❌ Email error (non-blocking):', emailErr);
+      console.error('Email error:', emailErr);
     }
 
     return NextResponse.json({
@@ -232,6 +241,8 @@ export async function POST(request, context) {
       order: updatedOrder,
       refund: refundRecord,
       refundType,
+      refundStatus,
+      refundWarning,
     });
 
   } catch (error) {

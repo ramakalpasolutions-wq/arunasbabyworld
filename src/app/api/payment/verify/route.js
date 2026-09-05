@@ -13,7 +13,7 @@ export async function POST(request) {
     }
 
     const body = await request.json();
-    console.log('Payment verify body:', body);
+    console.log('Payment verify request body:', body);
 
     const {
       razorpayOrderId,
@@ -23,14 +23,13 @@ export async function POST(request) {
     } = body;
 
     if (!orderId) {
-      console.error('orderId is missing from request body');
       return NextResponse.json(
         { error: 'Order ID is required' },
         { status: 400 }
       );
     }
 
-    // ✅ Verify signature
+    // Verify signature hash
     const text = razorpayOrderId + '|' + razorpayPaymentId;
     const expectedSignature = crypto
       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
@@ -38,13 +37,15 @@ export async function POST(request) {
       .digest('hex');
 
     if (expectedSignature !== razorpaySignature) {
-      // ✅ Mark payment as failed on signature mismatch
+      console.error('❌ Payment verification mismatch. Invalid signature received.');
+      
+      // Update local payment status to failed on mismatch
       await prisma.order.update({
         where: { id: orderId },
         data: {
           paymentStatus: 'failed',
           isPaid: false,
-          notes: 'Invalid payment signature',
+          notes: 'Invalid payment signature received during verification.',
         },
       });
 
@@ -54,13 +55,13 @@ export async function POST(request) {
       );
     }
 
-    // ✅ Update existing order — mark as PAID and CONFIRMED
+    // Update order status fields to paid & confirmed in database
     const order = await prisma.order.update({
       where: { id: orderId },
       data: {
         isPaid:        true,
         paidAt:        new Date(),
-        paymentStatus: 'success',
+        paymentStatus: 'paid', // Normalized database flag
         orderStatus:   'Confirmed',
         paymentResult: {
           id: razorpayPaymentId,
@@ -76,9 +77,9 @@ export async function POST(request) {
       },
     });
 
-    console.log('✅ Payment verified for order:', orderId);
+    console.log('✅ Payment verified successfully for order:', orderId);
 
-    // ✅ Send confirmation email now (after payment success)
+    // Send order confirmation email
     try {
       await sendOrderConfirmation(
         order,

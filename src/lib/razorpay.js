@@ -1,25 +1,35 @@
 import Razorpay from 'razorpay';
+import { sendEmail } from './nodemailer';
 
 export const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
+  key_id: process.env.RAZORPAY_KEY_ID || process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
 });
 
 // ============================================================
-// ✅ Create Instant Refund
+// ✅ Create Resilient Refund with Auto-Fallback Routing
 // speed: 'optimum' = instant (within 2-3 hrs on Live mode)
 // speed: 'normal'  = 5-7 business days (fallback)
 // ============================================================
 export async function createRefund(paymentId, amount, notes = {}) {
   try {
-    console.log('⚡ Attempting INSTANT refund for:', paymentId, 'Amount:', amount);
+    if (!paymentId) {
+      throw new Error('Payment ID is required to process refund');
+    }
+
+    const amountInPaise = Math.round(Number(amount) * 100);
+    if (isNaN(amountInPaise) || amountInPaise <= 0) {
+      throw new Error('Invalid refund amount');
+    }
+
+    console.log(`⚡ Attempting INSTANT refund for: ${paymentId} | Amount: ₹${amount} (${amountInPaise} paise)`);
 
     const refund = await razorpay.payments.refund(paymentId, {
-      amount: Math.round(amount * 100), // paise
-      speed: 'optimum',                 // ✅ instant refund
+      amount: amountInPaise,
+      speed: 'optimum', // Try instant refund route first
       notes: {
         reason:  notes.reason  || 'Customer request',
-        orderId: notes.orderId || '',
+        orderId: notes.orderId ? String(notes.orderId) : '',
       },
     });
 
@@ -27,16 +37,18 @@ export async function createRefund(paymentId, amount, notes = {}) {
     return { success: true, refund, speed: 'optimum' };
 
   } catch (error) {
-    console.error('❌ Instant refund failed, trying normal speed...', error?.error?.description || error.message);
+    const errorMsg = error?.error?.description || error?.message || 'Unknown error';
+    console.warn(`⚠️ Instant refund failed (${errorMsg}). Retrying via standard speed...`);
 
-    // ── Fallback to normal speed ──
+    // ── Fallback to standard/normal refund speed ──
     try {
+      const amountInPaise = Math.round(Number(amount) * 100);
       const refund = await razorpay.payments.refund(paymentId, {
-        amount: Math.round(amount * 100),
-        speed: 'normal',
+        amount: amountInPaise,
+        speed: 'normal', // Fallback standard routing
         notes: {
           reason:  notes.reason  || 'Customer request',
-          orderId: notes.orderId || '',
+          orderId: notes.orderId ? String(notes.orderId) : '',
         },
       });
 
@@ -44,10 +56,11 @@ export async function createRefund(paymentId, amount, notes = {}) {
       return { success: true, refund, speed: 'normal' };
 
     } catch (fallbackError) {
-      console.error('❌ Both refund attempts failed:', fallbackError?.error?.description || fallbackError.message);
+      const fallbackMsg = fallbackError?.error?.description || fallbackError?.message || 'Refund failed';
+      console.error('❌ Both refund attempts failed:', fallbackMsg);
       return {
         success: false,
-        error: fallbackError?.error?.description || fallbackError.message || 'Refund failed',
+        error: fallbackMsg,
       };
     }
   }
@@ -67,7 +80,7 @@ export async function getRefundDetails(paymentId, refundId) {
 }
 
 // ============================================================
-// ✅ Fetch Payment Details (to get paymentId from orderId)
+// ✅ Fetch Payment Details
 // ============================================================
 export async function getPaymentDetails(paymentId) {
   try {
@@ -258,7 +271,7 @@ export const sendAdminExchangeNotification = async (exchange, order, customer) =
         </div>
 
         <div style="text-align:center;">
-          <a href="${process.env.NEXTAUTH_URL}/admin/exchanges/${exchange.id}"
+          <a href="${process.env.NEXT_PUBLIC_URL || process.env.NEXTAUTH_URL}/admin/exchanges/${exchange.id}"
              style="background:#FF6B35;color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;">
             View in Admin Panel
           </a>
@@ -369,7 +382,7 @@ export const sendExchangeShipped = async (exchange, order, customerEmail, custom
         </div>
 
         <div style="text-align:center;margin-top:24px;">
-          <a href="${process.env.NEXTAUTH_URL}/orders/exchanges"
+          <a href="${process.env.NEXT_URL || process.env.NEXTAUTH_URL}/orders/exchanges"
              style="background:linear-gradient(135deg,#06B6D4,#0891B2);color:white;padding:12px 28px;border-radius:8px;text-decoration:none;font-weight:700;">
             View Exchange Details
           </a>
