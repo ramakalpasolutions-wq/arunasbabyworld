@@ -3,10 +3,21 @@ import { createContext, useContext, useState, useEffect } from 'react';
 
 const LocationContext = createContext();
 
+// ✅ STRICT ELIGIBLE GUNTUR CITY PINCODES ONLY
+export const ELIGIBLE_GUNTUR_PINCODES = [
+  '522001', // Guntur Bus Stand and central city areas
+  '522002', // Guntur Head Post Office (HO) and Brodipet
+  '522003', // Hindu College and Etukuru Road
+  '522004', // A.T. Agraharam and Guntur Collectorate
+  '522006', // S.V.N. Colony
+  '522007', // Amaravathi Road and Chandramoulinagar
+  '522034', // Industrial Estate
+];
+
 export function isGunturPincode(pincode) {
   if (!pincode) return false;
   const p = String(pincode).trim();
-  return p.startsWith('522');
+  return ELIGIBLE_GUNTUR_PINCODES.includes(p);
 }
 
 export function LocationProvider({ children }) {
@@ -49,7 +60,7 @@ export function LocationProvider({ children }) {
     localStorage.removeItem('userLocation');
   };
 
-  const isGuntur = isGunturPincode(userPincode) || userCity.toLowerCase().includes('guntur');
+  const isGuntur = isGunturPincode(userPincode);
 
   return (
     <LocationContext.Provider
@@ -62,6 +73,7 @@ export function LocationProvider({ children }) {
         setShowLocationModal,
         saveLocation,
         clearLocation,
+        ELIGIBLE_GUNTUR_PINCODES,
       }}
     >
       {children}

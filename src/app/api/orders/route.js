@@ -9,11 +9,21 @@ const COD_EXTRA_FEE = 20;
 const FREE_SHIPPING_THRESHOLD = 800;
 const BABY_FOOD_CATEGORY_ID = '6a5473f71736df8447776561';
 
+// ✅ STRICT ELIGIBLE GUNTUR CITY PINCODES ONLY
+const ELIGIBLE_GUNTUR_PINCODES = [
+  '522001',
+  '522002',
+  '522003',
+  '522004',
+  '522006',
+  '522007',
+  '522034',
+];
+
 function isGunturLocation(address) {
   if (!address) return false;
-  const city = (address.city || '').toLowerCase().trim();
-  const pincode = (address.pincode || '').toString().trim();
-  return city.includes('guntur') || pincode.startsWith('522');
+  const pincode = String(address.pincode || address.pin || '').trim();
+  return ELIGIBLE_GUNTUR_PINCODES.includes(pincode);
 }
 
 function isFoodItem(item) {
@@ -95,7 +105,7 @@ export async function GET(request) {
     const startDate             = searchParams.get('startDate');
     const endDate               = searchParams.get('endDate');
     const page                  = parseInt(searchParams.get('page')  || '1');
-    const limit                 = Math.min(parseInt(searchParams.get('limit') || '10'), 50); // Cap limits to prevent RAM overheads
+    const limit                 = Math.min(parseInt(searchParams.get('limit') || '10'), 50);
 
     const where = {};
     if (session.user.role !== 'admin') where.userId = session.user.id;
@@ -120,7 +130,6 @@ export async function GET(request) {
       if (endDate)   where.createdAt.lte = new Date(`${endDate}T23:59:59.999Z`);
     }
 
-    // ✅ OPTIMIZATION: Query count and find in parallel using Promise.all
     const [total, orders] = await Promise.all([
       prisma.order.count({ where }),
       prisma.order.findMany({
@@ -203,9 +212,7 @@ export async function POST(request) {
       paymentStatus,
     } = data;
 
-    // ════════════════════════════════════════════════════════════
-    // ✅ BACKEND SECURITY CONTROL SWITCH: CODE-BYPASS PREVENTION
-    // ════════════════════════════════════════════════════════════
+    // Validate COD Master Switch
     if (paymentMethod === 'COD') {
       const companySettings = await prisma.companySettings.findFirst({
         select: { codEnabled: true }
@@ -218,9 +225,9 @@ export async function POST(request) {
       }
     }
 
+    // ✅ Strict check against Guntur Pincodes Array
     const isGuntur = isGunturLocation(shippingAddress);
 
-    // Securely pull catalog values directly from database and verify Guntur 10% food discount calculations
     const enrichedItems = await Promise.all(
       data.orderItems.map(async (item) => {
         try {
@@ -287,7 +294,7 @@ export async function POST(request) {
     // Minimum 2 food items required outside Guntur
     if (isOnlyFood && !isGuntur && totalFoodQty < 2) {
       return NextResponse.json(
-        { error: 'Minimum order of 2 food items is required for delivery outside Guntur.' },
+        { error: 'Minimum order of 2 food items is required for delivery outside Guntur City.' },
         { status: 400 }
       );
     }

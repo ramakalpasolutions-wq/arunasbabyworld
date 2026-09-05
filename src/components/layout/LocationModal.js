@@ -1,15 +1,17 @@
 'use client';
 import { useState } from 'react';
-import { useLocation } from '@/context/LocationContext';
+import { useLocation, isGunturPincode, ELIGIBLE_GUNTUR_PINCODES } from '@/context/LocationContext';
 import toast from 'react-hot-toast';
 
 export default function LocationModal() {
-  const { showLocationModal, setShowLocationModal, saveLocation } = useLocation();
+  const { showLocationModal, saveLocation } = useLocation();
   const [pincode, setPincode] = useState('');
   const [city, setCity] = useState('');
   const [detecting, setDetecting] = useState(false);
 
   if (!showLocationModal) return null;
+
+  const isEligible = isGunturPincode(pincode);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -18,8 +20,8 @@ export default function LocationModal() {
       return;
     }
     saveLocation(pincode, city);
-    if (pincode.startsWith('522')) {
-      toast.success('🎉 Guntur location detected! You get 10% off on food items!', { duration: 4000 });
+    if (isEligible) {
+      toast.success('🎉 Guntur City detected! You get 10% off on all Baby Food items!', { duration: 4000 });
     } else {
       toast.success('📍 Location saved!');
     }
@@ -35,7 +37,6 @@ export default function LocationModal() {
       async (position) => {
         try {
           const { latitude, longitude } = position.coords;
-          // Reverse-geocode using OpenStreetMap (free & no API key required)
           const res = await fetch(
             `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`
           );
@@ -58,7 +59,7 @@ export default function LocationModal() {
       },
       (err) => {
         setDetecting(false);
-        toast.error('Please allow location access');
+        toast.error('Please allow location access or type pincode manually.');
       },
       { timeout: 10000 }
     );
@@ -106,119 +107,105 @@ export default function LocationModal() {
             borderRadius: '50%',
             background: 'rgba(255,255,255,0.15)',
           }} />
-          <div style={{
-            position: 'absolute',
-            bottom: '-40px', left: '-40px',
-            width: '120px', height: '120px',
-            borderRadius: '50%',
-            background: 'rgba(255,255,255,0.1)',
-          }} />
           <div style={{ fontSize: '3rem', marginBottom: '8px', position: 'relative' }}>📍</div>
-          <h2 style={{
-            margin: 0,
-            color: 'white',
-            fontSize: '1.4rem',
-            fontWeight: '900',
-            position: 'relative',
-          }}>
-            Where are you shopping from?
+          <h2 style={{ margin: 0, color: 'white', fontSize: '1.4rem', fontWeight: '900', position: 'relative' }}>
+            Where should we deliver?
           </h2>
-          <p style={{
-            margin: '6px 0 0',
-            color: 'rgba(255,255,255,0.95)',
-            fontSize: '0.85rem',
-            fontWeight: '600',
-            position: 'relative',
-          }}>
-            Get personalized offers & delivery details
+          <p style={{ margin: '6px 0 0', color: 'rgba(255,255,255,0.95)', fontSize: '0.85rem', fontWeight: '600', position: 'relative' }}>
+            Enter your pincode to check delivery availability and local deals
           </p>
         </div>
 
         {/* Body Content */}
-        <div style={{ padding: '24px' }}>
-          {/* Guntur Special Banner */}
+        <div style={{ padding: '22px' }}>
+          {/* Guntur Special Banner with precise clickable pills */}
           <div style={{
-            padding: '12px 16px',
+            padding: '12px 14px',
             background: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)',
             border: '1.5px solid #10B981',
             borderRadius: '12px',
-            marginBottom: '18px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '10px',
+            marginBottom: '16px',
           }}>
-            <div style={{ fontSize: '1.5rem' }}>🎉</div>
-            <div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <span style={{ fontSize: '1.2rem' }}>🎉</span>
               <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: '900', color: '#065F46' }}>
-                Guntur Residents Special!
+                Guntur City Special Offer!
               </p>
-              <p style={{ margin: '2px 0 0', fontSize: '0.72rem', fontWeight: '700', color: '#047857' }}>
-                Get 10% OFF on all baby food items + Free Delivery
-              </p>
+            </div>
+            <p style={{ margin: 0, fontSize: '0.74rem', fontWeight: '700', color: '#047857', lineHeight: 1.4 }}>
+              Get <strong>10% OFF</strong> on all Baby Food items for eligible Guntur pincodes:
+            </p>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '6px' }}>
+              {ELIGIBLE_GUNTUR_PINCODES.map(p => (
+                <span
+                  key={p}
+                  onClick={() => setPincode(p)}
+                  style={{
+                    padding: '3px 8px',
+                    background: pincode === p ? '#059669' : 'white',
+                    color: pincode === p ? 'white' : '#065F46',
+                    border: '1px solid #10B981',
+                    borderRadius: '6px',
+                    fontSize: '0.70rem',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    transition: 'all 0.15s ease'
+                  }}
+                >
+                  {p}
+                </span>
+              ))}
             </div>
           </div>
 
           <form onSubmit={handleSubmit}>
             <label style={{
               display: 'block',
-              fontSize: '0.82rem',
+              fontSize: '0.80rem',
               fontWeight: '800',
               color: '#6B4E8A',
               marginBottom: '6px',
               textTransform: 'uppercase',
-              letterSpacing: '0.5px',
             }}>
-              Enter your Pincode *
+              Enter Delivery Pincode *
             </label>
             <input
               type="tel"
               value={pincode}
               onChange={(e) => setPincode(e.target.value.replace(/\D/g, '').slice(0, 6))}
-              placeholder="e.g., 522007 for Guntur"
+              placeholder="e.g. 522007"
               autoFocus
               maxLength={6}
               style={{
                 width: '100%',
-                padding: '14px 16px',
-                border: '2px solid #EDD9FF',
+                padding: '12px 14px',
+                border: `2px solid ${isEligible ? '#10B981' : '#EDD9FF'}`,
                 borderRadius: '12px',
-                fontSize: '1rem',
-                fontWeight: '700',
+                fontSize: '1.1rem',
+                fontWeight: '900',
                 outline: 'none',
-                fontFamily: 'inherit',
+                fontFamily: 'monospace',
                 boxSizing: 'border-box',
-                letterSpacing: '1.5px',
                 textAlign: 'center',
+                letterSpacing: '2px',
               }}
             />
 
-            {city && (
-              <p style={{
-                margin: '10px 0 0',
-                fontSize: '0.82rem',
-                color: '#6B7280',
-                fontWeight: '700',
-                textAlign: 'center',
-              }}>
-                📍 {city}
-              </p>
-            )}
-
-            {pincode && pincode.length === 6 && (
+            {pincode.length === 6 && (
               <div style={{
-                marginTop: '12px',
-                padding: '10px 14px',
-                background: pincode.startsWith('522') ? '#ECFDF5' : '#F9FAFB',
-                border: `1.5px solid ${pincode.startsWith('522') ? '#10B981' : '#E5E7EB'}`,
+                marginTop: '10px',
+                padding: '8px 12px',
+                background: isEligible ? '#ECFDF5' : '#F9FAFB',
+                border: `1.5px solid ${isEligible ? '#10B981' : '#E5E7EB'}`,
                 borderRadius: '10px',
-                fontSize: '0.85rem',
-                fontWeight: '700',
-                color: pincode.startsWith('522') ? '#065F46' : '#6B7280',
+                fontSize: '0.82rem',
+                fontWeight: '800',
+                color: isEligible ? '#065F46' : '#6B7280',
                 textAlign: 'center',
               }}>
-                {pincode.startsWith('522')
-                  ? '🎉 Guntur Detected — 10% food discount unlocked!'
-                  : '📍 Standard delivery rates apply'}
+                {isEligible
+                  ? '🎉 Eligible Guntur Pincode — 10% Food Discount Active!'
+                  : '📍 Standard Delivery Rates Apply'}
               </div>
             )}
 
@@ -228,8 +215,8 @@ export default function LocationModal() {
               disabled={detecting}
               style={{
                 width: '100%',
-                padding: '11px',
-                marginTop: '14px',
+                padding: '10px',
+                marginTop: '12px',
                 background: 'white',
                 border: '1.5px dashed #7B2FBE',
                 borderRadius: '10px',
@@ -237,7 +224,7 @@ export default function LocationModal() {
                 fontWeight: '800',
                 cursor: detecting ? 'wait' : 'pointer',
                 fontFamily: 'inherit',
-                fontSize: '0.85rem',
+                fontSize: '0.82rem',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
@@ -256,7 +243,7 @@ export default function LocationModal() {
                   Detecting your location...
                 </>
               ) : (
-                <>📡 Auto-Detect My Location</>
+                <>📡 Auto-Detect Location</>
               )}
             </button>
 
@@ -265,9 +252,9 @@ export default function LocationModal() {
               disabled={pincode.length !== 6}
               style={{
                 width: '100%',
-                padding: '14px',
-                marginTop: '14px',
-                background: pincode.length === 6 ? 'linear-gradient(135deg, #FF6B9D, #7B2FBE)' : '#E5E7EB',
+                padding: '13px',
+                marginTop: '12px',
+                background: pincode.length === 6 ? 'linear-gradient(135deg, #FF6B35, #7B2FBE)' : '#E5E7EB',
                 border: 'none',
                 borderRadius: '12px',
                 color: pincode.length === 6 ? 'white' : '#9CA3AF',
@@ -275,10 +262,10 @@ export default function LocationModal() {
                 fontSize: '0.95rem',
                 cursor: pincode.length === 6 ? 'pointer' : 'not-allowed',
                 fontFamily: 'inherit',
-                boxShadow: pincode.length === 6 ? '0 6px 20px rgba(123,47,190,0.30)' : 'none',
+                boxShadow: pincode.length === 6 ? '0 4px 14px rgba(123,47,190,0.25)' : 'none',
               }}
             >
-              Confirm Location ✓
+              Confirm Delivery Location ✓
             </button>
 
             <button
@@ -294,7 +281,6 @@ export default function LocationModal() {
                 fontWeight: '600',
                 fontSize: '0.80rem',
                 cursor: 'pointer',
-                fontFamily: 'inherit',
               }}
             >
               Skip for now
