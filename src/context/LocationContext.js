@@ -60,6 +60,7 @@ export function LocationProvider({ children }) {
     localStorage.removeItem('userLocation');
   };
 
+  // ✅ Strict Guntur verification based on the 7 eligible Guntur city pincodes
   const isGuntur = isGunturPincode(userPincode);
 
   return (

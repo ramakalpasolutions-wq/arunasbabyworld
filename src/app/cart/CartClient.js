@@ -88,7 +88,7 @@ export default function CartClient() {
     shippingPrice,
     baseShipping,
     codFee,
-    isGuntur,
+    isGuntur, // ✅ Listens dynamically to Context
     hasFoodItems,
     paymentMethod,
     setPaymentMethod,
@@ -98,8 +98,9 @@ export default function CartClient() {
     setCoupon,
     removeCoupon,
     clearCart,
-    syncCartPrices, // ✅ On-demand sync function from context
+    syncCartPrices,
 
+    // Server-side Address Actions from global context
     addresses,
     selectedAddressIndex,
     selectedAddress,
@@ -113,6 +114,7 @@ export default function CartClient() {
 
   const [couponCode, setCouponCode] = useState('');
   const [applying, setApplying] = useState(false);
+  const [isCodEnabled, setIsCodEnabled] = useState(true);
 
   const [showAddressPanel, setShowAddressPanel] = useState(false);
   const [showPaymentPanel, setShowPaymentPanel] = useState(false);
@@ -131,15 +133,24 @@ export default function CartClient() {
 
   const isFoodBlocked = isOnlyFood && !isGuntur && totalFoodQty < 2;
 
-  // ✅ Sync cart prices only when this cart page loads (once)
+  // Sync cart details on load
   useEffect(() => {
     if (syncCartPrices) {
       syncCartPrices();
     }
+
+    // Fetch dynamic master database switch for COD payments
+    fetch('/api/company-settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data.settings && data.settings.codEnabled !== undefined) {
+          setIsCodEnabled(data.settings.codEnabled);
+        }
+      })
+      .catch(err => console.error('Error fetching company configurations:', err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Since context handles real-time stock sync with DB, we read directly from item.stock
   const getMaxStock = (item) => {
     return item.stock !== undefined ? item.stock : 999;
   };
@@ -381,7 +392,7 @@ export default function CartClient() {
 
       clearCart();
 
-      const razorpay = new window.Razorpay({
+      const razorpayInstance = new window.Razorpay({
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
         amount: orderData.order.amount,
         currency: 'INR',
@@ -428,11 +439,11 @@ export default function CartClient() {
           },
         },
       });
-      razorpay.on('payment.failed', async (response) => {
+      razorpayInstance.on('payment.failed', async (response) => {
         await fetch(`/api/orders/${orderId}/payment-failed`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reason: response.error?.description }) });
         router.push(`/orders/${orderId}?paymentFailed=true`);
       });
-      razorpay.open();
+      razorpayInstance.open();
     } catch (err) {
       toast.error(err.message || 'Something went wrong');
       setProcessing(false);
@@ -448,12 +459,15 @@ export default function CartClient() {
     }, 300);
   };
 
+  // ✅ DYNAMIC PAYMENT OPTIONS (Hides COD dynamically when disabled by Admin)
   const PAYMENT_OPTIONS = [
     { id: 'card', icon: '💳', title: 'Credit/Debit Card', subtitle: 'Visa, Mastercard, RuPay', color: '#3B82F6', method: 'Razorpay' },
     { id: 'upi', icon: '📱', title: 'UPI', subtitle: 'GPay, PhonePe, Paytm', color: '#10B981', badge: 'Paytm', method: 'Razorpay', recommended: true },
     { id: 'netbanking', icon: '🏦', title: 'Net Banking', subtitle: totalPrice >= 2000 ? 'All major banks' : 'Available on orders above ₹2000', color: '#F59E0B', method: 'Razorpay', disabled: totalPrice < 2000 },
     { id: 'emi', icon: '📊', title: 'EMI', subtitle: totalPrice >= 3000 ? 'Convert to EMI' : 'Available on orders above ₹3000', color: '#8B5CF6', method: 'Razorpay', disabled: totalPrice < 3000 },
-    { id: 'cod', icon: '💵', title: 'Cash on Delivery', subtitle: 'Pay when you receive (+₹20 COD fee)', color: '#EF4444', method: 'COD' },
+    ...(isCodEnabled ? [
+      { id: 'cod', icon: '💵', title: 'Cash on Delivery', subtitle: 'Pay when you receive (+₹20 COD fee)', color: '#EF4444', method: 'COD' }
+    ] : []),
   ];
 
   if (items.length === 0) return (
@@ -686,7 +700,7 @@ export default function CartClient() {
                 {baseShipping === 0 ? '🎉 FREE' : `₹${baseShipping}`}
               </span>
             </div>
-            {codFee > 0 && (
+            {isCodEnabled && codFee > 0 && (
               <div className={styles.summaryRow}>
                 <span>COD Fee</span>
                 <span>+ ₹{codFee}</span>

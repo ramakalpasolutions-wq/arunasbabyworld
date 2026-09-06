@@ -11,13 +11,13 @@ const BABY_FOOD_CATEGORY_ID = '6a5473f71736df8447776561';
 
 // ✅ STRICT ELIGIBLE GUNTUR CITY PINCODES ONLY
 const ELIGIBLE_GUNTUR_PINCODES = [
-  '522001',
-  '522002',
-  '522003',
-  '522004',
-  '522006',
-  '522007',
-  '522034',
+  '522001', // Guntur Bus Stand & Central
+  '522002', // Guntur Head Post Office & Brodipet
+  '522003', // Hindu College & Etukuru Road
+  '522004', // A.T. Agraharam & Guntur Collectorate
+  '522006', // S.V.N. Colony
+  '522007', // Amaravathi Road & Chandramoulinagar
+  '522034', // Industrial Estate
 ];
 
 function isGunturLocation(address) {
@@ -55,10 +55,10 @@ function calculateShipping(orderItems, itemsPrice, address, paymentMethod) {
 
   if (isOnlyFood) {
     if (isGuntur) {
-      baseShipping = 0;
+      baseShipping = 0; // Free shipping for Guntur city residents
     } else {
       if (totalFoodQty >= 2) {
-        baseShipping = 0;
+        baseShipping = 0; // Free shipping for 2+ food items outside Guntur
       } else {
         baseShipping = STANDARD_SHIPPING_FEE;
       }
@@ -269,6 +269,7 @@ export async function POST(request) {
           );
 
           const baseDbPrice = product ? (product.discountPrice || product.price) : (item.price || 0);
+          // ✅ Apply 10% discount only if delivery address matches Guntur city pincodes
           const finalVerifiedPrice = (itemIsFood && isGuntur) ? Math.round(baseDbPrice * 0.9) : baseDbPrice;
 
           return {
@@ -294,7 +295,7 @@ export async function POST(request) {
     // Minimum 2 food items required outside Guntur
     if (isOnlyFood && !isGuntur && totalFoodQty < 2) {
       return NextResponse.json(
-        { error: 'Minimum order of 2 food items is required for delivery outside Guntur City.' },
+        { error: 'Minimum order of 2 food items is required for delivery outside Guntur city.' },
         { status: 400 }
       );
     }
@@ -356,7 +357,7 @@ export async function POST(request) {
 
     console.log(
       '✅ Order created secure:', order.id,
-      '| Shipping:', shippingPrice,
+      '| Guntur Discount Verification:', isGuntur,
       '| Total:', totalPrice
     );
 
