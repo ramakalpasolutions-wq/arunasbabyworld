@@ -1,7 +1,7 @@
 'use client';
 import { createContext, useContext, useReducer, useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useSession } from 'next-auth/react';
-import { useLocation, ELIGIBLE_GUNTUR_PINCODES } from '@/context/LocationContext'; // ✅ Linked to global location state
+import { useLocation, ELIGIBLE_GUNTUR_PINCODES } from '@/context/LocationContext';
 
 const CartContext = createContext();
 
@@ -10,7 +10,7 @@ export const COD_EXTRA_FEE = 20;
 export const FREE_SHIPPING_THRESHOLD = 800;
 export const BABY_FOOD_CATEGORY_ID = '6a5473f71736df8447776561';
 
-// ✅ Strict verification helper using our 7 eligible pincodes
+// ✅ Strict Guntur City check based on the 7 selected pincodes
 export function isGunturAddress(address) {
   if (!address) return false;
   const pincode = String(address.pincode || address.pin || '').trim();
@@ -34,11 +34,11 @@ export function isFoodItem(item) {
   );
 }
 
-// ✅ Dynamic Pricing Utility: Guntur residents get 10% discount on food items
+// Dynamic Pricing Utility: Guntur residents get 10% discount on food items
 export function getEffectiveItemPrice(item, isGuntur) {
   const basePrice = Number(item.discountPrice || item.price || 0);
   if (isGuntur && isFoodItem(item)) {
-    return Math.round(basePrice * 0.9); // Apply 10% discount and round off float issues
+    return Math.round(basePrice * 0.9);
   }
   return basePrice;
 }
@@ -48,7 +48,7 @@ export function calculateShippingFee({ items, subtotal, address, paymentMethod, 
     return { baseShipping: 0, codFee: 0, totalShipping: 0, isGuntur: false, hasFood: false, isCOD: false };
   }
 
-  // ✅ Prioritize selected address pincode; fallback to global geolocation modal if no address is selected
+  // ✅ Determine Guntur status: Prioritize selected address, fallback to global popup
   const isGuntur = address ? isGunturAddress(address) : locationIsGuntur;
   const foodItems = items.filter(isFoodItem);
   const nonFoodItems = items.filter(item => !isFoodItem(item));
@@ -60,10 +60,10 @@ export function calculateShippingFee({ items, subtotal, address, paymentMethod, 
 
   if (isOnlyFood) {
     if (isGuntur) {
-      baseShipping = 0; // Free delivery in Guntur
+      baseShipping = 0;
     } else {
       if (totalFoodQty >= 2) {
-        baseShipping = 0; // Free shipping outside Guntur if 2+ food items ordered
+        baseShipping = 0;
       } else {
         baseShipping = STANDARD_SHIPPING_FEE;
       }
@@ -197,14 +197,13 @@ export function CartProvider({ children }) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [loadingAddresses, setLoadingAddresses] = useState(false);
 
-  // ✅ Pull global location context to sync dynamic Guntur pricing automatically
   const locationCtx = useLocation();
   const locationIsGuntur = locationCtx?.isGuntur || false;
 
   const userEmail = session?.user?.email;
   const addressFetchedRef = useRef(false);
 
-  // 1. Hydrate Cart from LocalStorage
+  // Hydrate Cart from LocalStorage
   useEffect(() => {
     try {
       const saved = localStorage.getItem('cart');
@@ -215,7 +214,7 @@ export function CartProvider({ children }) {
     setIsHydrated(true);
   }, []);
 
-  // 2. Save Cart changes to LocalStorage (debounced)
+  // Save Cart changes to LocalStorage (debounced)
   useEffect(() => {
     if (!isHydrated) return;
     const timeout = setTimeout(() => {
@@ -227,7 +226,7 @@ export function CartProvider({ children }) {
     return () => clearTimeout(timeout);
   }, [state.items, state.coupon, isHydrated]);
 
-  // 3. ON-DEMAND REAL-TIME SYNCER — Runs ONLY on checkout or on /cart page
+  // Sync cart items on-demand
   const syncCartPrices = useCallback(async () => {
     if (state.items.length === 0) return;
     try {
@@ -263,7 +262,7 @@ export function CartProvider({ children }) {
     }
   }, [state.items]);
 
-  // 4. Fetch persistent address list from DB on login (guarded against loop)
+  // Fetch persistent address list from DB on login (guarded against loop)
   useEffect(() => {
     if (!userEmail) {
       addressFetchedRef.current = false;
@@ -334,7 +333,7 @@ export function CartProvider({ children }) {
       : null;
   }, [state.selectedAddressIndex, state.addresses]);
 
-  // ✅ Unified Guntur calculation: address pincode priority, fallback to geolocation popup
+  // ✅ Unified Guntur calculation: address pincode checks against the 7 Guntur city pincodes list, falls back to popup
   const isGuntur = useMemo(() => {
     if (selectedAddress) {
       return isGunturAddress(selectedAddress);
@@ -342,14 +341,12 @@ export function CartProvider({ children }) {
     return locationIsGuntur;
   }, [selectedAddress, locationIsGuntur]);
 
-  // ✅ Reactive subtotal: recalculates instantly on address or location change
   const itemsPrice = useMemo(() => {
     return state.items.reduce(
       (acc, i) => acc + getEffectiveItemPrice(i, isGuntur) * i.quantity, 0
     );
   }, [state.items, isGuntur]);
 
-  // ✅ Reactive shipping: recalculates instantly on address or location change
   const shippingInfo = useMemo(() => {
     return calculateShippingFee({
       items: state.items,
@@ -375,7 +372,7 @@ export function CartProvider({ children }) {
         shippingPrice,
         baseShipping: shippingInfo.baseShipping,
         codFee: shippingInfo.codFee,
-        isGuntur, // ✅ Shared reactive value
+        isGuntur, // ✅ Shared reactive value represents the 7 exact Guntur pincodes
         hasFoodItems: shippingInfo.hasFood,
         paymentMethod,
         setPaymentMethod,

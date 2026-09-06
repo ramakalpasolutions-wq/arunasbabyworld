@@ -88,7 +88,7 @@ export default function CartClient() {
     shippingPrice,
     baseShipping,
     codFee,
-    isGuntur, // ✅ Listens dynamically to Context
+    isGuntur, // ✅ Reactive status representing the 7 strict pincodes
     hasFoodItems,
     paymentMethod,
     setPaymentMethod,
@@ -100,7 +100,6 @@ export default function CartClient() {
     clearCart,
     syncCartPrices,
 
-    // Server-side Address Actions from global context
     addresses,
     selectedAddressIndex,
     selectedAddress,
@@ -133,13 +132,13 @@ export default function CartClient() {
 
   const isFoodBlocked = isOnlyFood && !isGuntur && totalFoodQty < 2;
 
-  // Sync cart details on load
+  // Sync details on mount
   useEffect(() => {
     if (syncCartPrices) {
       syncCartPrices();
     }
 
-    // Fetch dynamic master database switch for COD payments
+    // Fetch dynamic configuration flag for COD payments from company settings
     fetch('/api/company-settings')
       .then(res => res.json())
       .then(data => {
@@ -147,7 +146,7 @@ export default function CartClient() {
           setIsCodEnabled(data.settings.codEnabled);
         }
       })
-      .catch(err => console.error('Error fetching company configurations:', err));
+      .catch(err => console.error('Error fetching payment settings:', err));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -388,7 +387,7 @@ export default function CartClient() {
         body: JSON.stringify({ amount: totalPrice }),
       });
       const orderData = await orderRes.json();
-      if (!orderRes.ok) throw new Error(orderData.error);
+      if (!orderRes.ok) throw new Error(orderData.order);
 
       clearCart();
 
@@ -459,13 +458,14 @@ export default function CartClient() {
     }, 300);
   };
 
-  // ✅ DYNAMIC PAYMENT OPTIONS (Hides COD dynamically when disabled by Admin)
+  // ✅ DYNAMIC PAYMENT OPTIONS (Hides COD dynamically when not eligible or disabled)
+  const canUseCOD = isCodEnabled && isGuntur; // Only allow COD if globally active and pincode is within Guntur list
   const PAYMENT_OPTIONS = [
     { id: 'card', icon: '💳', title: 'Credit/Debit Card', subtitle: 'Visa, Mastercard, RuPay', color: '#3B82F6', method: 'Razorpay' },
     { id: 'upi', icon: '📱', title: 'UPI', subtitle: 'GPay, PhonePe, Paytm', color: '#10B981', badge: 'Paytm', method: 'Razorpay', recommended: true },
     { id: 'netbanking', icon: '🏦', title: 'Net Banking', subtitle: totalPrice >= 2000 ? 'All major banks' : 'Available on orders above ₹2000', color: '#F59E0B', method: 'Razorpay', disabled: totalPrice < 2000 },
     { id: 'emi', icon: '📊', title: 'EMI', subtitle: totalPrice >= 3000 ? 'Convert to EMI' : 'Available on orders above ₹3000', color: '#8B5CF6', method: 'Razorpay', disabled: totalPrice < 3000 },
-    ...(isCodEnabled ? [
+    ...(canUseCOD ? [
       { id: 'cod', icon: '💵', title: 'Cash on Delivery', subtitle: 'Pay when you receive (+₹20 COD fee)', color: '#EF4444', method: 'COD' }
     ] : []),
   ];

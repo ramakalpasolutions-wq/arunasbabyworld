@@ -5,12 +5,12 @@ const LocationContext = createContext();
 
 // ✅ STRICT ELIGIBLE GUNTUR CITY PINCODES ONLY
 export const ELIGIBLE_GUNTUR_PINCODES = [
-  '522001', // Guntur Bus Stand and central city areas
-  '522002', // Guntur Head Post Office (HO) and Brodipet
-  '522003', // Hindu College and Etukuru Road
+  '522001', // Guntur HO and central areas
+  '522002', // Guntur Head Post Office (Main delivery office)
+  '522003', // Etukuru Road and Hindu College area
   '522004', // A.T. Agraharam and Guntur Collectorate
   '522006', // S.V.N. Colony
-  '522007', // Amaravathi Road and Chandramoulinagar
+  '522007', // Chandramouli Nagar
   '522034', // Industrial Estate
 ];
 
@@ -60,7 +60,6 @@ export function LocationProvider({ children }) {
     localStorage.removeItem('userLocation');
   };
 
-  // ✅ Strict Guntur verification based on the 7 eligible Guntur city pincodes
   const isGuntur = isGunturPincode(userPincode);
 
   return (
