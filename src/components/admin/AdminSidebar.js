@@ -18,6 +18,7 @@ const navItems = [
   // { href: '/admin/refunds',    icon: '💰', label: 'Refunds'    }, // ✅ NEW
   { href: '/admin/exchanges',  icon: '🔄', label: 'Exchanges'  }, // ✅ NEW
   { href: '/admin/coupons',    icon: '🎟️', label: 'Coupons'    },
+  { href: '/admin/guntur-discounts', icon: '🎯', label: 'Guntur Food Discounts' },
   { href: '/admin/users',      icon: '👥', label: 'Users'      },
   { href: '/admin/gst-reports', icon: '📊', label: 'GST Reports' },
   { href: '/admin/contacts',   icon: '📩', label: 'Messages'   },

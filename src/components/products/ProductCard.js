@@ -82,7 +82,8 @@ export function ProductCardSkeleton() {
 }
 
 export default function ProductCard({ product }) {
-  const { addItem, addToCart } = useCart();
+  // ✅ Access gunturDiscounts dynamic rules from Context
+  const { addItem, addToCart, gunturDiscounts = [] } = useCart();
   const { toggle, isWishlisted, isInWishlist } = useWishlist();
 
   // ✅ Location Context for Guntur discount detection
@@ -130,9 +131,23 @@ export default function ProductCard({ product }) {
   const isFood = isFoodProduct(product);
   const hasGunturDiscount = isGuntur && isFood;
 
-  const standardActivePrice = displayDiscountPrice || displayPrice;
-  const finalPrice = hasGunturDiscount ? Math.round(standardActivePrice * 0.9) : standardActivePrice;
+  // ✅ Find Guntur discount percentage based on Brand Rules (defaults to 10%)
+  const gunturDiscountPercent = (() => {
+    if (!hasGunturDiscount) return 0;
+    const brandName = (product.brand || '').trim().toLowerCase();
+    const brandRule = gunturDiscounts.find(
+      d => d.brand.toLowerCase() === brandName && d.isActive
+    );
+    return brandRule ? brandRule.discountPercent : 10;
+  })();
 
+  const standardActivePrice = displayDiscountPrice || displayPrice;
+  // Apply Guntur brand-specific discount or standard discount
+  const finalPrice = hasGunturDiscount 
+    ? Math.round(standardActivePrice * (1 - gunturDiscountPercent / 100)) 
+    : standardActivePrice;
+
+  // Strikethrough price configuration
   const showOldPrice = hasGunturDiscount
     ? (displayPrice > finalPrice ? displayPrice : (standardActivePrice > finalPrice ? standardActivePrice : null))
     : (displayDiscountPrice && displayDiscountPrice < displayPrice ? displayPrice : null);
@@ -208,11 +223,10 @@ export default function ProductCard({ product }) {
       href={`/products/${product.id}`}
       className={styles.card}
       style={{
-        '--accent': accent.color,
+        '--accent':        accent.color,
         '--accent-pastel': accent.pastel,
       }}
     >
-
       {/* ═══ IMAGE ═══ */}
       <div className={styles.imageWrap} style={{ background: accent.pastel }}>
         {imageUrl ? (
@@ -227,7 +241,7 @@ export default function ProductCard({ product }) {
               alt={product.name}
               width={240}
               height={240}
-              unoptimized={true} // ✅ Bypasses Next.js image server, delivers from Cloudflare CDN directly
+              unoptimized={true} // Bypasses Next.js image server, delivers from Cloudflare CDN directly
               loading="lazy"
               className={`${styles.image} ${imgLoaded ? styles.imageVisible : styles.imageHidden}`}
               style={{ objectFit: 'cover' }}
@@ -240,7 +254,7 @@ export default function ProductCard({ product }) {
           </div>
         )}
 
-        {/* Guntur Special or Standard Discount Badge */}
+        {/* Dynamic Guntur Special or Standard Discount Badge */}
         {hasGunturDiscount ? (
           <span
             className={styles.badgeDiscount}
@@ -252,12 +266,13 @@ export default function ProductCard({ product }) {
               fontWeight: '900',
             }}
           >
-            🎉 -{discountPercent}% GUNTUR
+            🎉 -{gunturDiscountPercent}% GUNTUR
           </span>
         ) : discountPercent > 0 ? (
           <span className={styles.badgeDiscount}>-{discountPercent}%</span>
         ) : null}
 
+        {/* Wishlist button */}
         <button
           className={`${styles.wishBtn} ${inWishlist ? styles.wishActive : ''}`}
           onClick={handleWishlist}
@@ -267,6 +282,7 @@ export default function ProductCard({ product }) {
           <span className={styles.wishIcon}>{inWishlist ? '❤️' : '🤍'}</span>
         </button>
 
+        {/* OOS Overlay */}
         {product.stock === 0 && (
           <div className={styles.oos}>
             <span>Out of Stock</span>
@@ -276,10 +292,12 @@ export default function ProductCard({ product }) {
 
       {/* ═══ INFO ═══ */}
       <div className={styles.info}>
+        {/* Title */}
         <h3 className={styles.name} title={product.name}>
           {product.name}
         </h3>
 
+        {/* Prices */}
         <div className={styles.priceRow}>
           <span className={styles.price}>
             ₹{Math.round(finalPrice)?.toLocaleString('en-IN')}
@@ -292,6 +310,7 @@ export default function ProductCard({ product }) {
           )}
         </div>
 
+        {/* Add to Cart Button */}
         <button
           className={`
             ${styles.cartBtn}

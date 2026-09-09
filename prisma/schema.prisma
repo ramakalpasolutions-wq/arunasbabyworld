@@ -310,7 +310,16 @@ type OrderItem {
   price     Float?
   quantity  Int?
 }
+model GunturFoodDiscount {
+  id              String   @id @default(auto()) @map("_id") @db.ObjectId
+  brand           String   @unique
+  discountPercent Float    @default(10)
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
+  @@map("guntur_food_discounts")
+}
 type ShipAddress {
   name    String?
   phone   String?

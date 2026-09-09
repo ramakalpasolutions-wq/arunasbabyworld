@@ -11,12 +11,12 @@ const BABY_FOOD_CATEGORY_ID = '6a5473f71736df8447776561';
 
 // ✅ STRICT ELIGIBLE GUNTUR CITY PINCODES ONLY
 const ELIGIBLE_GUNTUR_PINCODES = [
-  '522001', // Guntur Bus Stand & Central
-  '522002', // Guntur Head Post Office & Brodipet
-  '522003', // Hindu College & Etukuru Road
-  '522004', // A.T. Agraharam & Guntur Collectorate
+  '522001', // Guntur HO and central areas
+  '522002', // Guntur Head Post Office
+  '522003', // Etukuru Road and Hindu College area
+  '522004', // A.T. Agraharam and Guntur Collectorate
   '522006', // S.V.N. Colony
-  '522007', // Amaravathi Road & Chandramoulinagar
+  '522007', // Chandramouli Nagar
   '522034', // Industrial Estate
 ];
 
@@ -55,10 +55,10 @@ function calculateShipping(orderItems, itemsPrice, address, paymentMethod) {
 
   if (isOnlyFood) {
     if (isGuntur) {
-      baseShipping = 0; // Free shipping for Guntur city residents
+      baseShipping = 0;
     } else {
       if (totalFoodQty >= 2) {
-        baseShipping = 0; // Free shipping for 2+ food items outside Guntur
+        baseShipping = 0;
       } else {
         baseShipping = STANDARD_SHIPPING_FEE;
       }
@@ -212,7 +212,12 @@ export async function POST(request) {
       paymentStatus,
     } = data;
 
-    // Validate COD Master Switch
+    // ✅ Strict check against Guntur Pincodes Array
+    const isGuntur = isGunturLocation(shippingAddress);
+
+    // ════════════════════════════════════════════════════════════
+    // ✅ BACKEND SECURITY GUARD: COD RESTRICTED TO GUNTUR PINCODES
+    // ════════════════════════════════════════════════════════════
     if (paymentMethod === 'COD') {
       const companySettings = await prisma.companySettings.findFirst({
         select: { codEnabled: true }
@@ -223,10 +228,20 @@ export async function POST(request) {
           { status: 400 }
         );
       }
+      
+      // ✅ Security Check: Blocks non-Guntur COD bypass attempts
+      if (!isGuntur) {
+        return NextResponse.json(
+          { error: 'Cash on Delivery (COD) is only available for eligible Guntur city pincodes. Please pay online.' },
+          { status: 400 }
+        );
+      }
     }
 
-    // ✅ Strict check against Guntur Pincodes Array
-    const isGuntur = isGunturLocation(shippingAddress);
+    // Fetch live brand discount percentages to compute secure price validation
+    const brandDiscounts = await prisma.gunturFoodDiscount.findMany({
+      where: { isActive: true },
+    });
 
     const enrichedItems = await Promise.all(
       data.orderItems.map(async (item) => {
@@ -236,6 +251,7 @@ export async function POST(request) {
             select: {
               price: true,
               discountPrice: true,
+              brand: true,
               categoryId: true,
               category: {
                 select: {
@@ -269,8 +285,18 @@ export async function POST(request) {
           );
 
           const baseDbPrice = product ? (product.discountPrice || product.price) : (item.price || 0);
-          // ✅ Apply 10% discount only if delivery address matches Guntur city pincodes
-          const finalVerifiedPrice = (itemIsFood && isGuntur) ? Math.round(baseDbPrice * 0.9) : baseDbPrice;
+          
+          let finalVerifiedPrice = baseDbPrice;
+          
+          // ✅ Apply brand-specific Guntur food discount securely on the backend
+          if (itemIsFood && isGuntur) {
+            const itemBrand = (product?.brand || item.brand || '').trim().toLowerCase();
+            const brandRule = brandDiscounts.find(
+              d => d.brand.toLowerCase() === itemBrand && d.isActive
+            );
+            const discountPct = brandRule ? brandRule.discountPercent : 10; // Default to 10% Guntur discount
+            finalVerifiedPrice = Math.round(baseDbPrice * (1 - discountPct / 100));
+          }
 
           return {
             ...item,
