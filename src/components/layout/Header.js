@@ -33,7 +33,7 @@ export default function Header() {
   const [navCategories, setNavCategories] = useState([]);
   const [catLoading,    setCatLoading]    = useState(true);
 
-  // ✅ SEARCH STATES
+  // SEARCH STATES
   const [searchOpen,        setSearchOpen]        = useState(false);
   const [mobileSearchOpen,  setMobileSearchOpen]  = useState(false);
   const [searchResults,     setSearchResults]     = useState([]);
@@ -48,7 +48,7 @@ export default function Header() {
   const mobileSearchInputRef = useRef(null);
   const debounceRef = useRef(null);
 
-  // ✅ Fetch categories
+  // Fetch categories
   useEffect(() => {
     setCatLoading(true);
     fetch('/api/categories?all=true')
@@ -63,7 +63,7 @@ export default function Header() {
       .finally(() => setCatLoading(false));
   }, []);
 
-  // ✅ Load recent searches from localStorage
+  // Load recent searches from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('recentSearches');
     if (saved) {
@@ -73,7 +73,7 @@ export default function Header() {
     }
   }, []);
 
-  // ✅ Debounced live search
+  // Debounced live search
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
 
@@ -102,14 +102,14 @@ export default function Header() {
     };
   }, [searchQuery]);
 
-  // ✅ Scroll listener
+  // Scroll listener
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
-  // ✅ Cart bounce animation
+  // Cart bounce animation
   useEffect(() => {
     if (totalItems > prevItems.current) {
       setCartBounce(true);
@@ -118,7 +118,7 @@ export default function Header() {
     prevItems.current = totalItems;
   }, [totalItems]);
 
-  // ✅ Close dropdowns on outside click
+  // Close dropdowns on outside click
   useEffect(() => {
     const handle = (e) => {
       if (profileRef.current && !profileRef.current.contains(e.target)) {
@@ -133,16 +133,16 @@ export default function Header() {
     return () => document.removeEventListener('mousedown', handle);
   }, []);
 
-  // ✅ Close mobile menu on route change
+  // Close mobile menu on route change
   useEffect(() => { setMobileOpen(false); setMobileSearchOpen(false); }, [router]);
 
-  // ✅ Lock body scroll (mobile menu OR mobile search)
+  // Lock body scroll (mobile menu OR mobile search)
   useEffect(() => {
     document.body.style.overflow = (mobileOpen || mobileSearchOpen) ? 'hidden' : '';
     return () => { document.body.style.overflow = ''; };
   }, [mobileOpen, mobileSearchOpen]);
 
-  // ✅ ESC key handling
+  // ESC key handling
   useEffect(() => {
     const handleEsc = (e) => {
       if (e.key === 'Escape') {
@@ -162,7 +162,7 @@ export default function Header() {
     return () => document.removeEventListener('keydown', handleEsc);
   }, [mobileOpen, searchOpen, mobileSearchOpen]);
 
-  // ✅ Focus mobile search input when opened
+  // Focus mobile search input when opened
   useEffect(() => {
     if (mobileSearchOpen) {
       setTimeout(() => mobileSearchInputRef.current?.focus(), 100);
@@ -214,7 +214,6 @@ export default function Header() {
       e.preventDefault();
       if (selectedIndex >= 0 && searchResults[selectedIndex]) {
         const product = searchResults[selectedIndex];
-        // ✅ FIXED: Always use product.id
         router.push(`/products/${product.id}`);
         setSearchOpen(false);
         setSearchQuery('');
@@ -248,7 +247,7 @@ export default function Header() {
             />
           </Link>
 
-          {/* ✅ SMART SEARCH (Desktop only) */}
+          {/* SMART SEARCH (Desktop only) */}
           <div ref={searchRef} className={styles.searchWrap}>
             <form onSubmit={handleSearch} className={styles.searchForm}>
               <div className={styles.searchBox}>
@@ -286,7 +285,7 @@ export default function Header() {
               </div>
             </form>
 
-            {/* ✅ INLINED DROPDOWN (Prevents unmounting/flicker) */}
+            {/* INLINED DROPDOWN */}
             {searchOpen && (
               <div style={{
                 position: 'absolute',
@@ -706,6 +705,14 @@ export default function Header() {
       {/* DESKTOP CATEGORY NAV */}
       <nav className={styles.categoryNav}>
         <div className={`container ${styles.navContent}`}>
+          
+          {/* ✅ ALL PRODUCTS LINK */}
+          <div className={styles.navItem}>
+            <Link href="/products" className={styles.navLink} style={{ fontWeight: '800' }}>
+              All Products
+            </Link>
+          </div>
+
           {navCategories.map(cat => (
             <div
               key={cat.id}
@@ -748,7 +755,7 @@ export default function Header() {
         </div>
       </nav>
 
-      {/* ✅ MOBILE SEARCH FULLSCREEN OVERLAY */}
+      {/* MOBILE SEARCH FULLSCREEN OVERLAY */}
       {mobileSearchOpen && (
         <div className={styles.mobileSearchOverlay}>
           <div className={styles.mobileSearchTopbar}>
