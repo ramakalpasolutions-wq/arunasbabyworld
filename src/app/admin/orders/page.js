@@ -20,6 +20,16 @@ const STATUS_COLOR = {
   Refunded:   '#6b7280',
 };
 
+// UI Config for the top tabs
+const statusCardsCfg = [
+  { label: 'Pending',    color: '#f59e0b', emoji: '⏳' },
+  { label: 'Confirmed',  color: '#3b82f6', emoji: '✅' },
+  { label: 'Processing', color: '#8b5cf6', emoji: '⚙️' },
+  { label: 'Shipped',    color: '#06b6d4', emoji: '🚚' },
+  { label: 'Delivered',  color: '#10b981', emoji: '🎉' },
+  { label: 'Cancelled',  color: '#ef4444', emoji: '❌' },
+];
+
 function fmtOrderNum(order) {
   return order.orderNumber
     ? `ABW-${order.orderNumber}`
@@ -40,7 +50,7 @@ function PaymentBadge({ order }) {
     );
   }
 
-  if (order.paymentStatus === 'cancelled') {
+  if (order.paymentStatus === 'cancelled' || order.orderStatus === 'Cancelled') {
     return (
       <span style={{
         display: 'inline-flex', alignItems: 'center', gap: '4px',
@@ -90,7 +100,9 @@ export default function AdminOrders() {
   // Pagination & Counts
   const [page,         setPage]         = useState(1);
   const [pagination,   setPagination]   = useState({});
-  const [statusCounts, setStatusCounts] = useState({});
+  const [statusCounts, setStatusCounts] = useState({
+    all: 0, Pending: 0, Confirmed: 0, Processing: 0, Shipped: 0, Delivered: 0, Cancelled: 0
+  });
   const [failedCount,  setFailedCount]  = useState(0);
 
   const fetchOrders = async () => {
@@ -102,13 +114,12 @@ export default function AdminOrders() {
         excludeFailedPayments: 'true',
       });
 
-      if (filterStatus) params.set('status', filterStatus);
+      if (filterStatus && filterStatus !== 'all') params.set('status', filterStatus);
       if (startDate) params.set('startDate', startDate);
       if (endDate) params.set('endDate', endDate);
 
       const res = await fetch(`/api/orders?${params}`);
       
-      // ✅ Read as text first to prevent JSON parse crash on server error
       const text = await res.text();
       let data = {};
       try {
@@ -128,15 +139,12 @@ export default function AdminOrders() {
 
       setOrders(data.orders || []);
       setPagination(data.pagination || {});
-
-      // Only update counts if no status filter is applied
-      if (!filterStatus) {
-        const counts = {};
-        (data.orders || []).forEach(o => {
-          counts[o.orderStatus] = (counts[o.orderStatus] || 0) + 1;
-        });
-        setStatusCounts(counts);
+      
+      // ✅ Overwrite counts directly from the backend to ensure accurate tracking
+      if (data.statusCounts) {
+        setStatusCounts(data.statusCounts);
       }
+
     } catch (err) {
       console.error(err);
       toast.error('Failed to load orders');
@@ -159,6 +167,7 @@ export default function AdminOrders() {
   useEffect(() => {
     fetchOrders();
     fetchFailedCount();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [page, filterStatus, startDate, endDate]);
 
   const handleStatusChange = async (orderId, newStatus) => {
@@ -171,18 +180,9 @@ export default function AdminOrders() {
       toast.success('✅ Status updated'); 
       fetchOrders(); 
     } else {
-      toast.error('Failed to update');
+      toast.error('Failed to update status');
     }
   };
-
-  const statusCardsCfg = [
-    { label: 'Pending',    color: '#f59e0b', emoji: '⏳' },
-    { label: 'Confirmed',  color: '#3b82f6', emoji: '✅' },
-    { label: 'Processing', color: '#8b5cf6', emoji: '⚙️' },
-    { label: 'Shipped',    color: '#06b6d4', emoji: '🚚' },
-    { label: 'Delivered',  color: '#10b981', emoji: '🎉' },
-    { label: 'Cancelled',  color: '#ef4444', emoji: '❌' },
-  ];
 
   return (
     <div className={styles.page}>
@@ -191,7 +191,7 @@ export default function AdminOrders() {
       <div className={styles.header}>
         <div>
           <h1>Orders 🛍️</h1>
-          <p>{pagination.total || 0} valid orders</p>
+          <p>{statusCounts.all || 0} total valid orders</p>
         </div>
       </div>
 
@@ -250,16 +250,26 @@ export default function AdminOrders() {
         </div>
       )}
 
-      {/* ── STATUS CARDS ── */}
+      {/* ── STATUS CARDS (ACCURATE TABS) ── */}
       <div className={orderStyles.statusCards}>
+        <button
+          className={`${orderStyles.statusCard} ${!filterStatus || filterStatus === 'all' ? orderStyles.statusCardActive : ''}`}
+          onClick={() => { setFilterStatus('all'); setPage(1); }}
+          style={{ '--s-color': '#1F2937' }}
+        >
+          <span className={orderStyles.statusCardEmoji}>📦</span>
+          <span className={orderStyles.statusCardLabel}>All Orders</span>
+          <span className={orderStyles.statusCardCount} style={{ background: '#F3F4F6', color: '#1F2937' }}>
+            {statusCounts.all || 0}
+          </span>
+        </button>
+
         {statusCardsCfg.map(s => (
           <button
             key={s.label}
-            className={`${orderStyles.statusCard} ${
-              filterStatus === s.label ? orderStyles.statusCardActive : ''
-            }`}
+            className={`${orderStyles.statusCard} ${filterStatus === s.label ? orderStyles.statusCardActive : ''}`}
             onClick={() => {
-              setFilterStatus(filterStatus === s.label ? '' : s.label);
+              setFilterStatus(s.label);
               setPage(1);
             }}
             style={{ '--s-color': s.color }}
@@ -276,20 +286,8 @@ export default function AdminOrders() {
         ))}
       </div>
 
-      {/* ── FILTERS (Status + Dates) ── */}
+      {/* ── FILTERS (Dates) ── */}
       <div className={styles.filters} style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
-        <select
-          className="form-control"
-          value={filterStatus}
-          onChange={e => { setFilterStatus(e.target.value); setPage(1); }}
-          style={{ maxWidth: 200, padding: '10px', borderRadius: '8px', border: '1px solid #ddd' }}
-        >
-          <option value="">All Statuses</option>
-          {STATUS_OPTIONS.map(s => (
-            <option key={s} value={s}>{s}</option>
-          ))}
-        </select>
-
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <label style={{ fontSize: '13px', fontWeight: '600', color: '#666' }}>From:</label>
           <input
@@ -310,10 +308,9 @@ export default function AdminOrders() {
           />
         </div>
 
-        {(filterStatus || startDate || endDate) && (
+        {(startDate || endDate) && (
           <button
             onClick={() => { 
-              setFilterStatus(''); 
               setStartDate(''); 
               setEndDate(''); 
               setPage(1); 
@@ -325,7 +322,7 @@ export default function AdminOrders() {
               cursor: 'pointer', fontSize: '13px',
             }}
           >
-            ✕ Clear Filters
+            ✕ Clear Dates
           </button>
         )}
       </div>
@@ -392,7 +389,7 @@ export default function AdminOrders() {
                 <td>
                   <div style={{ fontSize: '13px' }}>
                     <span style={{ fontWeight: '700' }}>
-                      {order.orderItems?.length}
+                      {order.orderItems?.reduce((s,i) => s + (i.quantity||1), 0)}
                     </span>
                     <span style={{ color: '#888' }}> items</span>
                   </div>
@@ -447,7 +444,6 @@ export default function AdminOrders() {
                       }}
                     >
                         👁️ View
-                  
                     </Link>
                   </div>
                 </td>
@@ -498,7 +494,7 @@ export default function AdminOrders() {
                   {order.user?.name || 'Customer'}
                 </div>
                 <div style={{ fontSize: '0.75rem', color: '#9ca3af' }}>
-                  {order.orderItems?.length} item(s)
+                  {order.orderItems?.reduce((s,i) => s + (i.quantity||1), 0)} item(s)
                 </div>
               </div>
               <div className={orderStyles.mobileOrderAmount}>
@@ -542,6 +538,7 @@ export default function AdminOrders() {
         ))}
       </div>
 
+      {/* Pagination */}
       {pagination.pages > 1 && (
         <div className={styles.pagination}>
           <button

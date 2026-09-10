@@ -11,13 +11,7 @@ const BABY_FOOD_CATEGORY_ID = '6a5473f71736df8447776561';
 
 // ✅ STRICT ELIGIBLE GUNTUR CITY PINCODES ONLY
 const ELIGIBLE_GUNTUR_PINCODES = [
-  '522001', // Guntur HO and central areas
-  '522002', // Guntur Head Post Office
-  '522003', // Etukuru Road and Hindu College area
-  '522004', // A.T. Agraharam and Guntur Collectorate
-  '522006', // S.V.N. Colony
-  '522007', // Chandramouli Nagar
-  '522034', // Industrial Estate
+  '522001', '522002', '522003', '522004', '522006', '522007', '522034'
 ];
 
 function isGunturLocation(address) {
@@ -109,7 +103,7 @@ export async function GET(request) {
 
     const where = {};
     if (session.user.role !== 'admin') where.userId = session.user.id;
-    if (status) where.orderStatus = status;
+    if (status && status !== 'all') where.orderStatus = status;
 
     if (paymentStatus) {
       where.paymentStatus = paymentStatus;
@@ -130,7 +124,24 @@ export async function GET(request) {
       if (endDate)   where.createdAt.lte = new Date(`${endDate}T23:59:59.999Z`);
     }
 
-    const [total, orders] = await Promise.all([
+    // ✅ Global Status Counts condition (Always excludes failed un-paid if flagged)
+    const statusCountsWhere = {};
+    if (session.user.role !== 'admin') {
+      statusCountsWhere.userId = session.user.id;
+    }
+    if (excludeFailedPayments === 'true') {
+      statusCountsWhere.NOT = [
+        {
+          AND: [
+            { paymentStatus: 'failed' },
+            { isPaid: false },
+          ],
+        },
+      ];
+    }
+
+    // ✅ OPTIMIZATION: Parallel execution of Data, Count, and Status Grouping
+    const [total, orders, statusGroups] = await Promise.all([
       prisma.order.count({ where }),
       prisma.order.findMany({
         where,
@@ -167,8 +178,34 @@ export async function GET(request) {
         orderBy: { createdAt: 'desc' },
         skip: (page - 1) * limit,
         take: limit,
+      }),
+      // ✅ Efficiently count all statuses across the database
+      prisma.order.groupBy({
+        by: ['orderStatus'],
+        where: statusCountsWhere,
+        _count: { _all: true },
       })
     ]);
+
+    // Build the status counts response object
+    const statusCounts = {
+      all: 0,
+      Pending: 0,
+      Confirmed: 0,
+      Processing: 0,
+      Shipped: 0,
+      Delivered: 0,
+      Cancelled: 0,
+      Refunded: 0,
+    };
+
+    statusGroups.forEach(g => {
+      const count = g._count._all || 0;
+      if (g.orderStatus) {
+        statusCounts[g.orderStatus] = count;
+      }
+      statusCounts.all += count; // Update "All" total
+    });
 
     return NextResponse.json({
       orders,
@@ -178,6 +215,7 @@ export async function GET(request) {
         total,
         pages: Math.ceil(total / limit),
       },
+      statusCounts, // ✅ Attach accurate counts object for Admin frontend
     });
   } catch (error) {
     console.error('Orders GET error:', error);
@@ -212,12 +250,7 @@ export async function POST(request) {
       paymentStatus,
     } = data;
 
-    // ✅ Strict check against Guntur Pincodes Array
-    const isGuntur = isGunturLocation(shippingAddress);
-
-    // ════════════════════════════════════════════════════════════
-    // ✅ BACKEND SECURITY GUARD: COD RESTRICTED TO GUNTUR PINCODES
-    // ════════════════════════════════════════════════════════════
+    // Validate COD Master Switch
     if (paymentMethod === 'COD') {
       const companySettings = await prisma.companySettings.findFirst({
         select: { codEnabled: true }
@@ -229,8 +262,8 @@ export async function POST(request) {
         );
       }
       
-      // ✅ Security Check: Blocks non-Guntur COD bypass attempts
-      if (!isGuntur) {
+      // ✅ Strict Check against Guntur
+      if (!isGunturLocation(shippingAddress)) {
         return NextResponse.json(
           { error: 'Cash on Delivery (COD) is only available for eligible Guntur city pincodes. Please pay online.' },
           { status: 400 }
@@ -238,7 +271,9 @@ export async function POST(request) {
       }
     }
 
-    // Fetch live brand discount percentages to compute secure price validation
+    const isGuntur = isGunturLocation(shippingAddress);
+
+    // Fetch active brand discounts
     const brandDiscounts = await prisma.gunturFoodDiscount.findMany({
       where: { isActive: true },
     });
@@ -288,13 +323,13 @@ export async function POST(request) {
           
           let finalVerifiedPrice = baseDbPrice;
           
-          // ✅ Apply brand-specific Guntur food discount securely on the backend
+          // Apply active brand-specific Guntur food discounts securely
           if (itemIsFood && isGuntur) {
             const itemBrand = (product?.brand || item.brand || '').trim().toLowerCase();
             const brandRule = brandDiscounts.find(
               d => d.brand.toLowerCase() === itemBrand && d.isActive
             );
-            const discountPct = brandRule ? brandRule.discountPercent : 10; // Default to 10% Guntur discount
+            const discountPct = brandRule ? brandRule.discountPercent : 10;
             finalVerifiedPrice = Math.round(baseDbPrice * (1 - discountPct / 100));
           }
 

@@ -23,54 +23,81 @@ export default function AdminDashboard() {
   const [showAllLow,      setShowAllLow]      = useState(false);
 
   useEffect(() => {
-    // ✅ Parallel DB execution: Pulls stats and orders together
-    Promise.all([
-      fetch('/api/orders?limit=5').then(r => r.json()),
-      fetch('/api/admin/dashboard').then(r => r.json()),
-    ]).then(([ordersData, dashboardData]) => {
-      setOrders(ordersData.orders || []);
-      setStats({
-        orders:              ordersData.pagination?.total || 0,
-        totalProductUnits:   dashboardData.stats?.totalProductUnits || 0,
-        totalUniqueProducts: dashboardData.stats?.totalUniqueProducts || 0,
-        categories:          dashboardData.stats?.categories || 0,
-        revenue:             dashboardData.stats?.revenue || 0,
-        lowStockCount:       dashboardData.stats?.lowStockCount || 0,
-        outOfStockCount:     dashboardData.stats?.outOfStockCount || 0,
-      });
-      setLowStockItems(dashboardData.lowStockItems || []);
-      setOutOfStockItems(dashboardData.outOfStockItems || []);
-      setThreshold(dashboardData.threshold || 5);
-      setLoading(false);
-    }).catch((err) => {
-      console.error('Dashboard load error:', err);
-      setLoading(false);
-    });
+    let isMounted = true;
+
+    async function loadDashboard() {
+      try {
+        const [ordersRes, dashRes] = await Promise.all([
+          fetch('/api/orders?limit=5'),
+          fetch('/api/admin/dashboard'),
+        ]);
+
+        const ordersData = await ordersRes.json();
+        const dashboardData = await dashRes.json();
+
+        if (!isMounted) return;
+
+        if (ordersData.orders) {
+          setOrders(ordersData.orders);
+        }
+
+        if (dashboardData.stats) {
+          setStats({
+            orders:              dashboardData.stats.totalOrders || ordersData.pagination?.total || 0,
+            totalProductUnits:   dashboardData.stats.totalProductUnits || 0,
+            totalUniqueProducts: dashboardData.stats.totalUniqueProducts || 0,
+            categories:          dashboardData.stats.categories || 0,
+            revenue:             dashboardData.stats.revenue || 0,
+            users:               dashboardData.stats.users || 0,
+            lowStockCount:       dashboardData.stats.lowStockCount || 0,
+            outOfStockCount:     dashboardData.stats.outOfStockCount || 0,
+          });
+          setLowStockItems(dashboardData.lowStockItems || []);
+          setOutOfStockItems(dashboardData.outOfStockItems || []);
+          setThreshold(dashboardData.threshold || 5);
+        } else if (dashboardData.error) {
+          console.error('Dashboard API Error:', dashboardData.error);
+        }
+      } catch (err) {
+        console.error('Dashboard load error:', err);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    }
+
+    loadDashboard();
+
+    return () => { isMounted = false; };
   }, []);
 
   const statCards = [
     {
-      icon: '🛍️', label: 'Total Orders',
+      icon: '📦', label: 'Total Orders',
       value: stats?.orders ?? '—',
       color: '#f97316', link: '/admin/orders',
-    },
-    {
-      icon: '📦', label: 'Total Products',
-      value: stats?.totalProductUnits ?? '—',
-      subtitle: stats?.totalUniqueProducts
-        ? `${stats.totalUniqueProducts} unique products`
-        : '',
-      color: '#8b5cf6', link: '/admin/products',
-    },
-    {
-      icon: '🗂️', label: 'Categories',
-      value: stats?.categories ?? '—',
-      color: '#0ea5e9', link: '/admin/categories',
     },
     {
       icon: '💰', label: 'Revenue',
       value: stats ? '₹' + stats.revenue.toLocaleString('en-IN') : '—',
       color: '#10b981', link: '/admin/orders',
+    },
+    {
+      icon: '🛍️', label: 'Total Products',
+      value: stats?.totalProductUnits ?? '—',
+      subtitle: stats?.totalUniqueProducts
+        ? `${stats.totalUniqueProducts} unique items`
+        : '',
+      color: '#8b5cf6', link: '/admin/products',
+    },
+    {
+      icon: '👥', label: 'Total Users',
+      value: stats?.users ?? '—',
+      color: '#eab308', link: '/admin/users',
+    },
+    {
+      icon: '🗂️', label: 'Categories',
+      value: stats?.categories ?? '—',
+      color: '#0ea5e9', link: '/admin/categories',
     },
   ];
 
@@ -194,7 +221,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Out of Stock — Show first if any */}
+          {/* Out of Stock */}
           {outOfStockItems.length > 0 && (
             <div style={{
               padding: '14px 18px',
@@ -203,33 +230,13 @@ export default function AdminDashboard() {
               borderRadius: '14px',
               marginBottom: lowStockItems.length > 0 ? '16px' : 0,
             }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '14px',
-                flexWrap: 'wrap',
-                gap: '8px',
-              }}>
-                <h3 style={{
-                  margin: 0,
-                  fontSize: '15px',
-                  fontWeight: '800',
-                  color: '#991b1b',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                }}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '14px' }}>
+                <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#991b1b' }}>
                   ❌ Out of Stock ({outOfStockItems.length})
                 </h3>
               </div>
-
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                gap: '10px',
-              }}>
-                {outOfStockItems.slice(0, 8).map((item, idx) => (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
+                {outOfStockItems.map((item, idx) => (
                   <StockItemCard key={`out-${idx}`} item={item} isOutOfStock />
                 ))}
               </div>
@@ -244,49 +251,20 @@ export default function AdminDashboard() {
               border: '2px solid #fde68a',
               borderRadius: '14px',
             }}>
-              <div style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                marginBottom: '14px',
-                flexWrap: 'wrap',
-                gap: '8px',
-              }}>
-                <h3 style={{
-                  margin: 0,
-                  fontSize: '15px',
-                  fontWeight: '800',
-                  color: '#92400e',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px' }}>
+                <h3 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#92400e' }}>
                   ⚠️ Low Stock (≤ {threshold} units)
                 </h3>
                 {lowStockItems.length > 6 && (
                   <button
                     onClick={() => setShowAllLow(!showAllLow)}
-                    style={{
-                      background: 'white',
-                      border: '1.5px solid #f59e0b',
-                      borderRadius: '999px',
-                      padding: '5px 14px',
-                      fontSize: '12px',
-                      fontWeight: '800',
-                      color: '#92400e',
-                      cursor: 'pointer',
-                    }}
+                    style={{ background: 'white', border: '1.5px solid #f59e0b', borderRadius: '999px', padding: '5px 14px', fontSize: '12px', fontWeight: '800', color: '#92400e', cursor: 'pointer' }}
                   >
                     {showAllLow ? '← Show less' : `Show all ${lowStockItems.length} →`}
                   </button>
                 )}
               </div>
-
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))',
-                gap: '10px',
-              }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '10px' }}>
                 {displayLowStock.map((item, idx) => (
                   <StockItemCard key={`low-${idx}`} item={item} />
                 ))}
@@ -301,12 +279,7 @@ export default function AdminDashboard() {
         <h2 className={styles.sectionTitle}>Quick Actions</h2>
         <div className={styles.quickActions}>
           {quickActions.map((a) => (
-            <Link
-              key={a.label}
-              href={a.href}
-              className={styles.quickAction}
-              style={{ '--ac': a.color }}
-            >
+            <Link key={a.label} href={a.href} className={styles.quickAction} style={{ '--ac': a.color }}>
               <span className={styles.qaIcon}>{a.icon}</span>
               <span className={styles.qaLabel}>{a.label}</span>
             </Link>
@@ -318,9 +291,7 @@ export default function AdminDashboard() {
       <div className={styles.section}>
         <div className={styles.sectionHeader}>
           <h2 className={styles.sectionTitle}>Recent Orders</h2>
-          <Link href="/admin/orders" className={styles.viewAll}>
-            View All →
-          </Link>
+          <Link href="/admin/orders" className={styles.viewAll}>View All →</Link>
         </div>
 
         {/* Desktop Table */}
@@ -342,39 +313,23 @@ export default function AdminDashboard() {
                 const sc = STATUS_CFG[order.orderStatus] || STATUS_CFG.Refunded;
                 return (
                   <tr key={order.id} className={styles.tr}>
-                    <td className={styles.tdId}>
-                      #{order.id?.slice(-8)?.toUpperCase()}
-                    </td>
+                    <td className={styles.tdId}>#{order.id?.slice(-8)?.toUpperCase()}</td>
                     <td className={styles.td}>
                       <div className={styles.customerCell}>
-                        <div className={styles.avatar}>
-                          {(order.user?.name || 'C')[0].toUpperCase()}
-                        </div>
+                        <div className={styles.avatar}>{(order.user?.name || 'C')[0].toUpperCase()}</div>
                         {order.user?.name || 'Customer'}
                       </div>
                     </td>
-                    <td className={styles.tdAmt}>
-                      ₹{order.totalPrice?.toLocaleString('en-IN')}
-                    </td>
+                    <td className={styles.tdAmt}>₹{order.totalPrice?.toLocaleString('en-IN')}</td>
                     <td className={styles.td}>
-                      <span
-                        className={styles.badge}
-                        style={{ background: sc.bg, color: sc.text }}
-                      >
+                      <span className={styles.badge} style={{ background: sc.bg, color: sc.text }}>
                         <span className={styles.dot} style={{ background: sc.dot }} />
                         {order.orderStatus}
                       </span>
                     </td>
+                    <td className={styles.td}>{new Date(order.createdAt).toLocaleDateString('en-IN')}</td>
                     <td className={styles.td}>
-                      {new Date(order.createdAt).toLocaleDateString('en-IN')}
-                    </td>
-                    <td className={styles.td}>
-                      <Link
-                        href={`/admin/orders/${order.id}`}
-                        className={styles.viewBtn}
-                      >
-                        View →
-                      </Link>
+                      <Link href={`/admin/orders/${order.id}`} className={styles.viewBtn}>View →</Link>
                     </td>
                   </tr>
                 );
@@ -382,61 +337,11 @@ export default function AdminDashboard() {
             </tbody>
           </table>
         </div>
-
-        {/* Mobile Cards */}
-        <div className={styles.mobileOrders}>
-          {orders.length === 0 ? (
-            <div className={styles.emptyCell}>No orders yet</div>
-          ) : orders.map((order) => {
-            const sc = STATUS_CFG[order.orderStatus] || STATUS_CFG.Refunded;
-            return (
-              <div key={order.id} className={styles.mobileOrderCard}>
-                <div className={styles.mobileOrderTop}>
-                  <span className={styles.mobileOrderId}>
-                    #{order.id?.slice(-8)?.toUpperCase()}
-                  </span>
-                  <span
-                    className={styles.badge}
-                    style={{ background: sc.bg, color: sc.text }}
-                  >
-                    <span className={styles.dot} style={{ background: sc.dot }} />
-                    {order.orderStatus}
-                  </span>
-                </div>
-                <div className={styles.mobileOrderMid}>
-                  <div className={styles.customerCell}>
-                    <div className={styles.avatar}>
-                      {(order.user?.name || 'C')[0].toUpperCase()}
-                    </div>
-                    {order.user?.name || 'Customer'}
-                  </div>
-                  <span className={styles.mobileOrderAmt}>
-                    ₹{order.totalPrice?.toLocaleString('en-IN')}
-                  </span>
-                </div>
-                <div className={styles.mobileOrderBottom}>
-                  <span className={styles.mobileOrderDate}>
-                    {new Date(order.createdAt).toLocaleDateString('en-IN')}
-                  </span>
-                  <Link
-                    href={`/admin/orders/${order.id}`}
-                    className={styles.viewBtn}
-                  >
-                    View Details →
-                  </Link>
-                </div>
-              </div>
-            );
-          })}
-        </div>
       </div>
     </div>
   );
 }
 
-/* ═══════════════════════════════════════
-   STOCK ITEM CARD COMPONENT
-═══════════════════════════════════════ */
 function StockItemCard({ item, isOutOfStock = false }) {
   const displayPrice = item.discountPrice || item.price;
 
@@ -444,134 +349,42 @@ function StockItemCard({ item, isOutOfStock = false }) {
     <Link
       href={`/admin/products/${item.id}`}
       style={{
-        display: 'flex',
-        gap: '10px',
-        padding: '10px',
-        background: 'white',
+        display: 'flex', gap: '10px', padding: '10px', background: 'white',
         border: `1.5px solid ${isOutOfStock ? '#fca5a5' : '#fde68a'}`,
-        borderRadius: '10px',
-        textDecoration: 'none',
-        transition: 'all 0.2s',
-        cursor: 'pointer',
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = 'translateY(-2px)';
-        e.currentTarget.style.boxShadow = isOutOfStock
-          ? '0 6px 16px rgba(220,38,38,0.15)'
-          : '0 6px 16px rgba(245,158,11,0.15)';
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = 'translateY(0)';
-        e.currentTarget.style.boxShadow = 'none';
+        borderRadius: '10px', textDecoration: 'none', cursor: 'pointer',
       }}
     >
-      {/* Image */}
       <div style={{
-        width: '54px',
-        height: '54px',
-        borderRadius: '8px',
-        background: '#f9fafb',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        overflow: 'hidden',
-        flexShrink: 0,
-        border: '1px solid #e5e7eb',
+        width: '54px', height: '54px', borderRadius: '8px', background: '#f9fafb',
+        display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden',
+        flexShrink: 0, border: '1px solid #e5e7eb',
       }}>
         {item.image ? (
-          <img
-            src={item.image}
-            alt={item.name}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-            }}
-          />
+          <img src={item.image} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
           <span style={{ fontSize: '1.5rem' }}>📦</span>
         )}
       </div>
 
-      {/* Info */}
       <div style={{ flex: 1, minWidth: 0 }}>
-        <p style={{
-          margin: 0,
-          fontSize: '12.5px',
-          fontWeight: '800',
-          color: '#1f2937',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-          lineHeight: 1.3,
-        }}>
+        <p style={{ margin: 0, fontSize: '12.5px', fontWeight: '800', color: '#1f2937', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
           {item.name}
         </p>
 
-        {/* Variant info */}
         {item.isVariant && item.variantName && (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '5px',
-            marginTop: '3px',
-          }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '5px', marginTop: '3px' }}>
             {item.variantHex && (
-              <span style={{
-                display: 'inline-block',
-                width: '10px',
-                height: '10px',
-                borderRadius: '50%',
-                background: item.variantHex,
-                border: '1px solid #ddd',
-                flexShrink: 0,
-              }} />
+              <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: item.variantHex, border: '1px solid #ddd' }} />
             )}
-            <span style={{
-              fontSize: '10.5px',
-              fontWeight: '700',
-              color: '#6b7280',
-            }}>
-              {item.variantName}
-            </span>
+            <span style={{ fontSize: '10.5px', fontWeight: '700', color: '#6b7280' }}>{item.variantName}</span>
           </div>
         )}
 
-        <p style={{
-          margin: '3px 0 0',
-          fontSize: '10.5px',
-          color: '#9ca3af',
-          fontWeight: '600',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          whiteSpace: 'nowrap',
-        }}>
-          🗂️ {item.category}
-        </p>
-
-        <div style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '6px',
-          marginTop: '5px',
-        }}>
-          <span style={{
-            fontSize: '11px',
-            fontWeight: '800',
-            color: '#059669',
-          }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', marginTop: '5px' }}>
+          <span style={{ fontSize: '11px', fontWeight: '800', color: '#059669' }}>
             ₹{displayPrice?.toLocaleString('en-IN')}
           </span>
-
-          <span style={{
-            padding: '2px 8px',
-            background: isOutOfStock ? '#dc2626' : '#f59e0b',
-            color: 'white',
-            borderRadius: '999px',
-            fontSize: '10px',
-            fontWeight: '800',
-          }}>
+          <span style={{ padding: '2px 8px', background: isOutOfStock ? '#dc2626' : '#f59e0b', color: 'white', borderRadius: '999px', fontSize: '10px', fontWeight: '800' }}>
             {isOutOfStock ? '❌ 0 left' : `⚠️ ${item.stock} left`}
           </span>
         </div>
