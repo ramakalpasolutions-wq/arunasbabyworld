@@ -3,6 +3,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from 'next-auth/react';
 import { useCart } from '@/context/CartContext';
+import { validateCheckoutRules } from '@/lib/checkoutRules';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 import styles from './CheckoutClient.module.css';
@@ -30,6 +31,8 @@ export default function CheckoutClient() {
   const [loading, setLoading] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('');
   const [showPaymentPanel, setShowPaymentPanel] = useState(false);
+  const [isCodAdminEnabled, setIsCodAdminEnabled] = useState(true);
+  
   const [address, setAddress] = useState({
     name: '',
     phone: '',
@@ -38,6 +41,18 @@ export default function CheckoutClient() {
     state: '',
     pincode: '',
   });
+
+  // Fetch admin settings for global COD switch status
+  useEffect(() => {
+    fetch('/api/company-settings')
+      .then((r) => r.json())
+      .then((data) => {
+        if (typeof data?.codEnabled === 'boolean') {
+          setIsCodAdminEnabled(data.codEnabled);
+        }
+      })
+      .catch((err) => console.error('Error fetching settings:', err));
+  }, []);
 
   useEffect(() => {
     document.body.style.overflow = showPaymentPanel ? 'hidden' : '';
@@ -61,6 +76,19 @@ export default function CheckoutClient() {
       <Link href="/products" className="btn btn-primary">Shop Now</Link>
     </div>
   );
+
+  // Validate Food MOV & COD Eligibility Rules
+  const {
+    isFoodMovValid,
+    foodMovError,
+    isCodAvailable,
+    codDisabledReason,
+  } = validateCheckoutRules({
+    cartItems: items,
+    pincode: address.pincode,
+    isCodAdminEnabled,
+    finalTotal: totalPrice,
+  });
 
   const handleAddressSubmit = (e) => {
     e.preventDefault();
@@ -106,6 +134,15 @@ export default function CheckoutClient() {
   });
 
   const handleCODOrder = async () => {
+    if (!isFoodMovValid) {
+      toast.error(foodMovError);
+      return;
+    }
+    if (!isCodAvailable) {
+      toast.error(codDisabledReason);
+      return;
+    }
+
     setLoading(true);
     try {
       const dbOrderRes = await fetch('/api/orders', {
@@ -145,6 +182,11 @@ export default function CheckoutClient() {
   };
 
   const handleRazorpayPayment = async () => {
+    if (!isFoodMovValid) {
+      toast.error(foodMovError);
+      return;
+    }
+
     setLoading(true);
     try {
       const loaded = await loadRazorpay();
@@ -285,6 +327,15 @@ export default function CheckoutClient() {
   };
 
   const handlePaymentMethodSelect = (method) => {
+    if (!isFoodMovValid) {
+      toast.error(foodMovError);
+      return;
+    }
+    if (method === 'COD' && !isCodAvailable) {
+      toast.error(codDisabledReason);
+      return;
+    }
+
     setPaymentMethod(method);
     if (setCartPaymentMethod) setCartPaymentMethod(method);
     setShowPaymentPanel(false);
@@ -306,6 +357,7 @@ export default function CheckoutClient() {
       subtitle: 'Visa, Mastercard, RuPay',
       color: '#3B82F6',
       method: 'Razorpay',
+      disabled: false,
     },
     {
       id: 'upi',
@@ -316,6 +368,7 @@ export default function CheckoutClient() {
       badge: 'Paytm',
       method: 'Razorpay',
       recommended: true,
+      disabled: false,
     },
     {
       id: 'netbanking',
@@ -339,9 +392,10 @@ export default function CheckoutClient() {
       id: 'cod',
       icon: '💵',
       title: 'Cash on Delivery',
-      subtitle: 'Pay when you receive (+₹20 COD fee)',
+      subtitle: isCodAvailable ? 'Pay when you receive (+₹20 COD fee)' : codDisabledReason,
       color: '#EF4444',
       method: 'COD',
+      disabled: !isCodAvailable,
     },
   ];
 
@@ -502,6 +556,24 @@ export default function CheckoutClient() {
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>💳 Ready to Pay</h2>
 
+              {/* Food Minimum Requirement Warning */}
+              {!isFoodMovValid && (
+                <div style={{
+                  padding: '14px 16px',
+                  background: '#FFFBEB',
+                  border: '1.5px solid #F59E0B',
+                  borderRadius: '12px',
+                  color: '#92400E',
+                  fontSize: '0.88rem',
+                  fontWeight: '700',
+                  fontFamily: 'Nunito, sans-serif',
+                  marginBottom: '16px',
+                  lineHeight: '1.4',
+                }}>
+                  ⚠️ <strong>Cart Requirement:</strong> {foodMovError}
+                </div>
+              )}
+
               <div style={{
                 padding: '20px',
                 background: 'linear-gradient(135deg, #FFF5F7, #F3E8FF)',
@@ -527,27 +599,37 @@ export default function CheckoutClient() {
                   ← Back
                 </button>
                 <button
-                  onClick={() => setShowPaymentPanel(true)}
-                  disabled={loading}
+                  onClick={() => {
+                    if (!isFoodMovValid) {
+                      toast.error(foodMovError);
+                      return;
+                    }
+                    setShowPaymentPanel(true);
+                  }}
+                  disabled={loading || !isFoodMovValid}
                   style={{
                     flex: 1,
                     padding: '14px 24px',
-                    background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                    background: !isFoodMovValid ? '#9CA3AF' : 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
                     color: 'white',
                     border: 'none',
                     borderRadius: '12px',
                     fontSize: '1rem',
                     fontWeight: '800',
                     fontFamily: 'Nunito, sans-serif',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 6px 20px rgba(255,107,53,0.30)',
+                    cursor: (loading || !isFoodMovValid) ? 'not-allowed' : 'pointer',
+                    boxShadow: !isFoodMovValid ? 'none' : '0 6px 20px rgba(255,107,53,0.30)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
                   }}
                 >
-                  {loading ? '⏳ Processing...' : `💳 Select Payment Method · ₹${fmt(totalPrice)}`}
+                  {loading
+                    ? '⏳ Processing...'
+                    : !isFoodMovValid
+                    ? '⚠️ Minimum Order Not Met'
+                    : `💳 Select Payment Method · ₹${fmt(totalPrice)}`}
                 </button>
               </div>
             </div>

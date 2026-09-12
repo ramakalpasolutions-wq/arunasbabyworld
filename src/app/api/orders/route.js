@@ -3,16 +3,12 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
 import { sendOrderConfirmation } from '@/lib/nodemailer';
+import { validateCheckoutRules, ELIGIBLE_GUNTUR_PINCODES } from '@/lib/checkoutRules';
 
 const STANDARD_SHIPPING_FEE = 50;
 const COD_EXTRA_FEE = 20;
 const FREE_SHIPPING_THRESHOLD = 800;
 const BABY_FOOD_CATEGORY_ID = '6a5473f71736df8447776561';
-
-// ✅ STRICT ELIGIBLE GUNTUR CITY PINCODES ONLY
-const ELIGIBLE_GUNTUR_PINCODES = [
-  '522001', '522002', '522003', '522004', '522006', '522007', '522034'
-];
 
 function isGunturLocation(address) {
   if (!address) return false;
@@ -124,7 +120,6 @@ export async function GET(request) {
       if (endDate)   where.createdAt.lte = new Date(`${endDate}T23:59:59.999Z`);
     }
 
-    // ✅ Global Status Counts condition (Always excludes failed un-paid if flagged)
     const statusCountsWhere = {};
     if (session.user.role !== 'admin') {
       statusCountsWhere.userId = session.user.id;
@@ -140,7 +135,6 @@ export async function GET(request) {
       ];
     }
 
-    // ✅ OPTIMIZATION: Parallel execution of Data, Count, and Status Grouping
     const [total, orders, statusGroups] = await Promise.all([
       prisma.order.count({ where }),
       prisma.order.findMany({
@@ -179,7 +173,6 @@ export async function GET(request) {
         skip: (page - 1) * limit,
         take: limit,
       }),
-      // ✅ Efficiently count all statuses across the database
       prisma.order.groupBy({
         by: ['orderStatus'],
         where: statusCountsWhere,
@@ -187,7 +180,6 @@ export async function GET(request) {
       })
     ]);
 
-    // Build the status counts response object
     const statusCounts = {
       all: 0,
       Pending: 0,
@@ -204,7 +196,7 @@ export async function GET(request) {
       if (g.orderStatus) {
         statusCounts[g.orderStatus] = count;
       }
-      statusCounts.all += count; // Update "All" total
+      statusCounts.all += count;
     });
 
     return NextResponse.json({
@@ -215,7 +207,7 @@ export async function GET(request) {
         total,
         pages: Math.ceil(total / limit),
       },
-      statusCounts, // ✅ Attach accurate counts object for Admin frontend
+      statusCounts,
     });
   } catch (error) {
     console.error('Orders GET error:', error);
@@ -249,27 +241,6 @@ export async function POST(request) {
       orderStatus,
       paymentStatus,
     } = data;
-
-    // Validate COD Master Switch
-    if (paymentMethod === 'COD') {
-      const companySettings = await prisma.companySettings.findFirst({
-        select: { codEnabled: true }
-      });
-      if (companySettings && companySettings.codEnabled === false) {
-        return NextResponse.json(
-          { error: 'Cash on Delivery (COD) is currently disabled. Please choose another payment method.' },
-          { status: 400 }
-        );
-      }
-      
-      // ✅ Strict Check against Guntur
-      if (!isGunturLocation(shippingAddress)) {
-        return NextResponse.json(
-          { error: 'Cash on Delivery (COD) is only available for eligible Guntur city pincodes. Please pay online.' },
-          { status: 400 }
-        );
-      }
-    }
 
     const isGuntur = isGunturLocation(shippingAddress);
 
@@ -323,7 +294,6 @@ export async function POST(request) {
           
           let finalVerifiedPrice = baseDbPrice;
           
-          // Apply active brand-specific Guntur food discounts securely
           if (itemIsFood && isGuntur) {
             const itemBrand = (product?.brand || item.brand || '').trim().toLowerCase();
             const brandRule = brandDiscounts.find(
@@ -376,6 +346,35 @@ export async function POST(request) {
     const taxPrice = Number(data.taxPrice) || 0;
     const totalPrice = Math.max(0, Math.round(itemsPrice + shippingPrice + taxPrice - discountAmount));
 
+    // --------------------------------------------------------------------------
+    // Backend Enforcement of Food MOV & Cash On Delivery (COD) Rules
+    // --------------------------------------------------------------------------
+    const companySettings = await prisma.companySettings.findFirst({
+      select: { codEnabled: true }
+    });
+    const isCodAdminEnabled = companySettings?.codEnabled !== false;
+
+    const rules = validateCheckoutRules({
+      cartItems: enrichedItems,
+      pincode: shippingAddress?.pincode,
+      isCodAdminEnabled,
+      finalTotal: totalPrice,
+    });
+
+    if (!rules.isFoodMovValid) {
+      return NextResponse.json(
+        { error: rules.foodMovError },
+        { status: 400 }
+      );
+    }
+
+    if (paymentMethod === 'COD' && !rules.isCodAvailable) {
+      return NextResponse.json(
+        { error: rules.codDisabledReason },
+        { status: 400 }
+      );
+    }
+
     const orderNumber = await getNextOrderNumber();
 
     const sanitizedOrderItems = enrichedItems.map((item) => ({
@@ -417,8 +416,8 @@ export async function POST(request) {
     });
 
     console.log(
-      '✅ Order created secure:', order.id,
-      '| Guntur Discount Verification:', isGuntur,
+      '✅ Order created securely:', order.id,
+      '| Guntur Check:', isGuntur,
       '| Total:', totalPrice
     );
 
