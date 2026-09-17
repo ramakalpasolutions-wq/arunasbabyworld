@@ -4,7 +4,6 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { useCart } from '@/context/CartContext';
 import { useWishlist } from '@/context/WishlistContext';
-import { useLocation } from '@/context/LocationContext';
 import toast from 'react-hot-toast';
 import styles from './ProductCard.module.css';
 
@@ -82,13 +81,8 @@ export function ProductCardSkeleton() {
 }
 
 export default function ProductCard({ product }) {
-  // ✅ Access gunturDiscounts dynamic rules from Context
-  const { addItem, addToCart, gunturDiscounts = [] } = useCart();
+  const { addItem, addToCart } = useCart();
   const { toggle, isWishlisted, isInWishlist } = useWishlist();
-
-  // ✅ Location Context for Guntur discount detection
-  const locationCtx = useLocation();
-  const isGuntur = locationCtx?.isGuntur || false;
 
   const [imgLoaded, setImgLoaded] = useState(false);
   const [cartAdding, setCartAdding] = useState(false);
@@ -129,31 +123,14 @@ export default function ProductCard({ product }) {
   const { price: displayPrice, discountPrice: displayDiscountPrice } = getProductPrice();
 
   const isFood = isFoodProduct(product);
-  const hasGunturDiscount = isGuntur && isFood;
 
-  // ✅ Find Guntur discount percentage based on Brand Rules (defaults to 10%)
-  const gunturDiscountPercent = (() => {
-    if (!hasGunturDiscount) return 0;
-    const brandName = (product.brand || '').trim().toLowerCase();
-    const brandRule = gunturDiscounts.find(
-      d => d.brand.toLowerCase() === brandName && d.isActive
-    );
-    return brandRule ? brandRule.discountPercent : 10;
-  })();
+  // Standard Catalog Pricing (Strictly No Guntur Discounts)
+  const hasCatalogDiscount = Boolean(displayDiscountPrice && displayDiscountPrice > 0 && displayDiscountPrice < displayPrice);
+  const finalPrice = hasCatalogDiscount ? displayDiscountPrice : displayPrice;
+  const showOldPrice = hasCatalogDiscount ? displayPrice : null;
 
-  const standardActivePrice = displayDiscountPrice || displayPrice;
-  // Apply Guntur brand-specific discount or standard discount
-  const finalPrice = hasGunturDiscount 
-    ? Math.round(standardActivePrice * (1 - gunturDiscountPercent / 100)) 
-    : standardActivePrice;
-
-  // Strikethrough price configuration
-  const showOldPrice = hasGunturDiscount
-    ? (displayPrice > finalPrice ? displayPrice : (standardActivePrice > finalPrice ? standardActivePrice : null))
-    : (displayDiscountPrice && displayDiscountPrice < displayPrice ? displayPrice : null);
-
-  const discountPercent = displayPrice > finalPrice
-    ? Math.round(((displayPrice - finalPrice) / displayPrice) * 100)
+  const discountPercent = hasCatalogDiscount
+    ? Math.round(((displayPrice - displayDiscountPrice) / displayPrice) * 100)
     : 0;
 
   const accent = getCategoryAccent(
@@ -241,7 +218,7 @@ export default function ProductCard({ product }) {
               alt={product.name}
               width={240}
               height={240}
-              unoptimized={true} // Bypasses Next.js image server, delivers from Cloudflare CDN directly
+              unoptimized={true}
               loading="lazy"
               className={`${styles.image} ${imgLoaded ? styles.imageVisible : styles.imageHidden}`}
               style={{ objectFit: 'cover' }}
@@ -254,23 +231,10 @@ export default function ProductCard({ product }) {
           </div>
         )}
 
-        {/* Dynamic Guntur Special or Standard Discount Badge */}
-        {hasGunturDiscount ? (
-          <span
-            className={styles.badgeDiscount}
-            style={{
-              background: 'linear-gradient(135deg, #10B981, #059669)',
-              color: 'white',
-              boxShadow: '0 2px 8px rgba(16,185,129,0.35)',
-              fontSize: '0.72rem',
-              fontWeight: '900',
-            }}
-          >
-            🎉 -{gunturDiscountPercent}% GUNTUR
-          </span>
-        ) : discountPercent > 0 ? (
+        {/* Standard Catalog Discount Badge */}
+        {discountPercent > 0 && (
           <span className={styles.badgeDiscount}>-{discountPercent}%</span>
-        ) : null}
+        )}
 
         {/* Wishlist button */}
         <button
@@ -282,7 +246,7 @@ export default function ProductCard({ product }) {
           <span className={styles.wishIcon}>{inWishlist ? '❤️' : '🤍'}</span>
         </button>
 
-        {/* OOS Overlay */}
+        {/* Out of Stock Overlay */}
         {product.stock === 0 && (
           <div className={styles.oos}>
             <span>Out of Stock</span>

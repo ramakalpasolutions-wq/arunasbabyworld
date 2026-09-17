@@ -63,10 +63,10 @@ export function validateCheckoutRules({
 
   if (hasFood) {
     if (nonFoodTotal >= NON_FOOD_COMBO_THRESHOLD) {
-      // Food MOV requirement is waived because Non-Food products >= ₹500 are in cart
+      // Waived because non-food items >= ₹500 are in cart
       isFoodMovValid = true;
     } else if (foodTotal >= MIN_FOOD_ORDER_VALUE) {
-      // Met because Food total is >= ₹1,500
+      // Met because food total is >= ₹1,500
       isFoodMovValid = true;
     } else {
       isFoodMovValid = false;

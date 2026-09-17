@@ -88,7 +88,7 @@ export default function CartClient() {
     shippingPrice,
     baseShipping,
     codFee,
-    isGuntur, // ✅ Shared reactive value represents the 7 exact Guntur pincodes
+    isGuntur,
     hasFoodItems,
     paymentMethod,
     setPaymentMethod,
@@ -99,7 +99,6 @@ export default function CartClient() {
     removeCoupon,
     clearCart,
     syncCartPrices,
-    gunturDiscounts, // ✅ dynamic brand discount matrix
 
     // Server-side Address Actions from global context
     addresses,
@@ -149,7 +148,6 @@ export default function CartClient() {
         }
       })
       .catch(err => console.error('Error fetching payment settings:', err));
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const getMaxStock = (item) => {
@@ -178,7 +176,7 @@ export default function CartClient() {
           items: items.map(i => ({
             productId: i.id || i._id,
             quantity: i.quantity,
-            price: getEffectiveItemPrice(i, isGuntur, gunturDiscounts),
+            price: getEffectiveItemPrice(i),
             category: i.category,
             categoryId: i.categoryId
           })),
@@ -312,7 +310,7 @@ export default function CartClient() {
       productId: i.id || i._id,
       name: i.name,
       image: i.images?.[0]?.url || '',
-      price: getEffectiveItemPrice(i, isGuntur, gunturDiscounts),
+      price: getEffectiveItemPrice(i),
       quantity: i.quantity,
       categorySlug: i.categorySlug || i.category?.slug || '',
       categoryName: i.categoryName || i.category?.name || '',
@@ -460,8 +458,7 @@ export default function CartClient() {
     }, 300);
   };
 
-  // ✅ DYNAMIC PAYMENT OPTIONS (Hides COD dynamically when not eligible or disabled)
-  const canUseCOD = isCodEnabled && isGuntur; // Only allow COD if globally active and pincode is within Guntur list
+  const canUseCOD = isCodEnabled && isGuntur;
   const PAYMENT_OPTIONS = [
     { id: 'card', icon: '💳', title: 'Credit/Debit Card', subtitle: 'Visa, Mastercard, RuPay', color: '#3B82F6', method: 'Razorpay' },
     { id: 'upi', icon: '📱', title: 'UPI', subtitle: 'GPay, PhonePe, Paytm', color: '#10B981', badge: 'Paytm', method: 'Razorpay', recommended: true },
@@ -517,7 +514,7 @@ export default function CartClient() {
                   Deliver to <span style={{ color: '#FF6B9D' }}>{selectedAddress.name}</span>, {selectedAddress.pincode}
                   {isGuntur && (
                     <span style={{ marginLeft: '8px', padding: '2px 8px', background: '#D1FAE5', color: '#065F46', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>
-                      📍 Guntur Offer Active!
+                      📍 Guntur Free Shipping
                     </span>
                   )}
                   {selectedAddress.isDefault && (
@@ -536,7 +533,7 @@ export default function CartClient() {
                   No delivery address selected
                 </p>
                 <p style={{ margin: '3px 0 0', fontSize: '0.78rem', color: '#6B7280', fontWeight: '600', fontFamily: 'Nunito, sans-serif' }}>
-                  Add an address to check local offers
+                  Add an address to proceed
                 </p>
               </>
             )}
@@ -625,9 +622,8 @@ export default function CartClient() {
         <div className={styles.itemsList}>
           {items.map((item) => {
             const itemId = item.id || item._id;
-            const originalPrice = item.discountPrice || item.price;
-            const price = getEffectiveItemPrice(item, isGuntur, gunturDiscounts); // ✅ Dynamic Brand Food Discount applied instantly
-            const hasGunturDiscount = isGuntur && isFoodItem(item);
+            const price = getEffectiveItemPrice(item);
+            const hasCatalogDiscount = item.discountPrice && item.discountPrice > 0 && item.discountPrice < item.price;
 
             const image = item.images?.[0]?.url || `https://via.placeholder.com/100`;
             const maxStock = getMaxStock(item);
@@ -635,11 +631,6 @@ export default function CartClient() {
             const exceedsStock = item.quantity > maxStock;
             const atMaxStock = item.quantity >= maxStock && maxStock > 0;
             const isLowStock = maxStock > 0 && maxStock <= 5;
-
-            // ✅ Find specific Guntur discount percentage for custom item badge display
-            const itemBrandName = (item.brand || item.brandName || '').trim().toLowerCase();
-            const matchingRule = gunturDiscounts.find(d => d.brand.toLowerCase() === itemBrandName && d.isActive);
-            const currentDiscountPercent = matchingRule ? matchingRule.discountPercent : 10;
 
             return (
               <div key={itemId} className={styles.cartItem} style={{
@@ -661,21 +652,15 @@ export default function CartClient() {
 
                   <div className={styles.itemPrice}>
                     ₹{price.toLocaleString('en-IN')} each
-                    {hasGunturDiscount && (
+                    {hasCatalogDiscount && (
                       <span style={{ textDecoration: 'line-through', color: '#94A3B8', fontSize: '11px', marginLeft: '6px', fontWeight: '600' }}>
-                        ₹{originalPrice.toLocaleString('en-IN')}
+                        ₹{item.price.toLocaleString('en-IN')}
                       </span>
                     )}
                   </div>
 
-                  {item.discountPrice && !hasGunturDiscount && <div className={styles.itemOriginal}>MRP: ₹{item.price.toLocaleString('en-IN')}</div>}
                   {item.ageGroup && <div style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>👶 {item.ageGroup}</div>}
 
-                  {hasGunturDiscount && (
-                    <div style={{ display: 'inline-block', marginTop: '6px', padding: '3px 10px', background: '#D1FAE5', color: '#065F46', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>
-                      🎉 {currentDiscountPercent}% Guntur Food Discount Applied
-                    </div>
-                  )}
                   {isOutOfStock && <div style={{ display: 'inline-block', marginTop: '6px', padding: '3px 10px', background: '#dc2626', color: 'white', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>❌ OUT OF STOCK</div>}
                   {exceedsStock && !isOutOfStock && <div style={{ display: 'inline-block', marginTop: '6px', padding: '3px 10px', background: '#dc2626', color: 'white', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>⚠️ Only {maxStock} available</div>}
                   {!exceedsStock && !isOutOfStock && isLowStock && <div style={{ display: 'inline-block', marginTop: '6px', padding: '3px 10px', background: '#fef3c7', color: '#92400e', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>⚠️ Only {maxStock} left</div>}
@@ -752,7 +737,7 @@ export default function CartClient() {
                     background: '#ECFDF5', border: '1.5px solid #A7F3D0',
                     fontSize: '12px', fontWeight: '700', color: '#065F46', textAlign: 'center',
                   }}>
-                    🎉 Guntur Special: Free delivery + Brand-Specific Food Discount Applied!
+                    🎉 Guntur City Order: Free Delivery Applied!
                   </div>
                 );
               }
@@ -957,7 +942,7 @@ export default function CartClient() {
                               </p>
                               <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }} onClick={(e) => e.stopPropagation()}>
                                 <button onClick={() => openEditAddress(index)} style={{ padding: '5px 12px', background: 'white', border: '1.5px solid #7B2FBE', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '800', color: '#7B2FBE', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>✏️ EDIT</button>
-                                <button onClick={() => { if (confirm('Delete this address permanently?')) handleDeleteAddress(index); }} style={{ padding: '5px 12px', background: 'white', border: '1.5px solid #DC2626', color: '#DC2626', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '800', color: '#DC2626', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>🗑️ DELETE</button>
+                                <button onClick={() => { if (confirm('Delete this address permanently?')) handleDeleteAddress(index); }} style={{ padding: '5px 12px', background: 'white', border: '1.5px solid #DC2626', color: '#DC2626', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '800', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>🗑️ DELETE</button>
                                 {!addr.isDefault && (
                                   <button onClick={() => handleSetDefaultAddress(index)} style={{ padding: '5px 12px', background: 'white', border: '1.5px solid #D97706', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '800', color: '#D97706', cursor: 'pointer', fontFamily: 'Nunito, sans-serif', marginLeft: 'auto' }}>👑 SET DEFAULT</button>
                                 )}

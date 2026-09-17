@@ -42,7 +42,6 @@ export default function CheckoutClient() {
     pincode: '',
   });
 
-  // Fetch admin settings for global COD switch status
   useEffect(() => {
     fetch('/api/company-settings')
       .then((r) => r.json())
@@ -77,7 +76,6 @@ export default function CheckoutClient() {
     </div>
   );
 
-  // Validate Food MOV & COD Eligibility Rules
   const {
     isFoodMovValid,
     foodMovError,
@@ -117,7 +115,7 @@ export default function CheckoutClient() {
       productId: i.id || i._id,
       name: i.name,
       image: i.images?.[0]?.url || '',
-      price: i.discountPrice || i.price,
+      price: i.discountPrice && i.discountPrice > 0 ? i.discountPrice : i.price,
       quantity: i.quantity,
       categorySlug: i.categorySlug || i.category?.slug || '',
       categoryName: i.categoryName || i.category?.name || '',
@@ -535,7 +533,7 @@ export default function CheckoutClient() {
                       <p>Qty: {item.quantity}</p>
                     </div>
                     <span className={styles.reviewItemPrice}>
-                      ₹{Math.round((item.discountPrice || item.price) * item.quantity).toLocaleString('en-IN')}
+                      ₹{Math.round((item.discountPrice && item.discountPrice > 0 ? item.discountPrice : item.price) * item.quantity).toLocaleString('en-IN')}
                     </span>
                   </div>
                 ))}
@@ -556,7 +554,6 @@ export default function CheckoutClient() {
             <div className={styles.card}>
               <h2 className={styles.cardTitle}>💳 Ready to Pay</h2>
 
-              {/* Food Minimum Requirement Warning */}
               {!isFoodMovValid && (
                 <div style={{
                   padding: '14px 16px',
