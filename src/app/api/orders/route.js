@@ -81,6 +81,146 @@ async function getNextOrderNumber() {
   }
 }
 
+// ==========================================
+// GET Handler - Retrieve user/admin orders
+// ==========================================
+export async function GET(request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session) {
+      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const status                = searchParams.get('status');
+    const paymentStatus         = searchParams.get('paymentStatus');
+    const excludeFailedPayments = searchParams.get('excludeFailedPayments');
+    const startDate             = searchParams.get('startDate');
+    const endDate               = searchParams.get('endDate');
+    const page                  = parseInt(searchParams.get('page')  || '1');
+    const limit                 = Math.min(parseInt(searchParams.get('limit') || '10'), 50);
+
+    const where = {};
+    if (session.user.role !== 'admin') where.userId = session.user.id;
+    if (status && status !== 'all') where.orderStatus = status;
+
+    if (paymentStatus) {
+      where.paymentStatus = paymentStatus;
+    } else if (excludeFailedPayments === 'true') {
+      where.NOT = [
+        {
+          AND: [
+            { paymentStatus: 'failed' },
+            { isPaid: false },
+          ],
+        },
+      ];
+    }
+
+    if (startDate || endDate) {
+      where.createdAt = {};
+      if (startDate) where.createdAt.gte = new Date(`${startDate}T00:00:00.000Z`);
+      if (endDate)   where.createdAt.lte = new Date(`${endDate}T23:59:59.999Z`);
+    }
+
+    const statusCountsWhere = {};
+    if (session.user.role !== 'admin') {
+      statusCountsWhere.userId = session.user.id;
+    }
+    if (excludeFailedPayments === 'true') {
+      statusCountsWhere.NOT = [
+        {
+          AND: [
+            { paymentStatus: 'failed' },
+            { isPaid: false },
+          ],
+        },
+      ];
+    }
+
+    const [total, orders, statusGroups] = await Promise.all([
+      prisma.order.count({ where }),
+      prisma.order.findMany({
+        where,
+        select: {
+          id: true,
+          orderNumber: true,
+          userId: true,
+          paymentMethod: true,
+          itemsPrice: true,
+          shippingPrice: true,
+          taxPrice: true,
+          discountAmount: true,
+          totalPrice: true,
+          couponCode: true,
+          isPaid: true,
+          paidAt: true,
+          orderStatus: true,
+          paymentStatus: true,
+          createdAt: true,
+          orderItems: {
+            select: {
+              productId: true,
+              name: true,
+              image: true,
+              price: true,
+              quantity: true,
+            }
+          },
+          shippingAddress: true,
+          user: {
+            select: { name: true, email: true }
+          }
+        },
+        orderBy: { createdAt: 'desc' },
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+      prisma.order.groupBy({
+        by: ['orderStatus'],
+        where: statusCountsWhere,
+        _count: { _all: true },
+      })
+    ]);
+
+    const statusCounts = {
+      all: 0,
+      Pending: 0,
+      Confirmed: 0,
+      Processing: 0,
+      Shipped: 0,
+      Delivered: 0,
+      Cancelled: 0,
+      Refunded: 0,
+    };
+
+    statusGroups.forEach(g => {
+      const count = g._count._all || 0;
+      if (g.orderStatus) {
+        statusCounts[g.orderStatus] = count;
+      }
+      statusCounts.all += count;
+    });
+
+    return NextResponse.json({
+      orders,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+      statusCounts,
+    });
+  } catch (error) {
+    console.error('Orders GET error:', error);
+    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+  }
+}
+
+// ==========================================
+// POST Handler - Create Order
+// ==========================================
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
@@ -280,5 +420,30 @@ export async function POST(request) {
   } catch (error) {
     console.error('Order POST error:', error);
     return NextResponse.json({ error: error.message || 'Internal server error' }, { status: 500 });
+  }
+}
+
+// ==========================================
+// DELETE Handler - Admin Delete Order
+// ==========================================
+export async function DELETE(request) {
+  try {
+    const session = await getServerSession(authOptions);
+    if (!session || session.user.role !== 'admin') {
+      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+    }
+
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+
+    if (!id) {
+      return NextResponse.json({ error: 'Order ID required' }, { status: 400 });
+    }
+
+    await prisma.order.delete({ where: { id } });
+    return NextResponse.json({ message: 'Order deleted' });
+  } catch (error) {
+    console.error('Order DELETE error:', error);
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
