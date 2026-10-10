@@ -4,7 +4,7 @@ import { Toaster } from 'react-hot-toast';
 import { CartProvider } from '@/context/CartContext';
 import { WishlistProvider } from '@/context/WishlistContext';
 import { LocationProvider } from '@/context/LocationContext';
-import LocationModal from '@/components/layout/LocationModal';
+import FloatingWhatsApp from '@/components/layout/FloatingWhatsApp';
 
 export default function Providers({ children }) {
   return (
@@ -13,7 +13,7 @@ export default function Providers({ children }) {
         <CartProvider>
           <WishlistProvider>
             {children}
-            <LocationModal />
+            <FloatingWhatsApp />
             <Toaster
               position="top-center"
               toastOptions={{

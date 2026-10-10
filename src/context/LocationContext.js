@@ -24,10 +24,11 @@ export function LocationProvider({ children }) {
   const [userPincode, setUserPincode] = useState('');
   const [userCity, setUserCity] = useState('');
   const [isLocationSet, setIsLocationSet] = useState(false);
+  // Kept for optional manual override elsewhere (Header etc.) — never auto-opened
   const [showLocationModal, setShowLocationModal] = useState(false);
 
-  // Load location from localStorage on first mount
   useEffect(() => {
+    // 1. Use saved location if available
     const saved = localStorage.getItem('userLocation');
     if (saved) {
       try {
@@ -35,14 +36,12 @@ export function LocationProvider({ children }) {
         setUserPincode(pincode || '');
         setUserCity(city || '');
         setIsLocationSet(true);
+        return;
       } catch {}
-    } else {
-      // Show modal after 1 second delay for smooth UX
-      const timer = setTimeout(() => {
-        setShowLocationModal(true);
-      }, 1000);
-      return () => clearTimeout(timer);
     }
+
+    // 2. No saved location → silent auto-detect (NO modal)
+    autoDetectLocation();
   }, []);
 
   const saveLocation = (pincode, city = '') => {
@@ -51,6 +50,56 @@ export function LocationProvider({ children }) {
     setIsLocationSet(true);
     setShowLocationModal(false);
     localStorage.setItem('userLocation', JSON.stringify({ pincode, city }));
+  };
+
+  const autoDetectLocation = async () => {
+    // Method 1: IP geolocation (silent, no browser permission popup)
+    try {
+      const res = await fetch('https://ipapi.co/json/');
+      if (res.ok) {
+        const data = await res.json();
+        const pincode = data.postal || '';
+        const city = data.city || '';
+        if (pincode) {
+          saveLocation(pincode, city);
+          return;
+        }
+      }
+    } catch (err) {
+      console.warn('IP geolocation failed, trying browser geolocation...', err);
+    }
+
+    // Method 2: Browser geolocation fallback
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        try {
+          const { latitude, longitude } = position.coords;
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&addressdetails=1`
+          );
+          const data = await res.json();
+          const pincode = data.address?.postcode || '';
+          const city =
+            data.address?.city ||
+            data.address?.town ||
+            data.address?.village ||
+            data.address?.county ||
+            '';
+          if (pincode) {
+            saveLocation(pincode, city);
+          }
+        } catch (err) {
+          console.warn('Reverse geocode failed', err);
+        }
+      },
+      (err) => {
+        // Denied / timeout — stay without location, no modal
+        console.warn('Geolocation denied/error', err);
+      },
+      { timeout: 8000, maximumAge: 600000 }
+    );
   };
 
   const clearLocation = () => {
@@ -73,6 +122,7 @@ export function LocationProvider({ children }) {
         setShowLocationModal,
         saveLocation,
         clearLocation,
+        autoDetectLocation,
         ELIGIBLE_GUNTUR_PINCODES,
       }}
     >
