@@ -10,16 +10,16 @@ const navItems = [
   { href: '/admin/products',   icon: '📦', label: 'Products'   },
   { href: '/admin/categories', icon: '🗂️', label: 'Categories' },
   { href: '/admin/banners',    icon: '🖼️', label: 'Banners'    },
-    { href: '/admin/failed-payments', icon: '🚨', label: 'Failed Payments' },
+  { href: '/admin/failed-payments', icon: '🚨', label: 'Failed Payments' },
   { href: '/admin/orders',     icon: '🛍️', label: 'Orders'     },
   { label: 'Reviews', icon: '⭐', href: '/admin/reviews' },
   { label: 'Offer Popups', href: '/admin/offer-popups', icon: '🎁' },
   { label: 'Settings', icon: '⚙️', href: '/admin/settings' },
-  // { href: '/admin/refunds',    icon: '💰', label: 'Refunds'    }, // ✅ NEW
-  { href: '/admin/exchanges',  icon: '🔄', label: 'Exchanges'  }, // ✅ NEW
+  { href: '/admin/exchanges',  icon: '🔄', label: 'Exchanges'  },
   { href: '/admin/coupons',    icon: '🎟️', label: 'Coupons'    },
   { href: '/admin/guntur-discounts', icon: '🎯', label: 'Guntur Food Discounts' },
   { href: '/admin/users',      icon: '👥', label: 'Users'      },
+  { href: '/admin/heatmap',    icon: '🔥', label: 'User Heatmap' }, // 👈 ADDED HERE
   { href: '/admin/gst-reports', icon: '📊', label: 'GST Reports' },
   { href: '/admin/contacts',   icon: '📩', label: 'Messages'   },
 ];

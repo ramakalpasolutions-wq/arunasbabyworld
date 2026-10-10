@@ -1,0 +1,210 @@
+.container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.header h1 {
+  font-size: 1.8rem;
+  color: #1E293B;
+  margin: 0 0 8px;
+}
+
+.header p {
+  color: #64748B;
+  margin: 0 0 24px;
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.card {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+  border: 1px solid #E2E8F0;
+}
+
+.card h3 {
+  margin: 0 0 20px;
+  color: #0F172A;
+  font-size: 1.2rem;
+}
+
+/* Density Matrix */
+.matrix {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  gap: 10px;
+}
+
+.matrixBlock {
+  border-radius: 10px;
+  padding: 14px 8px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  min-height: 80px;
+  transition: transform 0.2s ease;
+  cursor: default;
+}
+
+.matrixBlock:hover {
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.matrixLabel {
+  font-size: 0.9rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.matrixCount {
+  font-size: 1.2rem;
+  font-weight: 900;
+  margin-top: 4px;
+}
+
+/* Color blocks with light background need dark text */
+.matrixBlock[style*="background-color: rgb(226, 232, 240)"] {
+  color: #475569;
+}
+
+/* Legend */
+.legend {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 24px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #64748B;
+}
+
+.legendGradient {
+  height: 8px;
+  width: 150px;
+  border-radius: 4px;
+  background: linear-gradient(90deg, #E2E8F0, #F472B6, #A855F7, #7B2FBE);
+}
+
+/* List */
+.list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.listItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px;
+  background: #F8FAFC;
+  border-radius: 10px;
+  border: 1px solid #F1F5F9;
+}
+
+.listInfo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.rank {
+  font-weight: 900;
+  color: #94A3B8;
+  font-size: 1.1rem;
+}
+
+.name {
+  font-weight: 800;
+  color: #334155;
+}
+
+.listStats {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.count {
+  font-weight: 800;
+  color: #7B2FBE;
+}
+
+.percentage {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #64748B;
+}
+
+/* Bar Chart */
+.barChart {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.barRow {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.barLabel {
+  width: 120px;
+  font-weight: 700;
+  color: #475569;
+  font-size: 0.85rem;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.barTrack {
+  flex: 1;
+  height: 12px;
+  background: #F1F5F9;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.barFill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 1s ease-out;
+}
+
+.barValue {
+  width: 40px;
+  font-weight: 800;
+  color: #1E293B;
+  font-size: 0.9rem;
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 50vh;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #7B2FBE;
+}
