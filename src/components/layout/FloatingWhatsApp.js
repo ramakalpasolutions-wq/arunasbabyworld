@@ -3,7 +3,7 @@ import { usePathname } from 'next/navigation';
 import { useState, useEffect } from 'react';
 
 // ⬇️ Replace with your actual WhatsApp business number (country code + number)
-const WHATSAPP_NUMBER = '919876543210'; 
+const WHATSAPP_NUMBER = '919966543759'; 
 const DEFAULT_MESSAGE = 'Hi! I need help with an order from Arunas Baby World 👶';
 
 export default function FloatingWhatsApp() {

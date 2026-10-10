@@ -310,6 +310,17 @@ type OrderItem {
   price     Float?
   quantity  Int?
 }
+model PageVisit {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  sessionId String
+  path      String
+  userId    String?  @db.ObjectId
+  createdAt DateTime @default(now())
+
+  @@index([sessionId])
+  @@index([path])
+  @@index([createdAt])
+}
 model GunturFoodDiscount {
   id              String   @id @default(auto()) @map("_id") @db.ObjectId
   brand           String   @unique
