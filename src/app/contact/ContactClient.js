@@ -70,7 +70,7 @@ export default function ContactClient() {
             </div>
             <div className={styles.cardBody}>
               <h3>Call Us</h3>
-              <p>+91 90529 99659</p>
+              <p>+91 99665 43759</p>
               <span>Mon–Sat, 9am–10pm</span>
             </div>
             <a href="tel:+919052999659" className={styles.cardBtn} style={{ '--btn-color': '#ff6b9d' }}>
