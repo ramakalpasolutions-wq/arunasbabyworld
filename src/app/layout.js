@@ -1,4 +1,3 @@
-
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import { GoogleAnalytics } from '@next/third-parties/google';
@@ -27,17 +26,11 @@ export const metadata = {
 };
 
 // =========================================================
-// GOOGLE ANALYTICS 4
+// GOOGLE ANALYTICS 4 & MICROSOFT CLARITY
 // =========================================================
 
 const GOOGLE_ANALYTICS_ID = 'G-WRC6VQLGE2';
-
-// =========================================================
-// MICROSOFT CLARITY
-// Replace with your actual Microsoft Clarity Project ID
-// =========================================================
-
-const CLARITY_PROJECT_ID = 'YOUR_CLARITY_PROJECT_ID';
+const CLARITY_PROJECT_ID = 'yvi9pf6emf';
 
 // =========================================================
 // ROOT LAYOUT
@@ -54,7 +47,6 @@ export default async function RootLayout({ children }) {
           rel="preconnect"
           href="https://fonts.googleapis.com"
         />
-
         <link
           rel="preconnect"
           href="https://fonts.gstatic.com"
@@ -68,7 +60,7 @@ export default async function RootLayout({ children }) {
         {/* MICROSOFT CLARITY - HEATMAPS AND SESSION REPLAYS */}
         {/* ================================================= */}
 
-        {CLARITY_PROJECT_ID !== 'YOUR_CLARITY_PROJECT_ID' && (
+        {CLARITY_PROJECT_ID && (
           <Script
             id="microsoft-clarity"
             strategy="afterInteractive"
@@ -98,22 +90,21 @@ export default async function RootLayout({ children }) {
         {/* MICROSOFT CLARITY - LOGGED-IN USER IDENTIFICATION */}
         {/* ================================================= */}
 
-        {userId &&
-          CLARITY_PROJECT_ID !== 'YOUR_CLARITY_PROJECT_ID' && (
-            <Script
-              id="clarity-identify"
-              strategy="afterInteractive"
-            >
-              {`
-                if (window.clarity) {
-                  window.clarity(
-                    "identify",
-                    ${JSON.stringify(userId)}
-                  );
-                }
-              `}
-            </Script>
-          )}
+        {userId && CLARITY_PROJECT_ID && (
+          <Script
+            id="clarity-identify"
+            strategy="afterInteractive"
+          >
+            {`
+              if (window.clarity) {
+                window.clarity(
+                  "identify",
+                  ${JSON.stringify(userId)}
+                );
+              }
+            `}
+          </Script>
+        )}
 
         {/* ================================================= */}
         {/* APPLICATION PROVIDERS */}

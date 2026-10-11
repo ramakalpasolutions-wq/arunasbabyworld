@@ -10,7 +10,8 @@ export async function POST(req) {
       return NextResponse.json({ ok: true });
     }
 
-    const cookieStore = cookies();
+    // Next.js 15+ requires await cookies()
+    const cookieStore = await cookies();
     let sessionId = cookieStore.get('store_session')?.value;
 
     if (!sessionId) {
@@ -22,14 +23,24 @@ export async function POST(req) {
         data: {
           sessionId,
           path,
-          userId: userId || null,
+          userId: userId || undefined,
         },
       });
     } catch (e) {
-      console.log('Tracking skipped - Prisma model missing');
+      console.log('Tracking skipped - Prisma model missing or DB issue');
     }
 
-    return NextResponse.json({ sessionId });
+    const response = NextResponse.json({ sessionId });
+    
+    // Persist sessionId in browser cookie for 24 hours
+    response.cookies.set('store_session', sessionId, {
+      httpOnly: false,
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 60 * 60 * 24,
+    });
+
+    return response;
   } catch (error) {
     return NextResponse.json({ ok: true });
   }
