@@ -44,16 +44,53 @@ function fmtAmount(n) {
   return `Rs. ${Math.round(Number(n) || 0).toLocaleString('en-IN')}`;
 }
 
-// ✅ Load logo as base64
+// ✅ Load logo as base64 AND strip cream/off-white background dynamically using HTML5 Canvas
 async function loadLogoBase64(url) {
   try {
     const response = await fetch(url);
     const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => resolve(reader.result);
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'Anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+
+        try {
+          const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+          const data = imgData.data;
+
+          // Remove cream/off-white background pixels dynamically
+          for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            const brightness = (r + g + b) / 3;
+
+            // Target cream, off-white, light yellow background pixels
+            if (r > 200 && g > 190 && b > 160 && brightness > 205) {
+              data[i + 3] = 0; // Make pixel transparent
+            }
+          }
+
+          ctx.putImageData(imgData, 0, 0);
+          resolve(canvas.toDataURL('image/png'));
+        } catch (e) {
+          // Fallback to standard base64 if canvas operation fails
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.readAsDataURL(blob);
+        }
+      };
+      img.onerror = () => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result);
+        reader.readAsDataURL(blob);
+      };
+      img.src = URL.createObjectURL(blob);
     });
   } catch (err) {
     console.error('Logo load error:', err);
@@ -82,16 +119,12 @@ export async function generateInvoice(order) {
   doc.setFillColor(...COLORS.secondary);
   doc.rect(0, 47, pageWidth, 3, 'F');
 
-  // ✅ Load and add logo
+  // ✅ Load and add processed transparent logo
   try {
     const logoBase64 = await loadLogoBase64(COMPANY_INFO.logoUrl);
     if (logoBase64) {
-      // White circle background for logo
-      doc.setFillColor(255, 255, 255);
-      doc.circle(24, 24, 12, 'F');
-
-      // Add logo inside circle
-      doc.addImage(logoBase64, 'PNG', 14, 14, 20, 20);
+      // Add logo image seamlessly over header
+      doc.addImage(logoBase64, 'PNG', 14, 14, 24, 24);
     }
   } catch (err) {
     console.error('Logo error:', err);

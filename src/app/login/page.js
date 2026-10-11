@@ -74,7 +74,7 @@ function LoginForm() {
       <div className="login-card">
         <div className="card-top-bar" />
 
-        {/* Logo */}
+        {/* Logo with Cream Background Removed */}
         <div className="logo-area">
           <Link href="/" className="logo-link">
             <div className="logo-wrap">
@@ -84,6 +84,7 @@ function LoginForm() {
                 width={180}
                 height={180}
                 className="logo-img"
+                style={{ mixBlendMode: 'multiply', objectFit: 'contain' }}
                 priority
               />
             </div>

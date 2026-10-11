@@ -235,7 +235,7 @@ export default function Header() {
       <div className={styles.mainHeader}>
         <div className={`container ${styles.mainContent}`}>
 
-          {/* Logo */}
+          {/* Logo with Cream Background Removed */}
           <Link href="/" className={styles.logo} onClick={closeMobile}>
             <Image
               src="/logo.png"
@@ -244,6 +244,7 @@ export default function Header() {
               height={60}
               priority
               className={styles.logoImg}
+              style={{ mixBlendMode: 'multiply', objectFit: 'contain' }}
             />
           </Link>
 
@@ -706,7 +707,7 @@ export default function Header() {
       <nav className={styles.categoryNav}>
         <div className={`container ${styles.navContent}`}>
           
-          {/* ✅ ALL PRODUCTS LINK */}
+          {/* ALL PRODUCTS LINK */}
           <div className={styles.navItem}>
             <Link href="/products" className={styles.navLink} style={{ fontWeight: '800' }}>
               All Products
@@ -1132,4 +1133,4 @@ export default function Header() {
       `}</style>
     </header>
   );
-}
+} 

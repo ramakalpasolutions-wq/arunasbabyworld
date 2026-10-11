@@ -33,7 +33,7 @@ export default function Footer() {
 
             {/* Brand */}
             <div className={`${styles.brand} ${styles.reveal}`}>
-              {/* ✅ LOGO IMAGE */}
+              {/* ✅ LOGO IMAGE WITH CREAM BACKGROUND REMOVED */}
               <Link href="/" className={styles.logo}>
                 <Image
                   src="/logo.png"
@@ -41,6 +41,7 @@ export default function Footer() {
                   width={220}
                   height={90}
                   className={styles.logoImg}
+                  style={{ mixBlendMode: 'multiply', objectFit: 'contain' }}
                 />
               </Link>
 
