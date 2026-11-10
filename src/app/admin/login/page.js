@@ -70,8 +70,8 @@ export default function AdminLoginPage() {
       }}>
         <div style={{
           width: '44px', height: '44px',
-          border: '4px solid rgba(255,107,53,0.2)',
-          borderTop: '4px solid #FF6B35',
+          border: '4px solid rgba(229,57,53,0.2)',
+          borderTop: '4px solid #E53935',
           borderRadius: '50%',
           animation: 'spin 0.7s linear infinite',
         }} />
@@ -94,8 +94,8 @@ export default function AdminLoginPage() {
       }}>
         <div style={{
           width: '44px', height: '44px',
-          border: '4px solid rgba(255,107,53,0.2)',
-          borderTop: '4px solid #FF6B35',
+          border: '4px solid rgba(229,57,53,0.2)',
+          borderTop: '4px solid #E53935',
           borderRadius: '50%',
           animation: 'spin 0.7s linear infinite',
         }} />
@@ -172,7 +172,7 @@ export default function AdminLoginPage() {
       <div style={{
         position: 'fixed', width: '500px', height: '500px',
         top: '-150px', right: '-100px', borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(255,107,53,0.18) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(229,57,53,0.18) 0%, transparent 70%)',
         filter: 'blur(60px)',
         animation: 'float1 18s ease-in-out infinite',
         pointerEvents: 'none', zIndex: 0,
@@ -180,7 +180,7 @@ export default function AdminLoginPage() {
       <div style={{
         position: 'fixed', width: '420px', height: '420px',
         bottom: '-100px', left: '-80px', borderRadius: '50%',
-        background: 'radial-gradient(circle, rgba(123,47,190,0.18) 0%, transparent 70%)',
+        background: 'radial-gradient(circle, rgba(38,70,83,0.18) 0%, transparent 70%)',
         filter: 'blur(60px)',
         animation: 'float2 22s ease-in-out infinite',
         pointerEvents: 'none', zIndex: 0,
@@ -198,7 +198,7 @@ export default function AdminLoginPage() {
         {/* Rainbow bar */}
         <div style={{
           height: '4px',
-          background: 'linear-gradient(90deg, #FF6B35, #FFB347, #7B2FBE, #9B4FDE, #FF6B35)',
+          background: 'linear-gradient(90deg, #3A6373, #F2B33D, #264653, #3A6373, #3A6373)',
           backgroundSize: '300% 100%',
           animation: 'rainbow 4s linear infinite',
           borderRadius: '24px 24px 0 0',
@@ -221,29 +221,29 @@ export default function AdminLoginPage() {
             <div style={{
               width: '72px', height: '72px',
               borderRadius: '20px',
-              background: 'linear-gradient(135deg, rgba(255,107,53,0.15), rgba(123,47,190,0.15))',
+              background: 'linear-gradient(135deg, rgba(229,57,53,0.15), rgba(38,70,83,0.15))',
               border: '1px solid rgba(255,255,255,0.08)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               margin: '0 auto 18px',
               fontSize: '2.2rem',
-              boxShadow: '0 8px 32px rgba(255,107,53,0.12)',
+              boxShadow: '0 8px 32px rgba(229,57,53,0.12)',
             }}>🛡️</div>
 
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: '7px',
               padding: '5px 18px',
-              background: 'rgba(255,107,53,0.10)',
-              border: '1px solid rgba(255,107,53,0.22)',
+              background: 'rgba(229,57,53,0.10)',
+              border: '1px solid rgba(229,57,53,0.22)',
               borderRadius: '9999px',
               fontSize: '0.68rem', fontWeight: '800',
-              color: '#FF6B35',
+              color: '#E53935',
               textTransform: 'uppercase', letterSpacing: '1.5px',
               marginBottom: '18px',
             }}>
               <span style={{
                 width: '6px', height: '6px',
                 borderRadius: '50%',
-                background: '#FF6B35',
+                background: '#E53935',
                 display: 'inline-block',
                 animation: 'dotPulse 2s ease-in-out infinite',
               }} />
@@ -273,11 +273,11 @@ export default function AdminLoginPage() {
               }}>Email Address</label>
               <div style={{
                 display: 'flex', alignItems: 'center',
-                border: `2px solid ${focusedField === 'email' ? '#FF6B35' : 'rgba(255,255,255,0.07)'}`,
+                border: `2px solid ${focusedField === 'email' ? '#E53935' : 'rgba(255,255,255,0.07)'}`,
                 borderRadius: '14px', overflow: 'hidden',
                 background: 'rgba(255,255,255,0.03)',
                 transition: 'all 0.3s ease',
-                boxShadow: focusedField === 'email' ? '0 0 0 4px rgba(255,107,53,0.10)' : 'none',
+                boxShadow: focusedField === 'email' ? '0 0 0 4px rgba(229,57,53,0.10)' : 'none',
               }}>
                 <span style={{
                   padding: '13px 14px', fontSize: '1rem',
@@ -311,11 +311,11 @@ export default function AdminLoginPage() {
               }}>Password</label>
               <div style={{
                 display: 'flex', alignItems: 'center',
-                border: `2px solid ${focusedField === 'password' ? '#7B2FBE' : 'rgba(255,255,255,0.07)'}`,
+                border: `2px solid ${focusedField === 'password' ? '#264653' : 'rgba(255,255,255,0.07)'}`,
                 borderRadius: '14px', overflow: 'hidden',
                 background: 'rgba(255,255,255,0.03)',
                 transition: 'all 0.3s ease',
-                boxShadow: focusedField === 'password' ? '0 0 0 4px rgba(123,47,190,0.10)' : 'none',
+                boxShadow: focusedField === 'password' ? '0 0 0 4px rgba(38,70,83,0.10)' : 'none',
               }}>
                 <span style={{
                   padding: '13px 14px', fontSize: '1rem',
@@ -362,7 +362,7 @@ export default function AdminLoginPage() {
                 width: '100%', padding: '15px',
                 background: loading
                   ? 'rgba(255,255,255,0.05)'
-                  : 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                  : 'linear-gradient(135deg, #3A6373, #264653)',
                 color: loading ? 'rgba(255,255,255,0.25)' : 'white',
                 border: 'none', borderRadius: '14px',
                 fontSize: '0.96rem', fontWeight: '800',
@@ -370,7 +370,7 @@ export default function AdminLoginPage() {
                 fontFamily: 'inherit',
                 display: 'flex', alignItems: 'center',
                 justifyContent: 'center', gap: '8px',
-                boxShadow: loading ? 'none' : '0 8px 32px rgba(255,107,53,0.28)',
+                boxShadow: loading ? 'none' : '0 8px 32px rgba(229,57,53,0.28)',
                 transition: 'all 0.3s ease',
                 marginTop: '6px',
                 letterSpacing: '0.3px',
@@ -417,15 +417,15 @@ export default function AdminLoginPage() {
           {/* Demo credentials */}
           <div style={{
             padding: '12px 16px',
-            background: 'rgba(255,107,53,0.04)',
-            border: '1px solid rgba(255,107,53,0.10)',
+            background: 'rgba(229,57,53,0.04)',
+            border: '1px solid rgba(229,57,53,0.10)',
             borderRadius: '12px',
             display: 'flex', alignItems: 'center', gap: '10px',
           }}>
             <span style={{ fontSize: '0.9rem', flexShrink: 0 }}>💡</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <span style={{
-                fontSize: '0.65rem', color: '#FF6B35',
+                fontSize: '0.65rem', color: '#E53935',
                 fontWeight: '800', textTransform: 'uppercase',
                 letterSpacing: '0.5px', display: 'block', marginBottom: '2px',
               }}>Demo Admin</span>
@@ -443,9 +443,9 @@ export default function AdminLoginPage() {
               }}
               style={{
                 padding: '5px 14px',
-                background: 'rgba(255,107,53,0.12)',
-                border: '1px solid rgba(255,107,53,0.20)',
-                borderRadius: '8px', color: '#FF6B35',
+                background: 'rgba(229,57,53,0.12)',
+                border: '1px solid rgba(229,57,53,0.20)',
+                borderRadius: '8px', color: '#E53935',
                 fontSize: '0.70rem', fontWeight: '800',
                 cursor: 'pointer', fontFamily: 'inherit',
                 whiteSpace: 'nowrap', flexShrink: 0,

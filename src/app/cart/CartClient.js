@@ -35,17 +35,17 @@ function AvailableCoupons({ itemsPrice, onApply }) {
           const remaining = (c.minOrderValue || 0) - itemsPrice;
           const isCategorySpecific = c.applicableCategories && c.applicableCategories.length > 0;
           return (
-            <div key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: eligible ? '#f0fdf4' : '#fafafa', border: `1.5px dashed ${eligible ? '#10b981' : '#ddd'}`, borderRadius: '10px', opacity: eligible ? 1 : 0.7, gap: '8px' }}>
+            <div key={c.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 12px', background: eligible ? '#f0fdf4' : '#fafafa', border: `1.5px dashed ${eligible ? '#43A047' : '#ddd'}`, borderRadius: '10px', opacity: eligible ? 1 : 0.7, gap: '8px' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px', flexWrap: 'wrap' }}>
-                  <span style={{ fontWeight: '800', fontSize: '13px', color: '#1a1a2e', fontFamily: 'monospace', background: '#e0f2fe', padding: '2px 8px', borderRadius: '4px', letterSpacing: '1px' }}>
+                  <span style={{ fontWeight: '800', fontSize: '13px', color: '#1B3540', fontFamily: 'monospace', background: '#e0f2fe', padding: '2px 8px', borderRadius: '4px', letterSpacing: '1px' }}>
                     {c.code}
                   </span>
-                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#ff6b9d' }}>
+                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#E53935' }}>
                     {c.discountType === 'percentage' ? `${c.discountValue}% OFF` : `₹${c.discountValue} OFF`}
                   </span>
                   {isCategorySpecific && (
-                    <span style={{ fontSize: '10px', fontWeight: '800', color: '#fff', background: '#f59e0b', padding: '2px 6px', borderRadius: '4px' }}>
+                    <span style={{ fontSize: '10px', fontWeight: '800', color: '#fff', background: '#F2B33D', padding: '2px 6px', borderRadius: '4px' }}>
                       CATEGORY
                     </span>
                   )}
@@ -55,12 +55,12 @@ function AvailableCoupons({ itemsPrice, onApply }) {
                   {c.maxDiscount ? ` • Max: ₹${c.maxDiscount}` : ''}
                 </p>
                 {c.description && (
-                  <p style={{ fontSize: '11px', color: '#7c3aed', fontWeight: '600', margin: '3px 0 0' }}>
+                  <p style={{ fontSize: '11px', color: '#264653', fontWeight: '600', margin: '3px 0 0' }}>
                     📢 {c.description}
                   </p>
                 )}
               </div>
-              <button onClick={() => eligible && onApply(c.code)} disabled={!eligible} style={{ background: eligible ? 'linear-gradient(135deg, #ff6b9d, #7c3aed)' : '#e5e7eb', color: eligible ? 'white' : '#999', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: eligible ? 'pointer' : 'not-allowed', whiteSpace: 'nowrap', flexShrink: 0 }}>
+              <button onClick={() => eligible && onApply(c.code)} disabled={!eligible} style={{ background: eligible ? 'linear-gradient(135deg, #3A6373, #264653)' : '#e5e7eb', color: eligible ? 'white' : '#999', border: 'none', padding: '6px 12px', borderRadius: '8px', fontSize: '11px', fontWeight: '700', cursor: eligible ? 'pointer' : 'not-allowed', whiteSpace: 'nowrap', flexShrink: 0 }}>
                 {eligible ? 'Apply' : `₹${remaining.toLocaleString('en-IN')} more`}
               </button>
             </div>
@@ -68,7 +68,7 @@ function AvailableCoupons({ itemsPrice, onApply }) {
         })}
       </div>
       {coupons.length > 2 && (
-        <button onClick={() => setShowAll(!showAll)} style={{ background: 'none', border: 'none', color: '#7c3aed', fontSize: '12px', fontWeight: '700', cursor: 'pointer', marginTop: '6px', padding: '4px 0' }}>
+        <button onClick={() => setShowAll(!showAll)} style={{ background: 'none', border: 'none', color: '#264653', fontSize: '12px', fontWeight: '700', cursor: 'pointer', marginTop: '6px', padding: '4px 0' }}>
           {showAll ? '← Show less' : `View all ${coupons.length} coupons →`}
         </button>
       )}
@@ -428,7 +428,7 @@ export default function CartClient() {
           email: session?.user?.email,
           contact: selectedAddress?.phone,
         },
-        theme: { color: '#ff6b9d' },
+        theme: { color: '#E53935' },
         modal: {
           ondismiss: async () => {
             setProcessing(false);
@@ -460,12 +460,12 @@ export default function CartClient() {
 
   const canUseCOD = isCodEnabled && isGuntur;
   const PAYMENT_OPTIONS = [
-    { id: 'card', icon: '💳', title: 'Credit/Debit Card', subtitle: 'Visa, Mastercard, RuPay', color: '#3B82F6', method: 'Razorpay' },
-    { id: 'upi', icon: '📱', title: 'UPI', subtitle: 'GPay, PhonePe, Paytm', color: '#10B981', badge: 'Paytm', method: 'Razorpay', recommended: true },
-    { id: 'netbanking', icon: '🏦', title: 'Net Banking', subtitle: totalPrice >= 2000 ? 'All major banks' : 'Available on orders above ₹2000', color: '#F59E0B', method: 'Razorpay', disabled: totalPrice < 2000 },
-    { id: 'emi', icon: '📊', title: 'EMI', subtitle: totalPrice >= 3000 ? 'Convert to EMI' : 'Available on orders above ₹3000', color: '#8B5CF6', method: 'Razorpay', disabled: totalPrice < 3000 },
+    { id: 'card', icon: '💳', title: 'Credit/Debit Card', subtitle: 'Visa, Mastercard, RuPay', color: '#1E88E5', method: 'Razorpay' },
+    { id: 'upi', icon: '📱', title: 'UPI', subtitle: 'GPay, PhonePe, Paytm', color: '#43A047', badge: 'Paytm', method: 'Razorpay', recommended: true },
+    { id: 'netbanking', icon: '🏦', title: 'Net Banking', subtitle: totalPrice >= 2000 ? 'All major banks' : 'Available on orders above ₹2000', color: '#F2B33D', method: 'Razorpay', disabled: totalPrice < 2000 },
+    { id: 'emi', icon: '📊', title: 'EMI', subtitle: totalPrice >= 3000 ? 'Convert to EMI' : 'Available on orders above ₹3000', color: '#3A6373', method: 'Razorpay', disabled: totalPrice < 3000 },
     ...(canUseCOD ? [
-      { id: 'cod', icon: '💵', title: 'Cash on Delivery', subtitle: 'Pay when you receive (+₹20 COD fee)', color: '#EF4444', method: 'COD' }
+      { id: 'cod', icon: '💵', title: 'Cash on Delivery', subtitle: 'Pay when you receive (+₹20 COD fee)', color: '#E53935', method: 'COD' }
     ] : []),
   ];
 
@@ -489,18 +489,18 @@ export default function CartClient() {
       {session && (
         <div style={{
           background: 'white',
-          border: '2px solid #FFE4EC',
+          border: '2px solid #FDE7E6',
           borderRadius: '14px',
           padding: '14px 18px',
           marginBottom: '18px',
           display: 'flex',
           alignItems: 'center',
           gap: '14px',
-          boxShadow: '0 4px 14px rgba(255,107,157,0.08)',
+          boxShadow: '0 4px 14px rgba(229,57,53,0.08)',
         }}>
           <div style={{
             width: '46px', height: '46px', borderRadius: '12px',
-            background: 'linear-gradient(135deg, #FFF5F7, #F3E8FF)',
+            background: 'linear-gradient(135deg, #FFF5F4, #EEF3F5)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '1.5rem', flexShrink: 0,
           }}>📍</div>
@@ -511,9 +511,9 @@ export default function CartClient() {
             ) : selectedAddress ? (
               <>
                 <p style={{ margin: 0, fontSize: '0.90rem', fontWeight: '800', color: '#1F2937', fontFamily: 'Nunito, sans-serif' }}>
-                  Deliver to <span style={{ color: '#FF6B9D' }}>{selectedAddress.name}</span>, {selectedAddress.pincode}
+                  Deliver to <span style={{ color: '#E53935' }}>{selectedAddress.name}</span>, {selectedAddress.pincode}
                   {isGuntur && (
-                    <span style={{ marginLeft: '8px', padding: '2px 8px', background: '#D1FAE5', color: '#065F46', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>
+                    <span style={{ marginLeft: '8px', padding: '2px 8px', background: '#D1FAE5', color: '#1B5E20', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>
                       📍 Guntur Free Shipping
                     </span>
                   )}
@@ -529,7 +529,7 @@ export default function CartClient() {
               </>
             ) : (
               <>
-                <p style={{ margin: 0, fontSize: '0.90rem', fontWeight: '800', color: '#DC2626', fontFamily: 'Nunito, sans-serif' }}>
+                <p style={{ margin: 0, fontSize: '0.90rem', fontWeight: '800', color: '#C62828', fontFamily: 'Nunito, sans-serif' }}>
                   No delivery address selected
                 </p>
                 <p style={{ margin: '3px 0 0', fontSize: '0.78rem', color: '#6B7280', fontWeight: '600', fontFamily: 'Nunito, sans-serif' }}>
@@ -544,11 +544,11 @@ export default function CartClient() {
             style={{
               padding: '8px 18px',
               background: 'white',
-              border: '2px solid #FF6B9D',
+              border: '2px solid #E53935',
               borderRadius: '8px',
               fontSize: '0.78rem',
               fontWeight: '800',
-              color: '#FF6B9D',
+              color: '#E53935',
               cursor: 'pointer',
               fontFamily: 'Nunito, sans-serif',
               letterSpacing: '0.6px',
@@ -562,8 +562,8 @@ export default function CartClient() {
 
       {!session && (
         <div style={{
-          background: 'linear-gradient(135deg, #FFF5F7, #F3E8FF)',
-          border: '2px solid #FFE4EC',
+          background: 'linear-gradient(135deg, #FFF5F4, #EEF3F5)',
+          border: '2px solid #FDE7E6',
           borderRadius: '14px',
           padding: '16px 20px',
           marginBottom: '18px',
@@ -583,7 +583,7 @@ export default function CartClient() {
           </div>
           <Link href="/login?redirect=/cart" style={{
             padding: '10px 22px',
-            background: 'linear-gradient(135deg, #FF6B9D, #7B2FBE)',
+            background: 'linear-gradient(135deg, #3A6373, #264653)',
             color: 'white',
             borderRadius: '10px',
             fontWeight: '800',
@@ -597,14 +597,14 @@ export default function CartClient() {
       {isFoodBlocked && (
         <div style={{
           background: '#FEF2F2',
-          border: '2.5px solid #EF4444',
+          border: '2.5px solid #E53935',
           borderRadius: '14px',
           padding: '16px 20px',
           marginBottom: '20px',
           display: 'flex',
           alignItems: 'center',
           gap: '14px',
-          boxShadow: '0 4px 15px rgba(239, 68, 68, 0.1)',
+          boxShadow: '0 4px 15px rgba(229,57,53, 0.1)',
         }}>
           <div style={{ fontSize: '1.8rem' }}>⚠️</div>
           <div>
@@ -634,7 +634,7 @@ export default function CartClient() {
 
             return (
               <div key={itemId} className={styles.cartItem} style={{
-                border: exceedsStock || isOutOfStock ? '2px solid #dc2626' : undefined,
+                border: exceedsStock || isOutOfStock ? '2px solid #C62828' : undefined,
                 background: exceedsStock || isOutOfStock ? '#fef2f2' : undefined,
               }}>
                 <div className={styles.itemImage}>
@@ -661,8 +661,8 @@ export default function CartClient() {
 
                   {item.ageGroup && <div style={{ fontSize: '12px', color: '#888', marginTop: '4px' }}>👶 {item.ageGroup}</div>}
 
-                  {isOutOfStock && <div style={{ display: 'inline-block', marginTop: '6px', padding: '3px 10px', background: '#dc2626', color: 'white', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>❌ OUT OF STOCK</div>}
-                  {exceedsStock && !isOutOfStock && <div style={{ display: 'inline-block', marginTop: '6px', padding: '3px 10px', background: '#dc2626', color: 'white', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>⚠️ Only {maxStock} available</div>}
+                  {isOutOfStock && <div style={{ display: 'inline-block', marginTop: '6px', padding: '3px 10px', background: '#C62828', color: 'white', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>❌ OUT OF STOCK</div>}
+                  {exceedsStock && !isOutOfStock && <div style={{ display: 'inline-block', marginTop: '6px', padding: '3px 10px', background: '#C62828', color: 'white', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>⚠️ Only {maxStock} available</div>}
                   {!exceedsStock && !isOutOfStock && isLowStock && <div style={{ display: 'inline-block', marginTop: '6px', padding: '3px 10px', background: '#fef3c7', color: '#92400e', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>⚠️ Only {maxStock} left</div>}
                 </div>
                 <div className={styles.itemControls}>
@@ -735,7 +735,7 @@ export default function CartClient() {
                   <div style={{
                     padding: '10px 12px', marginTop: '8px', borderRadius: '10px',
                     background: '#ECFDF5', border: '1.5px solid #A7F3D0',
-                    fontSize: '12px', fontWeight: '700', color: '#065F46', textAlign: 'center',
+                    fontSize: '12px', fontWeight: '700', color: '#1B5E20', textAlign: 'center',
                   }}>
                     🎉 Guntur City Order: Free Delivery Applied!
                   </div>
@@ -746,7 +746,7 @@ export default function CartClient() {
                   <div style={{
                     padding: '10px 12px', marginTop: '8px', borderRadius: '10px',
                     background: '#ECFDF5', border: '1.5px solid #A7F3D0',
-                    fontSize: '12px', fontWeight: '700', color: '#065F46', textAlign: 'center',
+                    fontSize: '12px', fontWeight: '700', color: '#1B5E20', textAlign: 'center',
                   }}>
                     🎉 Food Special: Free shipping unlocked (min 2 items met)!
                   </div>
@@ -755,7 +755,7 @@ export default function CartClient() {
               return (
                 <div style={{
                   padding: '10px 12px', marginTop: '8px', borderRadius: '10px',
-                  background: '#FFF3E8', border: '1.5px solid #FFD4A8',
+                  background: '#FFF6E5', border: '1.5px solid #F6D28B',
                   fontSize: '12px', fontWeight: '700', color: '#C2410C', textAlign: 'center',
                 }}>
                   🍼 Minimum 2 food items required for Free Shipping (Outside Guntur).
@@ -767,7 +767,7 @@ export default function CartClient() {
               return (
                 <div style={{
                   padding: '10px 12px', marginTop: '8px', borderRadius: '10px',
-                  background: '#FFF3E8', border: '1.5px solid #FFD4A8',
+                  background: '#FFF6E5', border: '1.5px solid #F6D28B',
                   fontSize: '12px', fontWeight: '700', color: '#C2410C', textAlign: 'center',
                 }}>
                   🍼 Mixed orders containing Baby Food carry ₹50 delivery fee (Outside Guntur).
@@ -792,7 +792,7 @@ export default function CartClient() {
           })()}
 
           {hasStockIssue && (
-            <div style={{ padding: '12px 14px', background: '#fef2f2', border: '2px solid #dc2626', borderRadius: '10px', marginTop: '10px', fontSize: '13px', color: '#991b1b', fontWeight: '700', textAlign: 'center' }}>
+            <div style={{ padding: '12px 14px', background: '#fef2f2', border: '2px solid #C62828', borderRadius: '10px', marginTop: '10px', fontSize: '13px', color: '#991b1b', fontWeight: '700', textAlign: 'center' }}>
               ⚠️ Please fix stock issues before checkout
             </div>
           )}
@@ -806,7 +806,7 @@ export default function CartClient() {
               padding: '14px 20px',
               background: (hasStockIssue || processing || isFoodBlocked)
                 ? '#9ca3af'
-                : 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                : 'linear-gradient(135deg, #3A6373, #264653)',
               color: 'white',
               border: 'none',
               borderRadius: '12px',
@@ -814,7 +814,7 @@ export default function CartClient() {
               fontWeight: '800',
               cursor: (hasStockIssue || processing || isFoodBlocked) ? 'not-allowed' : 'pointer',
               fontFamily: 'Nunito, sans-serif',
-              boxShadow: (hasStockIssue || processing || isFoodBlocked) ? 'none' : '0 6px 20px rgba(255,107,53,0.30)',
+              boxShadow: (hasStockIssue || processing || isFoodBlocked) ? 'none' : '0 6px 20px rgba(229,57,53,0.30)',
               marginTop: '10px',
             }}
           >
@@ -844,34 +844,34 @@ export default function CartClient() {
               {showAddressForm ? (
                 <form onSubmit={handleSaveAddress} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '6px', textTransform: 'uppercase' }}>Full Name *</label>
-                    <input type="text" value={addressForm.name} onChange={(e) => setAddressForm({ ...addressForm, name: e.target.value })} placeholder="John Doe" required style={{ width: '100%', padding: '11px 14px', border: '2px solid #EDD9FF', borderRadius: '10px', fontSize: '14px', outline: 'none', fontFamily: 'Nunito, sans-serif' }} />
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#4F6B76', marginBottom: '6px', textTransform: 'uppercase' }}>Full Name *</label>
+                    <input type="text" value={addressForm.name} onChange={(e) => setAddressForm({ ...addressForm, name: e.target.value })} placeholder="John Doe" required style={{ width: '100%', padding: '11px 14px', border: '2px solid #E8E2D2', borderRadius: '10px', fontSize: '14px', outline: 'none', fontFamily: 'Nunito, sans-serif' }} />
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '6px', textTransform: 'uppercase' }}>Phone *</label>
-                    <input type="tel" value={addressForm.phone} onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })} placeholder="10-digit mobile" required style={{ width: '100%', padding: '11px 14px', border: '2px solid #EDD9FF', borderRadius: '10px', fontSize: '14px', outline: 'none', fontFamily: 'Nunito, sans-serif' }} />
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#4F6B76', marginBottom: '6px', textTransform: 'uppercase' }}>Phone *</label>
+                    <input type="tel" value={addressForm.phone} onChange={(e) => setAddressForm({ ...addressForm, phone: e.target.value.replace(/\D/g, '').slice(0, 10) })} placeholder="10-digit mobile" required style={{ width: '100%', padding: '11px 14px', border: '2px solid #E8E2D2', borderRadius: '10px', fontSize: '14px', outline: 'none', fontFamily: 'Nunito, sans-serif' }} />
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '6px', textTransform: 'uppercase' }}>Address *</label>
-                    <textarea value={addressForm.address} onChange={(e) => setAddressForm({ ...addressForm, address: e.target.value })} placeholder="Flat/House no., Street, Area" rows={3} required style={{ width: '100%', padding: '11px 14px', border: '2px solid #EDD9FF', borderRadius: '10px', fontSize: '14px', outline: 'none', fontFamily: 'Nunito, sans-serif', resize: 'vertical' }} />
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#4F6B76', marginBottom: '6px', textTransform: 'uppercase' }}>Address *</label>
+                    <textarea value={addressForm.address} onChange={(e) => setAddressForm({ ...addressForm, address: e.target.value })} placeholder="Flat/House no., Street, Area" rows={3} required style={{ width: '100%', padding: '11px 14px', border: '2px solid #E8E2D2', borderRadius: '10px', fontSize: '14px', outline: 'none', fontFamily: 'Nunito, sans-serif', resize: 'vertical' }} />
                   </div>
 
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '6px', textTransform: 'uppercase' }}>City *</label>
-                      <input type="text" value={addressForm.city} onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })} placeholder="Guntur / City" required style={{ width: '100%', padding: '11px 14px', border: '2px solid #EDD9FF', borderRadius: '10px', fontSize: '14px', outline: 'none', fontFamily: 'Nunito, sans-serif' }} />
+                      <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#4F6B76', marginBottom: '6px', textTransform: 'uppercase' }}>City *</label>
+                      <input type="text" value={addressForm.city} onChange={(e) => setAddressForm({ ...addressForm, city: e.target.value })} placeholder="Guntur / City" required style={{ width: '100%', padding: '11px 14px', border: '2px solid #E8E2D2', borderRadius: '10px', fontSize: '14px', outline: 'none', fontFamily: 'Nunito, sans-serif' }} />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '6px', textTransform: 'uppercase' }}>Pincode *</label>
-                      <input type="text" value={addressForm.pincode} onChange={(e) => setAddressForm({ ...addressForm, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) })} placeholder="522xxx" required style={{ width: '100%', padding: '11px 14px', border: '2px solid #EDD9FF', borderRadius: '10px', fontSize: '14px', outline: 'none', fontFamily: 'Nunito, sans-serif' }} />
+                      <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#4F6B76', marginBottom: '6px', textTransform: 'uppercase' }}>Pincode *</label>
+                      <input type="text" value={addressForm.pincode} onChange={(e) => setAddressForm({ ...addressForm, pincode: e.target.value.replace(/\D/g, '').slice(0, 6) })} placeholder="522xxx" required style={{ width: '100%', padding: '11px 14px', border: '2px solid #E8E2D2', borderRadius: '10px', fontSize: '14px', outline: 'none', fontFamily: 'Nunito, sans-serif' }} />
                     </div>
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '6px', textTransform: 'uppercase' }}>State *</label>
-                    <select value={addressForm.state} onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })} required style={{ width: '100%', padding: '11px 14px', border: '2px solid #EDD9FF', borderRadius: '10px', fontSize: '14px', outline: 'none', fontFamily: 'Nunito, sans-serif', background: 'white' }}>
+                    <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#4F6B76', marginBottom: '6px', textTransform: 'uppercase' }}>State *</label>
+                    <select value={addressForm.state} onChange={(e) => setAddressForm({ ...addressForm, state: e.target.value })} required style={{ width: '100%', padding: '11px 14px', border: '2px solid #E8E2D2', borderRadius: '10px', fontSize: '14px', outline: 'none', fontFamily: 'Nunito, sans-serif', background: 'white' }}>
                       <option value="">Select State</option>
                       {['Andhra Pradesh', 'Delhi', 'Gujarat', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra', 'Punjab', 'Rajasthan', 'Tamil Nadu', 'Telangana', 'Uttar Pradesh', 'West Bengal'].map(s => (
                         <option key={s} value={s}>{s}</option>
@@ -880,7 +880,7 @@ export default function CartClient() {
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0' }}>
-                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', fontWeight: '800', color: '#6B4E8A', cursor: 'pointer' }}>
+                    <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', fontSize: '0.82rem', fontWeight: '800', color: '#4F6B76', cursor: 'pointer' }}>
                       <input
                         type="checkbox"
                         checked={addressForm.isDefault}
@@ -893,7 +893,7 @@ export default function CartClient() {
 
                   <div style={{ display: 'flex', gap: '10px', marginTop: '10px' }}>
                     <button type="button" onClick={() => setShowAddressForm(false)} style={{ padding: '12px 18px', background: 'white', border: '2px solid #E5E7EB', borderRadius: '10px', fontWeight: '700', color: '#6B7280', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>Cancel</button>
-                    <button type="submit" disabled={processing} style={{ flex: 1, padding: '12px 18px', background: 'linear-gradient(135deg, #FF6B9D, #7B2FBE)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', cursor: processing ? 'not-allowed' : 'pointer', fontFamily: 'Nunito, sans-serif' }}>
+                    <button type="submit" disabled={processing} style={{ flex: 1, padding: '12px 18px', background: 'linear-gradient(135deg, #3A6373, #264653)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', cursor: processing ? 'not-allowed' : 'pointer', fontFamily: 'Nunito, sans-serif' }}>
                       {processing ? '⏳ Saving...' : (editingIndex !== null ? '💾 Update Address' : '✨ Save Address')}
                     </button>
                   </div>
@@ -905,7 +905,7 @@ export default function CartClient() {
                       <div style={{ fontSize: '3rem', marginBottom: '12px' }}>📍</div>
                       <h3 style={{ margin: '0 0 8px', fontSize: '1rem', color: '#1F2937', fontFamily: 'Nunito, sans-serif' }}>No addresses saved</h3>
                       <p style={{ margin: '0 0 20px', fontSize: '0.85rem', color: '#6B7280', fontFamily: 'Nunito, sans-serif' }}>Add your first delivery address</p>
-                      <button onClick={openAddAddress} style={{ padding: '12px 28px', background: 'linear-gradient(135deg, #FF6B9D, #7B2FBE)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>+ Add New Address</button>
+                      <button onClick={openAddAddress} style={{ padding: '12px 28px', background: 'linear-gradient(135deg, #3A6373, #264653)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>+ Add New Address</button>
                     </div>
                   ) : (
                     <>
@@ -915,8 +915,8 @@ export default function CartClient() {
                           return (
                             <div key={index} style={{
                               padding: '14px 16px',
-                              background: isSelected ? 'linear-gradient(135deg, #FFF5F7, #F3E8FF)' : 'white',
-                              border: `2px solid ${isSelected ? '#FF6B9D' : '#E5E7EB'}`,
+                              background: isSelected ? 'linear-gradient(135deg, #FFF5F4, #EEF3F5)' : 'white',
+                              border: `2px solid ${isSelected ? '#E53935' : '#E5E7EB'}`,
                               borderRadius: '12px',
                               cursor: 'pointer',
                               transition: 'all 0.2s',
@@ -925,7 +925,7 @@ export default function CartClient() {
                             onClick={() => handleSelectAddress(index)}
                             >
                               {isSelected && (
-                                <div style={{ position: 'absolute', top: '10px', right: '10px', background: '#10B981', color: 'white', borderRadius: '999px', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem', fontWeight: '800' }}>✓</div>
+                                <div style={{ position: 'absolute', top: '10px', right: '10px', background: '#43A047', color: 'white', borderRadius: '999px', width: '22px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.72rem', fontWeight: '800' }}>✓</div>
                               )}
                               <p style={{ margin: 0, fontSize: '0.92rem', fontWeight: '800', color: '#1F2937', fontFamily: 'Nunito, sans-serif' }}>
                                 {addr.name}
@@ -941,8 +941,8 @@ export default function CartClient() {
                                 {addr.city}, {addr.state} - {addr.pincode}
                               </p>
                               <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }} onClick={(e) => e.stopPropagation()}>
-                                <button onClick={() => openEditAddress(index)} style={{ padding: '5px 12px', background: 'white', border: '1.5px solid #7B2FBE', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '800', color: '#7B2FBE', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>✏️ EDIT</button>
-                                <button onClick={() => { if (confirm('Delete this address permanently?')) handleDeleteAddress(index); }} style={{ padding: '5px 12px', background: 'white', border: '1.5px solid #DC2626', color: '#DC2626', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '800', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>🗑️ DELETE</button>
+                                <button onClick={() => openEditAddress(index)} style={{ padding: '5px 12px', background: 'white', border: '1.5px solid #264653', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '800', color: '#264653', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>✏️ EDIT</button>
+                                <button onClick={() => { if (confirm('Delete this address permanently?')) handleDeleteAddress(index); }} style={{ padding: '5px 12px', background: 'white', border: '1.5px solid #C62828', color: '#C62828', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '800', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>🗑️ DELETE</button>
                                 {!addr.isDefault && (
                                   <button onClick={() => handleSetDefaultAddress(index)} style={{ padding: '5px 12px', background: 'white', border: '1.5px solid #D97706', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '800', color: '#D97706', cursor: 'pointer', fontFamily: 'Nunito, sans-serif', marginLeft: 'auto' }}>👑 SET DEFAULT</button>
                                 )}
@@ -951,7 +951,7 @@ export default function CartClient() {
                           );
                         })}
                       </div>
-                      <button onClick={openAddAddress} style={{ width: '100%', padding: '12px', background: 'white', border: '2px dashed #FF6B9D', borderRadius: '10px', color: '#FF6B9D', fontWeight: '800', cursor: 'pointer', fontFamily: 'Nunito, sans-serif', fontSize: '0.90rem' }}>
+                      <button onClick={openAddAddress} style={{ width: '100%', padding: '12px', background: 'white', border: '2px dashed #E53935', borderRadius: '10px', color: '#E53935', fontWeight: '800', cursor: 'pointer', fontFamily: 'Nunito, sans-serif', fontSize: '0.90rem' }}>
                         + Add New Address
                       </button>
                     </>
@@ -980,18 +980,18 @@ export default function CartClient() {
               <div style={{ padding: '14px 16px', background: '#F9FAFB', border: '1.5px solid #E5E7EB', borderRadius: '12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '10px', marginBottom: '18px' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ margin: 0, fontSize: '0.85rem', fontWeight: '800', color: '#1F2937', fontFamily: 'Nunito, sans-serif' }}>
-                    📍 Deliver to <span style={{ color: '#FF6B35' }}>{selectedAddress?.name}</span>, {selectedAddress?.pincode}
+                    📍 Deliver to <span style={{ color: '#E53935' }}>{selectedAddress?.name}</span>, {selectedAddress?.pincode}
                   </p>
                   <p style={{ margin: '4px 0 0', fontSize: '0.76rem', color: '#6B7280', fontWeight: '600', fontFamily: 'Nunito, sans-serif', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {selectedAddress?.address}
                   </p>
                 </div>
-                <button onClick={() => { setShowPaymentPanel(false); setShowAddressPanel(true); }} style={{ padding: '5px 12px', background: 'white', border: '1.5px solid #FF6B35', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '800', color: '#FF6B35', cursor: 'pointer', fontFamily: 'Nunito, sans-serif', letterSpacing: '0.5px', flexShrink: 0 }}>CHANGE</button>
+                <button onClick={() => { setShowPaymentPanel(false); setShowAddressPanel(true); }} style={{ padding: '5px 12px', background: 'white', border: '1.5px solid #E53935', borderRadius: '6px', fontSize: '0.72rem', fontWeight: '800', color: '#E53935', cursor: 'pointer', fontFamily: 'Nunito, sans-serif', letterSpacing: '0.5px', flexShrink: 0 }}>CHANGE</button>
               </div>
 
-              <div style={{ padding: '14px 16px', background: 'linear-gradient(135deg, #FFF5F7, #F3E8FF)', border: '1.5px solid #FFE4EC', borderRadius: '12px', marginBottom: '18px', textAlign: 'center' }}>
-                <p style={{ margin: 0, fontSize: '0.74rem', color: '#6B4E8A', fontWeight: '700', textTransform: 'uppercase' }}>Total Amount</p>
-                <p style={{ margin: '4px 0 0', fontSize: '1.6rem', fontWeight: '900', color: '#BE185D' }}>₹{fmt(totalPrice)}</p>
+              <div style={{ padding: '14px 16px', background: 'linear-gradient(135deg, #FFF5F4, #EEF3F5)', border: '1.5px solid #FDE7E6', borderRadius: '12px', marginBottom: '18px', textAlign: 'center' }}>
+                <p style={{ margin: 0, fontSize: '0.74rem', color: '#4F6B76', fontWeight: '700', textTransform: 'uppercase' }}>Total Amount</p>
+                <p style={{ margin: '4px 0 0', fontSize: '1.6rem', fontWeight: '900', color: '#C62828' }}>₹{fmt(totalPrice)}</p>
               </div>
 
               <h3 style={{ margin: '0 0 14px', fontSize: '1rem', fontWeight: '800', color: '#1F2937' }}>Choose Payment Option</h3>
@@ -1032,11 +1032,11 @@ export default function CartClient() {
                         <p style={{ margin: 0, fontSize: '0.95rem', fontWeight: '800', color: '#1F2937' }}>{opt.title}</p>
                         {opt.badge && <span style={{ padding: '2px 8px', background: '#F3F4F6', borderRadius: '4px', fontSize: '0.62rem', fontWeight: '800', color: '#6B7280', border: '1px solid #E5E7EB' }}>{opt.badge}</span>}
                       </div>
-                      <p style={{ margin: '3px 0 0', fontSize: '0.76rem', color: opt.disabled ? '#EF4444' : '#6B7280', fontWeight: '600' }}>{opt.subtitle}</p>
+                      <p style={{ margin: '3px 0 0', fontSize: '0.76rem', color: opt.disabled ? '#E53935' : '#6B7280', fontWeight: '600' }}>{opt.subtitle}</p>
                     </div>
                     <span style={{ fontSize: '1.3rem', color: '#9CA3AF', fontWeight: '800', flexShrink: 0 }}>›</span>
                     {opt.recommended && (
-                      <div style={{ position: 'absolute', top: '-8px', right: '12px', padding: '2px 10px', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', borderRadius: '999px', fontSize: '0.62rem', fontWeight: '800', letterSpacing: '0.4px', boxShadow: '0 3px 8px rgba(16,185,129,0.35)' }}>
+                      <div style={{ position: 'absolute', top: '-8px', right: '12px', padding: '2px 10px', background: 'linear-gradient(135deg, #43A047, #388E3C)', color: 'white', borderRadius: '999px', fontSize: '0.62rem', fontWeight: '800', letterSpacing: '0.4px', boxShadow: '0 3px 8px rgba(67,160,71,0.35)' }}>
                         ⭐ RECOMMENDED
                       </div>
                     )}
@@ -1046,7 +1046,7 @@ export default function CartClient() {
 
               <div style={{ marginTop: '18px', padding: '10px 14px', background: '#F0FDF4', border: '1.5px solid #BBF7D0', borderRadius: '10px', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '1.1rem' }}>🛡️</span>
-                <p style={{ margin: 0, fontSize: '0.78rem', fontWeight: '700', color: '#166534', fontFamily: 'Nunito, sans-serif' }}>
+                <p style={{ margin: 0, fontSize: '0.78rem', fontWeight: '700', color: '#1B5E20', fontFamily: 'Nunito, sans-serif' }}>
                   Most parents prefer: Instant Payments & Refunds
                 </p>
               </div>

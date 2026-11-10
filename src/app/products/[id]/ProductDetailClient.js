@@ -146,10 +146,10 @@ export default function ProductDetailClient({ id }) {
     <div style={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: '20px', fontFamily: 'Nunito, sans-serif' }}>
       <div style={{
         width: '60px', height: '60px',
-        border: '4px solid #F3E8FF', borderTop: '4px solid #7B2FBE',
+        border: '4px solid #EEF3F5', borderTop: '4px solid #264653',
         borderRadius: '50%', animation: 'spin 0.8s linear infinite',
       }} />
-      <p style={{ color: '#9585B0', fontWeight: '700' }}>Loading product...</p>
+      <p style={{ color: '#8A9BA3', fontWeight: '700' }}>Loading product...</p>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
     </div>
   );
@@ -157,12 +157,12 @@ export default function ProductDetailClient({ id }) {
   if (!product) return (
     <div style={{ textAlign: 'center', padding: '100px 20px', fontFamily: 'Nunito, sans-serif' }}>
       <div style={{ fontSize: '4rem', marginBottom: '20px' }}>😕</div>
-      <h2 style={{ color: '#2D1A4A', margin: '0 0 20px' }}>Product not found</h2>
+      <h2 style={{ color: '#264653', margin: '0 0 20px' }}>Product not found</h2>
       <Link href="/products" style={{
         display: 'inline-block', padding: '14px 32px',
-        background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+        background: 'linear-gradient(135deg,#3A6373,#264653)',
         color: 'white', borderRadius: '14px', textDecoration: 'none',
-        fontWeight: '800', boxShadow: '0 6px 20px rgba(255,107,53,0.30)',
+        fontWeight: '800', boxShadow: '0 6px 20px rgba(229,57,53,0.30)',
       }}>Browse Products</Link>
     </div>
   );
@@ -198,19 +198,19 @@ export default function ProductDetailClient({ id }) {
   };
 
   const genderDisplay = {
-    boy:    { label: 'Boy',    emoji: '👦', color: '#0EA5E9', bg: '#E0F2FE' },
-    girl:   { label: 'Girl',   emoji: '👧', color: '#EC4899', bg: '#FDF2F8' },
-    unisex: { label: 'Unisex', emoji: '🧒', color: '#7B2FBE', bg: '#F3E8FF' },
+    boy:    { label: 'Boy',    emoji: '👦', color: '#1E88E5', bg: '#E0F2FE' },
+    girl:   { label: 'Girl',   emoji: '👧', color: '#E53935', bg: '#FDE7E6' },
+    unisex: { label: 'Unisex', emoji: '🧒', color: '#264653', bg: '#EEF3F5' },
   };
 
   const genderInfo = product.gender
-    ? genderDisplay[product.gender.toLowerCase()] || { label: product.gender, emoji: '🧒', color: '#7B2FBE', bg: '#F3E8FF' }
+    ? genderDisplay[product.gender.toLowerCase()] || { label: product.gender, emoji: '🧒', color: '#264653', bg: '#EEF3F5' }
     : null;
 
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(180deg, #FAFBFF 0%, #FFF5F7 100%)',
+      background: 'linear-gradient(180deg, #FFFBF2 0%, #FFF5F4 100%)',
       fontFamily: 'Nunito, sans-serif',
     }}>
       <div style={{ maxWidth: '1300px', margin: '0 auto', padding: 'clamp(16px, 3vw, 32px) 20px' }}>
@@ -219,17 +219,17 @@ export default function ProductDetailClient({ id }) {
         <nav style={{
           display: 'flex', alignItems: 'center', gap: '8px',
           padding: '10px 16px', background: 'white',
-          border: '1.5px solid #F3E8FF', borderRadius: '12px',
+          border: '1.5px solid #EEF3F5', borderRadius: '12px',
           marginBottom: '20px', fontSize: '0.82rem',
-          flexWrap: 'wrap', boxShadow: '0 2px 8px rgba(123,47,190,0.05)',
+          flexWrap: 'wrap', boxShadow: '0 2px 8px rgba(38,70,83,0.05)',
         }}>
-          <Link href="/" style={{ color: '#7B2FBE', textDecoration: 'none', fontWeight: '700' }}>🏠 Home</Link>
+          <Link href="/" style={{ color: '#264653', textDecoration: 'none', fontWeight: '700' }}>🏠 Home</Link>
           <span style={{ color: '#CBD5E1' }}>›</span>
-          <Link href="/products" style={{ color: '#7B2FBE', textDecoration: 'none', fontWeight: '700' }}>Products</Link>
+          <Link href="/products" style={{ color: '#264653', textDecoration: 'none', fontWeight: '700' }}>Products</Link>
           {product.category && (
             <>
               <span style={{ color: '#CBD5E1' }}>›</span>
-              <Link href={`/products?category=${product.category?.id}`} style={{ color: '#7B2FBE', textDecoration: 'none', fontWeight: '700' }}>
+              <Link href={`/products?category=${product.category?.slug || product.categoryId}`} style={{ color: '#264653', textDecoration: 'none', fontWeight: '700' }}>
                 {product.category.name}
               </Link>
             </>
@@ -244,8 +244,8 @@ export default function ProductDetailClient({ id }) {
         <div style={{
           background: 'white', borderRadius: '24px',
           padding: 'clamp(16px, 2.5vw, 28px)',
-          boxShadow: '0 10px 40px rgba(123,47,190,0.08)',
-          border: '1px solid rgba(123,47,190,0.06)',
+          boxShadow: '0 10px 40px rgba(38,70,83,0.08)',
+          border: '1px solid rgba(38,70,83,0.06)',
           marginBottom: '20px',
         }}>
           <div style={{
@@ -267,7 +267,7 @@ export default function ProductDetailClient({ id }) {
                   background: 'linear-gradient(135deg, #FAFAFA, #F3F4F6)',
                   borderRadius: '20px',
                   overflow: 'hidden',
-                  border: '2px solid #F3E8FF',
+                  border: '2px solid #EEF3F5',
                   marginBottom: '16px',
                   boxShadow: '0 8px 24px rgba(0,0,0,0.06)',
                 }}
@@ -305,10 +305,10 @@ export default function ProductDetailClient({ id }) {
                   {discount > 0 && (
                     <span style={{
                       padding: '6px 14px',
-                      background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+                      background: 'linear-gradient(135deg, #E53935, #C62828)',
                       color: 'white', borderRadius: '10px',
                       fontSize: '0.82rem', fontWeight: '900',
-                      boxShadow: '0 4px 12px rgba(239,68,68,0.35)',
+                      boxShadow: '0 4px 12px rgba(229,57,53,0.35)',
                     }}>
                       -{discount}% OFF
                     </span>
@@ -316,10 +316,10 @@ export default function ProductDetailClient({ id }) {
                   {product.isTrending && (
                     <span style={{
                       padding: '6px 14px',
-                      background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                      background: 'linear-gradient(135deg, #3A6373, #264653)',
                       color: 'white', borderRadius: '10px',
                       fontSize: '0.82rem', fontWeight: '900',
-                      boxShadow: '0 4px 12px rgba(255,107,53,0.35)',
+                      boxShadow: '0 4px 12px rgba(229,57,53,0.35)',
                     }}>
                       🔥 Trending
                     </span>
@@ -327,7 +327,7 @@ export default function ProductDetailClient({ id }) {
                   {product.isFeatured && (
                     <span style={{
                       padding: '6px 14px',
-                      background: 'linear-gradient(135deg, #F59E0B, #D97706)',
+                      background: 'linear-gradient(135deg, #F2B33D, #D97706)',
                       color: 'white', borderRadius: '10px',
                       fontSize: '0.82rem', fontWeight: '900',
                       boxShadow: '0 4px 12px rgba(245,158,11,0.35)',
@@ -365,7 +365,7 @@ export default function ProductDetailClient({ id }) {
                       background: 'white', border: 'none',
                       boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                       cursor: 'pointer', fontSize: '1.4rem', fontWeight: '900',
-                      color: '#7B2FBE',
+                      color: '#264653',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>‹</button>
                     <button onClick={goNext} style={{
@@ -375,7 +375,7 @@ export default function ProductDetailClient({ id }) {
                       background: 'white', border: 'none',
                       boxShadow: '0 4px 12px rgba(0,0,0,0.15)',
                       cursor: 'pointer', fontSize: '1.4rem', fontWeight: '900',
-                      color: '#7B2FBE',
+                      color: '#264653',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                     }}>›</button>
                   </>
@@ -403,7 +403,7 @@ export default function ProductDetailClient({ id }) {
                   }}>
                     <div style={{
                       width: `${progress}%`, height: '100%',
-                      background: 'linear-gradient(90deg, #FF6B35, #7B2FBE)',
+                      background: 'linear-gradient(90deg, #3A6373, #264653)',
                       transition: 'width 0.03s linear',
                     }} />
                   </div>
@@ -425,12 +425,12 @@ export default function ProductDetailClient({ id }) {
                         aspectRatio: '1 / 1',
                         borderRadius: '12px',
                         overflow: 'hidden',
-                        border: `2.5px solid ${i === selectedImage ? '#7B2FBE' : '#E5E7EB'}`,
+                        border: `2.5px solid ${i === selectedImage ? '#264653' : '#E5E7EB'}`,
                         background: '#FAFAFA',
                         cursor: 'pointer',
                         padding: 0,
                         transition: 'all 0.2s',
-                        boxShadow: i === selectedImage ? '0 4px 12px rgba(123,47,190,0.25)' : 'none',
+                        boxShadow: i === selectedImage ? '0 4px 12px rgba(38,70,83,0.25)' : 'none',
                         transform: i === selectedImage ? 'scale(1.02)' : 'scale(1)',
                       }}
                     >
@@ -454,13 +454,13 @@ export default function ProductDetailClient({ id }) {
               <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                 {product.category && (
                   <Link
-                    href={`/products?category=${product.category?.id}`}
+                    href={`/products?category=${product.category?.slug || product.categoryId}`}
                     style={{
                       padding: '5px 14px',
-                      background: 'linear-gradient(135deg, #F3E8FF, #EDE9FE)',
-                      color: '#7B2FBE', borderRadius: '999px',
+                      background: 'linear-gradient(135deg, #EEF3F5, #EEF3F5)',
+                      color: '#264653', borderRadius: '999px',
                       textDecoration: 'none', fontSize: '0.75rem',
-                      fontWeight: '800', border: '1.5px solid #E9D5FF',
+                      fontWeight: '800', border: '1.5px solid #DDE5E8',
                       display: 'inline-flex', alignItems: 'center', gap: '4px',
                     }}
                   >
@@ -470,8 +470,8 @@ export default function ProductDetailClient({ id }) {
                 {product.brand && (
                   <span style={{
                     padding: '5px 14px',
-                    background: 'linear-gradient(135deg, #FFF3EC, #FFE4CC)',
-                    color: '#FF6B35', borderRadius: '999px',
+                    background: 'linear-gradient(135deg, #FFF6E5, #FDEBC8)',
+                    color: '#E53935', borderRadius: '999px',
                     fontSize: '0.75rem', fontWeight: '800',
                     border: '1.5px solid #FED7AA',
                     display: 'inline-flex', alignItems: 'center', gap: '4px',
@@ -485,7 +485,7 @@ export default function ProductDetailClient({ id }) {
               <h1 style={{
                 fontSize: 'clamp(1.4rem, 2.5vw, 1.9rem)',
                 fontWeight: '900',
-                color: '#1F0F3A',
+                color: '#1B3540',
                 margin: 0,
                 lineHeight: 1.25,
               }}>
@@ -504,7 +504,7 @@ export default function ProductDetailClient({ id }) {
                     {[1,2,3,4,5].map(s => (
                       <span key={s} style={{
                         fontSize: '1rem',
-                        color: s <= Math.round(product.rating) ? '#FBBF24' : '#E5E7EB',
+                        color: s <= Math.round(product.rating) ? '#F2B33D' : '#E5E7EB',
                       }}>★</span>
                     ))}
                   </div>
@@ -520,15 +520,15 @@ export default function ProductDetailClient({ id }) {
               {/* Price Section */}
               <div style={{
                 padding: '20px',
-                background: 'linear-gradient(135deg, #FFF5F7, #F3E8FF)',
+                background: 'linear-gradient(135deg, #FFF5F4, #EEF3F5)',
                 borderRadius: '16px',
-                border: '1.5px solid #FFE4EC',
+                border: '1.5px solid #FDE7E6',
               }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', flexWrap: 'wrap' }}>
                   <span style={{
                     fontSize: 'clamp(1.8rem, 3.5vw, 2.5rem)',
                     fontWeight: '900',
-                    background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                    background: 'linear-gradient(135deg, #3A6373, #264653)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text',
@@ -548,10 +548,10 @@ export default function ProductDetailClient({ id }) {
                       </span>
                       <span style={{
                         padding: '4px 12px',
-                        background: 'linear-gradient(135deg, #10B981, #059669)',
+                        background: 'linear-gradient(135deg, #43A047, #388E3C)',
                         color: 'white', borderRadius: '999px',
                         fontSize: '0.85rem', fontWeight: '900',
-                        boxShadow: '0 3px 8px rgba(16,185,129,0.30)',
+                        boxShadow: '0 3px 8px rgba(67,160,71,0.30)',
                       }}>
                         {discount}% OFF
                       </span>
@@ -562,7 +562,7 @@ export default function ProductDetailClient({ id }) {
                   <p style={{
                     margin: '8px 0 0',
                     fontSize: '0.85rem',
-                    color: '#059669',
+                    color: '#388E3C',
                     fontWeight: '800',
                   }}>
                     🎉 You save ₹{savedAmount.toLocaleString('en-IN')}
@@ -571,7 +571,7 @@ export default function ProductDetailClient({ id }) {
                 <p style={{
                   margin: '4px 0 0',
                   fontSize: '0.72rem',
-                  color: '#9585B0',
+                  color: '#8A9BA3',
                   fontWeight: '600',
                 }}>
                   Inclusive of all taxes
@@ -589,7 +589,7 @@ export default function ProductDetailClient({ id }) {
                   padding: '14px 16px',
                   background: '#F9FAFB',
                   borderRadius: '12px',
-                  borderLeft: '4px solid #7B2FBE',
+                  borderLeft: '4px solid #264653',
                 }}>
                   {product.shortDescription}
                 </p>
@@ -599,22 +599,22 @@ export default function ProductDetailClient({ id }) {
               {hasVariants && (
                 <div style={{
                   padding: '16px 18px',
-                  background: 'linear-gradient(135deg,#FBF7FF,#FFF)',
-                  border: '2px solid #EDD9FF',
+                  background: 'linear-gradient(135deg,#FFFBF2,#FFF)',
+                  border: '2px solid #E8E2D2',
                   borderRadius: '14px',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', flexWrap: 'wrap' }}>
-                    <span style={{ fontSize: '0.78rem', fontWeight: '900', color: '#6B4E8A', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span style={{ fontSize: '0.78rem', fontWeight: '900', color: '#4F6B76', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       🎨 Color:
                     </span>
-                    <span style={{ fontSize: '0.92rem', fontWeight: '800', color: '#2D1A4A' }}>
+                    <span style={{ fontSize: '0.92rem', fontWeight: '800', color: '#264653' }}>
                       {currentVariant?.colorName}
                     </span>
                     <span style={{
                       marginLeft: 'auto',
                       padding: '3px 10px',
-                      background: '#F3E8FF',
-                      color: '#7B2FBE',
+                      background: '#EEF3F5',
+                      color: '#264653',
                       borderRadius: '999px',
                       fontSize: '0.68rem',
                       fontWeight: '800',
@@ -647,9 +647,9 @@ export default function ProductDetailClient({ id }) {
                           <div style={{
                             width: '48px', height: '48px', borderRadius: '50%',
                             background: variant.colorHex || '#ccc',
-                            border: `3px solid ${isSelected ? '#7B2FBE' : 'white'}`,
+                            border: `3px solid ${isSelected ? '#264653' : 'white'}`,
                             boxShadow: isSelected
-                              ? '0 0 0 3px #7B2FBE, 0 6px 14px rgba(123,47,190,0.30)'
+                              ? '0 0 0 3px #264653, 0 6px 14px rgba(38,70,83,0.30)'
                               : '0 2px 8px rgba(0,0,0,0.12)',
                             transition: 'all 0.2s ease',
                             position: 'relative',
@@ -657,12 +657,12 @@ export default function ProductDetailClient({ id }) {
                             {isSelected && (
                               <span style={{
                                 position: 'absolute', bottom: '-4px', right: '-4px',
-                                background: '#22C55E', color: 'white',
+                                background: '#43A047', color: 'white',
                                 width: '20px', height: '20px', borderRadius: '50%',
                                 fontSize: '11px', fontWeight: '900',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                                 border: '2px solid white',
-                                boxShadow: '0 2px 6px rgba(34,197,94,0.35)',
+                                boxShadow: '0 2px 6px rgba(67,160,71,0.35)',
                               }}>✓</span>
                             )}
                             {outOfStock && (
@@ -670,13 +670,13 @@ export default function ProductDetailClient({ id }) {
                                 position: 'absolute', inset: 0, borderRadius: '50%',
                                 background: 'rgba(255,255,255,0.7)',
                                 display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                fontSize: '0.7rem', fontWeight: '900', color: '#DC2626',
+                                fontSize: '0.7rem', fontWeight: '900', color: '#C62828',
                               }}>✕</div>
                             )}
                           </div>
                           <span style={{
                             fontSize: '0.68rem', fontWeight: '800',
-                            color: isSelected ? '#7B2FBE' : '#6B4E8A',
+                            color: isSelected ? '#264653' : '#4F6B76',
                             maxWidth: '64px', textAlign: 'center', lineHeight: 1.1,
                           }}>
                             {variant.colorName}
@@ -692,16 +692,16 @@ export default function ProductDetailClient({ id }) {
               {hasVariants && currentSizes.length > 0 && (
                 <div style={{
                   padding: '16px 18px',
-                  background: 'linear-gradient(135deg,#FFF3EC,#FFF)',
-                  border: '2px solid #FFD4B8',
+                  background: 'linear-gradient(135deg,#FFF6E5,#FFF)',
+                  border: '2px solid #F6D28B',
                   borderRadius: '14px',
                 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-                    <span style={{ fontSize: '0.78rem', fontWeight: '900', color: '#6B4E8A', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <span style={{ fontSize: '0.78rem', fontWeight: '900', color: '#4F6B76', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       📏 Size:
                     </span>
                     {selectedSize && (
-                      <span style={{ fontSize: '0.92rem', fontWeight: '800', color: '#FF6B35' }}>
+                      <span style={{ fontSize: '0.92rem', fontWeight: '800', color: '#E53935' }}>
                         {selectedSize}
                       </span>
                     )}
@@ -719,16 +719,16 @@ export default function ProductDetailClient({ id }) {
                             padding: '10px 20px',
                             borderRadius: '10px',
                             border: '2px solid',
-                            borderColor: isSelected ? '#FF6B35' : '#FFD4B8',
-                            background: isSelected ? 'linear-gradient(135deg,#FF6B35,#7B2FBE)' : 'white',
-                            color: isSelected ? 'white' : '#6B4E8A',
+                            borderColor: isSelected ? '#E53935' : '#F6D28B',
+                            background: isSelected ? 'linear-gradient(135deg,#3A6373,#264653)' : 'white',
+                            color: isSelected ? 'white' : '#4F6B76',
                             fontWeight: '800',
                             fontSize: '0.88rem',
                             cursor: 'pointer',
                             fontFamily: 'inherit',
                             transition: 'all 0.2s',
                             minWidth: '52px',
-                            boxShadow: isSelected ? '0 4px 12px rgba(255,107,53,0.25)' : 'none',
+                            boxShadow: isSelected ? '0 4px 12px rgba(229,57,53,0.25)' : 'none',
                           }}
                         >
                           {size}
@@ -744,10 +744,10 @@ export default function ProductDetailClient({ id }) {
                 <div style={{
                   padding: '16px 18px',
                   background: 'white',
-                  border: '2px solid #F3E8FF',
+                  border: '2px solid #EEF3F5',
                   borderRadius: '14px',
                 }}>
-                  <h4 style={{ margin: '0 0 12px', fontSize: '0.88rem', fontWeight: '900', color: '#2D1A4A' }}>
+                  <h4 style={{ margin: '0 0 12px', fontSize: '0.88rem', fontWeight: '900', color: '#264653' }}>
                     📋 Product Details
                   </h4>
                   <div style={{
@@ -760,7 +760,7 @@ export default function ProductDetailClient({ id }) {
                         padding: '10px 12px', background: genderInfo.bg,
                         borderRadius: '10px', border: `1.5px solid ${genderInfo.color}30`,
                       }}>
-                        <p style={{ margin: 0, fontSize: '0.65rem', color: '#9585B0', fontWeight: '700', textTransform: 'uppercase' }}>
+                        <p style={{ margin: 0, fontSize: '0.65rem', color: '#8A9BA3', fontWeight: '700', textTransform: 'uppercase' }}>
                           Gender
                         </p>
                         <p style={{ margin: '3px 0 0', fontSize: '0.85rem', fontWeight: '900', color: genderInfo.color }}>
@@ -770,26 +770,26 @@ export default function ProductDetailClient({ id }) {
                     )}
                     {product.size && (
                       <div style={{
-                        padding: '10px 12px', background: '#F3E8FF',
+                        padding: '10px 12px', background: '#EEF3F5',
                         borderRadius: '10px', border: '1.5px solid #DFC5F830',
                       }}>
-                        <p style={{ margin: 0, fontSize: '0.65rem', color: '#9585B0', fontWeight: '700', textTransform: 'uppercase' }}>
+                        <p style={{ margin: 0, fontSize: '0.65rem', color: '#8A9BA3', fontWeight: '700', textTransform: 'uppercase' }}>
                           Size
                         </p>
-                        <p style={{ margin: '3px 0 0', fontSize: '0.85rem', fontWeight: '900', color: '#7B2FBE' }}>
+                        <p style={{ margin: '3px 0 0', fontSize: '0.85rem', fontWeight: '900', color: '#264653' }}>
                           📏 {product.size}
                         </p>
                       </div>
                     )}
                     {product.color && (
                       <div style={{
-                        padding: '10px 12px', background: '#FFF3EC',
+                        padding: '10px 12px', background: '#FFF6E5',
                         borderRadius: '10px', border: '1.5px solid #FFD4B830',
                       }}>
-                        <p style={{ margin: 0, fontSize: '0.65rem', color: '#9585B0', fontWeight: '700', textTransform: 'uppercase' }}>
+                        <p style={{ margin: 0, fontSize: '0.65rem', color: '#8A9BA3', fontWeight: '700', textTransform: 'uppercase' }}>
                           Color
                         </p>
-                        <p style={{ margin: '3px 0 0', fontSize: '0.85rem', fontWeight: '900', color: '#FF6B35' }}>
+                        <p style={{ margin: '3px 0 0', fontSize: '0.85rem', fontWeight: '900', color: '#E53935' }}>
                           🎨 {product.color}
                         </p>
                       </div>
@@ -799,10 +799,10 @@ export default function ProductDetailClient({ id }) {
                         padding: '10px 12px', background: '#F0FDF4',
                         borderRadius: '10px', border: '1.5px solid #BBF7D030',
                       }}>
-                        <p style={{ margin: 0, fontSize: '0.65rem', color: '#9585B0', fontWeight: '700', textTransform: 'uppercase' }}>
+                        <p style={{ margin: 0, fontSize: '0.65rem', color: '#8A9BA3', fontWeight: '700', textTransform: 'uppercase' }}>
                           Material
                         </p>
-                        <p style={{ margin: '3px 0 0', fontSize: '0.85rem', fontWeight: '900', color: '#22C55E' }}>
+                        <p style={{ margin: '3px 0 0', fontSize: '0.85rem', fontWeight: '900', color: '#43A047' }}>
                           🧵 {product.material}
                         </p>
                       </div>
@@ -812,10 +812,10 @@ export default function ProductDetailClient({ id }) {
                         padding: '10px 12px', background: '#FFFBEB',
                         borderRadius: '10px', border: '1.5px solid #FDE68A30',
                       }}>
-                        <p style={{ margin: 0, fontSize: '0.65rem', color: '#9585B0', fontWeight: '700', textTransform: 'uppercase' }}>
+                        <p style={{ margin: 0, fontSize: '0.65rem', color: '#8A9BA3', fontWeight: '700', textTransform: 'uppercase' }}>
                           Age Group
                         </p>
-                        <p style={{ margin: '3px 0 0', fontSize: '0.85rem', fontWeight: '900', color: '#F59E0B' }}>
+                        <p style={{ margin: '3px 0 0', fontSize: '0.85rem', fontWeight: '900', color: '#F2B33D' }}>
                           👶 {product.ageGroup}
                         </p>
                       </div>
@@ -835,7 +835,7 @@ export default function ProductDetailClient({ id }) {
                 <span style={{
                   fontSize: '0.88rem',
                   fontWeight: '900',
-                  color: currentStock > 0 ? '#065F46' : '#991B1B',
+                  color: currentStock > 0 ? '#1B5E20' : '#991B1B',
                 }}>
                   {currentStock > 0
                     ? `✅ In Stock (${currentStock} available${hasVariants ? ` for ${currentVariant?.colorName}` : ''})`
@@ -844,7 +844,7 @@ export default function ProductDetailClient({ id }) {
                 </span>
                 {currentStock > 0 && currentStock <= 10 && (
                   <span style={{
-                    padding: '4px 10px', background: '#F59E0B', color: 'white',
+                    padding: '4px 10px', background: '#F2B33D', color: 'white',
                     borderRadius: '999px', fontSize: '0.72rem', fontWeight: '900',
                   }}>
                     ⚠️ Only {currentStock} left!
@@ -873,12 +873,12 @@ export default function ProductDetailClient({ id }) {
                       style={{
                         width: '38px', height: '38px', border: 'none',
                         background: 'white', cursor: 'pointer',
-                        fontSize: '1.2rem', fontWeight: '900', color: '#7B2FBE',
+                        fontSize: '1.2rem', fontWeight: '900', color: '#264653',
                       }}
                     >−</button>
                     <span style={{
                       minWidth: '48px', textAlign: 'center',
-                      fontSize: '1rem', fontWeight: '900', color: '#1F0F3A',
+                      fontSize: '1rem', fontWeight: '900', color: '#1B3540',
                       borderLeft: '2px solid #E5E7EB',
                       borderRight: '2px solid #E5E7EB',
                       padding: '8px 0',
@@ -890,7 +890,7 @@ export default function ProductDetailClient({ id }) {
                       style={{
                         width: '38px', height: '38px', border: 'none',
                         background: 'white', cursor: 'pointer',
-                        fontSize: '1.2rem', fontWeight: '900', color: '#7B2FBE',
+                        fontSize: '1.2rem', fontWeight: '900', color: '#264653',
                       }}
                     >+</button>
                   </div>
@@ -907,13 +907,13 @@ export default function ProductDetailClient({ id }) {
                     padding: '16px 24px',
                     background: currentStock === 0
                       ? '#F3F4F6'
-                      : 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                      : 'linear-gradient(135deg, #3A6373, #264653)',
                     color: currentStock === 0 ? '#9CA3AF' : 'white',
                     border: 'none', borderRadius: '14px',
                     fontSize: '1rem', fontWeight: '900',
                     cursor: currentStock === 0 ? 'not-allowed' : 'pointer',
                     fontFamily: 'inherit',
-                    boxShadow: currentStock === 0 ? 'none' : '0 8px 20px rgba(255,107,53,0.30)',
+                    boxShadow: currentStock === 0 ? 'none' : '0 8px 20px rgba(229,57,53,0.30)',
                     transition: 'transform 0.2s',
                   }}
                   onMouseEnter={e => currentStock > 0 && (e.currentTarget.style.transform = 'translateY(-2px)')}
@@ -925,9 +925,9 @@ export default function ProductDetailClient({ id }) {
                   onClick={handleWishlist}
                   style={{
                     padding: '16px 20px',
-                    background: inWishlist ? 'linear-gradient(135deg, #EF4444, #DC2626)' : 'white',
-                    color: inWishlist ? 'white' : '#EF4444',
-                    border: `2px solid ${inWishlist ? '#EF4444' : '#FCA5A5'}`,
+                    background: inWishlist ? 'linear-gradient(135deg, #E53935, #C62828)' : 'white',
+                    color: inWishlist ? 'white' : '#E53935',
+                    border: `2px solid ${inWishlist ? '#E53935' : '#FCA5A5'}`,
                     borderRadius: '14px',
                     fontSize: '1.4rem',
                     cursor: 'pointer',
@@ -942,11 +942,11 @@ export default function ProductDetailClient({ id }) {
               {hasVariants && (currentVariant || selectedSize) && (
                 <div style={{
                   padding: '12px 16px',
-                  background: 'linear-gradient(135deg,#F0FDF4,#FBF7FF)',
+                  background: 'linear-gradient(135deg,#F0FDF4,#FFFBF2)',
                   border: '1.5px solid #BBF7D0',
                   borderRadius: '12px',
                   display: 'flex', flexWrap: 'wrap', gap: '10px',
-                  fontSize: '0.84rem', fontWeight: '800', color: '#166534',
+                  fontSize: '0.84rem', fontWeight: '800', color: '#1B5E20',
                   alignItems: 'center',
                 }}>
                   <span>✅ Selection:</span>
@@ -984,14 +984,14 @@ export default function ProductDetailClient({ id }) {
                   <div key={i} style={{
                     display: 'flex', alignItems: 'center', gap: '10px',
                     padding: '10px', background: 'white',
-                    borderRadius: '10px', border: '1px solid #F3E8FF',
+                    borderRadius: '10px', border: '1px solid #EEF3F5',
                   }}>
                     <div style={{ fontSize: '1.6rem', flexShrink: 0 }}>{h.icon}</div>
                     <div style={{ minWidth: 0 }}>
-                      <p style={{ margin: 0, fontSize: '0.76rem', fontWeight: '900', color: '#1F0F3A', lineHeight: 1.2 }}>
+                      <p style={{ margin: 0, fontSize: '0.76rem', fontWeight: '900', color: '#1B3540', lineHeight: 1.2 }}>
                         {h.title}
                       </p>
-                      <p style={{ margin: 0, fontSize: '0.68rem', color: '#6B4E8A', fontWeight: '700', lineHeight: 1.2 }}>
+                      <p style={{ margin: 0, fontSize: '0.68rem', color: '#4F6B76', fontWeight: '700', lineHeight: 1.2 }}>
                         {h.sub}
                       </p>
                     </div>
@@ -1006,14 +1006,14 @@ export default function ProductDetailClient({ id }) {
         <div style={{
           background: 'white', borderRadius: '24px',
           padding: 'clamp(16px, 2.5vw, 28px)',
-          boxShadow: '0 8px 32px rgba(123,47,190,0.08)',
-          border: '1px solid rgba(123,47,190,0.06)',
+          boxShadow: '0 8px 32px rgba(38,70,83,0.08)',
+          border: '1px solid rgba(38,70,83,0.06)',
           marginBottom: '20px',
         }}>
           {/* Tab Headers */}
           <div style={{
             display: 'flex', gap: '8px',
-            borderBottom: '2px solid #F3E8FF',
+            borderBottom: '2px solid #EEF3F5',
             marginBottom: '24px',
             flexWrap: 'wrap',
           }}>
@@ -1027,7 +1027,7 @@ export default function ProductDetailClient({ id }) {
                 onClick={() => setTab(t.key)}
                 style={{
                   padding: '12px 20px',
-                  background: tab === t.key ? 'linear-gradient(135deg, #FF6B35, #7B2FBE)' : 'transparent',
+                  background: tab === t.key ? 'linear-gradient(135deg, #3A6373, #264653)' : 'transparent',
                   color: tab === t.key ? 'white' : '#6B7280',
                   border: 'none',
                   borderRadius: '12px 12px 0 0',
@@ -1038,7 +1038,7 @@ export default function ProductDetailClient({ id }) {
                   transition: 'all 0.2s',
                   position: 'relative',
                   bottom: '-2px',
-                  boxShadow: tab === t.key ? '0 -4px 12px rgba(123,47,190,0.15)' : 'none',
+                  boxShadow: tab === t.key ? '0 -4px 12px rgba(38,70,83,0.15)' : 'none',
                 }}
               >
                 {t.icon} {t.label}
@@ -1061,7 +1061,7 @@ export default function ProductDetailClient({ id }) {
                   <>
                     <h4 style={{
                       fontSize: '1.05rem', fontWeight: '900',
-                      color: '#1F0F3A', margin: '20px 0 12px',
+                      color: '#1B3540', margin: '20px 0 12px',
                     }}>
                       ✨ Key Features
                     </h4>
@@ -1087,9 +1087,9 @@ export default function ProductDetailClient({ id }) {
                     {product.tags.map((tag, i) => (
                       <span key={i} style={{
                         padding: '5px 12px',
-                        background: '#F3E8FF', color: '#7B2FBE',
+                        background: '#EEF3F5', color: '#264653',
                         borderRadius: '999px', fontSize: '0.75rem',
-                        fontWeight: '700', border: '1.5px solid #E9D5FF',
+                        fontWeight: '700', border: '1.5px solid #DDE5E8',
                       }}>
                         #{tag}
                       </span>
@@ -1109,7 +1109,7 @@ export default function ProductDetailClient({ id }) {
                           <td style={{
                             padding: '12px 14px', background: '#F9FAFB',
                             borderRadius: '10px 0 0 10px',
-                            fontSize: '0.85rem', fontWeight: '800', color: '#6B4E8A',
+                            fontSize: '0.85rem', fontWeight: '800', color: '#4F6B76',
                             width: '35%',
                           }}>Available Colors</td>
                           <td style={{
@@ -1140,7 +1140,7 @@ export default function ProductDetailClient({ id }) {
                             <td style={{
                               padding: '12px 14px', background: '#F9FAFB',
                               borderRadius: '10px 0 0 10px',
-                              fontSize: '0.85rem', fontWeight: '800', color: '#6B4E8A',
+                              fontSize: '0.85rem', fontWeight: '800', color: '#4F6B76',
                             }}>Sizes ({currentVariant?.colorName})</td>
                             <td style={{
                               padding: '12px 14px', background: '#F9FAFB',
@@ -1149,9 +1149,9 @@ export default function ProductDetailClient({ id }) {
                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
                                 {currentSizes.map(s => (
                                   <span key={s} style={{
-                                    padding: '2px 10px', background: '#FFF3EC',
+                                    padding: '2px 10px', background: '#FFF6E5',
                                     borderRadius: '6px', fontSize: '0.8rem',
-                                    fontWeight: '800', color: '#FF6B35',
+                                    fontWeight: '800', color: '#E53935',
                                   }}>{s}</span>
                                 ))}
                               </div>
@@ -1174,7 +1174,7 @@ export default function ProductDetailClient({ id }) {
                         <td style={{
                           padding: '12px 14px', background: '#F9FAFB',
                           borderRadius: '10px 0 0 10px',
-                          fontSize: '0.85rem', fontWeight: '800', color: '#6B4E8A',
+                          fontSize: '0.85rem', fontWeight: '800', color: '#4F6B76',
                         }}>{key}</td>
                         <td style={{
                           padding: '12px 14px', background: '#F9FAFB',
@@ -1201,8 +1201,8 @@ export default function ProductDetailClient({ id }) {
           <section style={{
             background: 'white', borderRadius: '24px',
             padding: 'clamp(16px, 2.5vw, 28px)',
-            boxShadow: '0 8px 32px rgba(123,47,190,0.08)',
-            border: '1px solid rgba(123,47,190,0.06)',
+            boxShadow: '0 8px 32px rgba(38,70,83,0.08)',
+            border: '1px solid rgba(38,70,83,0.06)',
           }}>
             <div style={{
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -1212,12 +1212,12 @@ export default function ProductDetailClient({ id }) {
                 <span style={{
                   display: 'inline-block',
                   padding: '4px 12px',
-                  background: 'linear-gradient(135deg, #FFF3EC, #F3E8FF)',
-                  border: '1.5px solid #FFD4B8',
+                  background: 'linear-gradient(135deg, #FFF6E5, #EEF3F5)',
+                  border: '1.5px solid #F6D28B',
                   borderRadius: '999px',
                   fontSize: '0.7rem',
                   fontWeight: '800',
-                  color: '#FF6B35',
+                  color: '#E53935',
                   textTransform: 'uppercase',
                   letterSpacing: '0.5px',
                   marginBottom: '8px',
@@ -1227,27 +1227,27 @@ export default function ProductDetailClient({ id }) {
                 <h2 style={{
                   fontSize: 'clamp(1.2rem, 2.5vw, 1.7rem)',
                   fontWeight: '900',
-                  color: '#1F0F3A',
+                  color: '#1B3540',
                   margin: '0 0 4px',
                 }}>
                   🛍️ You May Also Like
                 </h2>
                 <p style={{
                   margin: 0, fontSize: '0.82rem',
-                  color: '#7B7898', fontWeight: '600',
+                  color: '#6F838C', fontWeight: '600',
                 }}>
                   More products from {product.category?.name || 'this category'}
                 </p>
               </div>
               <Link
-                href={`/products?category=${product.categoryId}`}
+                href={`/products?category=${product.category?.slug || product.categoryId}`}
                 style={{
                   padding: '10px 20px',
-                  background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                  background: 'linear-gradient(135deg, #3A6373, #264653)',
                   color: 'white', borderRadius: '12px',
                   textDecoration: 'none', fontWeight: '800',
                   fontSize: '0.85rem',
-                  boxShadow: '0 4px 12px rgba(255,107,53,0.25)',
+                  boxShadow: '0 4px 12px rgba(229,57,53,0.25)',
                 }}
               >
                 View All →
@@ -1313,7 +1313,7 @@ function RelatedCard({ product, index }) {
     addItem({ ...product, quantity: 1 });
     toast.success('Added to cart! 🛒', {
       style: {
-        background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+        background: 'linear-gradient(135deg,#3A6373,#264653)',
         color: 'white', fontWeight: 700, borderRadius: 999,
       },
       icon: null, duration: 1800,
@@ -1330,7 +1330,7 @@ function RelatedCard({ product, index }) {
 
   return (
     <Link
-      href={`/products/${product.id}`}
+      href={`/products/${product.slug || product.id}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       style={{
@@ -1338,11 +1338,11 @@ function RelatedCard({ product, index }) {
         textDecoration: 'none',
         background: 'white',
         borderRadius: '16px',
-        border: `2px solid ${isHovered ? '#7B2FBE' : '#F3E8FF'}`,
+        border: `2px solid ${isHovered ? '#264653' : '#EEF3F5'}`,
         overflow: 'hidden',
         transition: 'all 0.25s ease',
         transform: isHovered ? 'translateY(-4px)' : 'translateY(0)',
-        boxShadow: isHovered ? '0 12px 30px rgba(123,47,190,0.15)' : '0 2px 8px rgba(0,0,0,0.05)',
+        boxShadow: isHovered ? '0 12px 30px rgba(38,70,83,0.15)' : '0 2px 8px rgba(0,0,0,0.05)',
         animation: `slideUp 0.4s ease ${index * 60}ms both`,
       }}
     >
@@ -1389,16 +1389,16 @@ function RelatedCard({ product, index }) {
           {discount > 0 && (
             <span style={{
               padding: '4px 10px',
-              background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+              background: 'linear-gradient(135deg, #E53935, #C62828)',
               color: 'white', borderRadius: '8px',
               fontSize: '0.7rem', fontWeight: '900',
-              boxShadow: '0 3px 8px rgba(239,68,68,0.30)',
+              boxShadow: '0 3px 8px rgba(229,57,53,0.30)',
             }}>-{discount}%</span>
           )}
           {product.isTrending && (
             <span style={{
               padding: '4px 10px',
-              background: 'linear-gradient(135deg, #FF6B35, #EA580C)',
+              background: 'linear-gradient(135deg, #E53935, #FB8C00)',
               color: 'white', borderRadius: '8px',
               fontSize: '0.7rem', fontWeight: '900',
             }}>🔥 Hot</span>
@@ -1406,7 +1406,7 @@ function RelatedCard({ product, index }) {
           {product.hasVariants && product.colorVariants?.length > 1 && (
             <span style={{
               padding: '3px 8px',
-              background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)',
+              background: 'linear-gradient(135deg,#264653,#3A6373)',
               color: 'white', borderRadius: '8px',
               fontSize: '0.65rem', fontWeight: '900',
             }}>🎨 {product.colorVariants.length}</span>
@@ -1433,7 +1433,7 @@ function RelatedCard({ product, index }) {
             position: 'absolute', inset: 0,
             background: 'rgba(255,255,255,0.85)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
-            fontSize: '0.9rem', fontWeight: '900', color: '#DC2626',
+            fontSize: '0.9rem', fontWeight: '900', color: '#C62828',
           }}>
             Out of Stock
           </div>
@@ -1443,7 +1443,7 @@ function RelatedCard({ product, index }) {
       <div style={{ padding: '12px 14px' }}>
         <p style={{
           margin: '0 0 4px', fontSize: '0.68rem',
-          color: '#9585B0', fontWeight: '700',
+          color: '#8A9BA3', fontWeight: '700',
           textTransform: 'uppercase', letterSpacing: '0.5px',
         }}>
           {product.category?.name || ''}
@@ -1451,7 +1451,7 @@ function RelatedCard({ product, index }) {
 
         <h3 style={{
           margin: '0 0 8px', fontSize: '0.88rem',
-          fontWeight: '800', color: '#1F0F3A',
+          fontWeight: '800', color: '#1B3540',
           lineHeight: 1.3,
           overflow: 'hidden', textOverflow: 'ellipsis',
           display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical',
@@ -1472,7 +1472,7 @@ function RelatedCard({ product, index }) {
             {product.colorVariants.length > 5 && (
               <span style={{
                 fontSize: '0.62rem', fontWeight: '700',
-                color: '#9585B0', marginLeft: '3px',
+                color: '#8A9BA3', marginLeft: '3px',
               }}>+{product.colorVariants.length - 5}</span>
             )}
           </div>
@@ -1481,7 +1481,7 @@ function RelatedCard({ product, index }) {
         <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginBottom: '10px' }}>
           <span style={{
             fontSize: '1rem', fontWeight: '900',
-            background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+            background: 'linear-gradient(135deg, #3A6373, #264653)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
             backgroundClip: 'text',
@@ -1508,14 +1508,14 @@ function RelatedCard({ product, index }) {
             background: product.stock === 0
               ? '#F3F4F6'
               : adding
-                ? 'linear-gradient(135deg, #10B981, #059669)'
-                : 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                ? 'linear-gradient(135deg, #43A047, #388E3C)'
+                : 'linear-gradient(135deg, #3A6373, #264653)',
             color: product.stock === 0 ? '#9CA3AF' : 'white',
             border: 'none', borderRadius: '10px',
             fontSize: '0.78rem', fontWeight: '900',
             cursor: product.stock === 0 ? 'not-allowed' : 'pointer',
             fontFamily: 'inherit',
-            boxShadow: product.stock === 0 ? 'none' : '0 3px 10px rgba(255,107,53,0.25)',
+            boxShadow: product.stock === 0 ? 'none' : '0 3px 10px rgba(229,57,53,0.25)',
           }}
         >
           {adding

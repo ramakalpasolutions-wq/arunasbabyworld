@@ -42,10 +42,10 @@ export default function AdminReviewsPage() {
     <div style={{ padding: '20px', fontFamily: 'Nunito, sans-serif' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: '900', color: '#2D1A4A', margin: '0 0 4px' }}>
+          <h1 style={{ fontSize: '1.6rem', fontWeight: '900', color: '#264653', margin: '0 0 4px' }}>
             ⭐ Reviews Management
           </h1>
-          <p style={{ color: '#9585B0', margin: 0, fontSize: '0.85rem' }}>
+          <p style={{ color: '#8A9BA3', margin: 0, fontSize: '0.85rem' }}>
             Total: {reviews.length} reviews
           </p>
         </div>
@@ -53,9 +53,9 @@ export default function AdminReviewsPage() {
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           style={{
-            padding: '9px 16px', border: '2px solid #EDD9FF', borderRadius: '10px',
+            padding: '9px 16px', border: '2px solid #E8E2D2', borderRadius: '10px',
             fontSize: '14px', fontFamily: 'inherit', outline: 'none',
-            background: 'white', color: '#2D1A4A', cursor: 'pointer',
+            background: 'white', color: '#264653', cursor: 'pointer',
           }}
         >
           <option value="all">All Ratings</option>
@@ -68,11 +68,11 @@ export default function AdminReviewsPage() {
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#9585B0' }}>⏳ Loading...</div>
+        <div style={{ textAlign: 'center', padding: '40px', color: '#8A9BA3' }}>⏳ Loading...</div>
       ) : filteredReviews.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '16px', border: '2px dashed #EDD9FF' }}>
+        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '16px', border: '2px dashed #E8E2D2' }}>
           <div style={{ fontSize: '3rem', marginBottom: '12px' }}>⭐</div>
-          <p style={{ fontWeight: '700', color: '#9585B0' }}>No reviews found</p>
+          <p style={{ fontWeight: '700', color: '#8A9BA3' }}>No reviews found</p>
         </div>
       ) : (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
@@ -80,7 +80,7 @@ export default function AdminReviewsPage() {
             <div key={review.id} style={{
               padding: '16px 18px',
               background: 'white',
-              border: '2px solid #EDD9FF',
+              border: '2px solid #E8E2D2',
               borderRadius: '12px',
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px', marginBottom: '10px', flexWrap: 'wrap' }}>
@@ -88,13 +88,13 @@ export default function AdminReviewsPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px', flexWrap: 'wrap' }}>
                     <strong style={{ fontSize: '0.95rem', color: '#1F2937' }}>{review.name}</strong>
                     {review.isVerified && (
-                      <span style={{ padding: '2px 8px', background: '#D1FAE5', color: '#065F46', borderRadius: '999px', fontSize: '0.65rem', fontWeight: '800' }}>
+                      <span style={{ padding: '2px 8px', background: '#D1FAE5', color: '#1B5E20', borderRadius: '999px', fontSize: '0.65rem', fontWeight: '800' }}>
                         ✓ Verified Buyer
                       </span>
                     )}
                     <div style={{ display: 'flex', gap: '2px' }}>
                       {[1,2,3,4,5].map(s => (
-                        <span key={s} style={{ color: s <= review.rating ? '#FBBF24' : '#E5E7EB' }}>★</span>
+                        <span key={s} style={{ color: s <= review.rating ? '#F2B33D' : '#E5E7EB' }}>★</span>
                       ))}
                     </div>
                   </div>
@@ -102,7 +102,7 @@ export default function AdminReviewsPage() {
                     📧 {review.email} · 🗓️ {new Date(review.createdAt).toLocaleString('en-IN')}
                   </p>
                   <p style={{ margin: '0 0 8px', fontSize: '0.78rem', color: '#6B7280' }}>
-                    🛒 Product: <Link href={`/admin/products/${review.productId}`} style={{ color: '#7B2FBE', fontWeight: '700' }}>
+                    🛒 Product: <Link href={`/admin/products/${review.productId}`} style={{ color: '#264653', fontWeight: '700' }}>
                       {review.productName || review.productId}
                     </Link>
                   </p>

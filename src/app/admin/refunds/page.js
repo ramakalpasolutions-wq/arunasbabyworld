@@ -5,17 +5,17 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 const STATUS_CONFIG = {
-  pending:      { label: 'Pending',      color: '#F59E0B', bg: '#FEF3C7', icon: '🟡' },
-  processing:   { label: 'Processing',   color: '#3B82F6', bg: '#DBEAFE', icon: '⚙️' },
-  completed:    { label: 'Completed',    color: '#10B981', bg: '#D1FAE5', icon: '✅' },
-  failed:       { label: 'Failed',       color: '#EF4444', bg: '#FEE2E2', icon: '❌' },
+  pending:      { label: 'Pending',      color: '#F2B33D', bg: '#FEF3C7', icon: '🟡' },
+  processing:   { label: 'Processing',   color: '#1E88E5', bg: '#DBEAFE', icon: '⚙️' },
+  completed:    { label: 'Completed',    color: '#43A047', bg: '#D1FAE5', icon: '✅' },
+  failed:       { label: 'Failed',       color: '#E53935', bg: '#FEE2E2', icon: '❌' },
   not_required: { label: 'N/A',          color: '#6B7280', bg: '#F3F4F6', icon: 'ℹ️' },
 };
 
 const REFUND_TYPE_CONFIG = {
-  razorpay:       { label: 'Razorpay Auto', emoji: '⚡', color: '#10B981' },
-  upi_transfer:   { label: 'UPI Manual',    emoji: '📱', color: '#10B981' },
-  bank_transfer:  { label: 'Bank Manual',   emoji: '🏦', color: '#3B82F6' },
+  razorpay:       { label: 'Razorpay Auto', emoji: '⚡', color: '#43A047' },
+  upi_transfer:   { label: 'UPI Manual',    emoji: '📱', color: '#43A047' },
+  bank_transfer:  { label: 'Bank Manual',   emoji: '🏦', color: '#1E88E5' },
   not_required:   { label: 'Not Required',  emoji: 'ℹ️', color: '#6B7280' },
 };
 
@@ -73,7 +73,7 @@ export default function AdminRefundsPage() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '60px', color: '#9585B0', fontFamily: 'Nunito, sans-serif' }}>
+      <div style={{ textAlign: 'center', padding: '60px', color: '#8A9BA3', fontFamily: 'Nunito, sans-serif' }}>
         <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>⏳</div>
         <p style={{ fontWeight: '700' }}>Loading refunds...</p>
       </div>
@@ -89,10 +89,10 @@ export default function AdminRefundsPage() {
         marginBottom: '24px', flexWrap: 'wrap', gap: '12px',
       }}>
         <div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: '800', margin: '0 0 4px', color: '#2D1A4A' }}>
+          <h1 style={{ fontSize: '1.6rem', fontWeight: '800', margin: '0 0 4px', color: '#264653' }}>
             Refunds 💰
           </h1>
-          <p style={{ color: '#9585B0', margin: 0, fontSize: '0.86rem', fontWeight: '600' }}>
+          <p style={{ color: '#8A9BA3', margin: 0, fontSize: '0.86rem', fontWeight: '600' }}>
             Manage all refund requests in one place
           </p>
         </div>
@@ -105,11 +105,11 @@ export default function AdminRefundsPage() {
         gap: '12px', marginBottom: '24px',
       }}>
         {[
-          { label: 'Total',      value: stats.total,      color: '#7B2FBE', bg: '#F3E8FF', icon: '📊' },
-          { label: 'Pending',    value: stats.pending,    color: '#F59E0B', bg: '#FEF3C7', icon: '🟡' },
-          { label: 'Processing', value: stats.processing, color: '#3B82F6', bg: '#DBEAFE', icon: '⚙️' },
-          { label: 'Completed',  value: stats.completed,  color: '#10B981', bg: '#D1FAE5', icon: '✅' },
-          { label: 'Failed',     value: stats.failed,     color: '#EF4444', bg: '#FEE2E2', icon: '❌' },
+          { label: 'Total',      value: stats.total,      color: '#264653', bg: '#EEF3F5', icon: '📊' },
+          { label: 'Pending',    value: stats.pending,    color: '#F2B33D', bg: '#FEF3C7', icon: '🟡' },
+          { label: 'Processing', value: stats.processing, color: '#1E88E5', bg: '#DBEAFE', icon: '⚙️' },
+          { label: 'Completed',  value: stats.completed,  color: '#43A047', bg: '#D1FAE5', icon: '✅' },
+          { label: 'Failed',     value: stats.failed,     color: '#E53935', bg: '#FEE2E2', icon: '❌' },
         ].map(s => (
           <div key={s.label} style={{
             background: 'white',
@@ -127,7 +127,7 @@ export default function AdminRefundsPage() {
               {s.icon}
             </div>
             <div style={{ minWidth: 0 }}>
-              <p style={{ fontSize: '0.7rem', fontWeight: '800', color: '#9585B0', margin: 0, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+              <p style={{ fontSize: '0.7rem', fontWeight: '800', color: '#8A9BA3', margin: 0, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                 {s.label}
               </p>
               <p style={{ fontSize: '1.4rem', fontWeight: '900', color: s.color, margin: '2px 0 0', lineHeight: 1 }}>
@@ -146,13 +146,13 @@ export default function AdminRefundsPage() {
       }}>
         <div style={{
           padding: '16px 20px',
-          background: 'linear-gradient(135deg, #F3E8FF, #EDE9FE)',
-          border: '1.5px solid #DDD6FE', borderRadius: '14px',
+          background: 'linear-gradient(135deg, #EEF3F5, #EEF3F5)',
+          border: '1.5px solid #DDE5E8', borderRadius: '14px',
         }}>
-          <p style={{ fontSize: '0.74rem', fontWeight: '800', color: '#6D28D9', margin: 0, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+          <p style={{ fontSize: '0.74rem', fontWeight: '800', color: '#1B3540', margin: 0, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
             💰 Total Refund Amount
           </p>
-          <p style={{ fontSize: '1.6rem', fontWeight: '900', color: '#7B2FBE', margin: '4px 0 0', lineHeight: 1 }}>
+          <p style={{ fontSize: '1.6rem', fontWeight: '900', color: '#264653', margin: '4px 0 0', lineHeight: 1 }}>
             ₹{stats.totalAmount?.toLocaleString('en-IN')}
           </p>
         </div>
@@ -161,10 +161,10 @@ export default function AdminRefundsPage() {
           background: 'linear-gradient(135deg, #D1FAE5, #A7F3D0)',
           border: '1.5px solid #A7F3D0', borderRadius: '14px',
         }}>
-          <p style={{ fontSize: '0.74rem', fontWeight: '800', color: '#065F46', margin: 0, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+          <p style={{ fontSize: '0.74rem', fontWeight: '800', color: '#1B5E20', margin: 0, textTransform: 'uppercase', letterSpacing: '0.6px' }}>
             ✅ Completed Amount
           </p>
-          <p style={{ fontSize: '1.6rem', fontWeight: '900', color: '#10B981', margin: '4px 0 0', lineHeight: 1 }}>
+          <p style={{ fontSize: '1.6rem', fontWeight: '900', color: '#43A047', margin: '4px 0 0', lineHeight: 1 }}>
             ₹{stats.completedAmount?.toLocaleString('en-IN')}
           </p>
         </div>
@@ -173,7 +173,7 @@ export default function AdminRefundsPage() {
       {/* ── Filters + Search ── */}
       <div style={{
         background: 'white',
-        border: '1.5px solid #EDD9FF',
+        border: '1.5px solid #E8E2D2',
         borderRadius: '14px',
         padding: '14px 16px',
         marginBottom: '20px',
@@ -188,9 +188,9 @@ export default function AdminRefundsPage() {
           style={{
             flex: '1 1 220px',
             padding: '10px 14px',
-            border: '1.5px solid #EDD9FF', borderRadius: '10px',
+            border: '1.5px solid #E8E2D2', borderRadius: '10px',
             fontSize: '0.88rem', fontFamily: 'inherit',
-            outline: 'none', color: '#2D1A4A',
+            outline: 'none', color: '#264653',
           }}
         />
         <select
@@ -198,10 +198,10 @@ export default function AdminRefundsPage() {
           onChange={e => setFilter(e.target.value)}
           style={{
             padding: '10px 14px',
-            border: '1.5px solid #EDD9FF', borderRadius: '10px',
+            border: '1.5px solid #E8E2D2', borderRadius: '10px',
             fontSize: '0.88rem', fontFamily: 'inherit',
             outline: 'none', cursor: 'pointer',
-            background: 'white', color: '#2D1A4A', fontWeight: '700',
+            background: 'white', color: '#264653', fontWeight: '700',
           }}
         >
           <option value="all">All Statuses</option>
@@ -217,13 +217,13 @@ export default function AdminRefundsPage() {
         <div style={{
           textAlign: 'center', padding: '60px 20px',
           background: 'white', borderRadius: '16px',
-          border: '2px dashed #EDD9FF',
+          border: '2px dashed #E8E2D2',
         }}>
           <div style={{ fontSize: '3rem', marginBottom: '12px' }}>💰</div>
-          <h3 style={{ color: '#2D1A4A', margin: '0 0 8px', fontSize: '1.1rem' }}>
+          <h3 style={{ color: '#264653', margin: '0 0 8px', fontSize: '1.1rem' }}>
             No refunds found
           </h3>
-          <p style={{ color: '#9585B0', margin: 0, fontWeight: '600', fontSize: '0.88rem' }}>
+          <p style={{ color: '#8A9BA3', margin: 0, fontWeight: '600', fontSize: '0.88rem' }}>
             {search ? 'Try a different search term' : `No ${filter !== 'all' ? filter : ''} refunds at the moment`}
           </p>
         </div>
@@ -234,7 +234,7 @@ export default function AdminRefundsPage() {
         <div style={{
           background: 'white',
           borderRadius: '14px',
-          border: '1.5px solid #EDD9FF',
+          border: '1.5px solid #E8E2D2',
           overflow: 'hidden',
           overflowX: 'auto',
         }}>
@@ -243,7 +243,7 @@ export default function AdminRefundsPage() {
             borderCollapse: 'collapse', fontSize: '0.86rem',
           }}>
             <thead>
-              <tr style={{ background: '#FBF7FF', borderBottom: '2px solid #EDD9FF' }}>
+              <tr style={{ background: '#FFFBF2', borderBottom: '2px solid #E8E2D2' }}>
                 <th style={thStyle}>Refund ID</th>
                 <th style={thStyle}>Customer</th>
                 <th style={thStyle}>Order</th>
@@ -260,32 +260,32 @@ export default function AdminRefundsPage() {
                 const typeCfg   = REFUND_TYPE_CONFIG[r.refundType] || REFUND_TYPE_CONFIG.razorpay;
 
                 return (
-                  <tr key={r.id} style={{ borderBottom: '1px solid #F3E8FF' }}>
+                  <tr key={r.id} style={{ borderBottom: '1px solid #EEF3F5' }}>
                     <td style={tdStyle}>
-                      <code style={{ fontSize: '0.78rem', color: '#7B2FBE', fontWeight: '700' }}>
+                      <code style={{ fontSize: '0.78rem', color: '#264653', fontWeight: '700' }}>
                         #{r.id?.slice(-8).toUpperCase()}
                       </code>
                     </td>
                     <td style={tdStyle}>
                       <div>
-                        <p style={{ margin: 0, fontWeight: '700', color: '#2D1A4A' }}>
+                        <p style={{ margin: 0, fontWeight: '700', color: '#264653' }}>
                           {r.user?.name || 'Unknown'}
                         </p>
-                        <p style={{ margin: 0, fontSize: '0.74rem', color: '#9585B0', fontWeight: '600' }}>
+                        <p style={{ margin: 0, fontSize: '0.74rem', color: '#8A9BA3', fontWeight: '600' }}>
                           {r.user?.email}
                         </p>
                       </div>
                     </td>
                     <td style={tdStyle}>
                       <Link href={`/admin/orders/${r.orderId}`} style={{
-                        color: '#7B2FBE', textDecoration: 'none', fontWeight: '700', fontSize: '0.8rem',
+                        color: '#264653', textDecoration: 'none', fontWeight: '700', fontSize: '0.8rem',
                         fontFamily: 'monospace',
                       }}>
                         #{r.orderId?.slice(-8).toUpperCase()}
                       </Link>
                     </td>
                     <td style={tdStyle}>
-                      <strong style={{ color: '#10B981', fontSize: '0.95rem' }}>
+                      <strong style={{ color: '#43A047', fontSize: '0.95rem' }}>
                         ₹{r.amount?.toLocaleString('en-IN')}
                       </strong>
                     </td>
@@ -314,7 +314,7 @@ export default function AdminRefundsPage() {
                         {statusCfg.icon} {statusCfg.label}
                       </span>
                     </td>
-                    <td style={{ ...tdStyle, color: '#9585B0', fontSize: '0.78rem', fontWeight: '600' }}>
+                    <td style={{ ...tdStyle, color: '#8A9BA3', fontSize: '0.78rem', fontWeight: '600' }}>
                       {new Date(r.createdAt).toLocaleDateString('en-IN', {
                         day: 'numeric', month: 'short', year: '2-digit',
                       })}
@@ -322,7 +322,7 @@ export default function AdminRefundsPage() {
                     <td style={tdStyle}>
                       <Link href={`/admin/refunds/${r.id}`} style={{
                         display: 'inline-block', padding: '6px 14px',
-                        background: 'linear-gradient(135deg, #7B2FBE, #9333EA)',
+                        background: 'linear-gradient(135deg, #264653, #264653)',
                         color: 'white', borderRadius: '8px',
                         fontSize: '0.76rem', fontWeight: '800',
                         textDecoration: 'none', whiteSpace: 'nowrap',
@@ -346,7 +346,7 @@ const thStyle = {
   textAlign: 'left',
   fontSize: '0.76rem',
   fontWeight: '800',
-  color: '#7B2FBE',
+  color: '#264653',
   textTransform: 'uppercase',
   letterSpacing: '0.6px',
   whiteSpace: 'nowrap',
@@ -354,6 +354,6 @@ const thStyle = {
 
 const tdStyle = {
   padding: '12px 14px',
-  color: '#2D1A4A',
+  color: '#264653',
   fontWeight: '600',
 };

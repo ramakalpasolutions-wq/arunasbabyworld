@@ -1,8 +1,8 @@
 /* ====== ROOT VARS ====== */
 .contact {
-  --pink: #ff6b9d;
-  --purple: #7c3aed;
-  --gradient: linear-gradient(135deg, #ff6b9d, #7c3aed);
+  --pink: #E53935;
+  --purple: #264653;
+  --gradient: linear-gradient(135deg, #3A6373, #264653);
   padding-bottom: 60px;
 }
 
@@ -131,7 +131,7 @@
 .cardBody h3 {
   font-size: 0.92rem;
   font-weight: 800;
-  color: #1a1a2e;
+  color: #1B3540;
   margin: 0 0 3px;
 }
 
@@ -157,7 +157,7 @@
   font-weight: 700;
   text-decoration: none;
   color: var(--btn-color, var(--pink));
-  background: color-mix(in srgb, var(--btn-color, #ff6b9d) 10%, white);
+  background: color-mix(in srgb, var(--btn-color, #E53935) 10%, white);
   transition: all 0.2s;
 }
 
@@ -191,7 +191,7 @@
 .formHeader h2 {
   font-size: 1.3rem;
   font-weight: 800;
-  color: #1a1a2e;
+  color: #1B3540;
   margin: 0 0 6px;
 }
 
@@ -231,7 +231,7 @@
 .submitBtn:hover {
   opacity: 0.9;
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(255, 107, 157, 0.3);
+  box-shadow: 0 8px 24px rgba(229,57,53, 0.3);
 }
 
 .submitBtn:disabled {
@@ -250,7 +250,7 @@
 .infoCard h3 {
   font-size: 1rem;
   font-weight: 800;
-  color: #1a1a2e;
+  color: #1B3540;
   margin: 0 0 18px;
 }
 
@@ -271,7 +271,7 @@
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: #fff0f5;
+  background: #FFF5F4;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -353,14 +353,14 @@
 .deliveryCard strong {
   display: block;
   font-size: 0.88rem;
-  color: #065f46;
+  color: #1B5E20;
   font-weight: 800;
   margin-bottom: 4px;
 }
 
 .deliveryCard p {
   font-size: 0.78rem;
-  color: #047857;
+  color: #2E7D32;
   line-height: 1.5;
   margin: 0;
 }

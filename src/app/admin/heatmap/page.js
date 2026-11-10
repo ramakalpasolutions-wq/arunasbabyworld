@@ -31,7 +31,7 @@ export default function AdvancedHeatmapPage() {
   if (loading || !data) {
     return (
       <div style={{ padding: '60px', textAlign: 'center', fontFamily: 'Nunito, sans-serif' }}>
-        <h2 style={{ color: '#7B2FBE' }}>📡 Analyzing User Behavior...</h2>
+        <h2 style={{ color: '#264653' }}>📡 Analyzing User Behavior...</h2>
       </div>
     );
   }
@@ -40,17 +40,17 @@ export default function AdvancedHeatmapPage() {
   const maxStateRevenue = data.topStates?.[0]?.revenue || 1;
 
   const funnelColors = [
-    'linear-gradient(90deg, #93C5FD, #38BDF8)',
+    'linear-gradient(90deg, #93C5FD, #4FA3F0)',
     'linear-gradient(90deg, #C4B5FD, #818CF8)',
-    'linear-gradient(90deg, #FDBA74, #F59E0B)',
-    'linear-gradient(90deg, #FCA5A5, #F97316)',
-    'linear-gradient(90deg, #6EE7B7, #10B981)',
+    'linear-gradient(90deg, #FDBA74, #F2B33D)',
+    'linear-gradient(90deg, #FCA5A5, #FB8C00)',
+    'linear-gradient(90deg, #6EE7B7, #43A047)',
   ];
 
   const severityColor = {
-    critical: { bg: '#FEE2E2', border: '#FECACA', text: '#991B1B', badge: '#DC2626' },
+    critical: { bg: '#FEE2E2', border: '#FECACA', text: '#991B1B', badge: '#C62828' },
     high: { bg: '#FEF3C7', border: '#FDE68A', text: '#92400E', badge: '#D97706' },
-    medium: { bg: '#DBEAFE', border: '#BFDBFE', text: '#1E40AF', badge: '#2563EB' },
+    medium: { bg: '#DBEAFE', border: '#BFDBFE', text: '#1E40AF', badge: '#1E88E5' },
   };
 
   return (
@@ -64,7 +64,7 @@ export default function AdvancedHeatmapPage() {
           </h1>
           <p style={{ color: '#64748B', margin: '4px 0 0', fontSize: '0.95rem' }}>
             Funnel conversion, bottlenecks, geo heatmap & live sessions. 
-            {' '}<a href="https://clarity.microsoft.com/" target="_blank" rel="noreferrer" style={{ color: '#7B2FBE', fontWeight: '800', textDecoration: 'none' }}>
+            {' '}<a href="https://clarity.microsoft.com/" target="_blank" rel="noreferrer" style={{ color: '#264653', fontWeight: '800', textDecoration: 'none' }}>
               Open Clarity Dashboard →
             </a>
           </p>
@@ -86,14 +86,14 @@ export default function AdvancedHeatmapPage() {
       <div style={{ background: 'linear-gradient(135deg, #111827, #1F2937)', color: 'white', borderRadius: '14px', padding: '20px 24px', marginBottom: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
         <div>
           <h3 style={{ margin: 0, fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '10px', fontWeight: '800' }}>
-            <span style={{ display: 'inline-block', width: '10px', height: '10px', background: '#22C55E', borderRadius: '50%', animation: 'pulse 1.5s infinite', boxShadow: '0 0 10px #22C55E' }} />
+            <span style={{ display: 'inline-block', width: '10px', height: '10px', background: '#43A047', borderRadius: '50%', animation: 'pulse 1.5s infinite', boxShadow: '0 0 10px #43A047' }} />
             Live Store Activity
           </h3>
           <p style={{ margin: '4px 0 0', color: '#9CA3AF', fontSize: '0.82rem' }}>Updated every 30 seconds</p>
         </div>
         <div style={{ display: 'flex', gap: '32px' }}>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '1.6rem', fontWeight: '900', color: '#38BDF8' }}>{data.activeUsers}</div>
+            <div style={{ fontSize: '1.6rem', fontWeight: '900', color: '#4FA3F0' }}>{data.activeUsers}</div>
             <div style={{ fontSize: '0.72rem', color: '#9CA3AF', textTransform: 'uppercase', fontWeight: '700' }}>Active Users</div>
           </div>
           <div style={{ textAlign: 'center' }}>
@@ -101,7 +101,7 @@ export default function AdvancedHeatmapPage() {
             <div style={{ fontSize: '0.72rem', color: '#9CA3AF', textTransform: 'uppercase', fontWeight: '700' }}>In Cart/Checkout</div>
           </div>
           <div style={{ textAlign: 'center' }}>
-            <div style={{ fontSize: '1.6rem', fontWeight: '900', color: '#34D399' }}>₹{(data.totalRevenue / 1000).toFixed(1)}k</div>
+            <div style={{ fontSize: '1.6rem', fontWeight: '900', color: '#66BB6A' }}>₹{(data.totalRevenue / 1000).toFixed(1)}k</div>
             <div style={{ fontSize: '0.72rem', color: '#9CA3AF', textTransform: 'uppercase', fontWeight: '700' }}>Revenue</div>
           </div>
         </div>
@@ -117,7 +117,7 @@ export default function AdvancedHeatmapPage() {
               <div key={idx}>
                 {idx > 0 && (
                   <div style={{ display: 'flex', justifyContent: 'flex-end', paddingRight: '20px', marginBottom: '6px' }}>
-                    <span style={{ fontSize: '0.74rem', fontWeight: '800', color: step.drop > 50 ? '#EF4444' : '#F59E0B', background: step.drop > 50 ? '#FEE2E2' : '#FEF3C7', padding: '3px 10px', borderRadius: '20px' }}>
+                    <span style={{ fontSize: '0.74rem', fontWeight: '800', color: step.drop > 50 ? '#E53935' : '#F2B33D', background: step.drop > 50 ? '#FEE2E2' : '#FEF3C7', padding: '3px 10px', borderRadius: '20px' }}>
                       ↓ {step.drop}% drop
                     </span>
                   </div>
@@ -143,7 +143,7 @@ export default function AdvancedHeatmapPage() {
       <div style={{ ...cardStyle, border: '1px solid #FEE2E2' }}>
         <h2 style={{ ...sectionTitle, color: '#B91C1C' }}>🚨 Issues & Bottlenecks Detected</h2>
         {data.bottlenecks.length === 0 ? (
-          <div style={{ padding: '18px', background: '#ECFDF5', color: '#065F46', borderRadius: '12px', fontWeight: '700' }}>
+          <div style={{ padding: '18px', background: '#ECFDF5', color: '#1B5E20', borderRadius: '12px', fontWeight: '700' }}>
             ✅ Store is healthy — no critical bottlenecks right now.
           </div>
         ) : (
@@ -177,9 +177,9 @@ export default function AdvancedHeatmapPage() {
             ) : (
               data.topStates.map((st, idx) => {
                 const intensity = st.revenue / maxStateRevenue;
-                const bg = intensity > 0.7 ? 'linear-gradient(135deg, #7B2FBE, #5B21B6)' :
-                           intensity > 0.4 ? 'linear-gradient(135deg, #EC4899, #DB2777)' :
-                           intensity > 0.15 ? 'linear-gradient(135deg, #F59E0B, #D97706)' :
+                const bg = intensity > 0.7 ? 'linear-gradient(135deg, #264653, #1B3540)' :
+                           intensity > 0.4 ? 'linear-gradient(135deg, #E53935, #DB2777)' :
+                           intensity > 0.15 ? 'linear-gradient(135deg, #F2B33D, #D97706)' :
                            'linear-gradient(135deg, #94A3B8, #64748B)';
                 return (
                   <div key={idx} title={`${st.name}: ₹${st.revenue.toLocaleString()} • ${st.count} orders`} style={{ background: bg, padding: '14px 10px', borderRadius: '12px', color: 'white', textAlign: 'center', cursor: 'crosshair', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
@@ -215,7 +215,7 @@ export default function AdvancedHeatmapPage() {
                     </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontWeight: '900', color: '#059669', fontSize: '0.92rem' }}>₹{city.revenue.toLocaleString('en-IN')}</div>
+                    <div style={{ fontWeight: '900', color: '#388E3C', fontSize: '0.92rem' }}>₹{city.revenue.toLocaleString('en-IN')}</div>
                     <div style={{ fontSize: '0.72rem', color: '#64748B', fontWeight: '700' }}>{city.count} orders · AOV ₹{city.aov}</div>
                   </div>
                 </div>
@@ -226,7 +226,7 @@ export default function AdvancedHeatmapPage() {
       </div>
 
       {/* CLARITY REMINDER CARD */}
-      <div style={{ ...cardStyle, background: 'linear-gradient(135deg, #FEF3C7, #FDE68A)', border: '1px solid #FBBF24' }}>
+      <div style={{ ...cardStyle, background: 'linear-gradient(135deg, #FEF3C7, #FDE68A)', border: '1px solid #F2B33D' }}>
         <h2 style={{ ...sectionTitle, color: '#78350F' }}>🎥 Session Replays, Click & Scroll Heatmaps</h2>
         <p style={{ margin: '0 0 14px', color: '#92400E', fontSize: '0.9rem', fontWeight: '700' }}>
           Click, scroll, movement heatmaps, rage/dead clicks, device segmentation and session replays are available in your <strong>Microsoft Clarity dashboard</strong> (free, GDPR-safe, auto-masks sensitive data).

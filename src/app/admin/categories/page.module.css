@@ -98,7 +98,7 @@
   flex-shrink: 0;
 }
 
-.closeBtn:hover { background: #fee2e2; color: #dc2626; }
+.closeBtn:hover { background: #fee2e2; color: #C62828; }
 
 .form {
   display: flex;

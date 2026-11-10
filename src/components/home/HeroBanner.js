@@ -40,29 +40,29 @@ const themeMap = {
     titleColor: '#1A1A1A',
     subtitleColor: '#5A4A3A',
     cloudColor: '#FFFFFF',
-    accentDot: '#F5B5C5',
+    accentDot: '#F5B7B5',
   },
   orange: {
-    panelBg: 'linear-gradient(135deg, #FFF3E8 0%, #FFE4CC 100%)',
+    panelBg: 'linear-gradient(135deg, #FFF6E5 0%, #FDEBC8 100%)',
     btnPrimary: '#FFFFFF',
-    btnPrimaryText: '#E8650A',
+    btnPrimaryText: '#C62828',
     btnSecondary: 'rgba(255, 255, 255, 0.55)',
-    btnSecondaryText: '#E8650A',
+    btnSecondaryText: '#C62828',
     titleColor: '#2A1810',
     subtitleColor: '#5A4030',
     cloudColor: '#FFFFFF',
-    accentDot: '#F47B20',
+    accentDot: '#FB8C00',
   },
   purple: {
-    panelBg: 'linear-gradient(135deg, #F7F0FF 0%, #EBE0FA 100%)',
+    panelBg: 'linear-gradient(135deg, #FBF5E6 0%, #E8E2D2 100%)',
     btnPrimary: '#FFFFFF',
-    btnPrimaryText: '#7D3C98',
+    btnPrimaryText: '#264653',
     btnSecondary: 'rgba(255, 255, 255, 0.55)',
-    btnSecondaryText: '#7D3C98',
-    titleColor: '#2D1A4A',
-    subtitleColor: '#5A4570',
+    btnSecondaryText: '#264653',
+    titleColor: '#264653',
+    subtitleColor: '#3A5560',
     cloudColor: '#FFFFFF',
-    accentDot: '#9B59B6',
+    accentDot: '#3A6373',
   },
 };
 
@@ -100,7 +100,7 @@ function HeroMedia({ panel, isActive, muted, onToggleMute }) {
         className={styles.emojiWrap}
         style={{
           background:
-            panel?.bg || 'linear-gradient(135deg, #FFF5EE 0%, #FEF0FF 100%)',
+            panel?.bg || 'linear-gradient(135deg, #FFFBF2 0%, #FFFBF2 100%)',
         }}
       >
         <span className={styles.bigEmoji}>{panel?.emoji || '🍼'}</span>

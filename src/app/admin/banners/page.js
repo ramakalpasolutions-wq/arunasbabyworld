@@ -7,25 +7,25 @@ import { uploadFileToR2 } from '@/lib/uploadFile';
 // PANEL DEFAULTS
 // ============================================================
 const PANEL_DEFAULTS = [
-  { label: '🔥 Trending Now', sublabel: '2.4k sold this week', link: '/products', bg: '#FFF3E8', isBig: true, url: '', publicId: '' },
+  { label: '🔥 Trending Now', sublabel: '2.4k sold this week', link: '/products', bg: '#FFF6E5', isBig: true, url: '', publicId: '' },
 ];
 
 const CORE_SYSTEM_KEYS = ['hero', 'brands', 'section-settings'];
 
 const DEFAULT_SECTIONS = [
-  { key: 'hero',          defaultTitle: 'New Arrivals',     defaultEmoji: '🖼️', hint: 'Main hero slider',        color: '#FF6B35' },
-  { key: 'category',      defaultTitle: 'Shop By Category', defaultEmoji: '📁', hint: 'Home page category cards', color: '#FF6B35' },
-  { key: 'budget',        defaultTitle: 'Budget Store',      defaultEmoji: '🏪', hint: 'Budget price circles',     color: '#F59E0B' },
-  { key: 'sunny',         defaultTitle: 'Sunny Play Days',   defaultEmoji: '☀️', hint: 'Category cards section',   color: '#0EA5E9' },
-  { key: 'promo',         defaultTitle: 'Special Offers',    defaultEmoji: '🏷️', hint: 'Sliding offer cards',      color: '#EF4444' },
-  { key: 'gender',        defaultTitle: 'Shop by Style',     defaultEmoji: '👗', hint: 'Girl & Boy cards',         color: '#EC4899' },
-  { key: 'festival',      defaultTitle: 'Festival Special',  defaultEmoji: '🎪', hint: 'Festival video/image banners', color: '#FF4081' },
-  { key: 'baby-food',     defaultTitle: 'Baby Food',         defaultEmoji: '🍼', hint: 'Baby food section',        color: '#10B981' },
-  { key: 'toys',          defaultTitle: 'Toys & Games',      defaultEmoji: '🧸', hint: 'Toys & games section',     color: '#EF4444' },
-  { key: 'electric-vehicle', defaultTitle: 'Electric Rides', defaultEmoji: '🚗', hint: 'Electric vehicle section', color: '#0EA5E9' },
-  { key: 'personal-care', defaultTitle: 'Personal Care',     defaultEmoji: '🧴', hint: 'Bento grid (4 images)',    color: '#7B2FBE' },
-  { key: 'health-care',   defaultTitle: 'Health & Safety',   defaultEmoji: '🏥', hint: 'Mosaic grid (5 images)',   color: '#10B981' },
-  { key: 'wellness',      defaultTitle: 'Wellness & Care Products', defaultEmoji: '🌿', hint: 'Care section heading', color: '#7B2FBE' },
+  { key: 'hero',          defaultTitle: 'New Arrivals',     defaultEmoji: '🖼️', hint: 'Main hero slider',        color: '#E53935' },
+  { key: 'category',      defaultTitle: 'Shop By Category', defaultEmoji: '📁', hint: 'Home page category cards', color: '#E53935' },
+  { key: 'budget',        defaultTitle: 'Budget Store',      defaultEmoji: '🏪', hint: 'Budget price circles',     color: '#F2B33D' },
+  { key: 'sunny',         defaultTitle: 'Sunny Play Days',   defaultEmoji: '☀️', hint: 'Category cards section',   color: '#1E88E5' },
+  { key: 'promo',         defaultTitle: 'Special Offers',    defaultEmoji: '🏷️', hint: 'Sliding offer cards',      color: '#E53935' },
+  { key: 'gender',        defaultTitle: 'Shop by Style',     defaultEmoji: '👗', hint: 'Girl & Boy cards',         color: '#E53935' },
+  { key: 'festival',      defaultTitle: 'Festival Special',  defaultEmoji: '🎪', hint: 'Festival video/image banners', color: '#E53935' },
+  { key: 'baby-food',     defaultTitle: 'Baby Food',         defaultEmoji: '🍼', hint: 'Baby food section',        color: '#43A047' },
+  { key: 'toys',          defaultTitle: 'Toys & Games',      defaultEmoji: '🧸', hint: 'Toys & games section',     color: '#E53935' },
+  { key: 'electric-vehicle', defaultTitle: 'Electric Rides', defaultEmoji: '🚗', hint: 'Electric vehicle section', color: '#1E88E5' },
+  { key: 'personal-care', defaultTitle: 'Personal Care',     defaultEmoji: '🧴', hint: 'Bento grid (4 images)',    color: '#264653' },
+  { key: 'health-care',   defaultTitle: 'Health & Safety',   defaultEmoji: '🏥', hint: 'Mosaic grid (5 images)',   color: '#43A047' },
+  { key: 'wellness',      defaultTitle: 'Wellness & Care Products', defaultEmoji: '🌿', hint: 'Care section heading', color: '#264653' },
 ];
 
 const SEASON_PRESETS = {
@@ -192,12 +192,12 @@ function SectionSettings({ onSectionDeleted, onSectionAdded, sectionsList }) {
     }
   };
 
-  const inp = { width: '100%', padding: '11px 13px', border: '2px solid #EDD9FF', borderRadius: '10px', fontSize: '14px', fontFamily: 'Nunito, sans-serif', outline: 'none', background: 'white', color: '#2D1A4A', boxSizing: 'border-box' };
-  const lbl = { display: 'block', fontSize: '11px', fontWeight: '800', color: '#7B2FBE', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.5px' };
+  const inp = { width: '100%', padding: '11px 13px', border: '2px solid #E8E2D2', borderRadius: '10px', fontSize: '14px', fontFamily: 'Nunito, sans-serif', outline: 'none', background: 'white', color: '#264653', boxSizing: 'border-box' };
+  const lbl = { display: 'block', fontSize: '11px', fontWeight: '800', color: '#264653', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.5px' };
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '60px', color: '#9585B0', fontFamily: 'Nunito, sans-serif' }}>
+      <div style={{ textAlign: 'center', padding: '60px', color: '#8A9BA3', fontFamily: 'Nunito, sans-serif' }}>
         <div style={{ fontSize: '2rem', marginBottom: '12px' }}>⏳</div>
         <p style={{ fontWeight: '700' }}>Loading...</p>
       </div>
@@ -213,7 +213,7 @@ function SectionSettings({ onSectionDeleted, onSectionAdded, sectionsList }) {
         defaultTitle: settings[k].title || k,
         defaultEmoji: settings[k].emoji || '🏷️',
         hint: 'Custom banner section',
-        color: '#7B2FBE',
+        color: '#264653',
         isCustom: true
       });
     }
@@ -223,11 +223,11 @@ function SectionSettings({ onSectionDeleted, onSectionAdded, sectionsList }) {
     <div>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h2 style={{ fontSize: '1.2rem', fontWeight: '800', margin: '0 0 4px', color: '#2D1A4A' }}>🎨 Manage Section Names & Sections</h2>
-          <p style={{ color: '#9585B0', margin: 0, fontSize: '0.82rem', fontWeight: '600' }}>Add, edit or remove home page sections</p>
+          <h2 style={{ fontSize: '1.2rem', fontWeight: '800', margin: '0 0 4px', color: '#264653' }}>🎨 Manage Section Names & Sections</h2>
+          <p style={{ color: '#8A9BA3', margin: 0, fontSize: '0.82rem', fontWeight: '600' }}>Add, edit or remove home page sections</p>
         </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-          <button onClick={saveAll} disabled={savingAll} style={{ padding: '8px 20px', background: savingAll ? '#ccc' : 'linear-gradient(135deg,#FF6B35,#7B2FBE)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '800', cursor: savingAll ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
+          <button onClick={saveAll} disabled={savingAll} style={{ padding: '8px 20px', background: savingAll ? '#ccc' : 'linear-gradient(135deg,#3A6373,#264653)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '800', cursor: savingAll ? 'not-allowed' : 'pointer', fontFamily: 'inherit' }}>
             {savingAll ? '⏳ Saving...' : '💾 Save All'}
           </button>
         </div>
@@ -243,27 +243,27 @@ function SectionSettings({ onSectionDeleted, onSectionAdded, sectionsList }) {
           const isCore   = CORE_SYSTEM_KEYS.includes(section.key);
 
           return (
-            <div key={section.key} style={{ background: 'white', borderRadius: '14px', border: `2px solid ${isEdited ? section.color : '#EDD9FF'}`, overflow: 'hidden' }}>
-              <div style={{ padding: '12px 18px', background: isEdited ? `linear-gradient(135deg, ${section.color}10, #F3E8FF)` : '#FBF7FF', borderBottom: '1.5px solid #EDD9FF', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
+            <div key={section.key} style={{ background: 'white', borderRadius: '14px', border: `2px solid ${isEdited ? section.color : '#E8E2D2'}`, overflow: 'hidden' }}>
+              <div style={{ padding: '12px 18px', background: isEdited ? `linear-gradient(135deg, ${section.color}10, #EEF3F5)` : '#FFFBF2', borderBottom: '1.5px solid #E8E2D2', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px', minWidth: 0, flex: 1 }}>
-                  <div style={{ fontSize: '1.6rem', width: '46px', height: '46px', borderRadius: '12px', background: isEdited ? `${section.color}15` : 'white', border: `2px solid ${isEdited ? section.color : '#EDD9FF'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{emoji}</div>
+                  <div style={{ fontSize: '1.6rem', width: '46px', height: '46px', borderRadius: '12px', background: isEdited ? `${section.color}15` : 'white', border: `2px solid ${isEdited ? section.color : '#E8E2D2'}`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>{emoji}</div>
                   <div style={{ minWidth: 0 }}>
-                    <h3 style={{ fontSize: '0.95rem', fontWeight: '800', margin: '0 0 2px', color: '#2D1A4A' }}>{emoji} {title}</h3>
-                    <p style={{ fontSize: '11px', color: '#9585B0', margin: 0, fontWeight: '600' }}>{section.hint}</p>
+                    <h3 style={{ fontSize: '0.95rem', fontWeight: '800', margin: '0 0 2px', color: '#264653' }}>{emoji} {title}</h3>
+                    <p style={{ fontSize: '11px', color: '#8A9BA3', margin: 0, fontWeight: '600' }}>{section.hint}</p>
                   </div>
                 </div>
                 <div style={{ display: 'flex', gap: '7px', flexShrink: 0 }}>
                   {isEdited && (
-                    <button onClick={() => resetSection(section.key)} style={{ padding: '6px 12px', background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '7px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>↺</button>
+                    <button onClick={() => resetSection(section.key)} style={{ padding: '6px 12px', background: '#fee2e2', color: '#C62828', border: '1px solid #fca5a5', borderRadius: '7px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>↺</button>
                   )}
-                  <button onClick={() => saveSection(section.key)} disabled={saving === section.key} style={{ padding: '6px 16px', background: saved === section.key ? '#d1fae5' : `linear-gradient(135deg, ${section.color}, #7B2FBE)`, color: saved === section.key ? '#059669' : 'white', border: 'none', borderRadius: '7px', fontSize: '12px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit' }}>
+                  <button onClick={() => saveSection(section.key)} disabled={saving === section.key} style={{ padding: '6px 16px', background: saved === section.key ? '#d1fae5' : `linear-gradient(135deg, ${section.color}, #264653)`, color: saved === section.key ? '#388E3C' : 'white', border: 'none', borderRadius: '7px', fontSize: '12px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit' }}>
                     {saved === section.key ? '✅' : saving === section.key ? '⏳' : '💾 Save'}
                   </button>
                   {!isCore && (
                     <button 
                       onClick={() => deleteSection(section.key, title)} 
                       disabled={deleting === section.key}
-                      style={{ padding: '6px 12px', background: '#fee2e2', color: '#dc2626', border: '1.5px solid #fca5a5', borderRadius: '7px', fontSize: '12px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit' }}
+                      style={{ padding: '6px 12px', background: '#fee2e2', color: '#C62828', border: '1.5px solid #fca5a5', borderRadius: '7px', fontSize: '12px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit' }}
                       title="Delete Section"
                     >
                       {deleting === section.key ? '⏳' : '🗑️ Delete'}
@@ -285,10 +285,10 @@ function SectionSettings({ onSectionDeleted, onSectionAdded, sectionsList }) {
 
                 {presets.length > 0 && (
                   <div>
-                    <p style={{ fontSize: '11px', fontWeight: '800', color: '#9585B0', margin: '0 0 7px', textTransform: 'uppercase' }}>⚡ Quick Presets</p>
+                    <p style={{ fontSize: '11px', fontWeight: '800', color: '#8A9BA3', margin: '0 0 7px', textTransform: 'uppercase' }}>⚡ Quick Presets</p>
                     <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
                       {presets.map((preset, i) => (
-                        <button key={i} onClick={() => applyPreset(section.key, preset)} style={{ padding: '5px 13px', background: title === preset.title && emoji === preset.emoji ? `linear-gradient(135deg, ${section.color}, #7B2FBE)` : '#F3E8FF', color: title === preset.title && emoji === preset.emoji ? 'white' : '#7B2FBE', border: title === preset.title && emoji === preset.emoji ? 'none' : '1.5px solid #DFC5F8', borderRadius: '999px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>
+                        <button key={i} onClick={() => applyPreset(section.key, preset)} style={{ padding: '5px 13px', background: title === preset.title && emoji === preset.emoji ? `linear-gradient(135deg, ${section.color}, #264653)` : '#EEF3F5', color: title === preset.title && emoji === preset.emoji ? 'white' : '#264653', border: title === preset.title && emoji === preset.emoji ? 'none' : '1.5px solid #C9D6DB', borderRadius: '999px', fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>
                           {preset.label}
                         </button>
                       ))}
@@ -315,7 +315,7 @@ function BrandsTab() {
   const [saving,    setSaving]    = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  const emptyForm = { name: '', color: '#FF6B35', link: '/products', isActive: true, order: 0, logo: null };
+  const emptyForm = { name: '', color: '#E53935', link: '/products', isActive: true, order: 0, logo: null };
   const [form, setForm] = useState(emptyForm);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -334,7 +334,7 @@ function BrandsTab() {
   const openAdd  = () => { setEditing(null); setForm({ ...emptyForm, order: brands.length }); setShowForm(true); };
   const openEdit = (brand) => {
     setEditing(brand);
-    setForm({ name: brand.name || '', color: brand.color || '#FF6B35', link: brand.link || '/products', isActive: brand.isActive, order: brand.order || 0, logo: brand.logo || null });
+    setForm({ name: brand.name || '', color: brand.color || '#E53935', link: brand.link || '/products', isActive: brand.isActive, order: brand.order || 0, logo: brand.logo || null });
     setShowForm(true);
   };
 
@@ -384,23 +384,23 @@ function BrandsTab() {
     if (res.ok) { toast.success(!brand.isActive ? '✅ Active!' : '⭕ Inactive'); fetchBrands(); }
   };
 
-  const inp = { width: '100%', padding: '11px 13px', border: '2px solid #EDD9FF', borderRadius: '10px', fontSize: '14px', fontFamily: 'Nunito, sans-serif', outline: 'none', background: 'white', color: '#2D1A4A', boxSizing: 'border-box' };
-  const lbl = { display: 'block', fontSize: '11px', fontWeight: '800', color: '#7B2FBE', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.6px' };
+  const inp = { width: '100%', padding: '11px 13px', border: '2px solid #E8E2D2', borderRadius: '10px', fontSize: '14px', fontFamily: 'Nunito, sans-serif', outline: 'none', background: 'white', color: '#264653', boxSizing: 'border-box' };
+  const lbl = { display: 'block', fontSize: '11px', fontWeight: '800', color: '#264653', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.6px' };
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px', padding: '12px 16px', background: '#FBF7FF', borderRadius: '12px', border: '1.5px solid #EDD9FF' }}>
-        <p style={{ margin: 0, fontSize: '13px', color: '#6B4E8A', fontWeight: '600' }}>🏷️ Brand auto-scroll strip on home page</p>
-        <button onClick={openAdd} style={{ padding: '9px 18px', background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit' }}>+ Add Brand</button>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px', padding: '12px 16px', background: '#FFFBF2', borderRadius: '12px', border: '1.5px solid #E8E2D2' }}>
+        <p style={{ margin: 0, fontSize: '13px', color: '#4F6B76', fontWeight: '600' }}>🏷️ Brand auto-scroll strip on home page</p>
+        <button onClick={openAdd} style={{ padding: '9px 18px', background: 'linear-gradient(135deg,#3A6373,#264653)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit' }}>+ Add Brand</button>
       </div>
 
       {loading ? (
-        <div style={{ textAlign: 'center', padding: '40px', color: '#9585B0' }}>⏳ Loading...</div>
+        <div style={{ textAlign: 'center', padding: '40px', color: '#8A9BA3' }}>⏳ Loading...</div>
       ) : brands.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '16px', border: '2px dashed #EDD9FF', color: '#9585B0' }}>
+        <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '16px', border: '2px dashed #E8E2D2', color: '#8A9BA3' }}>
           <div style={{ fontSize: '3rem', marginBottom: '12px' }}>🏷️</div>
           <p style={{ fontWeight: '700', fontSize: '1rem', margin: '0 0 16px' }}>No brands yet!</p>
-          <button onClick={openAdd} style={{ padding: '10px 24px', background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit' }}>+ Add First Brand</button>
+          <button onClick={openAdd} style={{ padding: '10px 24px', background: 'linear-gradient(135deg,#3A6373,#264653)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit' }}>+ Add First Brand</button>
         </div>
       ) : (
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(220px, 1fr))', gap: '14px' }}>
@@ -413,13 +413,13 @@ function BrandsTab() {
                 }
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <h3 style={{ fontSize: '0.95rem', fontWeight: '800', color: brand.color, margin: '0 0 2px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{brand.name}</h3>
-                  <p style={{ fontSize: '11px', color: '#9585B0', margin: 0, fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>🔗 {brand.link}</p>
+                  <p style={{ fontSize: '11px', color: '#8A9BA3', margin: 0, fontWeight: '600', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>🔗 {brand.link}</p>
                 </div>
               </div>
               <div style={{ display: 'flex', gap: '6px' }}>
-                <button onClick={() => openEdit(brand)} style={{ flex: 1, padding: '8px 10px', background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit' }}>✏️ Edit</button>
-                <button onClick={() => toggleActive(brand)} style={{ padding: '8px 10px', background: brand.isActive ? '#d1fae5' : '#f3f4f6', color: brand.isActive ? '#059669' : '#666', border: `1.5px solid ${brand.isActive ? '#6ee7b7' : '#ddd'}`, borderRadius: '8px', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>{brand.isActive ? '✅' : '⭕'}</button>
-                <button onClick={() => handleDelete(brand.id)} style={{ padding: '8px 10px', background: '#fee2e2', color: '#dc2626', border: '1.5px solid #fca5a5', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>🗑️</button>
+                <button onClick={() => openEdit(brand)} style={{ flex: 1, padding: '8px 10px', background: 'linear-gradient(135deg,#264653,#3A6373)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit' }}>✏️ Edit</button>
+                <button onClick={() => toggleActive(brand)} style={{ padding: '8px 10px', background: brand.isActive ? '#d1fae5' : '#f3f4f6', color: brand.isActive ? '#388E3C' : '#666', border: `1.5px solid ${brand.isActive ? '#6ee7b7' : '#ddd'}`, borderRadius: '8px', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>{brand.isActive ? '✅' : '⭕'}</button>
+                <button onClick={() => handleDelete(brand.id)} style={{ padding: '8px 10px', background: '#fee2e2', color: '#C62828', border: '1.5px solid #fca5a5', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>🗑️</button>
               </div>
             </div>
           ))}
@@ -431,8 +431,8 @@ function BrandsTab() {
           onClick={e => { if (e.target === e.currentTarget) { setShowForm(false); setEditing(null); } }}>
           <div style={{ background: 'white', borderRadius: '20px', width: '100%', maxWidth: '480px', maxHeight: '92vh', overflowY: 'auto' }}
             onClick={e => e.stopPropagation()}>
-            <div style={{ position: 'sticky', top: 0, background: 'white', zIndex: 10, padding: '16px 20px 12px', borderBottom: '1.5px solid #EDD9FF', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '20px 20px 0 0' }}>
-              <h2 style={{ fontSize: '1.05rem', fontWeight: '800', margin: 0, color: '#2D1A4A' }}>{editing ? '✏️ Edit Brand' : '➕ Add Brand'}</h2>
+            <div style={{ position: 'sticky', top: 0, background: 'white', zIndex: 10, padding: '16px 20px 12px', borderBottom: '1.5px solid #E8E2D2', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '20px 20px 0 0' }}>
+              <h2 style={{ fontSize: '1.05rem', fontWeight: '800', margin: 0, color: '#264653' }}>{editing ? '✏️ Edit Brand' : '➕ Add Brand'}</h2>
               <button onClick={() => { setShowForm(false); setEditing(null); }} style={{ background: '#f3f4f6', border: 'none', borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', fontSize: '1rem', fontFamily: 'inherit' }}>✕</button>
             </div>
             <form onSubmit={handleSave} style={{ padding: '18px 20px 22px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -443,7 +443,7 @@ function BrandsTab() {
               <div>
                 <label style={lbl}>Brand Color</label>
                 <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                  <input type="color" value={form.color} onChange={e => set('color', e.target.value)} style={{ width: '48px', height: '42px', border: '2px solid #EDD9FF', borderRadius: '8px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
+                  <input type="color" value={form.color} onChange={e => set('color', e.target.value)} style={{ width: '48px', height: '42px', border: '2px solid #E8E2D2', borderRadius: '8px', cursor: 'pointer', padding: '2px', flexShrink: 0 }} />
                   <input type="text" value={form.color} onChange={e => set('color', e.target.value)} style={{ ...inp, flex: 1 }} />
                 </div>
               </div>
@@ -465,16 +465,16 @@ function BrandsTab() {
                   </div>
                 </label>
                 {form.logo?.url && (
-                  <button type="button" onClick={() => set('logo', null)} style={{ marginTop: '6px', width: '100%', background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '8px', padding: '6px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>🗑️ Remove</button>
+                  <button type="button" onClick={() => set('logo', null)} style={{ marginTop: '6px', width: '100%', background: '#fee2e2', color: '#C62828', border: '1px solid #fca5a5', borderRadius: '8px', padding: '6px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>🗑️ Remove</button>
                 )}
               </div>
-              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '700', color: '#2D1A4A' }}>
-                <input type="checkbox" checked={form.isActive} onChange={e => set('isActive', e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#FF6B35' }} />
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '700', color: '#264653' }}>
+                <input type="checkbox" checked={form.isActive} onChange={e => set('isActive', e.target.checked)} style={{ width: '16px', height: '16px', accentColor: '#E53935' }} />
                 ✅ Active
               </label>
               <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
-                <button type="button" onClick={() => { setShowForm(false); setEditing(null); }} style={{ padding: '12px 18px', border: '2px solid #EDD9FF', borderRadius: '10px', background: 'white', color: '#6B4E8A', fontWeight: '700', fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
-                <button type="submit" disabled={saving || uploading} style={{ flex: 1, padding: '12px 18px', background: saving ? '#ccc' : 'linear-gradient(135deg,#FF6B35,#7B2FBE)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}>
+                <button type="button" onClick={() => { setShowForm(false); setEditing(null); }} style={{ padding: '12px 18px', border: '2px solid #E8E2D2', borderRadius: '10px', background: 'white', color: '#4F6B76', fontWeight: '700', fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}>Cancel</button>
+                <button type="submit" disabled={saving || uploading} style={{ flex: 1, padding: '12px 18px', background: saving ? '#ccc' : 'linear-gradient(135deg,#3A6373,#264653)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize: '14px', cursor: 'pointer', fontFamily: 'inherit' }}>
                   {saving ? '⏳ Saving...' : editing ? '💾 Update' : '✨ Add'}
                 </button>
               </div>
@@ -602,7 +602,7 @@ function CareGridManager({ type, title, accentColor, layout }) {
   };
 
   if (loading) {
-    return <div style={{ textAlign: 'center', padding: '40px', color: '#9585B0' }}>⏳ Loading...</div>;
+    return <div style={{ textAlign: 'center', padding: '40px', color: '#8A9BA3' }}>⏳ Loading...</div>;
   }
 
   const SlotCard = ({ slot, slotIndex }) => {
@@ -622,7 +622,7 @@ function CareGridManager({ type, title, accentColor, layout }) {
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
           <div>
-            <p style={{ margin: '0 0 4px', fontSize: '10px', fontWeight: '800', color: '#7B2FBE', textAlign: 'center', fontFamily: 'Nunito, sans-serif' }}>🖼️ FRONT</p>
+            <p style={{ margin: '0 0 4px', fontSize: '10px', fontWeight: '800', color: '#264653', textAlign: 'center', fontFamily: 'Nunito, sans-serif' }}>🖼️ FRONT</p>
             <label style={{ cursor: 'pointer', display: 'block' }}>
               <input type="file" accept="image/*" onChange={e => uploadImage(slotIndex, 'front', e.target.files[0])} style={{ display: 'none' }} disabled={uplF} />
               <div style={{ width: '100%', height: '120px', border: `2px dashed ${accentColor}`, borderRadius: '10px', background: '#fff8fb', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
@@ -633,23 +633,23 @@ function CareGridManager({ type, title, accentColor, layout }) {
               </div>
             </label>
             {frontImg && (
-              <button type="button" onClick={() => removeImage(slotIndex, 'front')} style={{ marginTop: '4px', width: '100%', background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '6px', padding: '4px', fontSize: '10px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>🗑️</button>
+              <button type="button" onClick={() => removeImage(slotIndex, 'front')} style={{ marginTop: '4px', width: '100%', background: '#fee2e2', color: '#C62828', border: '1px solid #fca5a5', borderRadius: '6px', padding: '4px', fontSize: '10px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>🗑️</button>
             )}
           </div>
 
           <div>
-            <p style={{ margin: '0 0 4px', fontSize: '10px', fontWeight: '800', color: '#10B981', textAlign: 'center', fontFamily: 'Nunito, sans-serif' }}>🔄 BACK</p>
+            <p style={{ margin: '0 0 4px', fontSize: '10px', fontWeight: '800', color: '#43A047', textAlign: 'center', fontFamily: 'Nunito, sans-serif' }}>🔄 BACK</p>
             <label style={{ cursor: 'pointer', display: 'block' }}>
               <input type="file" accept="image/*" onChange={e => uploadImage(slotIndex, 'back', e.target.files[0])} style={{ display: 'none' }} disabled={uplB} />
-              <div style={{ width: '100%', height: '120px', border: `2px dashed #10B981`, borderRadius: '10px', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
-                {uplB ? <p style={{ color: '#10B981', fontWeight: '700', fontSize: '11px', margin: 0 }}>⏳</p>
+              <div style={{ width: '100%', height: '120px', border: `2px dashed #43A047`, borderRadius: '10px', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
+                {uplB ? <p style={{ color: '#43A047', fontWeight: '700', fontSize: '11px', margin: 0 }}>⏳</p>
                   : backImg
                     ? <img src={backImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-                    : <div style={{ textAlign: 'center' }}><div style={{ fontSize: '20px' }}>🔄</div><p style={{ margin: '3px 0 0', fontSize: '10px', fontWeight: '700', color: '#10B981', fontFamily: 'Nunito, sans-serif' }}>Click</p></div>}
+                    : <div style={{ textAlign: 'center' }}><div style={{ fontSize: '20px' }}>🔄</div><p style={{ margin: '3px 0 0', fontSize: '10px', fontWeight: '700', color: '#43A047', fontFamily: 'Nunito, sans-serif' }}>Click</p></div>}
               </div>
             </label>
             {backImg && (
-              <button type="button" onClick={() => removeImage(slotIndex, 'back')} style={{ marginTop: '4px', width: '100%', background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '6px', padding: '4px', fontSize: '10px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>🗑️</button>
+              <button type="button" onClick={() => removeImage(slotIndex, 'back')} style={{ marginTop: '4px', width: '100%', background: '#fee2e2', color: '#C62828', border: '1px solid #fca5a5', borderRadius: '6px', padding: '4px', fontSize: '10px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>🗑️</button>
             )}
           </div>
         </div>
@@ -659,7 +659,7 @@ function CareGridManager({ type, title, accentColor, layout }) {
           value={banner.buttonLink || ''}
           onChange={e => updateLink(slotIndex, e.target.value)}
           placeholder="🔗 Card link"
-          style={{ width: '100%', padding: '8px 10px', fontSize: '11px', border: '1.5px solid #EDD9FF', borderRadius: '7px', fontFamily: 'Nunito, sans-serif', outline: 'none', color: '#2D1A4A', boxSizing: 'border-box' }}
+          style={{ width: '100%', padding: '8px 10px', fontSize: '11px', border: '1.5px solid #E8E2D2', borderRadius: '7px', fontFamily: 'Nunito, sans-serif', outline: 'none', color: '#264653', boxSizing: 'border-box' }}
         />
       </div>
     );
@@ -667,16 +667,16 @@ function CareGridManager({ type, title, accentColor, layout }) {
 
   return (
     <div>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px', padding: '14px 18px', background: `linear-gradient(135deg, ${accentColor}15, #FBF7FF)`, borderRadius: '12px', border: `2px solid ${accentColor}30` }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px', padding: '14px 18px', background: `linear-gradient(135deg, ${accentColor}15, #FFFBF2)`, borderRadius: '12px', border: `2px solid ${accentColor}30` }}>
         <div>
-          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '800', color: '#2D1A4A', fontFamily: 'Nunito, sans-serif' }}>
+          <h3 style={{ margin: 0, fontSize: '1rem', fontWeight: '800', color: '#264653', fontFamily: 'Nunito, sans-serif' }}>
             {layout === 'bento' ? '🧴 Personal Care' : '🏥 Health Care'} — {SLOTS.length} Image Cards
           </h3>
-          <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#9585B0', fontWeight: '600', fontFamily: 'Nunito, sans-serif' }}>
+          <p style={{ margin: '2px 0 0', fontSize: '12px', color: '#8A9BA3', fontWeight: '600', fontFamily: 'Nunito, sans-serif' }}>
             Each card has Front + Back image (3D flip on hover). Section text editable in 🎨 Section Names tab.
           </p>
         </div>
-        <button onClick={saveAll} disabled={saving} style={{ padding: '10px 22px', background: saving ? '#ccc' : `linear-gradient(135deg, ${accentColor}, #7B2FBE)`, color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '800', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
+        <button onClick={saveAll} disabled={saving} style={{ padding: '10px 22px', background: saving ? '#ccc' : `linear-gradient(135deg, ${accentColor}, #264653)`, color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '800', cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap' }}>
           {saving ? '⏳ Saving...' : '💾 Save All'}
         </button>
       </div>
@@ -740,10 +740,10 @@ export default function AdminBanners() {
 
   const emptyForm = {
     title: '', subtitle: '', buttonText: 'Shop Now', buttonLink: '/products',
-    bgColor: '#ff6b9d', image: null, mobileImage: null,
+    bgColor: '#E53935', image: null, mobileImage: null,
     panels: PANEL_DEFAULTS,
     isActive: true, order: 0, type: 'hero', emoji: '', price: '', offer: '',
-    color: '#ff6b9d', slug: '', gender: 'girl', festivalName: '',
+    color: '#E53935', slug: '', gender: 'girl', festivalName: '',
     startDate: '', endDate: '', foodCategory: '', evGender: 'boy',
     newBornGender: 'girl', ageGroup: '',
   };
@@ -882,7 +882,7 @@ export default function AdminBanners() {
       offer:    type === 'budget' ? 'UNDER' : type === 'promo' ? '20%' : '',
       gender:   type === 'gender' ? 'girl' : null,
       evGender: type === 'electric-vehicle' ? 'boy' : '',
-      color:    type === 'budget' ? '#1a1a8e' : type === 'category' ? '#FF6B35' : '#ff6b9d',
+      color:    type === 'budget' ? '#1a1a8e' : type === 'category' ? '#E53935' : '#E53935',
     });
     setShowForm(true);
   };
@@ -898,7 +898,7 @@ export default function AdminBanners() {
       subtitle:      banner.subtitle      || '',
       buttonText:    banner.buttonText    || 'Shop Now',
       buttonLink:    banner.buttonLink    || '/products',
-      bgColor:       banner.bgColor       || '#ff6b9d',
+      bgColor:       banner.bgColor       || '#E53935',
       image:         banner.image?.url ? banner.image : heroMediaObj,
       mobileImage:   banner.mobileImage   || null,
       panels:        banner.panels?.length > 0 ? banner.panels : PANEL_DEFAULTS,
@@ -908,7 +908,7 @@ export default function AdminBanners() {
       emoji:         banner.emoji         || '',
       price:         banner.price         || '',
       offer:         banner.offer         || '',
-      color:         banner.color         || '#ff6b9d',
+      color:         banner.color         || '#E53935',
       slug:          banner.slug          || '',
       gender:        banner.gender        || 'girl',
       festivalName:  banner.festivalName  || '',
@@ -1044,7 +1044,7 @@ export default function AdminBanners() {
         buttonLink:    form.type === 'budget'
           ? `/products?maxPrice=${form.price}`
           : (form.buttonLink || '/products'),
-        bgColor:       form.bgColor       || '#ff6b9d',
+        bgColor:       form.bgColor       || '#E53935',
         isActive:      form.isActive,
         order:         parseInt(form.order) || 0,
         type:          form.type,
@@ -1099,9 +1099,9 @@ export default function AdminBanners() {
     if (res.ok) { toast.success(!banner.isActive ? '✅ Active!' : '⭕ Inactive'); fetchBanners(); }
   };
 
-  const inp   = { width: '100%', padding: '11px 14px', border: '2px solid #EDD9FF', borderRadius: '10px', fontSize: '14px', fontFamily: 'Nunito, sans-serif', outline: 'none', background: 'white', color: '#2D1A4A', boxSizing: 'border-box' };
-  const lbl   = { display: 'block', fontSize: '11px', fontWeight: '800', color: '#7B2FBE', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.6px' };
-  const tabSt = (key) => ({ padding: '9px 15px', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '12.5px', cursor: 'pointer', fontFamily: 'Nunito, sans-serif', background: activeTab === key ? 'linear-gradient(135deg,#FF6B35,#7B2FBE)' : '#f3f4f6', color: activeTab === key ? 'white' : '#555', boxShadow: activeTab === key ? '0 4px 14px rgba(255,107,53,0.25)' : 'none', transition: 'all 0.2s', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '6px' });
+  const inp   = { width: '100%', padding: '11px 14px', border: '2px solid #E8E2D2', borderRadius: '10px', fontSize: '14px', fontFamily: 'Nunito, sans-serif', outline: 'none', background: 'white', color: '#264653', boxSizing: 'border-box' };
+  const lbl   = { display: 'block', fontSize: '11px', fontWeight: '800', color: '#264653', marginBottom: '5px', textTransform: 'uppercase', letterSpacing: '0.6px' };
+  const tabSt = (key) => ({ padding: '9px 15px', border: 'none', borderRadius: '10px', fontWeight: '700', fontSize: '12.5px', cursor: 'pointer', fontFamily: 'Nunito, sans-serif', background: activeTab === key ? 'linear-gradient(135deg,#3A6373,#264653)' : '#f3f4f6', color: activeTab === key ? 'white' : '#555', boxShadow: activeTab === key ? '0 4px 14px rgba(229,57,53,0.25)' : 'none', transition: 'all 0.2s', whiteSpace: 'nowrap', display: 'inline-flex', alignItems: 'center', gap: '6px' });
 
   const BannerCard = ({ banner }) => {
     const heroPanel = banner.panels?.[0];
@@ -1110,8 +1110,8 @@ export default function AdminBanners() {
     const bannerImageIsVideo = isVideoUrl(banner.image?.url);
 
     return (
-      <div style={{ background: 'white', borderRadius: '16px', border: `2px solid ${banner.isActive ? '#EDD9FF' : '#f0f0f0'}`, overflow: 'hidden', boxShadow: '0 4px 16px rgba(123,47,190,0.08)', opacity: banner.isActive ? 1 : 0.65 }}>
-        <div style={{ height: '150px', background: banner.bgColor || banner.color || 'linear-gradient(135deg,#FF6B35,#7B2FBE)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ background: 'white', borderRadius: '16px', border: `2px solid ${banner.isActive ? '#E8E2D2' : '#f0f0f0'}`, overflow: 'hidden', boxShadow: '0 4px 16px rgba(38,70,83,0.08)', opacity: banner.isActive ? 1 : 0.65 }}>
+        <div style={{ height: '150px', background: banner.bgColor || banner.color || 'linear-gradient(135deg,#3A6373,#264653)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3rem', position: 'relative', overflow: 'hidden' }}>
           {banner.type === 'hero' && heroMedia ? (
             heroIsVideo ? (
               <video src={heroMedia} autoPlay muted loop playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -1147,16 +1147,16 @@ export default function AdminBanners() {
           <div style={{ position: 'absolute', top: '8px', right: '8px', padding: '3px 9px', borderRadius: '999px', fontSize: '10px', fontWeight: '800', background: 'rgba(0,0,0,0.55)', color: 'white', textTransform: 'capitalize' }}>{banner.type}</div>
         </div>
         <div style={{ padding: '12px' }}>
-          <h3 style={{ fontSize: '0.90rem', fontWeight: '800', color: '#2D1A4A', margin: '0 0 4px' }}>{banner.title}</h3>
-          {banner.subtitle && <p style={{ fontSize: '0.78rem', color: '#9585B0', margin: '0 0 6px' }}>{banner.subtitle}</p>}
+          <h3 style={{ fontSize: '0.90rem', fontWeight: '800', color: '#264653', margin: '0 0 4px' }}>{banner.title}</h3>
+          {banner.subtitle && <p style={{ fontSize: '0.78rem', color: '#8A9BA3', margin: '0 0 6px' }}>{banner.subtitle}</p>}
           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', marginBottom: '8px' }}>
-            {banner.buttonLink && <span style={{ fontSize: '10px', background: '#F3E8FF', color: '#7B2FBE', padding: '2px 7px', borderRadius: '5px', fontWeight: '600' }}>🔗 {banner.buttonLink}</span>}
-            {banner.price && <span style={{ fontSize: '10px', background: '#FFF3EC', color: '#FF6B35', padding: '2px 7px', borderRadius: '5px', fontWeight: '700' }}>₹{banner.price}</span>}
+            {banner.buttonLink && <span style={{ fontSize: '10px', background: '#EEF3F5', color: '#264653', padding: '2px 7px', borderRadius: '5px', fontWeight: '600' }}>🔗 {banner.buttonLink}</span>}
+            {banner.price && <span style={{ fontSize: '10px', background: '#FFF6E5', color: '#E53935', padding: '2px 7px', borderRadius: '5px', fontWeight: '700' }}>₹{banner.price}</span>}
           </div>
           <div style={{ display: 'flex', gap: '6px' }}>
-            <button onClick={() => openEdit(banner)} style={{ flex: 1, padding: '8px', background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit' }}>✏️ Edit</button>
-            <button onClick={() => toggleActive(banner)} style={{ padding: '8px 10px', background: banner.isActive ? '#d1fae5' : '#f3f4f6', color: banner.isActive ? '#059669' : '#666', border: `1.5px solid ${banner.isActive ? '#6ee7b7' : '#ddd'}`, borderRadius: '8px', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>{banner.isActive ? '✅' : '⭕'}</button>
-            <button onClick={() => handleDelete(banner.id)} style={{ padding: '8px 10px', background: '#fee2e2', color: '#dc2626', border: '1.5px solid #fca5a5', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>🗑️</button>
+            <button onClick={() => openEdit(banner)} style={{ flex: 1, padding: '8px', background: 'linear-gradient(135deg,#264653,#3A6373)', color: 'white', border: 'none', borderRadius: '8px', fontSize: '12px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit' }}>✏️ Edit</button>
+            <button onClick={() => toggleActive(banner)} style={{ padding: '8px 10px', background: banner.isActive ? '#d1fae5' : '#f3f4f6', color: banner.isActive ? '#388E3C' : '#666', border: `1.5px solid ${banner.isActive ? '#6ee7b7' : '#ddd'}`, borderRadius: '8px', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>{banner.isActive ? '✅' : '⭕'}</button>
+            <button onClick={() => handleDelete(banner.id)} style={{ padding: '8px 10px', background: '#fee2e2', color: '#C62828', border: '1.5px solid #fca5a5', borderRadius: '8px', fontSize: '12px', cursor: 'pointer', fontFamily: 'inherit' }}>🗑️</button>
           </div>
         </div>
       </div>
@@ -1176,9 +1176,9 @@ export default function AdminBanners() {
             style={{ display: 'none' }}
             disabled={upl}
           />
-          <div style={{ width: '100%', height: '180px', border: `2px dashed ${form.color || '#FF6B35'}`, borderRadius: '12px', background: '#fff8fb', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative', cursor: 'pointer' }}>
+          <div style={{ width: '100%', height: '180px', border: `2px dashed ${form.color || '#E53935'}`, borderRadius: '12px', background: '#fff8fb', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', position: 'relative', cursor: 'pointer' }}>
             {upl ? (
-              <p style={{ color: '#FF6B35', fontWeight: '700', fontSize: '13px' }}>⏳ Uploading...</p>
+              <p style={{ color: '#E53935', fontWeight: '700', fontSize: '13px' }}>⏳ Uploading...</p>
             ) : value?.url ? (
               <>
                 {isVideo ? (
@@ -1198,7 +1198,7 @@ export default function AdminBanners() {
             ) : (
               <div style={{ textAlign: 'center', padding: '12px' }}>
                 <div style={{ fontSize: '28px' }}>{allowVideo ? '🎥' : '🖼️'}</div>
-                <p style={{ fontSize: '12px', fontWeight: '700', color: form.color || '#FF6B35', margin: '6px 0 2px' }}>
+                <p style={{ fontSize: '12px', fontWeight: '700', color: form.color || '#E53935', margin: '6px 0 2px' }}>
                   Click to upload {allowVideo ? 'image or video' : 'image'}
                 </p>
               </div>
@@ -1206,7 +1206,7 @@ export default function AdminBanners() {
           </div>
         </label>
         {value?.url && (
-          <button type="button" onClick={onRemove} style={{ marginTop: '6px', width: '100%', background: '#fee2e2', color: '#dc2626', border: '1px solid #fca5a5', borderRadius: '8px', padding: '7px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>
+          <button type="button" onClick={onRemove} style={{ marginTop: '6px', width: '100%', background: '#fee2e2', color: '#C62828', border: '1px solid #fca5a5', borderRadius: '8px', padding: '7px', fontSize: '11px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit' }}>
             🗑️ Remove
           </button>
         )}
@@ -1223,12 +1223,12 @@ export default function AdminBanners() {
 
       <div className="adminMainHeader" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: '800', margin: '0 0 4px', color: '#2D1A4A' }}>Banners & Sections 🖼️</h1>
-          <p style={{ color: '#9585B0', margin: 0, fontSize: '0.85rem' }}>Manage home page banners, sections & custom categories</p>
+          <h1 style={{ fontSize: '1.6rem', fontWeight: '800', margin: '0 0 4px', color: '#264653' }}>Banners & Sections 🖼️</h1>
+          <p style={{ color: '#8A9BA3', margin: 0, fontSize: '0.85rem' }}>Manage home page banners, sections & custom categories</p>
         </div>
         <button
           onClick={() => setShowAddSection(true)}
-          style={{ padding: '9px 18px', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 12px rgba(16,185,129,0.25)' }}
+          style={{ padding: '9px 18px', background: 'linear-gradient(135deg, #43A047, #388E3C)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit', boxShadow: '0 4px 12px rgba(67,160,71,0.25)' }}
         >
           ➕ Add New Section
         </button>
@@ -1243,7 +1243,7 @@ export default function AdminBanners() {
         ))}
         <button
           onClick={() => setShowAddSection(true)}
-          style={{ padding: '9px 14px', border: '2px dashed #10B981', borderRadius: '10px', fontWeight: '800', fontSize: '12.5px', cursor: 'pointer', fontFamily: 'Nunito, sans-serif', background: '#ECFDF5', color: '#059669', whiteSpace: 'nowrap' }}
+          style={{ padding: '9px 14px', border: '2px dashed #43A047', borderRadius: '10px', fontWeight: '800', fontSize: '12.5px', cursor: 'pointer', fontFamily: 'Nunito, sans-serif', background: '#ECFDF5', color: '#388E3C', whiteSpace: 'nowrap' }}
         >
           ➕ Section
         </button>
@@ -1251,28 +1251,28 @@ export default function AdminBanners() {
 
       {activeTab === 'brands'           && <BrandsTab />}
       {activeTab === 'section-settings' && <SectionSettings onSectionDeleted={handleSectionDeleted} onSectionAdded={fetchSections} sectionsList={tabsList} />}
-      {activeTab === 'personal-care'    && <CareGridManager type="personal-care" title="Personal Care" accentColor="#7B2FBE" layout="bento" />}
-      {activeTab === 'health-care'      && <CareGridManager type="health-care"   title="Health Care"   accentColor="#10B981" layout="mosaic" />}
+      {activeTab === 'personal-care'    && <CareGridManager type="personal-care" title="Personal Care" accentColor="#264653" layout="bento" />}
+      {activeTab === 'health-care'      && <CareGridManager type="health-care"   title="Health Care"   accentColor="#43A047" layout="mosaic" />}
 
       {!isSpecialTab && currentTab && (
         <div>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px', padding: '12px 16px', background: '#FBF7FF', borderRadius: '12px', border: '1.5px solid #EDD9FF' }}>
-            <p style={{ margin: 0, fontSize: '13px', color: '#6B4E8A', fontWeight: '600' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '12px', padding: '12px 16px', background: '#FFFBF2', borderRadius: '12px', border: '1.5px solid #E8E2D2' }}>
+            <p style={{ margin: 0, fontSize: '13px', color: '#4F6B76', fontWeight: '600' }}>
               Upload and manage items inside <strong>{currentTab.label}</strong>
             </p>
-            <button onClick={() => openAdd(activeTab)} style={{ padding: '9px 18px', background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            <button onClick={() => openAdd(activeTab)} style={{ padding: '9px 18px', background: 'linear-gradient(135deg,#3A6373,#264653)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit', whiteSpace: 'nowrap', flexShrink: 0 }}>
               + Add Item
             </button>
           </div>
 
           {loading
-            ? <div style={{ textAlign: 'center', padding: '40px', color: '#9585B0' }}>⏳ Loading...</div>
+            ? <div style={{ textAlign: 'center', padding: '40px', color: '#8A9BA3' }}>⏳ Loading...</div>
             : currentTab.list.length === 0
               ? (
-                <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '16px', border: '2px dashed #EDD9FF', color: '#9585B0' }}>
+                <div style={{ textAlign: 'center', padding: '60px 20px', background: 'white', borderRadius: '16px', border: '2px dashed #E8E2D2', color: '#8A9BA3' }}>
                   <div style={{ fontSize: '3rem', marginBottom: '12px' }}>{currentTab.label.split(' ')[0]}</div>
                   <p style={{ fontWeight: '700', fontSize: '1rem', margin: '0 0 16px' }}>No banners in this section yet</p>
-                  <button onClick={() => openAdd(activeTab)} style={{ padding: '10px 24px', background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit' }}>+ Add First Item</button>
+                  <button onClick={() => openAdd(activeTab)} style={{ padding: '10px 24px', background: 'linear-gradient(135deg,#3A6373,#264653)', color: 'white', border: 'none', borderRadius: '10px', fontSize: '13px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit' }}>+ Add First Item</button>
                 </div>
               )
               : (
@@ -1289,8 +1289,8 @@ export default function AdminBanners() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.60)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 9999, padding: '16px' }}
           onClick={e => { if (e.target === e.currentTarget) setShowAddSection(false); }}>
           <div style={{ background: 'white', borderRadius: '20px', width: '100%', maxWidth: '440px', padding: '20px', boxShadow: '0 24px 60px rgba(0,0,0,0.3)' }} onClick={e => e.stopPropagation()}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1.5px solid #EDD9FF', paddingBottom: '12px' }}>
-              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', color: '#2D1A4A' }}>➕ Add New Banner Section</h3>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', borderBottom: '1.5px solid #E8E2D2', paddingBottom: '12px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', color: '#264653' }}>➕ Add New Banner Section</h3>
               <button onClick={() => setShowAddSection(false)} style={{ background: '#f3f4f6', border: 'none', borderRadius: '8px', width: '32px', height: '32px', cursor: 'pointer', fontSize: '1rem' }}>✕</button>
             </div>
             <form onSubmit={handleCreateSection} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
@@ -1307,8 +1307,8 @@ export default function AdminBanners() {
                 <input type="text" value={newSection.key} onChange={e => setNewSection({ ...newSection, key: e.target.value })} placeholder="e.g. winter-essentials" style={inp} />
               </div>
               <div style={{ display: 'flex', gap: '10px', marginTop: '8px' }}>
-                <button type="button" onClick={() => setShowAddSection(false)} style={{ padding: '10px 18px', border: '2px solid #EDD9FF', borderRadius: '10px', background: 'white', color: '#6B4E8A', fontWeight: '700', cursor: 'pointer' }}>Cancel</button>
-                <button type="submit" disabled={creatingSection} style={{ flex: 1, padding: '10px 18px', background: 'linear-gradient(135deg,#10B981,#059669)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', cursor: 'pointer' }}>
+                <button type="button" onClick={() => setShowAddSection(false)} style={{ padding: '10px 18px', border: '2px solid #E8E2D2', borderRadius: '10px', background: 'white', color: '#4F6B76', fontWeight: '700', cursor: 'pointer' }}>Cancel</button>
+                <button type="submit" disabled={creatingSection} style={{ flex: 1, padding: '10px 18px', background: 'linear-gradient(135deg,#43A047,#388E3C)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', cursor: 'pointer' }}>
                   {creatingSection ? '⏳ Creating...' : '✨ Create Section'}
                 </button>
               </div>
@@ -1328,14 +1328,14 @@ export default function AdminBanners() {
             onClick={e => e.stopPropagation()}>
 
             <div className="adminModalHeader"
-              style={{ position: 'sticky', top: 0, background: 'white', zIndex: 10, padding: '16px 22px 12px', borderBottom: '1.5px solid #EDD9FF', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '20px 20px 0 0' }}>
+              style={{ position: 'sticky', top: 0, background: 'white', zIndex: 10, padding: '16px 22px 12px', borderBottom: '1.5px solid #E8E2D2', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderRadius: '20px 20px 0 0' }}>
               <div>
-                <h2 style={{ fontSize: '1.05rem', fontWeight: '800', margin: 0, color: '#2D1A4A' }}>
+                <h2 style={{ fontSize: '1.05rem', fontWeight: '800', margin: 0, color: '#264653' }}>
                   {editing ? '✏️ Edit' : '➕ Add'} Banner Item ({form.type})
                 </h2>
               </div>
               <button type="button" onClick={() => { setShowForm(false); setEditing(null); }}
-                style={{ background: '#f3f4f6', border: 'none', borderRadius: '8px', width: '34px', height: '34px', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', color: '#2D1A4A', flexShrink: 0 }}>✕</button>
+                style={{ background: '#f3f4f6', border: 'none', borderRadius: '8px', width: '34px', height: '34px', cursor: 'pointer', fontSize: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'inherit', color: '#264653', flexShrink: 0 }}>✕</button>
             </div>
 
             <form onSubmit={handleSave} className="adminModalBody" style={{ padding: '18px 22px 22px' }}>
@@ -1353,8 +1353,8 @@ export default function AdminBanners() {
                     <div><label style={lbl}>Button Link</label><input type="text" value={form.buttonLink} onChange={e => set('buttonLink', e.target.value)} placeholder="/products" style={inp} /></div>
                     <div><label style={lbl}>Order</label><input type="number" value={form.order} onChange={e => set('order', parseInt(e.target.value) || 0)} min="0" style={inp} /></div>
                   </div>
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '700', color: '#2D1A4A', padding: '10px 14px', background: '#F3E8FF', borderRadius: '10px' }}>
-                    <input type="checkbox" checked={form.isActive} onChange={e => set('isActive', e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#FF6B35', cursor: 'pointer' }} />
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '700', color: '#264653', padding: '10px 14px', background: '#EEF3F5', borderRadius: '10px' }}>
+                    <input type="checkbox" checked={form.isActive} onChange={e => set('isActive', e.target.checked)} style={{ width: '18px', height: '18px', accentColor: '#E53935', cursor: 'pointer' }} />
                     ✅ Active — show on home page
                   </label>
                 </div>
@@ -1371,13 +1371,13 @@ export default function AdminBanners() {
                 </div>
               </div>
 
-              <div className="adminFormFooter" style={{ display: 'flex', gap: '10px', marginTop: '20px', paddingTop: '16px', borderTop: '1.5px solid #EDD9FF' }}>
+              <div className="adminFormFooter" style={{ display: 'flex', gap: '10px', marginTop: '20px', paddingTop: '16px', borderTop: '1.5px solid #E8E2D2' }}>
                 <button type="button" onClick={() => { setShowForm(false); setEditing(null); }}
-                  style={{ padding: '12px 22px', border: '2px solid #EDD9FF', borderRadius: '10px', background: 'white', color: '#6B4E8A', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}>
+                  style={{ padding: '12px 22px', border: '2px solid #E8E2D2', borderRadius: '10px', background: 'white', color: '#4F6B76', fontWeight: '700', fontSize: '14px', cursor: 'pointer' }}>
                   Cancel
                 </button>
                 <button type="submit" disabled={saving || uploading}
-                  style={{ flex: 1, padding: '12px 22px', background: saving ? '#ccc' : 'linear-gradient(135deg,#FF6B35,#7B2FBE)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize: '14px', cursor: 'pointer' }}>
+                  style={{ flex: 1, padding: '12px 22px', background: saving ? '#ccc' : 'linear-gradient(135deg,#3A6373,#264653)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize: '14px', cursor: 'pointer' }}>
                   {saving ? '⏳ Saving...' : editing ? '💾 Update' : '✨ Create'}
                 </button>
               </div>

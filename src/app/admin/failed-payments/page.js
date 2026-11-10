@@ -88,10 +88,10 @@ function ConfirmPaymentModal({ order, onClose, onSuccess }) {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800', color: '#065F46' }}>
+            <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800', color: '#1B5E20' }}>
               ✅ Confirm Manual Payment
             </h2>
-            <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#047857', fontWeight: '700', fontFamily: 'monospace' }}>
+            <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#2E7D32', fontWeight: '700', fontFamily: 'monospace' }}>
               {fmtOrderNum(order)}
             </p>
           </div>
@@ -100,7 +100,7 @@ function ConfirmPaymentModal({ order, onClose, onSuccess }) {
             style={{
               background: 'white', border: '1.5px solid #A7F3D0',
               width: '34px', height: '34px', borderRadius: '50%',
-              cursor: 'pointer', color: '#065F46', fontSize: '1rem', fontWeight: '700',
+              cursor: 'pointer', color: '#1B5E20', fontSize: '1rem', fontWeight: '700',
             }}
           >
             ✕
@@ -113,15 +113,15 @@ function ConfirmPaymentModal({ order, onClose, onSuccess }) {
           <div style={{
             padding: '14px 16px',
             background: 'linear-gradient(135deg, #F0FDF4, #DCFCE7)',
-            border: '1.5px solid #10B981',
+            border: '1.5px solid #43A047',
             borderRadius: '12px', marginBottom: '18px',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
             <div>
-              <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: '800', color: '#065F46', textTransform: 'uppercase' }}>
+              <p style={{ margin: 0, fontSize: '0.72rem', fontWeight: '800', color: '#1B5E20', textTransform: 'uppercase' }}>
                 💰 Amount Received
               </p>
-              <p style={{ margin: '4px 0 0', fontSize: '1.6rem', fontWeight: '900', color: '#059669' }}>
+              <p style={{ margin: '4px 0 0', fontSize: '1.6rem', fontWeight: '900', color: '#388E3C' }}>
                 ₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}
               </p>
             </div>
@@ -149,7 +149,7 @@ function ConfirmPaymentModal({ order, onClose, onSuccess }) {
 
           {/* Payment Mode */}
           <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: '800', color: '#1F2937', marginBottom: '10px' }}>
-            Payment Mode <span style={{ color: '#EF4444' }}>*</span>
+            Payment Mode <span style={{ color: '#E53935' }}>*</span>
           </label>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: '8px', marginBottom: '16px' }}>
@@ -160,14 +160,14 @@ function ConfirmPaymentModal({ order, onClose, onSuccess }) {
                 style={{
                   padding: '12px', textAlign: 'center',
                   background: paymentMode === mode.value ? '#F0FDF4' : 'white',
-                  border: `2px solid ${paymentMode === mode.value ? '#10B981' : '#E5E7EB'}`,
+                  border: `2px solid ${paymentMode === mode.value ? '#43A047' : '#E5E7EB'}`,
                   borderRadius: '10px', cursor: 'pointer',
                   transition: 'all 0.2s', position: 'relative',
                 }}
               >
                 <p style={{
                   margin: 0, fontSize: '0.86rem', fontWeight: '800',
-                  color: paymentMode === mode.value ? '#059669' : '#374151',
+                  color: paymentMode === mode.value ? '#388E3C' : '#374151',
                 }}>
                   {mode.label}
                 </p>
@@ -181,7 +181,7 @@ function ConfirmPaymentModal({ order, onClose, onSuccess }) {
                   <div style={{
                     position: 'absolute', top: '6px', right: '6px',
                     width: '18px', height: '18px', borderRadius: '50%',
-                    background: '#10B981', color: 'white',
+                    background: '#43A047', color: 'white',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontSize: '0.66rem', fontWeight: '900',
                   }}>✓</div>
@@ -269,11 +269,11 @@ function ConfirmPaymentModal({ order, onClose, onSuccess }) {
               disabled={loading}
               style={{
                 flex: 1.5, padding: '12px',
-                background: loading ? '#A7F3D0' : 'linear-gradient(135deg, #10B981, #059669)',
+                background: loading ? '#A7F3D0' : 'linear-gradient(135deg, #43A047, #388E3C)',
                 color: 'white', border: 'none', borderRadius: '10px',
                 fontWeight: '800', cursor: loading ? 'wait' : 'pointer',
                 fontFamily: 'Nunito, sans-serif',
-                boxShadow: '0 4px 12px rgba(16,185,129,0.30)',
+                boxShadow: '0 4px 12px rgba(67,160,71,0.30)',
               }}
             >
               {loading ? '⏳ Confirming...' : '✅ Confirm Payment Received'}
@@ -395,7 +395,7 @@ export default function FailedPaymentsPage() {
               🚨 Failed Payments
             </h1>
           </div>
-          <p style={{ margin: 0, color: '#9585B0', fontSize: '0.9rem' }}>
+          <p style={{ margin: 0, color: '#8A9BA3', fontSize: '0.9rem' }}>
             {pagination.total || 0} order{pagination.total !== 1 ? 's' : ''} with failed payment
           </p>
         </div>
@@ -404,7 +404,7 @@ export default function FailedPaymentsPage() {
       {/* Info Banner */}
       <div style={{
         background: 'linear-gradient(135deg, #FEF2F2, #FEE2E2)',
-        border: '2px solid #EF4444',
+        border: '2px solid #E53935',
         borderRadius: '14px',
         padding: '16px 20px',
         marginBottom: '20px',
@@ -439,7 +439,7 @@ export default function FailedPaymentsPage() {
           border: '2px solid #E5E7EB',
         }}>
           <div style={{ fontSize: '4rem', marginBottom: '16px' }}>🎉</div>
-          <h3 style={{ margin: '0 0 8px', color: '#065F46', fontSize: '1.4rem', fontWeight: '900' }}>
+          <h3 style={{ margin: '0 0 8px', color: '#1B5E20', fontSize: '1.4rem', fontWeight: '900' }}>
             No Failed Payments!
           </h3>
           <p style={{ margin: 0, color: '#6B7280' }}>
@@ -454,14 +454,14 @@ export default function FailedPaymentsPage() {
               style={{
                 background: 'white',
                 border: '2px solid #FCA5A5',
-                borderLeft: '6px solid #EF4444',
+                borderLeft: '6px solid #E53935',
                 borderRadius: '14px',
                 padding: '18px 20px',
                 display: 'grid',
                 gridTemplateColumns: '1fr auto',
                 gap: '16px',
                 alignItems: 'center',
-                boxShadow: '0 2px 8px rgba(239,68,68,0.08)',
+                boxShadow: '0 2px 8px rgba(229,57,53,0.08)',
               }}
             >
 
@@ -472,11 +472,11 @@ export default function FailedPaymentsPage() {
                     href={`/admin/orders/${order.id}`}
                     style={{
                       fontWeight: '800',
-                      color: '#7c3aed',
+                      color: '#264653',
                       fontFamily: 'monospace',
                       textDecoration: 'none',
                       fontSize: '14px',
-                      background: '#f3f0ff',
+                      background: '#FBF5E6',
                       padding: '4px 10px',
                       borderRadius: '6px',
                     }}
@@ -520,7 +520,7 @@ export default function FailedPaymentsPage() {
                     {order.user?.email && (
                       <a
                         href={`mailto:${order.user.email}`}
-                        style={{ fontSize: '0.76rem', color: '#7c3aed', textDecoration: 'none', display: 'block', marginTop: '2px' }}
+                        style={{ fontSize: '0.76rem', color: '#264653', textDecoration: 'none', display: 'block', marginTop: '2px' }}
                       >
                         ✉️ {order.user.email}
                       </a>
@@ -528,7 +528,7 @@ export default function FailedPaymentsPage() {
                     {order.shippingAddress?.phone && (
                       <a
                         href={`tel:${order.shippingAddress.phone}`}
-                        style={{ fontSize: '0.76rem', color: '#7c3aed', textDecoration: 'none', display: 'block', marginTop: '2px' }}
+                        style={{ fontSize: '0.76rem', color: '#264653', textDecoration: 'none', display: 'block', marginTop: '2px' }}
                       >
                         📞 {order.shippingAddress.phone}
                       </a>
@@ -539,7 +539,7 @@ export default function FailedPaymentsPage() {
                     <p style={{ margin: 0, fontSize: '0.70rem', fontWeight: '700', color: '#6B7280', textTransform: 'uppercase' }}>
                       Amount
                     </p>
-                    <p style={{ margin: '3px 0 0', fontSize: '1.1rem', fontWeight: '900', color: '#DC2626' }}>
+                    <p style={{ margin: '3px 0 0', fontSize: '1.1rem', fontWeight: '900', color: '#C62828' }}>
                       ₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}
                     </p>
                     <p style={{ margin: '2px 0 0', fontSize: '0.72rem', color: '#6B7280', fontWeight: '600' }}>
@@ -569,7 +569,7 @@ export default function FailedPaymentsPage() {
                   disabled={processing === order.id}
                   style={{
                     padding: '11px 16px',
-                    background: 'linear-gradient(135deg, #10B981, #059669)',
+                    background: 'linear-gradient(135deg, #43A047, #388E3C)',
                     color: 'white',
                     border: 'none',
                     borderRadius: '10px',
@@ -578,7 +578,7 @@ export default function FailedPaymentsPage() {
                     cursor: processing === order.id ? 'wait' : 'pointer',
                     opacity: processing === order.id ? 0.6 : 1,
                     fontFamily: 'Nunito, sans-serif',
-                    boxShadow: '0 4px 12px rgba(16,185,129,0.30)',
+                    boxShadow: '0 4px 12px rgba(67,160,71,0.30)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -592,7 +592,7 @@ export default function FailedPaymentsPage() {
                   href={`/admin/orders/${order.id}`}
                   style={{
                     padding: '8px 14px',
-                    background: '#7C3AED',
+                    background: '#264653',
                     color: 'white',
                     borderRadius: '8px',
                     fontSize: '0.80rem',
@@ -609,7 +609,7 @@ export default function FailedPaymentsPage() {
                     href={`mailto:${order.user.email}?subject=Complete your order ${fmtOrderNum(order)}&body=Hi ${order.user?.name || 'Customer'},%0D%0A%0D%0AYour payment for order ${fmtOrderNum(order)} could not be completed.%0D%0A%0D%0APlease visit your order page to retry payment.`}
                     style={{
                       padding: '8px 14px',
-                      background: '#0EA5E9',
+                      background: '#1E88E5',
                       color: 'white',
                       borderRadius: '8px',
                       fontSize: '0.80rem',
@@ -627,7 +627,7 @@ export default function FailedPaymentsPage() {
                   disabled={processing === order.id}
                   style={{
                     padding: '8px 14px',
-                    background: '#F59E0B',
+                    background: '#F2B33D',
                     color: 'white',
                     border: 'none',
                     borderRadius: '8px',
@@ -647,7 +647,7 @@ export default function FailedPaymentsPage() {
                   style={{
                     padding: '8px 14px',
                     background: 'white',
-                    color: '#DC2626',
+                    color: '#C62828',
                     border: '1.5px solid #FCA5A5',
                     borderRadius: '8px',
                     fontSize: '0.80rem',
@@ -676,7 +676,7 @@ export default function FailedPaymentsPage() {
             onClick={() => setPage(p => p - 1)}
             style={{
               padding: '8px 16px',
-              background: page === 1 ? '#F3F4F6' : '#7C3AED',
+              background: page === 1 ? '#F3F4F6' : '#264653',
               color: page === 1 ? '#9CA3AF' : 'white',
               border: 'none', borderRadius: '8px',
               fontWeight: '700', cursor: page === 1 ? 'not-allowed' : 'pointer',
@@ -692,7 +692,7 @@ export default function FailedPaymentsPage() {
             onClick={() => setPage(p => p + 1)}
             style={{
               padding: '8px 16px',
-              background: page === pagination.pages ? '#F3F4F6' : '#7C3AED',
+              background: page === pagination.pages ? '#F3F4F6' : '#264653',
               color: page === pagination.pages ? '#9CA3AF' : 'white',
               border: 'none', borderRadius: '8px',
               fontWeight: '700', cursor: page === pagination.pages ? 'not-allowed' : 'pointer',
@@ -717,8 +717,8 @@ export default function FailedPaymentsPage() {
 
       <style>{`
         @keyframes pulseRed {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-          50%      { box-shadow: 0 0 0 4px rgba(239, 68, 68, 0); }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(229,57,53, 0.4); }
+          50%      { box-shadow: 0 0 0 4px rgba(229,57,53, 0); }
         }
       `}</style>
     </div>

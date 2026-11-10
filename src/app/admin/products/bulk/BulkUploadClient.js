@@ -26,7 +26,7 @@ const IMAGE_SLOTS = [
 
 const inputStyle = {
   width: '100%', padding: '8px 10px',
-  border: '1px solid #EDD9FF', borderRadius: '8px',
+  border: '1px solid #E8E2D2', borderRadius: '8px',
   fontSize: '13px', boxSizing: 'border-box',
   outline: 'none', fontFamily: 'inherit',
 };
@@ -37,7 +37,7 @@ const labelStyle = {
 };
 const selectStyle = {
   width: '100%', padding: '8px 10px',
-  border: '1px solid #EDD9FF', borderRadius: '8px',
+  border: '1px solid #E8E2D2', borderRadius: '8px',
   fontSize: '13px', boxSizing: 'border-box',
   outline: 'none', background: 'white',
   cursor: 'pointer', fontFamily: 'inherit',
@@ -277,17 +277,17 @@ export default function BulkUploadClient() {
         flexWrap: 'wrap', gap: '12px',
       }}>
         <div>
-          <h1 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 4px', color: '#2D1A4A' }}>
+          <h1 style={{ fontSize: '24px', fontWeight: '800', margin: '0 0 4px', color: '#264653' }}>
             📦 Bulk Product Upload
           </h1>
-          <p style={{ color: '#9585B0', margin: 0, fontSize: '14px' }}>
+          <p style={{ color: '#8A9BA3', margin: 0, fontSize: '14px' }}>
             Each image = 1 product. Add up to 4 views per product (Front, Back, Side, Top)
           </p>
         </div>
         <button onClick={() => router.push('/admin/products')} style={{
-          padding: '8px 20px', border: '2px solid #EDD9FF', borderRadius: '10px',
+          padding: '8px 20px', border: '2px solid #E8E2D2', borderRadius: '10px',
           background: 'white', cursor: 'pointer', fontSize: '14px',
-          fontWeight: '600', color: '#6B4E8A', fontFamily: 'inherit',
+          fontWeight: '600', color: '#4F6B76', fontFamily: 'inherit',
         }}>
           ← Back to Products
         </button>
@@ -296,17 +296,17 @@ export default function BulkUploadClient() {
       {/* Step 1 — Category */}
       <div style={{
         background: 'white', borderRadius: '16px', padding: '24px',
-        marginBottom: '20px', boxShadow: '0 2px 12px rgba(123,47,190,0.08)',
-        border: selectedCategory ? '2px solid #22C55E' : '2px solid #EDD9FF',
+        marginBottom: '20px', boxShadow: '0 2px 12px rgba(38,70,83,0.08)',
+        border: selectedCategory ? '2px solid #43A047' : '2px solid #E8E2D2',
       }}>
-        <h3 style={{ margin: '0 0 4px', fontSize: '16px', fontWeight: '800', color: '#2D1A4A' }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: '16px', fontWeight: '800', color: '#264653' }}>
           Step 1 — Select Category
         </h3>
-        <p style={{ color: '#9585B0', fontSize: '13px', margin: '0 0 16px' }}>
+        <p style={{ color: '#8A9BA3', fontSize: '13px', margin: '0 0 16px' }}>
           All uploaded products will go into this category
         </p>
         <select value={selectedCategory} onChange={e => setSelectedCategory(e.target.value)}
-          style={{ ...selectStyle, maxWidth: '400px', padding: '12px 16px', fontSize: '15px', border: '2px solid #EDD9FF' }}>
+          style={{ ...selectStyle, maxWidth: '400px', padding: '12px 16px', fontSize: '15px', border: '2px solid #E8E2D2' }}>
           <option value="">-- Select Category --</option>
           {categories.map(c => (
             <option key={c.id} value={c.id}>{c.icon ? `${c.icon} ` : ''}{c.name}</option>
@@ -317,17 +317,17 @@ export default function BulkUploadClient() {
           <div style={{ marginTop: '12px', display: 'flex', alignItems: 'center', gap: '10px' }}>
             <span style={{
               padding: '5px 16px',
-              background: 'linear-gradient(135deg,#FFF3EC,#F3E8FF)',
-              border: '1.5px solid #EDD9FF', borderRadius: '999px',
-              fontSize: '13px', fontWeight: '700', color: '#FF6B35',
+              background: 'linear-gradient(135deg,#FFF6E5,#EEF3F5)',
+              border: '1.5px solid #E8E2D2', borderRadius: '999px',
+              fontSize: '13px', fontWeight: '700', color: '#E53935',
             }}>
               ✅ {selectedCatName}
             </span>
             {isClothingCat && (
               <span style={{
-                padding: '5px 16px', background: '#FFF3EC',
-                border: '1.5px solid #FFD4B8', borderRadius: '999px',
-                fontSize: '12px', fontWeight: '700', color: '#FF6B35',
+                padding: '5px 16px', background: '#FFF6E5',
+                border: '1.5px solid #F6D28B', borderRadius: '999px',
+                fontSize: '12px', fontWeight: '700', color: '#E53935',
               }}>
                 👗 Clothing — Gender & Size required
               </span>
@@ -339,13 +339,13 @@ export default function BulkUploadClient() {
       {/* Step 2 — Upload Front Images */}
       <div style={{
         background: 'white', borderRadius: '16px', padding: '24px',
-        marginBottom: '20px', boxShadow: '0 2px 12px rgba(123,47,190,0.08)',
-        border: products.length > 0 ? '2px solid #22C55E' : '2px solid #EDD9FF',
+        marginBottom: '20px', boxShadow: '0 2px 12px rgba(38,70,83,0.08)',
+        border: products.length > 0 ? '2px solid #43A047' : '2px solid #E8E2D2',
       }}>
-        <h3 style={{ margin: '0 0 4px', fontSize: '16px', fontWeight: '800', color: '#2D1A4A' }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: '16px', fontWeight: '800', color: '#264653' }}>
           Step 2 — Upload Product Front Images
         </h3>
-        <p style={{ color: '#9585B0', fontSize: '13px', margin: '0 0 16px' }}>
+        <p style={{ color: '#8A9BA3', fontSize: '13px', margin: '0 0 16px' }}>
           Select multiple images. Each image = 1 product (Front view). You can add Back/Side/Top later.
         </p>
 
@@ -355,10 +355,10 @@ export default function BulkUploadClient() {
           onDragLeave={() => setDragOver(false)}
           onClick={() => inputRef.current?.click()}
           style={{
-            border: `2px dashed ${dragOver ? '#7B2FBE' : '#FF6B35'}`,
+            border: `2px dashed ${dragOver ? '#264653' : '#E53935'}`,
             borderRadius: '16px', padding: '48px 24px',
             textAlign: 'center',
-            background: dragOver ? '#F3E8FF' : '#FFF9F5',
+            background: dragOver ? '#EEF3F5' : '#FFFBF2',
             cursor: 'pointer', transition: 'all 0.3s',
           }}
         >
@@ -366,24 +366,24 @@ export default function BulkUploadClient() {
             onChange={e => { handleFiles(e.target.files); e.target.value = ''; }}
             style={{ display: 'none' }} />
 
-          <p style={{ fontWeight: '800', fontSize: '18px', margin: '0 0 8px', color: '#2D1A4A' }}>
+          <p style={{ fontWeight: '800', fontSize: '18px', margin: '0 0 8px', color: '#264653' }}>
             📤 Drag & Drop Front Images Here
           </p>
-          <p style={{ color: '#9585B0', fontSize: '14px', margin: '0 0 20px' }}>
+          <p style={{ color: '#8A9BA3', fontSize: '14px', margin: '0 0 20px' }}>
             Each image becomes 1 product in{' '}
-            <strong style={{ color: '#FF6B35' }}>{selectedCatName || 'selected category'}</strong>
+            <strong style={{ color: '#E53935' }}>{selectedCatName || 'selected category'}</strong>
           </p>
           <button type="button"
             onClick={e => { e.stopPropagation(); inputRef.current?.click(); }}
             style={{
-              background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+              background: 'linear-gradient(135deg,#3A6373,#264653)',
               color: 'white', border: 'none', padding: '12px 32px',
               borderRadius: '12px', fontSize: '15px', fontWeight: '700',
               cursor: 'pointer', fontFamily: 'inherit',
             }}>
             Browse Images
           </button>
-          <p style={{ color: '#C8B8DC', fontSize: '12px', marginTop: '12px' }}>
+          <p style={{ color: '#B5C2C8', fontSize: '12px', marginTop: '12px' }}>
             PNG, JPG, WEBP — Max 5MB each
           </p>
         </div>
@@ -393,17 +393,17 @@ export default function BulkUploadClient() {
       {products.length > 0 && (
         <div style={{
           background: 'white', borderRadius: '16px', padding: '24px',
-          boxShadow: '0 2px 12px rgba(123,47,190,0.08)', border: '2px solid #EDD9FF',
+          boxShadow: '0 2px 12px rgba(38,70,83,0.08)', border: '2px solid #E8E2D2',
         }}>
           <div style={{
             display: 'flex', justifyContent: 'space-between',
             alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px',
           }}>
             <div>
-              <h3 style={{ margin: '0 0 4px', fontSize: '16px', fontWeight: '800', color: '#2D1A4A' }}>
+              <h3 style={{ margin: '0 0 4px', fontSize: '16px', fontWeight: '800', color: '#264653' }}>
                 Step 3 — Fill Details & Add More Views
               </h3>
-              <p style={{ color: '#9585B0', fontSize: '13px', margin: 0 }}>
+              <p style={{ color: '#8A9BA3', fontSize: '13px', margin: 0 }}>
                 {products.length} products — Add Back, Side, Top views for each product
               </p>
             </div>
@@ -417,7 +417,7 @@ export default function BulkUploadClient() {
               </button>
               <button onClick={handleSaveAll} disabled={saving} style={{
                 padding: '10px 24px',
-                background: saving ? '#ccc' : 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+                background: saving ? '#ccc' : 'linear-gradient(135deg,#3A6373,#264653)',
                 color: 'white', border: 'none', borderRadius: '10px',
                 fontSize: '14px', fontWeight: '700',
                 cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
@@ -449,11 +449,11 @@ export default function BulkUploadClient() {
           <div style={{ marginTop: '24px', textAlign: 'center' }}>
             <button onClick={handleSaveAll} disabled={saving} style={{
               padding: '14px 48px',
-              background: saving ? '#ccc' : 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+              background: saving ? '#ccc' : 'linear-gradient(135deg,#3A6373,#264653)',
               color: 'white', border: 'none', borderRadius: '14px',
               fontSize: '16px', fontWeight: '800',
               cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
-              boxShadow: saving ? 'none' : '0 6px 20px rgba(255,107,53,0.30)',
+              boxShadow: saving ? 'none' : '0 6px 20px rgba(229,57,53,0.30)',
             }}>
               {saving ? 'Saving...' : `💾 Save All ${products.length} Products`}
             </button>
@@ -474,15 +474,15 @@ function ProductCard({
 
   return (
     <div style={{
-      border: '2px solid #EDD9FF', borderRadius: '20px',
+      border: '2px solid #E8E2D2', borderRadius: '20px',
       overflow: 'hidden', background: '#FDFBFF',
-      boxShadow: '0 2px 16px rgba(123,47,190,0.08)',
+      boxShadow: '0 2px 16px rgba(38,70,83,0.08)',
       width: '100%',
       minWidth: 0,
     }}>
       {/* Card Header */}
       <div style={{
-        background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+        background: 'linear-gradient(135deg,#3A6373,#264653)',
         padding: '10px 16px',
         display: 'flex', alignItems: 'center',
         justifyContent: 'space-between',
@@ -494,7 +494,7 @@ function ProductCard({
           flexWrap: 'wrap', flex: 1, minWidth: 0,
         }}>
           <span style={{
-            background: 'white', color: '#FF6B35',
+            background: 'white', color: '#E53935',
             width: '28px', height: '28px', borderRadius: '50%',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '13px', fontWeight: '800',
@@ -541,12 +541,12 @@ function ProductCard({
               display: 'flex', alignItems: 'center',
               justifyContent: 'space-between', marginBottom: '12px',
             }}>
-              <h4 style={{ margin: 0, fontSize: '13px', fontWeight: '800', color: '#2D1A4A' }}>
+              <h4 style={{ margin: 0, fontSize: '13px', fontWeight: '800', color: '#264653' }}>
                 🖼️ Product Images
               </h4>
               <span style={{
                 fontSize: '11px', fontWeight: '700',
-                color: uploadedCount === 4 ? '#22C55E' : '#9585B0',
+                color: uploadedCount === 4 ? '#43A047' : '#8A9BA3',
               }}>
                 {uploadedCount}/4 views
               </span>
@@ -568,7 +568,7 @@ function ProductCard({
                   <div key={slot.key} style={{ display: 'flex', flexDirection: 'column', gap: '4px', minWidth: 0 }}>
                     {/* Label */}
                     <div style={{
-                      fontSize: '10px', fontWeight: '800', color: '#9585B0',
+                      fontSize: '10px', fontWeight: '800', color: '#8A9BA3',
                       textTransform: 'uppercase', textAlign: 'center',
                       letterSpacing: '0.3px',
                     }}>
@@ -576,7 +576,7 @@ function ProductCard({
                       {i === 0 && (
                         <span style={{
                           display: 'block', fontSize: '8px',
-                          color: '#FF6B35', fontWeight: '800',
+                          color: '#E53935', fontWeight: '800',
                         }}>★ Main</span>
                       )}
                     </div>
@@ -603,13 +603,13 @@ function ProductCard({
                         aspectRatio: '1',
                         borderRadius: '10px',
                         border: `2px ${img ? 'solid' : 'dashed'} ${
-                          i === 0    ? '#FF6B35' :
-                          img        ? '#22C55E' :
-                          isUploading ? '#7B2FBE' : '#EDD9FF'
+                          i === 0    ? '#E53935' :
+                          img        ? '#43A047' :
+                          isUploading ? '#264653' : '#E8E2D2'
                         }`,
                         background: img
                           ? 'transparent'
-                          : isUploading ? '#F3E8FF' : '#FBF7FF',
+                          : isUploading ? '#EEF3F5' : '#FFFBF2',
                         cursor: i === 0 ? 'default' : img ? 'default' : 'pointer',
                         position: 'relative',
                         overflow: 'hidden',
@@ -638,7 +638,7 @@ function ProductCard({
                           {i === 0 && (
                             <div style={{
                               position: 'absolute', bottom: '2px', right: '2px',
-                              background: '#22C55E', color: 'white',
+                              background: '#43A047', color: 'white',
                               width: '16px', height: '16px', borderRadius: '50%',
                               display: 'flex', alignItems: 'center', justifyContent: 'center',
                               fontSize: '9px', fontWeight: '800',
@@ -652,8 +652,8 @@ function ProductCard({
                         }}>
                           <div style={{
                             width: '18px', height: '18px',
-                            border: '2px solid rgba(123,47,190,0.2)',
-                            borderTop: '2px solid #7B2FBE',
+                            border: '2px solid rgba(38,70,83,0.2)',
+                            borderTop: '2px solid #264653',
                             borderRadius: '50%',
                             animation: 'spin 0.7s linear infinite',
                           }} />
@@ -667,7 +667,7 @@ function ProductCard({
                         }}>
                           <span style={{ fontSize: '1rem' }}>{slot.icon}</span>
                           {i !== 0 && (
-                            <span style={{ fontSize: '8px', color: '#9585B0', fontWeight: '700' }}>
+                            <span style={{ fontSize: '8px', color: '#8A9BA3', fontWeight: '700' }}>
                               + Add
                             </span>
                           )}
@@ -684,7 +684,7 @@ function ProductCard({
               {IMAGE_SLOTS.map((_, i) => (
                 <div key={i} style={{
                   flex: 1, height: '4px', borderRadius: '999px',
-                  background: product.images[i] ? '#22C55E' : '#EDD9FF',
+                  background: product.images[i] ? '#43A047' : '#E8E2D2',
                   transition: 'background 0.3s',
                 }} />
               ))}
@@ -704,7 +704,7 @@ function ProductCard({
               <input value={product.name}
                 onChange={e => onUpdate(product.id, 'name', e.target.value)}
                 placeholder="e.g. Baby Cotton T-Shirt"
-                style={{ ...inputStyle, border: !product.name ? '1px solid #ff4444' : '1px solid #EDD9FF' }} />
+                style={{ ...inputStyle, border: !product.name ? '1px solid #ff4444' : '1px solid #E8E2D2' }} />
             </div>
 
             {/* Short Description */}
@@ -713,7 +713,7 @@ function ProductCard({
               <input value={product.shortDescription}
                 onChange={e => onUpdate(product.id, 'shortDescription', e.target.value)}
                 placeholder="Brief description"
-                style={{ ...inputStyle, border: '1px solid #EDD9FF' }} />
+                style={{ ...inputStyle, border: '1px solid #E8E2D2' }} />
             </div>
 
             {/* Price & Discount Percentage */}
@@ -723,7 +723,7 @@ function ProductCard({
     <input type="number" value={product.price}
       onChange={e => onUpdate(product.id, 'price', e.target.value)}
       placeholder="e.g. 500" min="0"
-      style={{ ...inputStyle, border: !product.price ? '1px solid #ff4444' : '1px solid #EDD9FF' }} />
+      style={{ ...inputStyle, border: !product.price ? '1px solid #ff4444' : '1px solid #E8E2D2' }} />
   </div>
   <div style={{ minWidth: 0 }}>
     <label style={labelStyle}>Discount (%)</label>
@@ -740,15 +740,15 @@ function ProductCard({
       placeholder="e.g. 10" 
       min="0" 
       max="100"
-      style={{ ...inputStyle, border: '1px solid #EDD9FF' }} />
+      style={{ ...inputStyle, border: '1px solid #E8E2D2' }} />
   </div>
 </div>
 
 {/* ✅ Live Price Preview */}
 {product.price && product.discountPercent && Number(product.discountPercent) > 0 && (
   <div style={{
-    background: 'linear-gradient(135deg,#FFF3EC,#F3E8FF)',
-    border: '1.5px solid #FFD4B8',
+    background: 'linear-gradient(135deg,#FFF6E5,#EEF3F5)',
+    border: '1.5px solid #F6D28B',
     borderRadius: '10px',
     padding: '8px 12px',
     display: 'flex',
@@ -759,13 +759,13 @@ function ProductCard({
   }}>
     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
       <span style={{ 
-        fontSize: '11px', fontWeight: '700', color: '#9585B0',
+        fontSize: '11px', fontWeight: '700', color: '#8A9BA3',
         textDecoration: 'line-through',
       }}>
         ₹{Number(product.price).toFixed(2)}
       </span>
       <span style={{
-        background: '#22C55E', color: 'white',
+        background: '#43A047', color: 'white',
         padding: '2px 8px', borderRadius: '999px',
         fontSize: '10px', fontWeight: '800',
       }}>
@@ -773,7 +773,7 @@ function ProductCard({
       </span>
     </div>
     <span style={{
-      fontSize: '15px', fontWeight: '800', color: '#FF6B35',
+      fontSize: '15px', fontWeight: '800', color: '#E53935',
     }}>
       ₹{(Number(product.price) - (Number(product.price) * Number(product.discountPercent) / 100)).toFixed(2)}
     </span>
@@ -787,14 +787,14 @@ function ProductCard({
                 <input type="number" value={product.stock}
                   onChange={e => onUpdate(product.id, 'stock', e.target.value)}
                   placeholder="0" min="0"
-                  style={{ ...inputStyle, border: !product.stock ? '1px solid #ff4444' : '1px solid #EDD9FF' }} />
+                  style={{ ...inputStyle, border: !product.stock ? '1px solid #ff4444' : '1px solid #E8E2D2' }} />
               </div>
               <div style={{ minWidth: 0 }}>
                 <label style={labelStyle}>Brand</label>
                 <input value={product.brand}
                   onChange={e => onUpdate(product.id, 'brand', e.target.value)}
                   placeholder="Brand name"
-                  style={{ ...inputStyle, border: '1px solid #EDD9FF' }} />
+                  style={{ ...inputStyle, border: '1px solid #E8E2D2' }} />
               </div>
             </div>
 
@@ -807,7 +807,7 @@ function ProductCard({
                 onChange={e => onUpdate(product.id, 'ageGroup', e.target.value)}
                 placeholder="e.g. 13 yrs, 2 yrs, 6 months, Newborn..."
                 list={`age-suggestions-${product.id}`}
-                style={{ ...inputStyle, border: '1px solid #EDD9FF' }}
+                style={{ ...inputStyle, border: '1px solid #E8E2D2' }}
               />
               <datalist id={`age-suggestions-${product.id}`}>
                 <option value="Newborn" />
@@ -825,7 +825,7 @@ function ProductCard({
               </datalist>
               <small style={{
                 display: 'block', marginTop: '4px',
-                color: '#9585B0', fontSize: '10px', fontWeight: '600',
+                color: '#8A9BA3', fontSize: '10px', fontWeight: '600',
               }}>
                 💡 Type any age (e.g. "13 yrs", "2.5 years", "6 months")
               </small>
@@ -834,12 +834,12 @@ function ProductCard({
             {/* Clothing Fields */}
             {isClothingCat && (
               <div style={{
-                background: 'linear-gradient(135deg,#FFF3EC,#F3E8FF)',
-                border: '1.5px solid #EDD9FF', borderRadius: '12px',
+                background: 'linear-gradient(135deg,#FFF6E5,#EEF3F5)',
+                border: '1.5px solid #E8E2D2', borderRadius: '12px',
                 padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px',
                 minWidth: 0,
               }}>
-                <div style={{ fontSize: '11px', fontWeight: '800', color: '#FF6B35', textTransform: 'uppercase' }}>
+                <div style={{ fontSize: '11px', fontWeight: '800', color: '#E53935', textTransform: 'uppercase' }}>
                   👗 Clothing Details
                 </div>
 
@@ -852,10 +852,10 @@ function ProductCard({
                         onClick={() => onUpdate(product.id, 'gender', g.value)}
                         style={{
                           flex: 1, padding: '7px 4px', borderRadius: '8px', border: '1.5px solid',
-                          borderColor: product.gender === g.value ? '#FF6B35' : '#EDD9FF',
+                          borderColor: product.gender === g.value ? '#E53935' : '#E8E2D2',
                           background: product.gender === g.value
-                            ? 'linear-gradient(135deg,#FF6B35,#7B2FBE)' : 'white',
-                          color: product.gender === g.value ? 'white' : '#6B4E8A',
+                            ? 'linear-gradient(135deg,#3A6373,#264653)' : 'white',
+                          color: product.gender === g.value ? 'white' : '#4F6B76',
                           fontWeight: '700', fontSize: '12px', cursor: 'pointer',
                           transition: 'all 0.2s', fontFamily: 'inherit',
                         }}>
@@ -872,7 +872,7 @@ function ProductCard({
                     onChange={e => onUpdate(product.id, 'size', e.target.value)}
                     style={{
                       ...selectStyle,
-                      border: isClothingCat && !product.size ? '1px solid #ff4444' : '1px solid #EDD9FF',
+                      border: isClothingCat && !product.size ? '1px solid #ff4444' : '1px solid #E8E2D2',
                     }}>
                     <option value="">Select Size</option>
                     <optgroup label="Baby Sizes">
@@ -899,7 +899,7 @@ function ProductCard({
                     <label style={labelStyle}>Color</label>
                     <select value={product.color}
                       onChange={e => onUpdate(product.id, 'color', e.target.value)}
-                      style={{ ...selectStyle, border: '1px solid #EDD9FF' }}>
+                      style={{ ...selectStyle, border: '1px solid #E8E2D2' }}>
                       <option value="">Color</option>
                       {COLORS.map(c => <option key={c} value={c}>{c}</option>)}
                     </select>
@@ -908,7 +908,7 @@ function ProductCard({
                     <label style={labelStyle}>Material</label>
                     <select value={product.material}
                       onChange={e => onUpdate(product.id, 'material', e.target.value)}
-                      style={{ ...selectStyle, border: '1px solid #EDD9FF' }}>
+                      style={{ ...selectStyle, border: '1px solid #E8E2D2' }}>
                       <option value="">Material</option>
                       {MATERIALS.map(m => <option key={m} value={m}>{m}</option>)}
                     </select>
@@ -926,7 +926,7 @@ function ProductCard({
               ].map(({ key, label }) => (
                 <label key={key} style={{
                   display: 'flex', alignItems: 'center', gap: '5px',
-                  fontSize: '12px', cursor: 'pointer', fontWeight: '600', color: '#6B4E8A',
+                  fontSize: '12px', cursor: 'pointer', fontWeight: '600', color: '#4F6B76',
                 }}>
                   <input type="checkbox" checked={product[key]}
                     onChange={e => onUpdate(product.id, key, e.target.checked)} />

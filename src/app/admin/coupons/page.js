@@ -302,7 +302,7 @@ export default function AdminCouponsPage() {
       {/* Top Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ margin: 0, fontSize: '1.8rem', fontWeight: '900', color: '#1F0F3A' }}>🎟️ Coupon Management</h1>
+          <h1 style={{ margin: 0, fontSize: '1.8rem', fontWeight: '900', color: '#1B3540' }}>🎟️ Coupon Management</h1>
           <p style={{ margin: '4px 0 0', color: '#6B7280', fontSize: '0.9rem', fontWeight: '600' }}>
             {categories.length} Categories · {brands.length} Brands available for offers
           </p>
@@ -311,13 +311,13 @@ export default function AdminCouponsPage() {
           onClick={openCreateModal}
           style={{
             padding: '12px 24px',
-            background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+            background: 'linear-gradient(135deg, #3A6373, #264653)',
             color: 'white',
             border: 'none',
             borderRadius: '12px',
             fontWeight: '900',
             cursor: 'pointer',
-            boxShadow: '0 4px 14px rgba(255,107,53,0.3)',
+            boxShadow: '0 4px 14px rgba(229,57,53,0.3)',
           }}
         >
           + Create New Coupon
@@ -331,7 +331,7 @@ export default function AdminCouponsPage() {
         <div style={{ textAlign: 'center', padding: '60px', background: '#F9FAFB', borderRadius: '16px' }}>
           <div style={{ fontSize: '3rem' }}>🎟️</div>
           <h3>No coupons created yet</h3>
-          <button onClick={openCreateModal} style={{ padding: '10px 24px', background: '#FF6B35', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', cursor: 'pointer' }}>
+          <button onClick={openCreateModal} style={{ padding: '10px 24px', background: '#E53935', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', cursor: 'pointer' }}>
             + Create Coupon
           </button>
         </div>
@@ -350,7 +350,7 @@ export default function AdminCouponsPage() {
                   background: 'white',
                   padding: '20px',
                   borderRadius: '16px',
-                  border: `2px solid ${coupon.isActive && !isExpired ? '#10B981' : '#E5E7EB'}`,
+                  border: `2px solid ${coupon.isActive && !isExpired ? '#43A047' : '#E5E7EB'}`,
                   boxShadow: '0 4px 14px rgba(0,0,0,0.04)',
                   opacity: isExpired ? 0.6 : 1,
                 }}
@@ -358,10 +358,10 @@ export default function AdminCouponsPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
                   <div style={{ flex: 1, minWidth: '260px' }}>
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '8px', alignItems: 'center' }}>
-                      <span style={{ fontFamily: 'monospace', fontWeight: '900', color: '#7B2FBE', background: '#F3E8FF', padding: '4px 12px', borderRadius: '6px', fontSize: '1.1rem' }}>
+                      <span style={{ fontFamily: 'monospace', fontWeight: '900', color: '#264653', background: '#EEF3F5', padding: '4px 12px', borderRadius: '6px', fontSize: '1.1rem' }}>
                         {coupon.code}
                       </span>
-                      <span style={{ padding: '4px 12px', background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)', color: 'white', borderRadius: '999px', fontSize: '0.78rem', fontWeight: '800' }}>
+                      <span style={{ padding: '4px 12px', background: 'linear-gradient(135deg, #3A6373, #264653)', color: 'white', borderRadius: '999px', fontSize: '0.78rem', fontWeight: '800' }}>
                         {coupon.discountType === 'percentage' ? `${coupon.discountValue}% OFF` : `₹${coupon.discountValue} OFF`}
                       </span>
                       {isExpired && <span style={{ padding: '3px 10px', background: '#FEE2E2', color: '#991B1B', borderRadius: '999px', fontSize: '0.72rem', fontWeight: '800' }}>EXPIRED</span>}
@@ -370,10 +370,10 @@ export default function AdminCouponsPage() {
                     {coupon.description && <p style={{ margin: '0 0 8px', color: '#374151', fontWeight: '600', fontSize: '0.88rem' }}>{coupon.description}</p>}
 
                     <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginTop: '6px' }}>
-                      <span style={{ padding: '4px 10px', background: '#ECFDF5', color: '#065F46', border: '1px solid #A7F3D0', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '800' }}>
+                      <span style={{ padding: '4px 10px', background: '#ECFDF5', color: '#1B5E20', border: '1px solid #A7F3D0', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '800' }}>
                         🛒 Min Order: {coupon.minOrderValue > 0 ? `₹${coupon.minOrderValue}` : 'No Minimum'}
                       </span>
-                      <span style={{ padding: '4px 10px', background: '#F5F3FF', color: '#6D28D9', border: '1px solid #DDD6FE', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '800' }}>
+                      <span style={{ padding: '4px 10px', background: '#FBF5E6', color: '#1B3540', border: '1px solid #DDE5E8', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '800' }}>
                         🛡️ Max Cap: {coupon.maxDiscount ? `₹${coupon.maxDiscount}` : 'No Cap'}
                       </span>
                       <span style={{ padding: '4px 10px', background: '#F3F4F6', color: '#4B5563', borderRadius: '8px', fontSize: '0.75rem', fontWeight: '700' }}>
@@ -402,7 +402,7 @@ export default function AdminCouponsPage() {
                               <div key={catId} style={{ display: 'flex', gap: '6px', alignItems: 'center', flexWrap: 'wrap', marginTop: '3px' }}>
                                 <span style={{ fontSize: '0.74rem', fontWeight: '900', color: '#991B1B' }}>🚫 Excluded in {getCatName(catId)}:</span>
                                 {excludedBrands.map((b) => (
-                                  <span key={b} style={{ padding: '1px 8px', background: '#DC2626', color: 'white', borderRadius: '6px', fontSize: '0.68rem', fontWeight: '700' }}>
+                                  <span key={b} style={{ padding: '1px 8px', background: '#C62828', color: 'white', borderRadius: '6px', fontSize: '0.68rem', fontWeight: '700' }}>
                                     {b}
                                   </span>
                                 ))}
@@ -414,13 +414,13 @@ export default function AdminCouponsPage() {
                   </div>
 
                   <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'flex-start' }}>
-                    <button onClick={() => toggleActive(coupon)} style={{ padding: '8px 12px', background: coupon.isActive ? '#FEF2F2' : '#F0FDF4', color: coupon.isActive ? '#DC2626' : '#059669', border: '1.5px solid', borderRadius: '8px', fontWeight: '800', fontSize: '0.75rem', cursor: 'pointer' }}>
+                    <button onClick={() => toggleActive(coupon)} style={{ padding: '8px 12px', background: coupon.isActive ? '#FEF2F2' : '#F0FDF4', color: coupon.isActive ? '#C62828' : '#388E3C', border: '1.5px solid', borderRadius: '8px', fontWeight: '800', fontSize: '0.75rem', cursor: 'pointer' }}>
                       {coupon.isActive ? '⛔ Disable' : '✅ Enable'}
                     </button>
-                    <button onClick={() => openEditModal(coupon)} style={{ padding: '8px 12px', background: '#F3E8FF', color: '#7B2FBE', border: '1.5px solid #E9D5FF', borderRadius: '8px', fontWeight: '800', fontSize: '0.75rem', cursor: 'pointer' }}>
+                    <button onClick={() => openEditModal(coupon)} style={{ padding: '8px 12px', background: '#EEF3F5', color: '#264653', border: '1.5px solid #DDE5E8', borderRadius: '8px', fontWeight: '800', fontSize: '0.75rem', cursor: 'pointer' }}>
                       ✏️ Edit
                     </button>
-                    <button onClick={() => handleDelete(coupon.id)} style={{ padding: '8px 12px', background: '#FEE2E2', color: '#DC2626', border: '1.5px solid #FCA5A5', borderRadius: '8px', fontWeight: '800', fontSize: '0.75rem', cursor: 'pointer' }}>
+                    <button onClick={() => handleDelete(coupon.id)} style={{ padding: '8px 12px', background: '#FEE2E2', color: '#C62828', border: '1.5px solid #FCA5A5', borderRadius: '8px', fontWeight: '800', fontSize: '0.75rem', cursor: 'pointer' }}>
                       🗑️
                     </button>
                   </div>
@@ -439,9 +439,9 @@ export default function AdminCouponsPage() {
           <div style={{ background: 'white', borderRadius: '24px', width: '100%', maxWidth: '680px', maxHeight: '92vh', overflowY: 'auto', boxShadow: '0 25px 60px rgba(0,0,0,0.3)' }}>
             
             {/* Modal Header */}
-            <div style={{ padding: '20px 26px', borderBottom: '2px solid #F3E8FF', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, #FFF5F7, #F3E8FF)', borderRadius: '24px 24px 0 0' }}>
+            <div style={{ padding: '20px 26px', borderBottom: '2px solid #EEF3F5', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'linear-gradient(135deg, #FFF5F4, #EEF3F5)', borderRadius: '24px 24px 0 0' }}>
               <div>
-                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '900', color: '#7B2FBE' }}>
+                <h2 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '900', color: '#264653' }}>
                   {editingCoupon ? '✏️ Edit Coupon Offer' : '🎉 Create Coupon Offer'}
                 </h2>
                 <p style={{ margin: '2px 0 0', fontSize: '0.75rem', color: '#6B7280', fontWeight: '600' }}>
@@ -456,24 +456,24 @@ export default function AdminCouponsPage() {
               {/* Code & Description */}
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1.5fr', gap: '12px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '4px' }}>COUPON CODE *</label>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#4F6B76', marginBottom: '4px' }}>COUPON CODE *</label>
                   <input
                     type="text"
                     value={form.code}
                     onChange={(e) => setForm({ ...form, code: e.target.value.toUpperCase() })}
                     placeholder="e.g. FESTIVE20"
                     required
-                    style={{ width: '100%', padding: '11px 14px', border: '2px solid #EDD9FF', borderRadius: '10px', fontFamily: 'monospace', fontWeight: '900', fontSize: '1rem', letterSpacing: '1px', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '11px 14px', border: '2px solid #E8E2D2', borderRadius: '10px', fontFamily: 'monospace', fontWeight: '900', fontSize: '1rem', letterSpacing: '1px', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '4px' }}>DESCRIPTION</label>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#4F6B76', marginBottom: '4px' }}>DESCRIPTION</label>
                   <input
                     type="text"
                     value={form.description}
                     onChange={(e) => setForm({ ...form, description: e.target.value })}
                     placeholder="e.g. 20% off on toys and walkers"
-                    style={{ width: '100%', padding: '11px 14px', border: '2px solid #EDD9FF', borderRadius: '10px', fontSize: '0.9rem', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '11px 14px', border: '2px solid #E8E2D2', borderRadius: '10px', fontSize: '0.9rem', boxSizing: 'border-box' }}
                   />
                 </div>
               </div>
@@ -481,18 +481,18 @@ export default function AdminCouponsPage() {
               {/* Discount Type, Value & Expiry */}
               <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr 1fr', gap: '12px', alignItems: 'flex-end' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '4px' }}>DISCOUNT TYPE</label>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#4F6B76', marginBottom: '4px' }}>DISCOUNT TYPE</label>
                   <select
                     value={form.discountType}
                     onChange={(e) => setForm({ ...form, discountType: e.target.value })}
-                    style={{ width: '100%', padding: '11px 12px', border: '2px solid #EDD9FF', borderRadius: '10px', fontSize: '0.9rem', fontWeight: '700', background: 'white' }}
+                    style={{ width: '100%', padding: '11px 12px', border: '2px solid #E8E2D2', borderRadius: '10px', fontSize: '0.9rem', fontWeight: '700', background: 'white' }}
                   >
                     <option value="percentage">Percentage (%) Discount</option>
                     <option value="fixed">Flat Cash (₹) Off</option>
                   </select>
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#4F6B76', marginBottom: '4px' }}>
                     {form.discountType === 'percentage' ? 'DISCOUNT % *' : 'FLAT AMOUNT (₹) *'}
                   </label>
                   <input
@@ -503,18 +503,18 @@ export default function AdminCouponsPage() {
                     required
                     min="1"
                     max={form.discountType === 'percentage' ? '100' : undefined}
-                    style={{ width: '100%', padding: '11px 14px', border: '2px solid #EDD9FF', borderRadius: '10px', fontWeight: '800', fontSize: '0.95rem', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '11px 14px', border: '2px solid #E8E2D2', borderRadius: '10px', fontWeight: '800', fontSize: '0.95rem', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '4px' }}>EXPIRY DATE *</label>
+                  <label style={{ display: 'block', fontSize: '0.78rem', fontWeight: '800', color: '#4F6B76', marginBottom: '4px' }}>EXPIRY DATE *</label>
                   <input
                     type="date"
                     value={form.expiryDate}
                     onChange={(e) => setForm({ ...form, expiryDate: e.target.value })}
                     required
                     min={new Date(Date.now() + 86400000).toISOString().slice(0, 10)}
-                    style={{ width: '100%', padding: '11px 12px', border: '2px solid #EDD9FF', borderRadius: '10px', fontSize: '0.85rem', fontWeight: '700', boxSizing: 'border-box' }}
+                    style={{ width: '100%', padding: '11px 12px', border: '2px solid #E8E2D2', borderRadius: '10px', fontSize: '0.85rem', fontWeight: '700', boxSizing: 'border-box' }}
                   />
                 </div>
               </div>
@@ -525,20 +525,20 @@ export default function AdminCouponsPage() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '1.3rem' }}>🛒</span>
                     <div>
-                      <h4 style={{ margin: 0, fontSize: '0.88rem', fontWeight: '900', color: '#065F46' }}>Minimum Order (₹)</h4>
-                      <p style={{ margin: '1px 0 0', fontSize: '0.68rem', color: '#047857', fontWeight: '600' }}>Cart threshold to unlock code</p>
+                      <h4 style={{ margin: 0, fontSize: '0.88rem', fontWeight: '900', color: '#1B5E20' }}>Minimum Order (₹)</h4>
+                      <p style={{ margin: '1px 0 0', fontSize: '0.68rem', color: '#2E7D32', fontWeight: '600' }}>Cart threshold to unlock code</p>
                     </div>
                   </div>
 
                   <div style={{ position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: '900', color: '#059669' }}>₹</span>
+                    <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: '900', color: '#388E3C' }}>₹</span>
                     <input
                       type="number"
                       value={form.minOrderValue}
                       onChange={(e) => setForm({ ...form, minOrderValue: e.target.value })}
                       placeholder="0 (No Minimum)"
                       min="0"
-                      style={{ width: '100%', padding: '10px 12px 10px 28px', border: '2px solid #A7F3D0', borderRadius: '10px', fontSize: '0.95rem', fontWeight: '800', background: 'white', boxSizing: 'border-box', color: '#065F46' }}
+                      style={{ width: '100%', padding: '10px 12px 10px 28px', border: '2px solid #A7F3D0', borderRadius: '10px', fontSize: '0.95rem', fontWeight: '800', background: 'white', boxSizing: 'border-box', color: '#1B5E20' }}
                     />
                   </div>
 
@@ -550,7 +550,7 @@ export default function AdminCouponsPage() {
                           key={p.value}
                           type="button"
                           onClick={() => setForm({ ...form, minOrderValue: p.value === '0' ? '' : p.value })}
-                          style={{ padding: '3px 8px', background: isSelected ? '#059669' : 'white', color: isSelected ? 'white' : '#047857', border: `1px solid ${isSelected ? '#059669' : '#A7F3D0'}`, borderRadius: '999px', fontSize: '0.68rem', fontWeight: '800', cursor: 'pointer' }}
+                          style={{ padding: '3px 8px', background: isSelected ? '#388E3C' : 'white', color: isSelected ? 'white' : '#2E7D32', border: `1px solid ${isSelected ? '#388E3C' : '#A7F3D0'}`, borderRadius: '999px', fontSize: '0.68rem', fontWeight: '800', cursor: 'pointer' }}
                         >
                           {p.label}
                         </button>
@@ -559,24 +559,24 @@ export default function AdminCouponsPage() {
                   </div>
                 </div>
 
-                <div style={{ background: 'linear-gradient(135deg, #F5F3FF, #EDE9FE)', border: '2px solid #C4B5FD', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                <div style={{ background: 'linear-gradient(135deg, #FBF5E6, #EEF3F5)', border: '2px solid #C4B5FD', borderRadius: '16px', padding: '16px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <span style={{ fontSize: '1.3rem' }}>🛡️</span>
                     <div>
-                      <h4 style={{ margin: 0, fontSize: '0.88rem', fontWeight: '900', color: '#5B21B6' }}>Max Discount Cap (₹)</h4>
-                      <p style={{ margin: '1px 0 0', fontSize: '0.68rem', color: '#6D28D9', fontWeight: '600' }}>Ceiling to protect your margin</p>
+                      <h4 style={{ margin: 0, fontSize: '0.88rem', fontWeight: '900', color: '#1B3540' }}>Max Discount Cap (₹)</h4>
+                      <p style={{ margin: '1px 0 0', fontSize: '0.68rem', color: '#1B3540', fontWeight: '600' }}>Ceiling to protect your margin</p>
                     </div>
                   </div>
 
                   <div style={{ position: 'relative' }}>
-                    <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: '900', color: '#7C3AED' }}>₹</span>
+                    <span style={{ position: 'absolute', left: '12px', top: '50%', transform: 'translateY(-50%)', fontWeight: '900', color: '#264653' }}>₹</span>
                     <input
                       type="number"
                       value={form.maxDiscount}
                       onChange={(e) => setForm({ ...form, maxDiscount: e.target.value })}
                       placeholder="Unlimited (No Cap)"
                       min="0"
-                      style={{ width: '100%', padding: '10px 12px 10px 28px', border: '2px solid #DDD6FE', borderRadius: '10px', fontSize: '0.95rem', fontWeight: '800', background: 'white', boxSizing: 'border-box', color: '#5B21B6' }}
+                      style={{ width: '100%', padding: '10px 12px 10px 28px', border: '2px solid #DDE5E8', borderRadius: '10px', fontSize: '0.95rem', fontWeight: '800', background: 'white', boxSizing: 'border-box', color: '#1B3540' }}
                     />
                   </div>
 
@@ -588,7 +588,7 @@ export default function AdminCouponsPage() {
                           key={p.label}
                           type="button"
                           onClick={() => setForm({ ...form, maxDiscount: p.value })}
-                          style={{ padding: '3px 8px', background: isSelected ? '#7C3AED' : 'white', color: isSelected ? 'white' : '#6D28D9', border: `1px solid ${isSelected ? '#7C3AED' : '#DDD6FE'}`, borderRadius: '999px', fontSize: '0.68rem', fontWeight: '800', cursor: 'pointer' }}
+                          style={{ padding: '3px 8px', background: isSelected ? '#264653' : 'white', color: isSelected ? 'white' : '#1B3540', border: `1px solid ${isSelected ? '#264653' : '#DDE5E8'}`, borderRadius: '999px', fontSize: '0.68rem', fontWeight: '800', cursor: 'pointer' }}
                         >
                           {p.label}
                         </button>
@@ -621,7 +621,7 @@ export default function AdminCouponsPage() {
               )}
 
               {/* 🎯 APPLICABLE CATEGORIES: FULL LIST WITH SEARCH & SELECT ALL */}
-              <div style={{ padding: '16px', background: '#FEF3C7', border: '2px dashed #F59E0B', borderRadius: '16px' }}>
+              <div style={{ padding: '16px', background: '#FEF3C7', border: '2px dashed #F2B33D', borderRadius: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
                   <div>
                     <label style={{ fontSize: '0.88rem', fontWeight: '900', color: '#78350F' }}>🎯 Applicable Categories</label>
@@ -645,7 +645,7 @@ export default function AdminCouponsPage() {
                   value={categorySearch}
                   onChange={(e) => setCategorySearch(e.target.value)}
                   placeholder="🔍 Search category name..."
-                  style={{ width: '100%', padding: '8px 12px', border: '1.5px solid #F59E0B', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '10px', boxSizing: 'border-box', background: 'white' }}
+                  style={{ width: '100%', padding: '8px 12px', border: '1.5px solid #F2B33D', borderRadius: '8px', fontSize: '0.82rem', marginBottom: '10px', boxSizing: 'border-box', background: 'white' }}
                 />
 
                 <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px', maxHeight: '130px', overflowY: 'auto' }}>
@@ -658,7 +658,7 @@ export default function AdminCouponsPage() {
                         onClick={() => toggleCategory(cat.id)}
                         style={{
                           padding: '5px 12px',
-                          background: sel ? 'linear-gradient(135deg, #F59E0B, #D97706)' : 'white',
+                          background: sel ? 'linear-gradient(135deg, #F2B33D, #D97706)' : 'white',
                           color: sel ? 'white' : '#78350F',
                           border: `1.5px solid ${sel ? '#D97706' : '#FDE68A'}`,
                           borderRadius: '999px',
@@ -675,7 +675,7 @@ export default function AdminCouponsPage() {
               </div>
 
               {/* 🚫 PER-CATEGORY BRAND EXCLUSIONS: FULL LIST WITH SEARCH */}
-              <div style={{ padding: '16px', background: '#FEF2F2', border: '2px dashed #EF4444', borderRadius: '16px' }}>
+              <div style={{ padding: '16px', background: '#FEF2F2', border: '2px dashed #E53935', borderRadius: '16px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
                   <label style={{ fontSize: '0.88rem', fontWeight: '900', color: '#991B1B' }}>🚫 Per-Category Brand Exclusions</label>
                   <span style={{ fontSize: '0.72rem', color: '#991B1B', fontWeight: '800' }}>
@@ -713,7 +713,7 @@ export default function AdminCouponsPage() {
                       ) : (
                         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '4px', marginTop: '4px' }}>
                           {(form.categoryBrandExclusions[selectedExclusionCategory] || []).map((b) => (
-                            <span key={b} style={{ padding: '2px 8px', background: '#DC2626', color: 'white', borderRadius: '999px', fontSize: '0.72rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span key={b} style={{ padding: '2px 8px', background: '#C62828', color: 'white', borderRadius: '999px', fontSize: '0.72rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
                               🚫 {b}
                               <button type="button" onClick={() => toggleBrandExclusion(selectedExclusionCategory, b)} style={{ background: 'none', border: 'none', color: 'white', cursor: 'pointer', padding: 0, fontSize: '0.8rem' }}>✕</button>
                             </span>
@@ -734,7 +734,7 @@ export default function AdminCouponsPage() {
                       <button
                         type="button"
                         onClick={() => addCustomBrandExclusion(selectedExclusionCategory)}
-                        style={{ padding: '8px 14px', background: '#DC2626', color: 'white', border: 'none', borderRadius: '8px', fontSize: '0.78rem', fontWeight: '800', cursor: 'pointer' }}
+                        style={{ padding: '8px 14px', background: '#C62828', color: 'white', border: 'none', borderRadius: '8px', fontSize: '0.78rem', fontWeight: '800', cursor: 'pointer' }}
                       >
                         + Add Custom
                       </button>
@@ -751,9 +751,9 @@ export default function AdminCouponsPage() {
                             onClick={() => toggleBrandExclusion(selectedExclusionCategory, b)}
                             style={{
                               padding: '3px 8px',
-                              background: isExcluded ? '#DC2626' : 'white',
-                              color: isExcluded ? 'white' : '#DC2626',
-                              border: `1px solid ${isExcluded ? '#DC2626' : '#FECACA'}`,
+                              background: isExcluded ? '#C62828' : 'white',
+                              color: isExcluded ? 'white' : '#C62828',
+                              border: `1px solid ${isExcluded ? '#C62828' : '#FECACA'}`,
                               borderRadius: '999px',
                               fontSize: '0.7rem',
                               fontWeight: '700',
@@ -785,14 +785,14 @@ export default function AdminCouponsPage() {
                   style={{
                     flex: 1,
                     padding: '13px 20px',
-                    background: saving ? '#9CA3AF' : 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                    background: saving ? '#9CA3AF' : 'linear-gradient(135deg, #3A6373, #264653)',
                     color: 'white',
                     border: 'none',
                     borderRadius: '12px',
                     fontWeight: '900',
                     fontSize: '0.95rem',
                     cursor: saving ? 'not-allowed' : 'pointer',
-                    boxShadow: '0 4px 14px rgba(123,47,190,0.25)',
+                    boxShadow: '0 4px 14px rgba(38,70,83,0.25)',
                   }}
                 >
                   {saving ? '⏳ Saving...' : editingCoupon ? '💾 Update Coupon' : '🎉 Publish Coupon'}

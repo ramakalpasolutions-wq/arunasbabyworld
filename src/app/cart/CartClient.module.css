@@ -81,8 +81,8 @@
 }
 
 .cartItem:hover {
-  box-shadow: 0 10px 30px rgba(123, 47, 190, 0.12);
-  border-color: rgba(255, 107, 53, 0.18);
+  box-shadow: 0 10px 30px rgba(38,70,83, 0.12);
+  border-color: rgba(229,57,53, 0.18);
   transform: translateY(-2px);
 }
 
@@ -190,7 +190,7 @@
 }
 
 .quantityCtrl button:hover {
-  background: linear-gradient(135deg, #FF6B35, #7B2FBE);
+  background: linear-gradient(135deg, #3A6373, #264653);
   color: white;
 }
 
@@ -238,12 +238,12 @@
   background: white;
   border-radius: var(--radius-xl);
   padding: 26px;
-  box-shadow: 0 6px 24px rgba(123, 47, 190, 0.08);
+  box-shadow: 0 6px 24px rgba(38,70,83, 0.08);
   position: sticky;
   top: calc(var(--header-height) + 16px);
   display: flex;
   flex-direction: column;
-  border: 1.5px solid rgba(237, 217, 255, 0.7);
+  border: 1.5px solid rgba(232,226,210, 0.7);
   width: 100%;
   box-sizing: border-box;
   max-width: 100%;
@@ -406,7 +406,7 @@
 
 .checkoutBtn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 24px rgba(255, 107, 53, 0.3);
+  box-shadow: 0 10px 24px rgba(229,57,53, 0.3);
 }
 
 .continueShopping {

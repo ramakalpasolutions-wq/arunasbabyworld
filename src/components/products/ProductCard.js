@@ -10,25 +10,25 @@ import styles from './ProductCard.module.css';
 const BABY_FOOD_CATEGORY_ID = '6a5473f71736df8447776561';
 
 const CATEGORY_ACCENTS = {
-  'clothing':          { color: '#FF6B35', emoji: '👗', pastel: '#FFF2EB' },
-  'personal-care':     { color: '#7B2FBE', emoji: '🧴', pastel: '#F3E8FF' },
-  'personal':          { color: '#7B2FBE', emoji: '🧴', pastel: '#F3E8FF' },
-  'health-care':       { color: '#0EA5E9', emoji: '💊', pastel: '#E0F2FE' },
-  'health':            { color: '#0EA5E9', emoji: '💊', pastel: '#E0F2FE' },
-  'baby-gear':         { color: '#10B981', emoji: '🎒', pastel: '#ECFDF5' },
-  'baby':              { color: '#10B981', emoji: '🎒', pastel: '#ECFDF5' },
-  'walkers':           { color: '#F59E0B', emoji: '🚶', pastel: '#FFFBEB' },
-  'walker':            { color: '#F59E0B', emoji: '🚶', pastel: '#FFFBEB' },
-  'toys':              { color: '#EF4444', emoji: '🎠', pastel: '#FEF2F2' },
-  'toy':               { color: '#EF4444', emoji: '🎠', pastel: '#FEF2F2' },
-  'cradles-cribs':     { color: '#8B5CF6', emoji: '🛏️', pastel: '#EDE9FE' },
-  'cradles':           { color: '#8B5CF6', emoji: '🛏️', pastel: '#EDE9FE' },
-  'cribs':             { color: '#8B5CF6', emoji: '🛏️', pastel: '#EDE9FE' },
-  'electric-vehicles': { color: '#059669', emoji: '🚗', pastel: '#ECFDF5' },
-  'electric':          { color: '#059669', emoji: '🚗', pastel: '#ECFDF5' },
-  'food':              { color: '#F97316', emoji: '🍎', pastel: '#FFF7ED' },
-  'baby-food':         { color: '#F97316', emoji: '🍼', pastel: '#FFF7ED' },
-  'default':           { color: '#FF6B35', emoji: '🎁', pastel: '#FFF2EB' },
+  'clothing':          { color: '#E53935', emoji: '👗', pastel: '#FFF6E5' },
+  'personal-care':     { color: '#264653', emoji: '🧴', pastel: '#EEF3F5' },
+  'personal':          { color: '#264653', emoji: '🧴', pastel: '#EEF3F5' },
+  'health-care':       { color: '#1E88E5', emoji: '💊', pastel: '#E0F2FE' },
+  'health':            { color: '#1E88E5', emoji: '💊', pastel: '#E0F2FE' },
+  'baby-gear':         { color: '#43A047', emoji: '🎒', pastel: '#ECFDF5' },
+  'baby':              { color: '#43A047', emoji: '🎒', pastel: '#ECFDF5' },
+  'walkers':           { color: '#F2B33D', emoji: '🚶', pastel: '#FFFBEB' },
+  'walker':            { color: '#F2B33D', emoji: '🚶', pastel: '#FFFBEB' },
+  'toys':              { color: '#E53935', emoji: '🎠', pastel: '#FEF2F2' },
+  'toy':               { color: '#E53935', emoji: '🎠', pastel: '#FEF2F2' },
+  'cradles-cribs':     { color: '#3A6373', emoji: '🛏️', pastel: '#EEF3F5' },
+  'cradles':           { color: '#3A6373', emoji: '🛏️', pastel: '#EEF3F5' },
+  'cribs':             { color: '#3A6373', emoji: '🛏️', pastel: '#EEF3F5' },
+  'electric-vehicles': { color: '#388E3C', emoji: '🚗', pastel: '#ECFDF5' },
+  'electric':          { color: '#388E3C', emoji: '🚗', pastel: '#ECFDF5' },
+  'food':              { color: '#FB8C00', emoji: '🍎', pastel: '#FFF7ED' },
+  'baby-food':         { color: '#FB8C00', emoji: '🍼', pastel: '#FFF7ED' },
+  'default':           { color: '#E53935', emoji: '🎁', pastel: '#FFF6E5' },
 };
 
 function getCategoryAccent(categoryName = '', categorySlug = '') {
@@ -162,7 +162,7 @@ export default function ProductCard({ product }) {
 
     toast.success('Added to cart! 🛒', {
       style: {
-        background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+        background: 'linear-gradient(135deg,#3A6373,#264653)',
         color: 'white',
         fontWeight: 700,
         borderRadius: 999,
@@ -184,7 +184,7 @@ export default function ProductCard({ product }) {
     } else {
       toast.success('Saved ❤️', {
         style: {
-          background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+          background: 'linear-gradient(135deg,#3A6373,#264653)',
           color: 'white',
           fontWeight: 700,
           borderRadius: 999,
@@ -197,7 +197,7 @@ export default function ProductCard({ product }) {
 
   return (
     <Link
-      href={`/products/${product.id}`}
+      href={`/products/${product.slug || product.id}`}
       className={styles.card}
       style={{
         '--accent':        accent.color,
@@ -287,7 +287,7 @@ export default function ProductCard({ product }) {
           style={
             product.stock > 0
               ? {
-                  background: `linear-gradient(135deg, ${accent.color} 0%, #7B2FBE 100%)`,
+                  background: `linear-gradient(135deg, ${accent.color} 0%, #264653 100%)`,
                 }
               : {}
           }

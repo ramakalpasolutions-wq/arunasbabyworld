@@ -13,12 +13,12 @@ export default function TrackOrderPage() {
 
   const STATUS_STEPS = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered'];
   const STATUS_COLOR = {
-    Pending: '#f59e0b',
-    Confirmed: '#3b82f6',
-    Processing: '#8b5cf6',
+    Pending: '#F2B33D',
+    Confirmed: '#1E88E5',
+    Processing: '#3A6373',
     Shipped: '#06b6d4',
-    Delivered: '#10b981',
-    Cancelled: '#ef4444',
+    Delivered: '#43A047',
+    Cancelled: '#E53935',
     Refunded: '#6b7280',
   };
 
@@ -158,7 +158,7 @@ export default function TrackOrderPage() {
       <div
         style={{
           minHeight: '80vh',
-          background: 'linear-gradient(135deg, #FFF5EE 0%, #F3E8FF 100%)',
+          background: 'linear-gradient(135deg, #FFFBF2 0%, #EEF3F5 100%)',
           padding: 'clamp(32px,6vw,80px) 20px',
         }}
       >
@@ -170,7 +170,7 @@ export default function TrackOrderPage() {
               style={{
                 fontSize: 'clamp(1.6rem,3vw,2.4rem)',
                 fontWeight: '800',
-                color: '#2D1A4A',
+                color: '#264653',
                 margin: '0 0 10px',
                 fontFamily: 'Nunito, sans-serif',
               }}
@@ -180,7 +180,7 @@ export default function TrackOrderPage() {
             <p
               style={{
                 fontSize: '1rem',
-                color: '#6B4E8A',
+                color: '#4F6B76',
                 fontWeight: '600',
                 fontFamily: 'Nunito, sans-serif',
               }}
@@ -195,7 +195,7 @@ export default function TrackOrderPage() {
               background: 'white',
               borderRadius: '24px',
               padding: 'clamp(24px,4vw,40px)',
-              boxShadow: '0 20px 60px rgba(123,47,190,0.10)',
+              boxShadow: '0 20px 60px rgba(38,70,83,0.10)',
               marginBottom: '28px',
             }}
           >
@@ -205,7 +205,7 @@ export default function TrackOrderPage() {
                   display: 'block',
                   fontSize: '0.85rem',
                   fontWeight: '800',
-                  color: '#7B2FBE',
+                  color: '#264653',
                   textTransform: 'uppercase',
                   letterSpacing: '0.8px',
                   marginBottom: '10px',
@@ -224,13 +224,13 @@ export default function TrackOrderPage() {
                     flex: 1,
                     minWidth: '200px',
                     padding: '14px 18px',
-                    border: '2px solid #EDD9FF',
+                    border: '2px solid #E8E2D2',
                     borderRadius: '14px',
                     fontSize: '0.95rem',
                     fontFamily: 'Nunito, sans-serif',
                     outline: 'none',
-                    color: '#2D1A4A',
-                    background: '#FDFAFF',
+                    color: '#264653',
+                    background: '#FFFBF2',
                   }}
                 />
                 <button
@@ -240,7 +240,7 @@ export default function TrackOrderPage() {
                     padding: '14px 28px',
                     background: loading
                       ? '#ccc'
-                      : 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                      : 'linear-gradient(135deg, #3A6373, #264653)',
                     color: 'white',
                     border: 'none',
                     borderRadius: '14px',
@@ -249,7 +249,7 @@ export default function TrackOrderPage() {
                     cursor: loading ? 'not-allowed' : 'pointer',
                     fontFamily: 'Nunito, sans-serif',
                     whiteSpace: 'nowrap',
-                    boxShadow: '0 6px 20px rgba(255,107,53,0.25)',
+                    boxShadow: '0 6px 20px rgba(229,57,53,0.25)',
                   }}
                 >
                   {loading ? '⏳ Searching...' : '🔍 Track Order'}
@@ -264,7 +264,7 @@ export default function TrackOrderPage() {
                     background: '#FEF2F2',
                     border: '1.5px solid #FCA5A5',
                     borderRadius: '10px',
-                    color: '#DC2626',
+                    color: '#C62828',
                     fontWeight: '600',
                     fontSize: '0.88rem',
                     fontFamily: 'Nunito, sans-serif',
@@ -283,7 +283,7 @@ export default function TrackOrderPage() {
                 border: '1.5px solid #BBF7D0',
                 borderRadius: '10px',
                 fontSize: '0.82rem',
-                color: '#166534',
+                color: '#1B5E20',
                 fontWeight: '600',
                 fontFamily: 'Nunito, sans-serif',
               }}
@@ -291,7 +291,7 @@ export default function TrackOrderPage() {
               💡 You can find your Order ID in your email confirmation or in your{' '}
               <Link
                 href="/profile"
-                style={{ color: '#059669', fontWeight: '800' }}
+                style={{ color: '#388E3C', fontWeight: '800' }}
               >
                 Profile → Orders
               </Link>
@@ -305,7 +305,7 @@ export default function TrackOrderPage() {
                 background: 'white',
                 borderRadius: '24px',
                 padding: 'clamp(24px,4vw,40px)',
-                boxShadow: '0 20px 60px rgba(123,47,190,0.10)',
+                boxShadow: '0 20px 60px rgba(38,70,83,0.10)',
               }}
             >
               {/* Order Header */}
@@ -318,7 +318,7 @@ export default function TrackOrderPage() {
                   gap: '12px',
                   marginBottom: '28px',
                   paddingBottom: '20px',
-                  borderBottom: '2px solid #F3E8FF',
+                  borderBottom: '2px solid #EEF3F5',
                 }}
               >
                 <div>
@@ -326,7 +326,7 @@ export default function TrackOrderPage() {
                     style={{
                       fontSize: '1.2rem',
                       fontWeight: '800',
-                      color: '#2D1A4A',
+                      color: '#264653',
                       margin: '0 0 4px',
                       fontFamily: 'Nunito, sans-serif',
                     }}
@@ -336,7 +336,7 @@ export default function TrackOrderPage() {
                   <p
                     style={{
                       fontSize: '0.85rem',
-                      color: '#9585B0',
+                      color: '#8A9BA3',
                       fontWeight: '600',
                       margin: 0,
                       fontFamily: 'Nunito, sans-serif',
@@ -380,7 +380,7 @@ export default function TrackOrderPage() {
                     style={{
                       fontSize: '1rem',
                       fontWeight: '800',
-                      color: '#2D1A4A',
+                      color: '#264653',
                       margin: '0 0 24px',
                       fontFamily: 'Nunito, sans-serif',
                     }}
@@ -429,7 +429,7 @@ export default function TrackOrderPage() {
                                   isCurrent ? '1.3rem' : '1rem',
                                 fontWeight: '800',
                                 background: isDone
-                                  ? '#10B981'
+                                  ? '#43A047'
                                   : isCurrent
                                   ? STATUS_COLOR[order.orderStatus]
                                   : '#F3F4F6',
@@ -439,7 +439,7 @@ export default function TrackOrderPage() {
                                 boxShadow: isCurrent
                                   ? `0 0 0 4px ${STATUS_COLOR[order.orderStatus]}25`
                                   : isDone
-                                  ? '0 4px 12px rgba(16,185,129,0.25)'
+                                  ? '0 4px 12px rgba(67,160,71,0.25)'
                                   : 'none',
                                 transition: 'all 0.3s ease',
                                 animation: isCurrent
@@ -459,7 +459,7 @@ export default function TrackOrderPage() {
                                   width: '2px',
                                   height: '36px',
                                   background: isDone
-                                    ? '#10B981'
+                                    ? '#43A047'
                                     : '#E5E7EB',
                                   marginTop: '4px',
                                   marginBottom: '4px',
@@ -490,7 +490,7 @@ export default function TrackOrderPage() {
                                 color: isCurrent
                                   ? STATUS_COLOR[order.orderStatus]
                                   : isDone
-                                  ? '#10B981'
+                                  ? '#43A047'
                                   : '#9CA3AF',
                                 margin: '0 0 2px',
                                 fontFamily: 'Nunito, sans-serif',
@@ -553,7 +553,7 @@ export default function TrackOrderPage() {
                     <strong
                       style={{
                         fontSize: '1rem',
-                        color: '#DC2626',
+                        color: '#C62828',
                         fontFamily: 'Nunito, sans-serif',
                       }}
                     >
@@ -579,7 +579,7 @@ export default function TrackOrderPage() {
                   style={{
                     padding: '16px 20px',
                     background:
-                      'linear-gradient(135deg, #E0F2FE, #EDE9FE)',
+                      'linear-gradient(135deg, #E0F2FE, #EEF3F5)',
                     border: '1.5px solid #7DD3FC',
                     borderRadius: '16px',
                     marginBottom: '20px',
@@ -643,7 +643,7 @@ export default function TrackOrderPage() {
                   style={{
                     fontSize: '1rem',
                     fontWeight: '800',
-                    color: '#2D1A4A',
+                    color: '#264653',
                     margin: '0 0 14px',
                     fontFamily: 'Nunito, sans-serif',
                   }}
@@ -667,7 +667,7 @@ export default function TrackOrderPage() {
                         padding: '12px',
                         background: '#FAFAFA',
                         borderRadius: '12px',
-                        border: '1.5px solid #F3E8FF',
+                        border: '1.5px solid #EEF3F5',
                       }}
                     >
                       <img
@@ -686,7 +686,7 @@ export default function TrackOrderPage() {
                           style={{
                             fontSize: '0.90rem',
                             fontWeight: '700',
-                            color: '#2D1A4A',
+                            color: '#264653',
                             margin: '0 0 3px',
                             overflow: 'hidden',
                             textOverflow: 'ellipsis',
@@ -699,7 +699,7 @@ export default function TrackOrderPage() {
                         <p
                           style={{
                             fontSize: '0.78rem',
-                            color: '#9585B0',
+                            color: '#8A9BA3',
                             margin: 0,
                             fontWeight: '600',
                             fontFamily: 'Nunito, sans-serif',
@@ -711,7 +711,7 @@ export default function TrackOrderPage() {
                       </div>
                       <strong
                         style={{
-                          color: '#FF6B35',
+                          color: '#E53935',
                           fontFamily: 'Nunito, sans-serif',
                           whiteSpace: 'nowrap',
                         }}
@@ -730,9 +730,9 @@ export default function TrackOrderPage() {
               <div
                 style={{
                   padding: '16px 20px',
-                  background: '#F8F4FF',
+                  background: '#FFFBF2',
                   borderRadius: '16px',
-                  border: '1.5px solid #EDD9FF',
+                  border: '1.5px solid #E8E2D2',
                 }}
               >
                 <div
@@ -745,7 +745,7 @@ export default function TrackOrderPage() {
                   <span
                     style={{
                       fontSize: '0.88rem',
-                      color: '#6B4E8A',
+                      color: '#4F6B76',
                       fontFamily: 'Nunito, sans-serif',
                       fontWeight: '600',
                     }}
@@ -755,7 +755,7 @@ export default function TrackOrderPage() {
                   <span
                     style={{
                       fontSize: '0.88rem',
-                      color: '#2D1A4A',
+                      color: '#264653',
                       fontFamily: 'Nunito, sans-serif',
                       fontWeight: '700',
                     }}
@@ -774,7 +774,7 @@ export default function TrackOrderPage() {
                   <span
                     style={{
                       fontSize: '0.88rem',
-                      color: '#6B4E8A',
+                      color: '#4F6B76',
                       fontFamily: 'Nunito, sans-serif',
                       fontWeight: '600',
                     }}
@@ -786,8 +786,8 @@ export default function TrackOrderPage() {
                       fontSize: '0.88rem',
                       color:
                         order.shippingPrice === 0
-                          ? '#10B981'
-                          : '#2D1A4A',
+                          ? '#43A047'
+                          : '#264653',
                       fontFamily: 'Nunito, sans-serif',
                       fontWeight: '700',
                     }}
@@ -808,7 +808,7 @@ export default function TrackOrderPage() {
                     <span
                       style={{
                         fontSize: '0.88rem',
-                        color: '#059669',
+                        color: '#388E3C',
                         fontFamily: 'Nunito, sans-serif',
                         fontWeight: '600',
                       }}
@@ -818,7 +818,7 @@ export default function TrackOrderPage() {
                     <span
                       style={{
                         fontSize: '0.88rem',
-                        color: '#059669',
+                        color: '#388E3C',
                         fontFamily: 'Nunito, sans-serif',
                         fontWeight: '700',
                       }}
@@ -833,7 +833,7 @@ export default function TrackOrderPage() {
                     display: 'flex',
                     justifyContent: 'space-between',
                     paddingTop: '10px',
-                    borderTop: '2px solid #EDD9FF',
+                    borderTop: '2px solid #E8E2D2',
                     marginTop: '4px',
                   }}
                 >
@@ -841,7 +841,7 @@ export default function TrackOrderPage() {
                     style={{
                       fontSize: '1rem',
                       fontWeight: '800',
-                      color: '#2D1A4A',
+                      color: '#264653',
                       fontFamily: 'Nunito, sans-serif',
                     }}
                   >
@@ -850,7 +850,7 @@ export default function TrackOrderPage() {
                   <strong
                     style={{
                       fontSize: '1.1rem',
-                      color: '#FF6B35',
+                      color: '#E53935',
                       fontFamily: 'Nunito, sans-serif',
                     }}
                   >
@@ -875,7 +875,7 @@ export default function TrackOrderPage() {
                     style={{
                       fontSize: '0.88rem',
                       fontWeight: '800',
-                      color: '#166534',
+                      color: '#1B5E20',
                       textTransform: 'uppercase',
                       letterSpacing: '0.8px',
                       margin: '0 0 10px',
@@ -888,7 +888,7 @@ export default function TrackOrderPage() {
                     style={{
                       margin: '0 0 3px',
                       fontWeight: '700',
-                      color: '#2D1A4A',
+                      color: '#264653',
                       fontFamily: 'Nunito, sans-serif',
                     }}
                   >
@@ -934,16 +934,16 @@ export default function TrackOrderPage() {
                   style={{
                     marginTop: '24px',
                     padding: '18px 20px',
-                    background: 'linear-gradient(135deg, #FFF5EE, #F3E8FF)',
+                    background: 'linear-gradient(135deg, #FFFBF2, #EEF3F5)',
                     borderRadius: '16px',
-                    border: '2px solid #EDD9FF',
+                    border: '2px solid #E8E2D2',
                   }}
                 >
                   <h3
                     style={{
                       fontSize: '1rem',
                       fontWeight: '800',
-                      color: '#2D1A4A',
+                      color: '#264653',
                       margin: '0 0 12px',
                       fontFamily: 'Nunito, sans-serif',
                     }}
@@ -953,7 +953,7 @@ export default function TrackOrderPage() {
                   <p
                     style={{
                       fontSize: '0.82rem',
-                      color: '#9585B0',
+                      color: '#8A9BA3',
                       margin: '0 0 14px',
                       fontWeight: '600',
                       fontFamily: 'Nunito, sans-serif',
@@ -970,7 +970,7 @@ export default function TrackOrderPage() {
                         border: '1.5px solid #BBF7D0',
                         borderRadius: '10px',
                         fontSize: '0.85rem',
-                        color: '#166534',
+                        color: '#1B5E20',
                         fontWeight: '600',
                         fontFamily: 'Nunito, sans-serif',
                       }}
@@ -985,7 +985,7 @@ export default function TrackOrderPage() {
                           style={{
                             padding: '12px 28px',
                             background:
-                              'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                              'linear-gradient(135deg, #3A6373, #264653)',
                             color: 'white',
                             border: 'none',
                             borderRadius: '12px',
@@ -994,7 +994,7 @@ export default function TrackOrderPage() {
                             cursor: 'pointer',
                             fontFamily: 'Nunito, sans-serif',
                             boxShadow:
-                              '0 6px 20px rgba(255,107,53,0.25)',
+                              '0 6px 20px rgba(229,57,53,0.25)',
                           }}
                         >
                           📦 Raise Return / Refund
@@ -1015,7 +1015,7 @@ export default function TrackOrderPage() {
                                 background: '#FEF2F2',
                                 border: '1.5px solid #FCA5A5',
                                 borderRadius: '10px',
-                                color: '#DC2626',
+                                color: '#C62828',
                                 fontSize: '0.85rem',
                                 fontWeight: '600',
                                 fontFamily: 'Nunito, sans-serif',
@@ -1030,7 +1030,7 @@ export default function TrackOrderPage() {
                               style={{
                                 fontSize: '0.80rem',
                                 fontWeight: '800',
-                                color: '#2D1A4A',
+                                color: '#264653',
                                 fontFamily: 'Nunito, sans-serif',
                                 display: 'block',
                                 marginBottom: '6px',
@@ -1050,7 +1050,7 @@ export default function TrackOrderPage() {
                               style={{
                                 width: '100%',
                                 padding: '10px',
-                                border: '2px solid #EDD9FF',
+                                border: '2px solid #E8E2D2',
                                 borderRadius: '10px',
                                 fontSize: '0.90rem',
                                 fontFamily: 'Nunito, sans-serif',
@@ -1063,7 +1063,7 @@ export default function TrackOrderPage() {
                               style={{
                                 fontSize: '0.80rem',
                                 fontWeight: '800',
-                                color: '#2D1A4A',
+                                color: '#264653',
                                 fontFamily: 'Nunito, sans-serif',
                                 display: 'block',
                                 marginBottom: '6px',
@@ -1081,7 +1081,7 @@ export default function TrackOrderPage() {
                               }
                               style={{
                                 padding: '10px 12px',
-                                border: '2px solid #EDD9FF',
+                                border: '2px solid #E8E2D2',
                                 borderRadius: '10px',
                                 fontSize: '0.90rem',
                                 fontFamily: 'Nunito, sans-serif',
@@ -1106,7 +1106,7 @@ export default function TrackOrderPage() {
                                   style={{
                                     fontSize: '0.80rem',
                                     fontWeight: '800',
-                                    color: '#2D1A4A',
+                                    color: '#264653',
                                     fontFamily: 'Nunito, sans-serif',
                                     display: 'block',
                                     marginBottom: '6px',
@@ -1130,7 +1130,7 @@ export default function TrackOrderPage() {
                                   style={{
                                     width: '100%',
                                     padding: '10px',
-                                    border: '2px solid #EDD9FF',
+                                    border: '2px solid #E8E2D2',
                                     borderRadius: '10px',
                                     fontSize: '0.90rem',
                                     fontFamily: 'Nunito, sans-serif',
@@ -1143,7 +1143,7 @@ export default function TrackOrderPage() {
                                   style={{
                                     fontSize: '0.80rem',
                                     fontWeight: '800',
-                                    color: '#2D1A4A',
+                                    color: '#264653',
                                     fontFamily: 'Nunito, sans-serif',
                                     display: 'block',
                                     marginBottom: '6px',
@@ -1166,7 +1166,7 @@ export default function TrackOrderPage() {
                                   style={{
                                     width: '100%',
                                     padding: '10px',
-                                    border: '2px solid #EDD9FF',
+                                    border: '2px solid #E8E2D2',
                                     borderRadius: '10px',
                                     fontSize: '0.90rem',
                                     fontFamily: 'Nunito, sans-serif',
@@ -1179,7 +1179,7 @@ export default function TrackOrderPage() {
                                   style={{
                                     fontSize: '0.80rem',
                                     fontWeight: '800',
-                                    color: '#2D1A4A',
+                                    color: '#264653',
                                     fontFamily: 'Nunito, sans-serif',
                                     display: 'block',
                                     marginBottom: '6px',
@@ -1202,7 +1202,7 @@ export default function TrackOrderPage() {
                                   style={{
                                     width: '100%',
                                     padding: '10px',
-                                    border: '2px solid #EDD9FF',
+                                    border: '2px solid #E8E2D2',
                                     borderRadius: '10px',
                                     fontSize: '0.90rem',
                                     fontFamily: 'Nunito, sans-serif',
@@ -1215,7 +1215,7 @@ export default function TrackOrderPage() {
                                   style={{
                                     fontSize: '0.80rem',
                                     fontWeight: '800',
-                                    color: '#2D1A4A',
+                                    color: '#264653',
                                     fontFamily: 'Nunito, sans-serif',
                                     display: 'block',
                                     marginBottom: '6px',
@@ -1238,7 +1238,7 @@ export default function TrackOrderPage() {
                                   style={{
                                     width: '100%',
                                     padding: '10px',
-                                    border: '2px solid #EDD9FF',
+                                    border: '2px solid #E8E2D2',
                                     borderRadius: '10px',
                                     fontSize: '0.90rem',
                                     fontFamily: 'Nunito, sans-serif',
@@ -1254,7 +1254,7 @@ export default function TrackOrderPage() {
                                 style={{
                                   fontSize: '0.80rem',
                                   fontWeight: '800',
-                                  color: '#2D1A4A',
+                                  color: '#264653',
                                   fontFamily: 'Nunito, sans-serif',
                                   display: 'block',
                                   marginBottom: '6px',
@@ -1275,7 +1275,7 @@ export default function TrackOrderPage() {
                                 style={{
                                   width: '100%',
                                   padding: '10px',
-                                  border: '2px solid #EDD9FF',
+                                  border: '2px solid #E8E2D2',
                                   borderRadius: '10px',
                                   fontSize: '0.90rem',
                                   fontFamily: 'Nunito, sans-serif',
@@ -1298,8 +1298,8 @@ export default function TrackOrderPage() {
                                 flex: 1,
                                 padding: '10px 16px',
                                 background: 'white',
-                                color: '#7B2FBE',
-                                border: '2px solid #EDD9FF',
+                                color: '#264653',
+                                border: '2px solid #E8E2D2',
                                 borderRadius: '10px',
                                 fontWeight: '800',
                                 fontSize: '0.90rem',
@@ -1317,7 +1317,7 @@ export default function TrackOrderPage() {
                                 padding: '10px 16px',
                                 background: returnLoading
                                   ? '#ccc'
-                                  : 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                                  : 'linear-gradient(135deg, #3A6373, #264653)',
                                 color: 'white',
                                 border: 'none',
                                 borderRadius: '10px',
@@ -1360,7 +1360,7 @@ export default function TrackOrderPage() {
                     gap: '6px',
                     padding: '12px 20px',
                     background:
-                      'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                      'linear-gradient(135deg, #3A6373, #264653)',
                     color: 'white',
                     borderRadius: '12px',
                     textDecoration: 'none',
@@ -1382,8 +1382,8 @@ export default function TrackOrderPage() {
                     gap: '6px',
                     padding: '12px 20px',
                     background: 'white',
-                    color: '#7B2FBE',
-                    border: '2px solid #EDD9FF',
+                    color: '#264653',
+                    border: '2px solid #E8E2D2',
                     borderRadius: '12px',
                     textDecoration: 'none',
                     fontWeight: '800',
@@ -1406,12 +1406,12 @@ export default function TrackOrderPage() {
                 padding: '24px',
                 background: 'white',
                 borderRadius: '20px',
-                boxShadow: '0 10px 40px rgba(123,47,190,0.08)',
+                boxShadow: '0 10px 40px rgba(38,70,83,0.08)',
               }}
             >
               <p
                 style={{
-                  color: '#9585B0',
+                  color: '#8A9BA3',
                   fontWeight: '600',
                   marginBottom: '16px',
                   fontFamily: 'Nunito, sans-serif',
@@ -1427,7 +1427,7 @@ export default function TrackOrderPage() {
                   gap: '8px',
                   padding: '12px 28px',
                   background:
-                    'linear-gradient(135deg, #7B2FBE, #9B4FDE)',
+                    'linear-gradient(135deg, #264653, #3A6373)',
                   color: 'white',
                   borderRadius: '12px',
                   textDecoration: 'none',
@@ -1445,8 +1445,8 @@ export default function TrackOrderPage() {
 
       <style>{`
         @keyframes pulse {
-          0%, 100% { box-shadow: 0 0 0 4px rgba(255,107,53,0.15); }
-          50%       { box-shadow: 0 0 0 8px rgba(255,107,53,0.08); }
+          0%, 100% { box-shadow: 0 0 0 4px rgba(229,57,53,0.15); }
+          50%       { box-shadow: 0 0 0 8px rgba(229,57,53,0.08); }
         }
       `}</style>
     </MainLayout>

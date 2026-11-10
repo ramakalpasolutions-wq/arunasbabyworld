@@ -7,7 +7,7 @@ import toast from 'react-hot-toast';
 const STATUS_CONFIG = {
   pending: {
     label: 'Under Review',
-    color: '#F59E0B',
+    color: '#F2B33D',
     bg:    '#FEF3C7',
     border:'#FDE68A',
     icon:  '🟡',
@@ -15,7 +15,7 @@ const STATUS_CONFIG = {
   },
   processing: {
     label: 'Processing',
-    color: '#3B82F6',
+    color: '#1E88E5',
     bg:    '#DBEAFE',
     border:'#BFDBFE',
     icon:  '⚙️',
@@ -23,7 +23,7 @@ const STATUS_CONFIG = {
   },
   completed: {
     label: 'Completed',
-    color: '#10B981',
+    color: '#43A047',
     bg:    '#D1FAE5',
     border:'#A7F3D0',
     icon:  '✅',
@@ -31,7 +31,7 @@ const STATUS_CONFIG = {
   },
   failed: {
     label: 'Failed',
-    color: '#EF4444',
+    color: '#E53935',
     bg:    '#FEE2E2',
     border:'#FCA5A5',
     icon:  '❌',
@@ -97,10 +97,10 @@ export default function RefundsHistoryClient() {
       }}>
         <div style={{
           width: '44px', height: '44px',
-          border: '4px solid #F3E8FF', borderTop: '4px solid #7B2FBE',
+          border: '4px solid #EEF3F5', borderTop: '4px solid #264653',
           borderRadius: '50%', animation: 'spin 0.8s linear infinite',
         }} />
-        <p style={{ color: '#9585B0', fontFamily: 'Nunito, sans-serif', fontWeight: '600' }}>
+        <p style={{ color: '#8A9BA3', fontFamily: 'Nunito, sans-serif', fontWeight: '600' }}>
           Loading your refunds...
         </p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -133,28 +133,28 @@ export default function RefundsHistoryClient() {
         <div>
           <Link href="/profile?tab=orders" style={{
             display: 'inline-flex', alignItems: 'center', gap: '6px',
-            color: '#7B2FBE', textDecoration: 'none', fontWeight: '700',
+            color: '#264653', textDecoration: 'none', fontWeight: '700',
             fontSize: '0.86rem', marginBottom: '12px',
           }}>
             ← Back to Orders
           </Link>
           <h1 style={{
             fontSize: 'clamp(1.6rem,2.8vw,2.2rem)',
-            fontWeight: '800', color: '#2D1A4A', margin: '0 0 6px',
+            fontWeight: '800', color: '#264653', margin: '0 0 6px',
           }}>
             💰 My Refunds
           </h1>
-          <p style={{ color: '#9585B0', margin: 0, fontWeight: '600', fontSize: '0.92rem' }}>
+          <p style={{ color: '#8A9BA3', margin: 0, fontWeight: '600', fontSize: '0.92rem' }}>
             Track all your refund requests in one place
           </p>
         </div>
 
         <Link href="/products" style={{
           padding: '12px 22px',
-          background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+          background: 'linear-gradient(135deg,#3A6373,#264653)',
           color: 'white', borderRadius: '12px',
           textDecoration: 'none', fontWeight: '800', fontSize: '0.9rem',
-          boxShadow: '0 6px 18px rgba(255,107,53,0.22)',
+          boxShadow: '0 6px 18px rgba(229,57,53,0.22)',
         }}>
           🛍️ Continue Shopping
         </Link>
@@ -181,22 +181,22 @@ export default function RefundsHistoryClient() {
               style={{
                 display: 'inline-flex', alignItems: 'center', gap: '6px',
                 padding: '9px 18px',
-                background: active ? 'linear-gradient(135deg,#FF6B35,#7B2FBE)' : 'white',
-                color: active ? 'white' : '#6B4E8A',
-                border: `1.5px solid ${active ? 'transparent' : '#EDD9FF'}`,
+                background: active ? 'linear-gradient(135deg,#3A6373,#264653)' : 'white',
+                color: active ? 'white' : '#4F6B76',
+                border: `1.5px solid ${active ? 'transparent' : '#E8E2D2'}`,
                 borderRadius: '999px',
                 fontWeight: '800', fontSize: '0.82rem',
                 cursor: 'pointer', fontFamily: 'Nunito, sans-serif',
                 whiteSpace: 'nowrap',
-                boxShadow: active ? '0 6px 16px rgba(123,47,190,0.22)' : 'none',
+                boxShadow: active ? '0 6px 16px rgba(38,70,83,0.22)' : 'none',
                 transition: 'all 0.2s',
               }}
             >
               <span>{chip.emoji}</span>
               <span>{chip.label}</span>
               <span style={{
-                background: active ? 'rgba(255,255,255,0.25)' : '#F3E8FF',
-                color: active ? 'white' : '#7B2FBE',
+                background: active ? 'rgba(255,255,255,0.25)' : '#EEF3F5',
+                color: active ? 'white' : '#264653',
                 padding: '2px 8px', borderRadius: '999px',
                 fontSize: '0.72rem', fontWeight: '800',
               }}>
@@ -212,20 +212,20 @@ export default function RefundsHistoryClient() {
         <div style={{
           textAlign: 'center', padding: '60px 20px',
           background: 'white', borderRadius: '24px',
-          border: '1.5px dashed #EDD9FF',
+          border: '1.5px dashed #E8E2D2',
         }}>
           <div style={{ fontSize: '4rem', marginBottom: '16px' }}>💰</div>
-          <h3 style={{ color: '#2D1A4A', fontSize: '1.3rem', margin: '0 0 8px' }}>
+          <h3 style={{ color: '#264653', fontSize: '1.3rem', margin: '0 0 8px' }}>
             {filter === 'all' ? 'No Refunds Yet' : `No ${filter} refunds`}
           </h3>
-          <p style={{ color: '#9585B0', margin: '0 0 24px', fontWeight: '600' }}>
+          <p style={{ color: '#8A9BA3', margin: '0 0 24px', fontWeight: '600' }}>
             {filter === 'all'
               ? "You haven't requested any refunds yet."
               : 'Try a different filter to see your refunds.'}
           </p>
           <Link href="/profile?tab=orders" style={{
             display: 'inline-block', padding: '12px 28px',
-            background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+            background: 'linear-gradient(135deg,#3A6373,#264653)',
             color: 'white', borderRadius: '12px', textDecoration: 'none',
             fontWeight: '800', fontSize: '0.9rem',
           }}>
@@ -258,7 +258,7 @@ function RefundCard({ order, status }) {
       background: 'white',
       borderRadius: '20px',
       border: `1.5px solid ${cfg.border}`,
-      boxShadow: '0 4px 20px rgba(123,47,190,0.06)',
+      boxShadow: '0 4px 20px rgba(38,70,83,0.06)',
       overflow: 'hidden',
     }}>
       {/* Top strip */}
@@ -289,20 +289,20 @@ function RefundCard({ order, status }) {
         }}>
           <div style={{ minWidth: 0, flex: 1 }}>
             <p style={{
-              fontSize: '0.74rem', color: '#9585B0',
+              fontSize: '0.74rem', color: '#8A9BA3',
               margin: '0 0 4px', fontWeight: '700',
               textTransform: 'uppercase', letterSpacing: '0.5px',
             }}>
               Order ID
             </p>
             <p style={{
-              fontSize: '0.95rem', color: '#2D1A4A',
+              fontSize: '0.95rem', color: '#264653',
               margin: 0, fontWeight: '800', fontFamily: 'monospace',
             }}>
               #{order.id?.slice(-12).toUpperCase()}
             </p>
             <p style={{
-              fontSize: '0.78rem', color: '#9585B0',
+              fontSize: '0.78rem', color: '#8A9BA3',
               margin: '6px 0 0', fontWeight: '600',
             }}>
               Ordered: {new Date(order.createdAt).toLocaleDateString('en-IN', {
@@ -313,14 +313,14 @@ function RefundCard({ order, status }) {
 
           <div style={{ textAlign: 'right' }}>
             <p style={{
-              fontSize: '0.74rem', color: '#9585B0',
+              fontSize: '0.74rem', color: '#8A9BA3',
               margin: '0 0 4px', fontWeight: '700',
               textTransform: 'uppercase', letterSpacing: '0.5px',
             }}>
               Refund Amount
             </p>
             <p style={{
-              fontSize: '1.4rem', color: '#10B981',
+              fontSize: '1.4rem', color: '#43A047',
               margin: 0, fontWeight: '900', lineHeight: 1,
             }}>
               ₹{refundAmount?.toLocaleString('en-IN')}
@@ -353,7 +353,7 @@ function RefundCard({ order, status }) {
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{
-                fontSize: '0.82rem', color: '#2D1A4A',
+                fontSize: '0.82rem', color: '#264653',
                 margin: 0, fontWeight: '700',
                 overflow: 'hidden', textOverflow: 'ellipsis',
                 whiteSpace: 'nowrap',
@@ -361,7 +361,7 @@ function RefundCard({ order, status }) {
                 {order.orderItems[0]?.name}
                 {order.orderItems.length > 1 && ` +${order.orderItems.length - 1} more`}
               </p>
-              <p style={{ fontSize: '0.74rem', color: '#9585B0', margin: '2px 0 0', fontWeight: '600' }}>
+              <p style={{ fontSize: '0.74rem', color: '#8A9BA3', margin: '2px 0 0', fontWeight: '600' }}>
                 {order.orderItems.length} item(s)
               </p>
             </div>
@@ -382,13 +382,13 @@ function RefundCard({ order, status }) {
             <span style={{ fontSize: '1.1rem' }}>{isUPI ? '📱' : '🏦'}</span>
             <div style={{ flex: 1, minWidth: 0 }}>
               <p style={{
-                fontSize: '0.76rem', color: isUPI ? '#065F46' : '#1E40AF',
+                fontSize: '0.76rem', color: isUPI ? '#1B5E20' : '#1E40AF',
                 margin: 0, fontWeight: '800',
               }}>
                 {isUPI ? 'UPI Refund' : 'Bank Transfer Refund'}
               </p>
               <p style={{
-                fontSize: '0.78rem', color: isUPI ? '#047857' : '#1E40AF',
+                fontSize: '0.78rem', color: isUPI ? '#2E7D32' : '#1E40AF',
                 margin: '2px 0 0', fontWeight: '600',
                 overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
               }}>
@@ -412,7 +412,7 @@ function RefundCard({ order, status }) {
             display: 'flex', alignItems: 'center', gap: '8px',
           }}>
             <span>⚡</span>
-            <span style={{ fontSize: '0.78rem', color: '#065F46', fontWeight: '700' }}>
+            <span style={{ fontSize: '0.78rem', color: '#1B5E20', fontWeight: '700' }}>
               Instant Razorpay auto-refund — {status === 'completed' ? 'Completed' : '2–3 hours'}
             </span>
           </div>
@@ -421,10 +421,10 @@ function RefundCard({ order, status }) {
         {/* Reason */}
         {order.returnRequest?.reason && (
           <p style={{
-            fontSize: '0.82rem', color: '#6B4E8A',
+            fontSize: '0.82rem', color: '#4F6B76',
             margin: '0 0 14px', fontWeight: '600',
           }}>
-            <strong style={{ color: '#7B2FBE' }}>Reason:</strong> {order.returnRequest.reason}
+            <strong style={{ color: '#264653' }}>Reason:</strong> {order.returnRequest.reason}
           </p>
         )}
 
@@ -433,7 +433,7 @@ function RefundCard({ order, status }) {
           <Link href={`/orders/${order.id}`} style={{
             flex: 1,
             padding: '10px 16px',
-            background: 'linear-gradient(135deg, #7B2FBE, #9333EA)',
+            background: 'linear-gradient(135deg, #264653, #264653)',
             color: 'white',
             borderRadius: '10px',
             fontSize: '0.84rem',
@@ -449,7 +449,7 @@ function RefundCard({ order, status }) {
             <a href="mailto:care@Arunas Baby World.in" style={{
               padding: '10px 16px',
               background: 'white',
-              color: '#EF4444',
+              color: '#E53935',
               border: '1.5px solid #FCA5A5',
               borderRadius: '10px',
               fontSize: '0.84rem',

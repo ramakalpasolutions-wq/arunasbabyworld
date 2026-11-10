@@ -10,9 +10,9 @@
   --border:    #E9E9ED;
   --white:     #FFFFFF;
   --bg:        #F5F5F6;
-  --pink:      #FF3F6C;
-  --green:     #03A685;
-  --orange:    #FF905A;
+  --pink:      #E53935;
+  --green:     #43A047;
+  --orange:    #EF5350;
   --sidebar-w: 240px;
 }
 
@@ -340,7 +340,7 @@
 .mobileCatPillActive .mobileCatCount { background: rgba(255,255,255,0.25); color: white; }
 .activeCatBanner {
   display: flex; align-items: center; justify-content: space-between;
-  padding: 5px 14px; background: #FFF0F5; border-top: 1px solid #FFD6E5;
+  padding: 5px 14px; background: #FFF5F4; border-top: 1px solid #FDE7E6;
   font-size: 0.76rem; font-weight: 700; color: var(--text);
 }
 .activeCatBanner strong { color: var(--pink); }
@@ -476,7 +476,7 @@
 .catBtnActive {
   color: var(--pink) !important;
   font-weight: 800 !important;
-  background: #FFF0F5 !important;
+  background: #FFF5F4 !important;
 }
 
 .catIcon { font-size: 1rem; flex-shrink: 0; width: 22px; text-align: center; }
@@ -508,8 +508,8 @@
 .priceInput:focus { border-color: var(--text-mid); }
 .priceError {
   font-size: 0.72rem; color: var(--pink); font-weight: 700;
-  margin-bottom: 8px; padding: 6px 8px; background: #FFF0F5;
-  border-radius: 4px; border: 1px solid #FFD6E5;
+  margin-bottom: 8px; padding: 6px 8px; background: #FFF5F4;
+  border-radius: 4px; border: 1px solid #FDE7E6;
 }
 .applyPriceBtn {
   width: 100%; padding: 9px;
@@ -519,8 +519,8 @@
 }
 .appliedPrice {
   display: flex; align-items: center; justify-content: space-between;
-  gap: 8px; padding: 7px 10px; background: #FFF0F5;
-  border-radius: 4px; border: 1px solid #FFD6E5;
+  gap: 8px; padding: 7px 10px; background: #FFF5F4;
+  border-radius: 4px; border: 1px solid #FDE7E6;
   font-size: 0.78rem; font-weight: 700; color: var(--text);
 }
 .clearPriceBtn {

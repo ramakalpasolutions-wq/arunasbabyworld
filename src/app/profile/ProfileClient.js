@@ -9,14 +9,14 @@ import styles from './profile.module.css';
 const STATUS_STEPS = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered'];
 
 const STATUS_COLOR = {
-  Pending:          '#f59e0b',
-  Confirmed:        '#3b82f6',
-  Processing:       '#8b5cf6',
+  Pending:          '#F2B33D',
+  Confirmed:        '#1E88E5',
+  Processing:       '#3A6373',
   Shipped:          '#06b6d4',
-  Delivered:        '#10b981',
-  Cancelled:        '#ef4444',
-  Refunded:         '#10b981',
-  Return_Requested: '#f97316',
+  Delivered:        '#43A047',
+  Cancelled:        '#E53935',
+  Refunded:         '#43A047',
+  Return_Requested: '#FB8C00',
 };
 
 const STATUS_EMOJI = {
@@ -86,7 +86,7 @@ function OrderTrackingCard({ order }) {
       background: 'white',
       borderRadius: '20px',
       border: `1.5px solid ${color}25`,
-      boxShadow: '0 4px 20px rgba(123,47,190,0.07)',
+      boxShadow: '0 4px 20px rgba(38,70,83,0.07)',
       overflow: 'hidden',
       fontFamily: 'Nunito, sans-serif',
     }}>
@@ -105,7 +105,7 @@ function OrderTrackingCard({ order }) {
         <div>
           {/* Order ID + Status badge */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '0.95rem', fontWeight: '800', color: '#2D1A4A' }}>
+            <span style={{ fontSize: '0.95rem', fontWeight: '800', color: '#264653' }}>
               #{order.id?.slice(-10).toUpperCase()}
             </span>
             <span style={{
@@ -131,7 +131,7 @@ function OrderTrackingCard({ order }) {
           </div>
 
           {/* Placed date */}
-          <p style={{ fontSize: '0.78rem', color: '#9585B0', margin: '4px 0 0', fontWeight: '600' }}>
+          <p style={{ fontSize: '0.78rem', color: '#8A9BA3', margin: '4px 0 0', fontWeight: '600' }}>
             📦 Ordered: {new Date(order.createdAt).toLocaleDateString('en-IN', {
               day: 'numeric', month: 'short', year: 'numeric',
             })}
@@ -139,14 +139,14 @@ function OrderTrackingCard({ order }) {
 
           {/* Expected delivery — show for active orders */}
           {!isCancelled && !isDelivered && (
-            <p style={{ fontSize: '0.78rem', color: '#7B2FBE', margin: '2px 0 0', fontWeight: '700' }}>
+            <p style={{ fontSize: '0.78rem', color: '#264653', margin: '2px 0 0', fontWeight: '700' }}>
               🗓️ Expected: {expected.min} – {expected.max}
             </p>
           )}
 
           {/* Actual delivery date — show when delivered */}
           {isDelivered && order.deliveredAt && (
-            <p style={{ fontSize: '0.78rem', color: '#10B981', margin: '2px 0 0', fontWeight: '700' }}>
+            <p style={{ fontSize: '0.78rem', color: '#43A047', margin: '2px 0 0', fontWeight: '700' }}>
               🎉 Delivered: {new Date(order.deliveredAt).toLocaleDateString('en-IN', {
                 day: 'numeric', month: 'short', year: 'numeric',
               })}
@@ -155,23 +155,23 @@ function OrderTrackingCard({ order }) {
 
           {/* If delivered but no deliveredAt */}
           {isDelivered && !order.deliveredAt && (
-            <p style={{ fontSize: '0.78rem', color: '#10B981', margin: '2px 0 0', fontWeight: '700' }}>
+            <p style={{ fontSize: '0.78rem', color: '#43A047', margin: '2px 0 0', fontWeight: '700' }}>
               🎉 Delivered successfully
             </p>
           )}
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <strong style={{ color: '#FF6B35', fontSize: '1rem' }}>
+          <strong style={{ color: '#E53935', fontSize: '1rem' }}>
             ₹{order.totalPrice?.toLocaleString('en-IN')}
           </strong>
           <button
             onClick={() => setExpanded(prev => !prev)}
             style={{
               padding: '7px 14px',
-              background: expanded ? `${color}15` : '#F3E8FF',
-              color: expanded ? color : '#7B2FBE',
-              border: `1.5px solid ${expanded ? color + '40' : '#EDD9FF'}`,
+              background: expanded ? `${color}15` : '#EEF3F5',
+              color: expanded ? color : '#264653',
+              border: `1.5px solid ${expanded ? color + '40' : '#E8E2D2'}`,
               borderRadius: '10px',
               fontWeight: '700',
               fontSize: '0.80rem',
@@ -193,8 +193,8 @@ function OrderTrackingCard({ order }) {
           padding: '10px 14px',
           background: order.exchangeStatus === 'completed'
             ? 'linear-gradient(135deg, #ECFDF5, #D1FAE5)'
-            : 'linear-gradient(135deg, #FFF3E8, #FFE4CC)',
-          border: `1.5px solid ${order.exchangeStatus === 'completed' ? '#10B981' : '#FF6B35'}`,
+            : 'linear-gradient(135deg, #FFF6E5, #FDEBC8)',
+          border: `1.5px solid ${order.exchangeStatus === 'completed' ? '#43A047' : '#E53935'}`,
           borderRadius: '10px',
           display: 'flex',
           alignItems: 'center',
@@ -209,7 +209,7 @@ function OrderTrackingCard({ order }) {
               margin: 0,
               fontSize: '0.84rem',
               fontWeight: '800',
-              color: order.exchangeStatus === 'completed' ? '#065F46' : '#9A3412',
+              color: order.exchangeStatus === 'completed' ? '#1B5E20' : '#9A3412',
             }}>
               {order.exchangeStatus === 'completed'
                 ? '✅ Exchange Completed!'
@@ -218,7 +218,7 @@ function OrderTrackingCard({ order }) {
             <p style={{
               margin: '2px 0 0',
               fontSize: '0.74rem',
-              color: order.exchangeStatus === 'completed' ? '#047857' : '#7C2D12',
+              color: order.exchangeStatus === 'completed' ? '#2E7D32' : '#7C2D12',
               fontWeight: '600',
             }}>
               {order.exchangeStatus === 'completed'
@@ -229,8 +229,8 @@ function OrderTrackingCard({ order }) {
           <Link href="/orders/exchanges" style={{
             padding: '6px 14px',
             background: 'white',
-            color: order.exchangeStatus === 'completed' ? '#10B981' : '#FF6B35',
-            border: `1.5px solid ${order.exchangeStatus === 'completed' ? '#10B981' : '#FF6B35'}`,
+            color: order.exchangeStatus === 'completed' ? '#43A047' : '#E53935',
+            border: `1.5px solid ${order.exchangeStatus === 'completed' ? '#43A047' : '#E53935'}`,
             borderRadius: '8px',
             textDecoration: 'none',
             fontWeight: '800',
@@ -247,19 +247,19 @@ function OrderTrackingCard({ order }) {
         <div style={{ display: 'flex', gap: '6px' }}>
           {order.orderItems?.slice(0, 3).map((item, i) => (
             <img key={i} src={item.image || 'https://via.placeholder.com/40'} alt={item.name}
-              style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '8px', border: '1.5px solid #F3E8FF', flexShrink: 0 }} />
+              style={{ width: '40px', height: '40px', objectFit: 'cover', borderRadius: '8px', border: '1.5px solid #EEF3F5', flexShrink: 0 }} />
           ))}
         </div>
         <div style={{ flex: 1, minWidth: 0 }}>
-          <p style={{ fontSize: '0.85rem', fontWeight: '700', color: '#2D1A4A', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <p style={{ fontSize: '0.85rem', fontWeight: '700', color: '#264653', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
             {order.orderItems?.[0]?.name}
             {order.orderItems?.length > 1 ? ` + ${order.orderItems.length - 1} more` : ''}
           </p>
-          <p style={{ fontSize: '0.75rem', color: '#9585B0', margin: '2px 0 0', fontWeight: '600' }}>
+          <p style={{ fontSize: '0.75rem', color: '#8A9BA3', margin: '2px 0 0', fontWeight: '600' }}>
             {order.orderItems?.length} item{order.orderItems?.length > 1 ? 's' : ''}
           </p>
         </div>
-        <Link href={`/orders/${order.id}`} style={{ padding: '6px 14px', background: 'white', color: '#7B2FBE', border: '1.5px solid #EDD9FF', borderRadius: '8px', textDecoration: 'none', fontWeight: '700', fontSize: '0.78rem', whiteSpace: 'nowrap', fontFamily: 'Nunito, sans-serif' }}>
+        <Link href={`/orders/${order.id}`} style={{ padding: '6px 14px', background: 'white', color: '#264653', border: '1.5px solid #E8E2D2', borderRadius: '8px', textDecoration: 'none', fontWeight: '700', fontSize: '0.78rem', whiteSpace: 'nowrap', fontFamily: 'Nunito, sans-serif' }}>
           View Details →
         </Link>
       </div>
@@ -271,7 +271,7 @@ function OrderTrackingCard({ order }) {
           <div style={{
             padding: '14px 18px',
             background: order.orderStatus === 'Refunded' ? '#ECFDF5' : '#FEF2F2',
-            border: `1.5px solid ${order.orderStatus === 'Refunded' ? '#10B981' : '#FCA5A5'}`,
+            border: `1.5px solid ${order.orderStatus === 'Refunded' ? '#43A047' : '#FCA5A5'}`,
             borderRadius: '14px',
             display: 'flex', gap: '12px', alignItems: 'flex-start',
           }}>
@@ -280,7 +280,7 @@ function OrderTrackingCard({ order }) {
             </span>
             <div style={{ flex: 1 }}>
               <strong style={{
-                color: order.orderStatus === 'Refunded' ? '#065F46' : '#DC2626',
+                color: order.orderStatus === 'Refunded' ? '#1B5E20' : '#C62828',
                 fontSize: '0.95rem',
               }}>
                 {order.orderStatus === 'Refunded' ? '✅ Order Refunded' : `Order ${order.orderStatus}`}
@@ -288,7 +288,7 @@ function OrderTrackingCard({ order }) {
               {order.orderStatus === 'Refunded' && order.refundAmount && (
                 <p style={{
                   margin: '6px 0 0', fontSize: '0.88rem',
-                  color: '#065F46', fontWeight: '800',
+                  color: '#1B5E20', fontWeight: '800',
                 }}>
                   💵 Refunded: ₹{order.refundAmount.toLocaleString('en-IN')}
                 </p>
@@ -296,7 +296,7 @@ function OrderTrackingCard({ order }) {
               {order.refundStatus === 'completed' && (
                 <p style={{
                   margin: '4px 0 0', fontSize: '0.82rem',
-                  color: '#047857', fontWeight: '700',
+                  color: '#2E7D32', fontWeight: '700',
                 }}>
                   ✅ Money credited to your account
                 </p>
@@ -312,7 +312,7 @@ function OrderTrackingCard({ order }) {
               {order.refundStatus === 'scheduled' && (
                 <p style={{
                   margin: '4px 0 0', fontSize: '0.82rem',
-                  color: '#EA580C', fontWeight: '700',
+                  color: '#FB8C00', fontWeight: '700',
                 }}>
                   ⏱️ Refund scheduled — processing soon
                 </p>
@@ -366,13 +366,13 @@ function OrderTrackingCard({ order }) {
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: isDone ? '1rem' : '1.1rem', fontWeight: '800',
                         background: isDone
-                          ? 'linear-gradient(135deg, #10B981, #059669)'
+                          ? 'linear-gradient(135deg, #43A047, #388E3C)'
                           : isCurrent
                             ? `linear-gradient(135deg, ${color}, ${color}BB)`
                             : 'white',
-                        border: isCurrent ? `3px solid ${color}` : isDone ? '3px solid #10B981' : '3px solid #E5E7EB',
+                        border: isCurrent ? `3px solid ${color}` : isDone ? '3px solid #43A047' : '3px solid #E5E7EB',
                         color: isDone || isCurrent ? 'white' : '#9CA3AF',
-                        boxShadow: isCurrent ? `0 0 0 5px ${color}20, 0 4px 14px ${color}30` : isDone ? '0 3px 10px rgba(16,185,129,0.20)' : 'none',
+                        boxShadow: isCurrent ? `0 0 0 5px ${color}20, 0 4px 14px ${color}30` : isDone ? '0 3px 10px rgba(67,160,71,0.20)' : 'none',
                         animation: isCurrent ? 'trackPulse 2s ease-in-out infinite' : 'none',
                         transition: 'all 0.3s ease',
                       }}>
@@ -381,7 +381,7 @@ function OrderTrackingCard({ order }) {
                       <span style={{
                         fontSize: 'clamp(0.58rem,1.2vw,0.72rem)',
                         fontWeight: isCurrent ? '800' : isDone ? '700' : '600',
-                        color: isCurrent ? color : isDone ? '#10B981' : '#9CA3AF',
+                        color: isCurrent ? color : isDone ? '#43A047' : '#9CA3AF',
                         textAlign: 'center', lineHeight: 1.3, maxWidth: '60px',
                       }}>
                         {step}
@@ -399,15 +399,15 @@ function OrderTrackingCard({ order }) {
                 <p style={{ fontSize: '0.82rem', fontWeight: '800', color: color, margin: 0 }}>
                   {STATUS_EMOJI[order.orderStatus]} {order.orderStatus}
                 </p>
-                <p style={{ fontSize: '0.76rem', color: '#6B4E8A', margin: '2px 0 0', fontWeight: '600' }}>
+                <p style={{ fontSize: '0.76rem', color: '#4F6B76', margin: '2px 0 0', fontWeight: '600' }}>
                   {STATUS_DESC[order.orderStatus] || 'Order in progress'}
                 </p>
 
                 {/* Expected delivery in status box */}
                 {!isDelivered && (
-                  <p style={{ fontSize: '0.74rem', color: '#7B2FBE', margin: '5px 0 0', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <p style={{ fontSize: '0.74rem', color: '#264653', margin: '5px 0 0', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '4px' }}>
                     🗓️ Expected delivery:
-                    <strong style={{ color: '#FF6B35', marginLeft: '4px' }}>
+                    <strong style={{ color: '#E53935', marginLeft: '4px' }}>
                       {expected.min} – {expected.max}
                     </strong>
                   </p>
@@ -415,7 +415,7 @@ function OrderTrackingCard({ order }) {
 
                 {/* Actual delivery date in status box */}
                 {isDelivered && order.deliveredAt && (
-                  <p style={{ fontSize: '0.74rem', color: '#10B981', margin: '5px 0 0', fontWeight: '700' }}>
+                  <p style={{ fontSize: '0.74rem', color: '#43A047', margin: '5px 0 0', fontWeight: '700' }}>
                     📅 Delivered on {new Date(order.deliveredAt).toLocaleDateString('en-IN', {
                       day: 'numeric', month: 'long', year: 'numeric',
                     })}
@@ -426,7 +426,7 @@ function OrderTrackingCard({ order }) {
               {/* Tracking number */}
               {order.trackingNumber && (
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <p style={{ fontSize: '0.65rem', color: '#9585B0', fontWeight: '700', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  <p style={{ fontSize: '0.65rem', color: '#8A9BA3', fontWeight: '700', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                     Tracking No.
                   </p>
                   <p style={{ fontFamily: 'monospace', fontWeight: '800', color: '#0369A1', fontSize: '0.80rem', margin: 0 }}>
@@ -441,8 +441,8 @@ function OrderTrackingCard({ order }) {
               <div style={{ marginTop: '10px', padding: '14px 16px', background: 'linear-gradient(135deg, #D1FAE5, #A7F3D0)', border: '1.5px solid #6EE7B7', borderRadius: '12px', display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <span style={{ fontSize: '1.8rem' }}>🎉</span>
                 <div>
-                  <strong style={{ fontSize: '0.90rem', color: '#065F46' }}>Order Delivered!</strong>
-                  <p style={{ margin: '3px 0 0', fontSize: '0.78rem', color: '#047857', fontWeight: '600' }}>
+                  <strong style={{ fontSize: '0.90rem', color: '#1B5E20' }}>Order Delivered!</strong>
+                  <p style={{ margin: '3px 0 0', fontSize: '0.78rem', color: '#2E7D32', fontWeight: '600' }}>
                     {order.deliveredAt
                       ? `Delivered on ${new Date(order.deliveredAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}`
                       : 'Delivered successfully ✅'}
@@ -461,23 +461,23 @@ function OrderTrackingCard({ order }) {
 
             {/* Items full list */}
             <div style={{ marginBottom: '16px' }}>
-              <h4 style={{ fontSize: '0.85rem', fontWeight: '800', color: '#2D1A4A', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+              <h4 style={{ fontSize: '0.85rem', fontWeight: '800', color: '#264653', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                 🛍️ Items
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 {order.orderItems?.map((item, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', background: '#FAFAFA', borderRadius: '10px', border: '1px solid #F3E8FF' }}>
+                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '10px', padding: '10px', background: '#FAFAFA', borderRadius: '10px', border: '1px solid #EEF3F5' }}>
                     <img src={item.image || 'https://via.placeholder.com/44'} alt={item.name}
                       style={{ width: '44px', height: '44px', objectFit: 'cover', borderRadius: '8px', flexShrink: 0 }} />
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <p style={{ fontSize: '0.84rem', fontWeight: '700', color: '#2D1A4A', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <p style={{ fontSize: '0.84rem', fontWeight: '700', color: '#264653', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {item.name}
                       </p>
-                      <p style={{ fontSize: '0.74rem', color: '#9585B0', margin: '2px 0 0', fontWeight: '600' }}>
+                      <p style={{ fontSize: '0.74rem', color: '#8A9BA3', margin: '2px 0 0', fontWeight: '600' }}>
                         Qty: {item.quantity} × ₹{item.price?.toLocaleString('en-IN')}
                       </p>
                     </div>
-                    <strong style={{ color: '#FF6B35', fontSize: '0.88rem', whiteSpace: 'nowrap' }}>
+                    <strong style={{ color: '#E53935', fontSize: '0.88rem', whiteSpace: 'nowrap' }}>
                       ₹{(item.price * item.quantity).toLocaleString('en-IN')}
                     </strong>
                   </div>
@@ -486,21 +486,21 @@ function OrderTrackingCard({ order }) {
             </div>
 
             {/* Delivery Date Info */}
-            <div style={{ marginBottom: '12px', padding: '14px 16px', background: isDelivered ? 'linear-gradient(135deg,#F0FDF4,#D1FAE5)' : 'linear-gradient(135deg,#F8F4FF,#EDE9FE)', borderRadius: '14px', border: `1.5px solid ${isDelivered ? '#6EE7B7' : '#DDD6FE'}` }}>
-              <h4 style={{ fontSize: '0.80rem', fontWeight: '800', color: isDelivered ? '#065F46' : '#7B2FBE', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+            <div style={{ marginBottom: '12px', padding: '14px 16px', background: isDelivered ? 'linear-gradient(135deg,#F0FDF4,#D1FAE5)' : 'linear-gradient(135deg,#FFFBF2,#EEF3F5)', borderRadius: '14px', border: `1.5px solid ${isDelivered ? '#6EE7B7' : '#DDE5E8'}` }}>
+              <h4 style={{ fontSize: '0.80rem', fontWeight: '800', color: isDelivered ? '#1B5E20' : '#264653', margin: '0 0 8px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                 🗓️ Delivery Info
               </h4>
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                   <span style={{ fontSize: '0.80rem', color: '#6B7280', fontWeight: '600' }}>Order Placed</span>
-                  <span style={{ fontSize: '0.80rem', fontWeight: '700', color: '#2D1A4A' }}>
+                  <span style={{ fontSize: '0.80rem', fontWeight: '700', color: '#264653' }}>
                     {new Date(order.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                   </span>
                 </div>
                 {!isDelivered && !isCancelled && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: '0.80rem', color: '#6B7280', fontWeight: '600' }}>Expected Delivery</span>
-                    <span style={{ fontSize: '0.80rem', fontWeight: '800', color: '#FF6B35' }}>
+                    <span style={{ fontSize: '0.80rem', fontWeight: '800', color: '#E53935' }}>
                       {expected.min} – {expected.max}
                     </span>
                   </div>
@@ -508,7 +508,7 @@ function OrderTrackingCard({ order }) {
                 {isDelivered && order.deliveredAt && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: '0.80rem', color: '#6B7280', fontWeight: '600' }}>Delivered On</span>
-                    <span style={{ fontSize: '0.80rem', fontWeight: '800', color: '#10B981' }}>
+                    <span style={{ fontSize: '0.80rem', fontWeight: '800', color: '#43A047' }}>
                       {new Date(order.deliveredAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
                     </span>
                   </div>
@@ -516,7 +516,7 @@ function OrderTrackingCard({ order }) {
                 {!isCancelled && (
                   <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                     <span style={{ fontSize: '0.80rem', color: '#6B7280', fontWeight: '600' }}>Delivery Type</span>
-                    <span style={{ fontSize: '0.80rem', fontWeight: '700', color: '#2D1A4A' }}>
+                    <span style={{ fontSize: '0.80rem', fontWeight: '700', color: '#264653' }}>
                       {order.shippingPrice === 0 ? '🎉 FREE Delivery' : `₹${order.shippingPrice} Delivery`}
                     </span>
                   </div>
@@ -528,35 +528,35 @@ function OrderTrackingCard({ order }) {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
 
               {/* Price */}
-              <div style={{ padding: '14px', background: '#F8F4FF', borderRadius: '14px', border: '1px solid #EDD9FF' }}>
-                <h4 style={{ fontSize: '0.80rem', fontWeight: '800', color: '#7B2FBE', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+              <div style={{ padding: '14px', background: '#FFFBF2', borderRadius: '14px', border: '1px solid #E8E2D2' }}>
+                <h4 style={{ fontSize: '0.80rem', fontWeight: '800', color: '#264653', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                   💰 Price
                 </h4>
                 {[
                   { label: 'Items', value: `₹${order.itemsPrice?.toLocaleString('en-IN')}` },
-                  { label: 'Shipping', value: order.shippingPrice === 0 ? 'FREE' : `₹${order.shippingPrice}`, color: order.shippingPrice === 0 ? '#10B981' : undefined },
+                  { label: 'Shipping', value: order.shippingPrice === 0 ? 'FREE' : `₹${order.shippingPrice}`, color: order.shippingPrice === 0 ? '#43A047' : undefined },
                   { label: 'Tax', value: `₹${order.taxPrice?.toLocaleString('en-IN')}` },
-                  ...(order.discountAmount > 0 ? [{ label: 'Coupon', value: `−₹${order.discountAmount?.toLocaleString('en-IN')}`, color: '#10B981' }] : []),
+                  ...(order.discountAmount > 0 ? [{ label: 'Coupon', value: `−₹${order.discountAmount?.toLocaleString('en-IN')}`, color: '#43A047' }] : []),
                 ].map((row, i) => (
-                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid #EDD9FF' }}>
-                    <span style={{ fontSize: '0.78rem', color: '#9585B0', fontWeight: '600' }}>{row.label}</span>
-                    <span style={{ fontSize: '0.80rem', fontWeight: '700', color: row.color || '#2D1A4A' }}>{row.value}</span>
+                  <div key={i} style={{ display: 'flex', justifyContent: 'space-between', padding: '5px 0', borderBottom: '1px solid #E8E2D2' }}>
+                    <span style={{ fontSize: '0.78rem', color: '#8A9BA3', fontWeight: '600' }}>{row.label}</span>
+                    <span style={{ fontSize: '0.80rem', fontWeight: '700', color: row.color || '#264653' }}>{row.value}</span>
                   </div>
                 ))}
                 <div style={{ display: 'flex', justifyContent: 'space-between', paddingTop: '8px', marginTop: '4px' }}>
-                  <span style={{ fontSize: '0.85rem', fontWeight: '800', color: '#2D1A4A' }}>Total</span>
-                  <strong style={{ color: '#FF6B35' }}>₹{order.totalPrice?.toLocaleString('en-IN')}</strong>
+                  <span style={{ fontSize: '0.85rem', fontWeight: '800', color: '#264653' }}>Total</span>
+                  <strong style={{ color: '#E53935' }}>₹{order.totalPrice?.toLocaleString('en-IN')}</strong>
                 </div>
               </div>
 
               {/* Address */}
               <div style={{ padding: '14px', background: '#F0FDF4', borderRadius: '14px', border: '1px solid #BBF7D0' }}>
-                <h4 style={{ fontSize: '0.80rem', fontWeight: '800', color: '#166534', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
+                <h4 style={{ fontSize: '0.80rem', fontWeight: '800', color: '#1B5E20', margin: '0 0 10px', textTransform: 'uppercase', letterSpacing: '0.6px' }}>
                   📍 Delivery
                 </h4>
                 {order.shippingAddress ? (
                   <div style={{ lineHeight: 1.7 }}>
-                    <p style={{ fontWeight: '800', color: '#2D1A4A', margin: 0, fontSize: '0.84rem' }}>{order.shippingAddress.name}</p>
+                    <p style={{ fontWeight: '800', color: '#264653', margin: 0, fontSize: '0.84rem' }}>{order.shippingAddress.name}</p>
                     <p style={{ color: '#4B5563', margin: 0, fontSize: '0.78rem', fontWeight: '600' }}>📞 {order.shippingAddress.phone}</p>
                     <p style={{ color: '#4B5563', margin: 0, fontSize: '0.78rem', fontWeight: '600' }}>{order.shippingAddress.address}</p>
                     <p style={{ color: '#4B5563', margin: 0, fontSize: '0.78rem', fontWeight: '600' }}>{order.shippingAddress.city}, {order.shippingAddress.state} {order.shippingAddress.pincode}</p>
@@ -568,21 +568,21 @@ function OrderTrackingCard({ order }) {
             </div>
 
             {/* Payment */}
-            <div style={{ marginTop: '12px', padding: '12px 16px', background: '#F8F4FF', borderRadius: '12px', border: '1px solid #EDD9FF', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+            <div style={{ marginTop: '12px', padding: '12px 16px', background: '#FFFBF2', borderRadius: '12px', border: '1px solid #E8E2D2', display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
               <div>
-                <p style={{ fontSize: '0.72rem', fontWeight: '700', color: '#9585B0', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Payment</p>
-                <p style={{ fontSize: '0.84rem', fontWeight: '700', color: '#2D1A4A', margin: 0 }}>{order.paymentMethod}</p>
+                <p style={{ fontSize: '0.72rem', fontWeight: '700', color: '#8A9BA3', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Payment</p>
+                <p style={{ fontSize: '0.84rem', fontWeight: '700', color: '#264653', margin: 0 }}>{order.paymentMethod}</p>
               </div>
               <div>
-                <p style={{ fontSize: '0.72rem', fontWeight: '700', color: '#9585B0', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Status</p>
-                <p style={{ fontSize: '0.84rem', fontWeight: '800', color: order.isPaid ? '#10B981' : '#F59E0B', margin: 0 }}>
+                <p style={{ fontSize: '0.72rem', fontWeight: '700', color: '#8A9BA3', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Status</p>
+                <p style={{ fontSize: '0.84rem', fontWeight: '800', color: order.isPaid ? '#43A047' : '#F2B33D', margin: 0 }}>
                   {order.isPaid ? '✅ Paid' : '⏳ Pending'}
                 </p>
               </div>
               {order.paymentResult?.razorpayPaymentId && (
                 <div>
-                  <p style={{ fontSize: '0.72rem', fontWeight: '700', color: '#9585B0', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Transaction ID</p>
-                  <p style={{ fontSize: '0.78rem', fontWeight: '700', color: '#2D1A4A', margin: 0, fontFamily: 'monospace' }}>
+                  <p style={{ fontSize: '0.72rem', fontWeight: '700', color: '#8A9BA3', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Transaction ID</p>
+                  <p style={{ fontSize: '0.78rem', fontWeight: '700', color: '#264653', margin: 0, fontFamily: 'monospace' }}>
                     {order.paymentResult.razorpayPaymentId}
                   </p>
                 </div>
@@ -590,7 +590,7 @@ function OrderTrackingCard({ order }) {
             </div>
 
             {/* View full details */}
-            <Link href={`/orders/${order.id}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '14px', padding: '11px', background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)', color: 'white', borderRadius: '12px', textDecoration: 'none', fontWeight: '800', fontSize: '0.88rem', fontFamily: 'Nunito, sans-serif' }}>
+            <Link href={`/orders/${order.id}`} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', marginTop: '14px', padding: '11px', background: 'linear-gradient(135deg, #3A6373, #264653)', color: 'white', borderRadius: '12px', textDecoration: 'none', fontWeight: '800', fontSize: '0.88rem', fontFamily: 'Nunito, sans-serif' }}>
               📦 View Full Order Details →
             </Link>
           </div>
@@ -603,8 +603,8 @@ function OrderTrackingCard({ order }) {
           50%       { transform: scale(1.5); opacity: 0.5; }
         }
         @keyframes trackPulse {
-          0%, 100% { box-shadow: 0 0 0 5px rgba(255,107,53,0.15); }
-          50%       { box-shadow: 0 0 0 10px rgba(255,107,53,0.06); }
+          0%, 100% { box-shadow: 0 0 0 5px rgba(229,57,53,0.15); }
+          50%       { box-shadow: 0 0 0 10px rgba(229,57,53,0.06); }
         }
       `}</style>
     </div>
@@ -825,8 +825,8 @@ export default function ProfileClient() {
       {activeTab === 'orders' && (
         <div className={styles.tabContent}>
           {ordersLoading ? (
-            <div style={{ textAlign: 'center', padding: '60px', color: '#9585B0', fontFamily: 'Nunito, sans-serif' }}>
-              <div style={{ width: '44px', height: '44px', border: '4px solid #F3E8FF', borderTop: '4px solid #7B2FBE', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
+            <div style={{ textAlign: 'center', padding: '60px', color: '#8A9BA3', fontFamily: 'Nunito, sans-serif' }}>
+              <div style={{ width: '44px', height: '44px', border: '4px solid #EEF3F5', borderTop: '4px solid #264653', borderRadius: '50%', animation: 'spin 0.8s linear infinite', margin: '0 auto 16px' }} />
               <p style={{ fontWeight: '600' }}>Loading your orders...</p>
               <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
             </div>

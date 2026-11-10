@@ -4,12 +4,12 @@ import Link from 'next/link';
 import styles from './page.module.css';
 
 const STATUS_CFG = {
-  Pending:    { bg: '#fff7ed', text: '#c2410c', dot: '#f97316' },
-  Confirmed:  { bg: '#eff6ff', text: '#1d4ed8', dot: '#3b82f6' },
-  Processing: { bg: '#f5f3ff', text: '#6d28d9', dot: '#8b5cf6' },
+  Pending:    { bg: '#fff7ed', text: '#c2410c', dot: '#FB8C00' },
+  Confirmed:  { bg: '#eff6ff', text: '#1d4ed8', dot: '#1E88E5' },
+  Processing: { bg: '#FBF5E6', text: '#1B3540', dot: '#3A6373' },
   Shipped:    { bg: '#ecfeff', text: '#0e7490', dot: '#06b6d4' },
-  Delivered:  { bg: '#f0fdf4', text: '#15803d', dot: '#22c55e' },
-  Cancelled:  { bg: '#fef2f2', text: '#b91c1c', dot: '#ef4444' },
+  Delivered:  { bg: '#f0fdf4', text: '#15803d', dot: '#43A047' },
+  Cancelled:  { bg: '#fef2f2', text: '#b91c1c', dot: '#E53935' },
   Refunded:   { bg: '#f9fafb', text: '#6b7280', dot: '#9ca3af' },
 };
 
@@ -74,12 +74,12 @@ export default function AdminDashboard() {
     {
       icon: '📦', label: 'Total Orders',
       value: stats?.orders ?? '—',
-      color: '#f97316', link: '/admin/orders',
+      color: '#FB8C00', link: '/admin/orders',
     },
     {
       icon: '💰', label: 'Revenue',
       value: stats ? '₹' + stats.revenue.toLocaleString('en-IN') : '—',
-      color: '#10b981', link: '/admin/orders',
+      color: '#43A047', link: '/admin/orders',
     },
     {
       icon: '🛍️', label: 'Total Products',
@@ -87,7 +87,7 @@ export default function AdminDashboard() {
       subtitle: stats?.totalUniqueProducts
         ? `${stats.totalUniqueProducts} unique items`
         : '',
-      color: '#8b5cf6', link: '/admin/products',
+      color: '#3A6373', link: '/admin/products',
     },
     {
       icon: '👥', label: 'Total Users',
@@ -97,15 +97,15 @@ export default function AdminDashboard() {
     {
       icon: '🗂️', label: 'Categories',
       value: stats?.categories ?? '—',
-      color: '#0ea5e9', link: '/admin/categories',
+      color: '#1E88E5', link: '/admin/categories',
     },
   ];
 
   const quickActions = [
-    { icon: '➕', label: 'Add Product',  href: '/admin/products/new', color: '#f97316' },
-    { icon: '🗂️', label: 'Add Category', href: '/admin/categories',   color: '#8b5cf6' },
-    { icon: '🖼️', label: 'Add Banner',   href: '/admin/banners',      color: '#0ea5e9' },
-    { icon: '🎟️', label: 'Add Coupon',   href: '/admin/coupons',      color: '#10b981' },
+    { icon: '➕', label: 'Add Product',  href: '/admin/products/new', color: '#FB8C00' },
+    { icon: '🗂️', label: 'Add Category', href: '/admin/categories',   color: '#3A6373' },
+    { icon: '🖼️', label: 'Add Banner',   href: '/admin/banners',      color: '#1E88E5' },
+    { icon: '🎟️', label: 'Add Coupon',   href: '/admin/coupons',      color: '#43A047' },
   ];
 
   const hour = new Date().getHours();
@@ -120,10 +120,10 @@ export default function AdminDashboard() {
       <div style={{ padding: '60px', textAlign: 'center', fontFamily: 'Nunito, sans-serif' }}>
         <div style={{
           width: '50px', height: '50px', margin: '0 auto 16px',
-          border: '4px solid #F3E8FF', borderTop: '4px solid #7B2FBE',
+          border: '4px solid #EEF3F5', borderTop: '4px solid #264653',
           borderRadius: '50%', animation: 'spin 1s linear infinite'
         }} />
-        <p style={{ color: '#9585B0', fontWeight: '800' }}>Preparing dashboard details...</p>
+        <p style={{ color: '#8A9BA3', fontWeight: '800' }}>Preparing dashboard details...</p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
       </div>
     );
@@ -258,7 +258,7 @@ export default function AdminDashboard() {
                 {lowStockItems.length > 6 && (
                   <button
                     onClick={() => setShowAllLow(!showAllLow)}
-                    style={{ background: 'white', border: '1.5px solid #f59e0b', borderRadius: '999px', padding: '5px 14px', fontSize: '12px', fontWeight: '800', color: '#92400e', cursor: 'pointer' }}
+                    style={{ background: 'white', border: '1.5px solid #F2B33D', borderRadius: '999px', padding: '5px 14px', fontSize: '12px', fontWeight: '800', color: '#92400e', cursor: 'pointer' }}
                   >
                     {showAllLow ? '← Show less' : `Show all ${lowStockItems.length} →`}
                   </button>
@@ -381,10 +381,10 @@ function StockItemCard({ item, isOutOfStock = false }) {
         )}
 
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '6px', marginTop: '5px' }}>
-          <span style={{ fontSize: '11px', fontWeight: '800', color: '#059669' }}>
+          <span style={{ fontSize: '11px', fontWeight: '800', color: '#388E3C' }}>
             ₹{displayPrice?.toLocaleString('en-IN')}
           </span>
-          <span style={{ padding: '2px 8px', background: isOutOfStock ? '#dc2626' : '#f59e0b', color: 'white', borderRadius: '999px', fontSize: '10px', fontWeight: '800' }}>
+          <span style={{ padding: '2px 8px', background: isOutOfStock ? '#C62828' : '#F2B33D', color: 'white', borderRadius: '999px', fontSize: '10px', fontWeight: '800' }}>
             {isOutOfStock ? '❌ 0 left' : `⚠️ ${item.stock} left`}
           </span>
         </div>

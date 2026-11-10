@@ -147,35 +147,35 @@ export default async function RootLayout({ children }) {
                 duration: 3000,
                 style: {
                   background:
-                    'linear-gradient(135deg, #10B981, #059669)',
+                    'linear-gradient(135deg, #43A047, #388E3C)',
                   color: '#fff',
                   border:
                     '1.5px solid rgba(255,255,255,0.15)',
                 },
                 iconTheme: {
                   primary: '#fff',
-                  secondary: '#10B981',
+                  secondary: '#43A047',
                 },
               },
               error: {
                 duration: 4000,
                 style: {
                   background:
-                    'linear-gradient(135deg, #EF4444, #DC2626)',
+                    'linear-gradient(135deg, #E53935, #C62828)',
                   color: '#fff',
                   border:
                     '1.5px solid rgba(255,255,255,0.15)',
                 },
                 iconTheme: {
                   primary: '#fff',
-                  secondary: '#EF4444',
+                  secondary: '#E53935',
                 },
               },
               loading: {
                 duration: Infinity,
                 style: {
                   background:
-                    'linear-gradient(135deg, #38BDF8, #0369A1)',
+                    'linear-gradient(135deg, #4FA3F0, #0369A1)',
                   color: '#fff',
                 },
               },

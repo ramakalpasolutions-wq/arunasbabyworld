@@ -161,10 +161,10 @@ export default function ExchangeRequestClient({ id }) {
       }}>
         <div style={{
           width: '44px', height: '44px',
-          border: '4px solid #FFF3E8', borderTop: '4px solid #FF6B35',
+          border: '4px solid #FFF6E5', borderTop: '4px solid #E53935',
           borderRadius: '50%', animation: 'spin 0.8s linear infinite',
         }} />
-        <p style={{ color: '#9585B0', fontFamily: 'Nunito, sans-serif', fontWeight: '600' }}>
+        <p style={{ color: '#8A9BA3', fontFamily: 'Nunito, sans-serif', fontWeight: '600' }}>
           Loading order...
         </p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -223,7 +223,7 @@ export default function ExchangeRequestClient({ id }) {
       {/* ── Back link ── */}
       <Link href={`/orders/${id}`} style={{
         display: 'inline-flex', alignItems: 'center', gap: '6px',
-        color: '#FF6B35', textDecoration: 'none', fontWeight: '700',
+        color: '#E53935', textDecoration: 'none', fontWeight: '700',
         fontSize: '0.88rem', marginBottom: '20px',
       }}>
         ← Back to Order
@@ -231,16 +231,16 @@ export default function ExchangeRequestClient({ id }) {
 
       {/* ── Header ── */}
       <div style={{
-        background: 'linear-gradient(135deg, #FFF3E8 0%, #FFE4CC 100%)',
+        background: 'linear-gradient(135deg, #FFF6E5 0%, #FDEBC8 100%)',
         borderRadius: '24px', padding: 'clamp(24px,3vw,36px)',
         marginBottom: '20px',
-        border: '1.5px solid #FFD4B8',
+        border: '1.5px solid #F6D28B',
         textAlign: 'center',
       }}>
         <div style={{ fontSize: '3rem', marginBottom: '8px' }}>🔄</div>
         <h1 style={{
           fontSize: 'clamp(1.5rem,2.5vw,2rem)',
-          fontWeight: '800', color: '#2D1A4A', margin: '0 0 6px',
+          fontWeight: '800', color: '#264653', margin: '0 0 6px',
         }}>
           Exchange Product
         </h1>
@@ -259,7 +259,7 @@ export default function ExchangeRequestClient({ id }) {
       }}>
         <span style={{ fontSize: '1.5rem' }}>⏰</span>
         <div style={{ flex: 1 }}>
-          <strong style={{ color: hoursLeft <= 12 ? '#DC2626' : '#92400E', fontSize: '0.92rem' }}>
+          <strong style={{ color: hoursLeft <= 12 ? '#C62828' : '#92400E', fontSize: '0.92rem' }}>
             Exchange Window: {hoursLeft <= 24 ? `${hoursLeft} hours left` : `${3 - daysSince} day(s) left`}
           </strong>
           <p style={{ margin: '2px 0 0', fontSize: '0.8rem', color: hoursLeft <= 12 ? '#991B1B' : '#78350F', fontWeight: '600' }}>
@@ -272,7 +272,7 @@ export default function ExchangeRequestClient({ id }) {
       <div style={{
         background: 'white', borderRadius: '16px',
         padding: '16px 20px', marginBottom: '20px',
-        border: '1.5px solid #F3E8FF',
+        border: '1.5px solid #EEF3F5',
         display: 'flex', alignItems: 'center',
         justifyContent: 'space-between', gap: '12px',
         flexWrap: 'wrap',
@@ -289,9 +289,9 @@ export default function ExchangeRequestClient({ id }) {
             <div style={{
               width: '32px', height: '32px', borderRadius: '50%',
               background: s.done
-                ? 'linear-gradient(135deg, #10B981, #059669)'
+                ? 'linear-gradient(135deg, #43A047, #388E3C)'
                 : step === s.num
-                  ? 'linear-gradient(135deg, #FF6B35, #7B2FBE)'
+                  ? 'linear-gradient(135deg, #3A6373, #264653)'
                   : '#E5E7EB',
               color: s.done || step === s.num ? 'white' : '#9CA3AF',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -303,7 +303,7 @@ export default function ExchangeRequestClient({ id }) {
             <span style={{
               fontSize: '0.84rem',
               fontWeight: '700',
-              color: s.done ? '#10B981' : step === s.num ? '#FF6B35' : '#9CA3AF',
+              color: s.done ? '#43A047' : step === s.num ? '#E53935' : '#9CA3AF',
             }}>
               {s.label}
             </span>
@@ -315,8 +315,8 @@ export default function ExchangeRequestClient({ id }) {
       <div style={{
         background: 'white', borderRadius: '20px',
         padding: '24px', marginBottom: '20px',
-        border: `2px solid ${oldItem ? '#10B981' : '#F3E8FF'}`,
-        boxShadow: '0 4px 20px rgba(123,47,190,0.06)',
+        border: `2px solid ${oldItem ? '#43A047' : '#EEF3F5'}`,
+        boxShadow: '0 4px 20px rgba(38,70,83,0.06)',
       }}>
         <div style={{
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -324,13 +324,13 @@ export default function ExchangeRequestClient({ id }) {
         }}>
           <h3 style={{
             margin: 0, fontSize: '1.05rem', fontWeight: '800',
-            color: '#2D1A4A',
+            color: '#264653',
           }}>
             1️⃣ Select item to return
           </h3>
           {oldItem && (
             <button onClick={() => { setOldItem(null); setStep(1); }} style={{
-              background: '#FEF2F2', color: '#EF4444',
+              background: '#FEF2F2', color: '#E53935',
               border: '1px solid #FCA5A5', borderRadius: '8px',
               padding: '4px 12px', fontSize: '0.78rem', fontWeight: '700',
               cursor: 'pointer', fontFamily: 'inherit',
@@ -355,7 +355,7 @@ export default function ExchangeRequestClient({ id }) {
                   display: 'flex', alignItems: 'center', gap: '14px',
                   padding: '14px',
                   background: selected ? '#ECFDF5' : 'white',
-                  border: `2px solid ${selected ? '#10B981' : '#F3E8FF'}`,
+                  border: `2px solid ${selected ? '#43A047' : '#EEF3F5'}`,
                   borderRadius: '14px', cursor: 'pointer',
                   textAlign: 'left', width: '100%',
                   fontFamily: 'inherit', transition: 'all 0.2s',
@@ -373,20 +373,20 @@ export default function ExchangeRequestClient({ id }) {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{
                     margin: '0 0 4px', fontSize: '0.95rem',
-                    fontWeight: '800', color: '#2D1A4A',
+                    fontWeight: '800', color: '#264653',
                     overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                   }}>
                     {item.name}
                   </p>
                   <p style={{
                     margin: 0, fontSize: '0.8rem',
-                    color: '#9585B0', fontWeight: '600',
+                    color: '#8A9BA3', fontWeight: '600',
                   }}>
                     Qty: {item.quantity} × ₹{item.price?.toLocaleString('en-IN')}
                   </p>
                 </div>
                 <strong style={{
-                  fontSize: '1rem', color: selected ? '#10B981' : '#FF6B35',
+                  fontSize: '1rem', color: selected ? '#43A047' : '#E53935',
                   flexShrink: 0,
                 }}>
                   ₹{(item.price * item.quantity).toLocaleString('en-IN')}
@@ -394,7 +394,7 @@ export default function ExchangeRequestClient({ id }) {
                 {selected && (
                   <div style={{
                     width: '28px', height: '28px', borderRadius: '50%',
-                    background: '#10B981', color: 'white',
+                    background: '#43A047', color: 'white',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     fontWeight: '900', fontSize: '0.92rem',
                     flexShrink: 0,
@@ -413,8 +413,8 @@ export default function ExchangeRequestClient({ id }) {
         <div style={{
           background: 'white', borderRadius: '20px',
           padding: '24px', marginBottom: '20px',
-          border: `2px solid ${newProduct ? '#10B981' : '#F3E8FF'}`,
-          boxShadow: '0 4px 20px rgba(123,47,190,0.06)',
+          border: `2px solid ${newProduct ? '#43A047' : '#EEF3F5'}`,
+          boxShadow: '0 4px 20px rgba(38,70,83,0.06)',
         }}>
           <div style={{
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -422,13 +422,13 @@ export default function ExchangeRequestClient({ id }) {
           }}>
             <h3 style={{
               margin: 0, fontSize: '1.05rem', fontWeight: '800',
-              color: '#2D1A4A',
+              color: '#264653',
             }}>
               2️⃣ Pick replacement product
             </h3>
             {newProduct && (
               <button onClick={() => setNewProduct(null)} style={{
-                background: '#FEF2F2', color: '#EF4444',
+                background: '#FEF2F2', color: '#E53935',
                 border: '1px solid #FCA5A5', borderRadius: '8px',
                 padding: '4px 12px', fontSize: '0.78rem', fontWeight: '700',
                 cursor: 'pointer', fontFamily: 'inherit',
@@ -442,7 +442,7 @@ export default function ExchangeRequestClient({ id }) {
           {newProduct && (
             <div style={{
               padding: '16px', background: '#ECFDF5',
-              border: '2px solid #10B981', borderRadius: '14px',
+              border: '2px solid #43A047', borderRadius: '14px',
               marginBottom: '16px',
               display: 'flex', alignItems: 'center', gap: '14px',
             }}>
@@ -454,16 +454,16 @@ export default function ExchangeRequestClient({ id }) {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{
                   margin: '0 0 4px', fontSize: '0.95rem',
-                  fontWeight: '800', color: '#065F46',
+                  fontWeight: '800', color: '#1B5E20',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
                   ✅ {newProduct.name}
                 </p>
-                <p style={{ margin: 0, fontSize: '0.8rem', color: '#047857', fontWeight: '600' }}>
+                <p style={{ margin: 0, fontSize: '0.8rem', color: '#2E7D32', fontWeight: '600' }}>
                   {newProduct.stock} in stock
                 </p>
               </div>
-              <strong style={{ fontSize: '1.1rem', color: '#10B981' }}>
+              <strong style={{ fontSize: '1.1rem', color: '#43A047' }}>
                 ₹{(newProduct.discountPrice || newProduct.price).toLocaleString('en-IN')}
               </strong>
             </div>
@@ -501,7 +501,7 @@ export default function ExchangeRequestClient({ id }) {
                     fontSize: '0.88rem',
                     fontFamily: 'inherit',
                     outline: 'none', cursor: 'pointer',
-                    background: 'white', color: '#2D1A4A',
+                    background: 'white', color: '#264653',
                   }}
                 >
                   <option value="all">All Categories</option>
@@ -513,7 +513,7 @@ export default function ExchangeRequestClient({ id }) {
 
               {/* Product grid */}
               {productsLoading ? (
-                <div style={{ textAlign: 'center', padding: '40px', color: '#9585B0' }}>
+                <div style={{ textAlign: 'center', padding: '40px', color: '#8A9BA3' }}>
                   ⏳ Loading products...
                 </div>
               ) : products.length === 0 ? (
@@ -550,7 +550,7 @@ export default function ExchangeRequestClient({ id }) {
                           style={{
                             display: 'flex', flexDirection: 'column',
                             background: 'white',
-                            border: '1.5px solid #F3E8FF',
+                            border: '1.5px solid #EEF3F5',
                             borderRadius: '12px',
                             overflow: 'hidden',
                             cursor: 'pointer',
@@ -560,13 +560,13 @@ export default function ExchangeRequestClient({ id }) {
                           }}
                           onMouseEnter={e => {
                             e.currentTarget.style.transform = 'translateY(-3px)';
-                            e.currentTarget.style.boxShadow = '0 8px 20px rgba(123,47,190,0.12)';
-                            e.currentTarget.style.borderColor = '#7B2FBE';
+                            e.currentTarget.style.boxShadow = '0 8px 20px rgba(38,70,83,0.12)';
+                            e.currentTarget.style.borderColor = '#264653';
                           }}
                           onMouseLeave={e => {
                             e.currentTarget.style.transform = 'translateY(0)';
                             e.currentTarget.style.boxShadow = 'none';
-                            e.currentTarget.style.borderColor = '#F3E8FF';
+                            e.currentTarget.style.borderColor = '#EEF3F5';
                           }}
                         >
                           <div style={{
@@ -586,7 +586,7 @@ export default function ExchangeRequestClient({ id }) {
                               <span style={{
                                 position: 'absolute', top: '6px', right: '6px',
                                 background: priceDiff > 0 ? '#FEF3C7' : '#D1FAE5',
-                                color: priceDiff > 0 ? '#92400E' : '#065F46',
+                                color: priceDiff > 0 ? '#92400E' : '#1B5E20',
                                 padding: '3px 8px',
                                 borderRadius: '999px',
                                 fontSize: '0.66rem', fontWeight: '800',
@@ -599,7 +599,7 @@ export default function ExchangeRequestClient({ id }) {
                           <div style={{ padding: '8px 10px' }}>
                             <p style={{
                               margin: '0 0 4px', fontSize: '0.82rem',
-                              fontWeight: '700', color: '#2D1A4A',
+                              fontWeight: '700', color: '#264653',
                               overflow: 'hidden',
                               display: '-webkit-box',
                               WebkitLineClamp: 2,
@@ -608,7 +608,7 @@ export default function ExchangeRequestClient({ id }) {
                             }}>
                               {product.name}
                             </p>
-                            <strong style={{ color: '#FF6B35', fontSize: '0.92rem' }}>
+                            <strong style={{ color: '#E53935', fontSize: '0.92rem' }}>
                               ₹{price?.toLocaleString('en-IN')}
                             </strong>
                           </div>
@@ -631,9 +631,9 @@ export default function ExchangeRequestClient({ id }) {
               ? 'linear-gradient(135deg, #FFFBEB, #FEF3C7)'
               : 'linear-gradient(135deg, #F0F9FF, #DBEAFE)',
           border: `2px solid ${
-            priceDifference === 0 ? '#10B981'
-            : priceDifference > 0 ? '#F59E0B'
-            : '#3B82F6'
+            priceDifference === 0 ? '#43A047'
+            : priceDifference > 0 ? '#F2B33D'
+            : '#1E88E5'
           }`,
           borderRadius: '20px',
           padding: '20px 24px',
@@ -647,7 +647,7 @@ export default function ExchangeRequestClient({ id }) {
             <div>
               <p style={{
                 margin: '0 0 4px', fontSize: '0.74rem', fontWeight: '800',
-                color: priceDifference === 0 ? '#065F46'
+                color: priceDifference === 0 ? '#1B5E20'
                      : priceDifference > 0 ? '#92400E' : '#1E40AF',
                 textTransform: 'uppercase', letterSpacing: '0.6px',
               }}>
@@ -655,8 +655,8 @@ export default function ExchangeRequestClient({ id }) {
               </p>
               <p style={{
                 margin: 0, fontSize: '1.4rem', fontWeight: '900',
-                color: priceDifference === 0 ? '#10B981'
-                     : priceDifference > 0 ? '#F59E0B' : '#3B82F6',
+                color: priceDifference === 0 ? '#43A047'
+                     : priceDifference > 0 ? '#F2B33D' : '#1E88E5',
               }}>
                 {priceDifference === 0 && '✅ Same Price — Free Exchange'}
                 {priceDifference > 0 && `+ ₹${priceDifference.toLocaleString('en-IN')}`}
@@ -671,7 +671,7 @@ export default function ExchangeRequestClient({ id }) {
           </div>
           <p style={{
             margin: '10px 0 0', fontSize: '0.84rem',
-            color: priceDifference === 0 ? '#047857'
+            color: priceDifference === 0 ? '#2E7D32'
                  : priceDifference > 0 ? '#78350F' : '#1E40AF',
             fontWeight: '600',
           }}>
@@ -687,14 +687,14 @@ export default function ExchangeRequestClient({ id }) {
         <div style={{
           background: 'white', borderRadius: '20px',
           padding: '24px', marginBottom: '20px',
-          border: `2px solid ${reason ? '#10B981' : '#F3E8FF'}`,
-          boxShadow: '0 4px 20px rgba(123,47,190,0.06)',
+          border: `2px solid ${reason ? '#43A047' : '#EEF3F5'}`,
+          boxShadow: '0 4px 20px rgba(38,70,83,0.06)',
         }}>
           <h3 style={{
             margin: '0 0 16px', fontSize: '1.05rem', fontWeight: '800',
-            color: '#2D1A4A',
+            color: '#264653',
           }}>
-            3️⃣ Why are you exchanging? <span style={{ color: '#EF4444' }}>*</span>
+            3️⃣ Why are you exchanging? <span style={{ color: '#E53935' }}>*</span>
           </h3>
 
           <div style={{ display: 'grid', gap: '8px', marginBottom: '14px' }}>
@@ -704,8 +704,8 @@ export default function ExchangeRequestClient({ id }) {
                 <label key={label} style={{
                   display: 'flex', alignItems: 'center', gap: '12px',
                   padding: '12px 14px',
-                  background: selected ? '#FFF3E8' : 'white',
-                  border: `1.5px solid ${selected ? '#FF6B35' : '#E5E7EB'}`,
+                  background: selected ? '#FFF6E5' : 'white',
+                  border: `1.5px solid ${selected ? '#E53935' : '#E5E7EB'}`,
                   borderRadius: '12px', cursor: 'pointer',
                   transition: 'all 0.15s',
                 }}>
@@ -716,8 +716,8 @@ export default function ExchangeRequestClient({ id }) {
                   />
                   <div style={{
                     width: '18px', height: '18px', borderRadius: '50%',
-                    border: `2px solid ${selected ? '#FF6B35' : '#D1D5DB'}`,
-                    background: selected ? '#FF6B35' : 'white',
+                    border: `2px solid ${selected ? '#E53935' : '#D1D5DB'}`,
+                    background: selected ? '#E53935' : 'white',
                     display: 'flex', alignItems: 'center', justifyContent: 'center',
                     flexShrink: 0, transition: 'all 0.15s',
                   }}>
@@ -727,7 +727,7 @@ export default function ExchangeRequestClient({ id }) {
                   <span style={{
                     fontSize: '0.88rem',
                     fontWeight: selected ? '800' : '600',
-                    color: selected ? '#EA580C' : '#374151',
+                    color: selected ? '#FB8C00' : '#374151',
                   }}>
                     {label}
                   </span>
@@ -791,7 +791,7 @@ export default function ExchangeRequestClient({ id }) {
             style={{
               flex: '2 1 240px', padding: '14px',
               background: !submitting && reason && (reason !== 'Other' || customReason.trim())
-                ? 'linear-gradient(135deg, #FF6B35, #7B2FBE)'
+                ? 'linear-gradient(135deg, #3A6373, #264653)'
                 : '#E5E7EB',
               color: !submitting && reason ? 'white' : '#9CA3AF',
               border: 'none', borderRadius: '12px',
@@ -799,7 +799,7 @@ export default function ExchangeRequestClient({ id }) {
               fontFamily: 'inherit',
               cursor: !submitting && reason ? 'pointer' : 'not-allowed',
               boxShadow: !submitting && reason
-                ? '0 8px 22px rgba(255,107,53,0.30)'
+                ? '0 8px 22px rgba(229,57,53,0.30)'
                 : 'none',
             }}
           >
@@ -814,7 +814,7 @@ export default function ExchangeRequestClient({ id }) {
 
       <p style={{
         textAlign: 'center', marginTop: '16px',
-        fontSize: '0.78rem', color: '#9585B0', fontWeight: '600',
+        fontSize: '0.78rem', color: '#8A9BA3', fontWeight: '600',
       }}>
         🔒 Pickup will be arranged within 2–3 business days after approval.
       </p>
@@ -831,11 +831,11 @@ function NotEligible({ icon, title, message, orderId }) {
       fontFamily: 'Nunito, sans-serif',
     }}>
       <div style={{ fontSize: '4rem', marginBottom: '16px' }}>{icon}</div>
-      <h2 style={{ color: '#2D1A4A', fontSize: '1.5rem', margin: '0 0 12px' }}>{title}</h2>
-      <p style={{ color: '#6B4E8A', margin: '0 0 24px', fontSize: '0.94rem' }}>{message}</p>
+      <h2 style={{ color: '#264653', fontSize: '1.5rem', margin: '0 0 12px' }}>{title}</h2>
+      <p style={{ color: '#4F6B76', margin: '0 0 24px', fontSize: '0.94rem' }}>{message}</p>
       <Link href={`/orders/${orderId}`} style={{
         display: 'inline-block', padding: '14px 32px',
-        background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+        background: 'linear-gradient(135deg,#3A6373,#264653)',
         color: 'white', borderRadius: '12px', textDecoration: 'none',
         fontWeight: '800', fontSize: '0.95rem',
       }}>

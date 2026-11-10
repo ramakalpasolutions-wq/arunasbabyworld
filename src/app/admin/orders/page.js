@@ -11,23 +11,23 @@ const STATUS_OPTIONS = [
 ];
 
 const STATUS_COLOR = {
-  Pending:    '#f59e0b',
-  Confirmed:  '#3b82f6',
-  Processing: '#8b5cf6',
+  Pending:    '#F2B33D',
+  Confirmed:  '#1E88E5',
+  Processing: '#3A6373',
   Shipped:    '#06b6d4',
-  Delivered:  '#10b981',
-  Cancelled:  '#ef4444',
+  Delivered:  '#43A047',
+  Cancelled:  '#E53935',
   Refunded:   '#6b7280',
 };
 
 // UI Config for the top tabs
 const statusCardsCfg = [
-  { label: 'Pending',    color: '#f59e0b', emoji: '⏳' },
-  { label: 'Confirmed',  color: '#3b82f6', emoji: '✅' },
-  { label: 'Processing', color: '#8b5cf6', emoji: '⚙️' },
+  { label: 'Pending',    color: '#F2B33D', emoji: '⏳' },
+  { label: 'Confirmed',  color: '#1E88E5', emoji: '✅' },
+  { label: 'Processing', color: '#3A6373', emoji: '⚙️' },
   { label: 'Shipped',    color: '#06b6d4', emoji: '🚚' },
-  { label: 'Delivered',  color: '#10b981', emoji: '🎉' },
-  { label: 'Cancelled',  color: '#ef4444', emoji: '❌' },
+  { label: 'Delivered',  color: '#43A047', emoji: '🎉' },
+  { label: 'Cancelled',  color: '#E53935', emoji: '❌' },
 ];
 
 function fmtOrderNum(order) {
@@ -41,7 +41,7 @@ function PaymentBadge({ order }) {
     return (
       <span style={{
         display: 'inline-flex', alignItems: 'center', gap: '4px',
-        padding: '3px 8px', background: '#D1FAE5', color: '#065F46',
+        padding: '3px 8px', background: '#D1FAE5', color: '#1B5E20',
         border: '1px solid #A7F3D0', borderRadius: '999px',
         fontSize: '0.70rem', fontWeight: '800', whiteSpace: 'nowrap',
       }}>
@@ -199,7 +199,7 @@ export default function AdminOrders() {
       {failedCount > 0 && (
         <div style={{
           background: 'linear-gradient(135deg, #FEF2F2, #FEE2E2)',
-          border: '2px solid #EF4444',
+          border: '2px solid #E53935',
           borderRadius: '14px',
           padding: '16px 20px',
           marginBottom: '20px',
@@ -208,12 +208,12 @@ export default function AdminOrders() {
           justifyContent: 'space-between',
           gap: '12px',
           flexWrap: 'wrap',
-          boxShadow: '0 4px 14px rgba(239,68,68,0.15)',
+          boxShadow: '0 4px 14px rgba(229,57,53,0.15)',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '14px' }}>
             <div style={{
               width: '44px', height: '44px', borderRadius: '12px',
-              background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+              background: 'linear-gradient(135deg, #E53935, #C62828)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '1.4rem', flexShrink: 0,
               animation: 'pulseRed 2s ease-in-out infinite',
@@ -233,7 +233,7 @@ export default function AdminOrders() {
             href="/admin/failed-payments"
             style={{
               padding: '10px 20px',
-              background: '#DC2626',
+              background: '#C62828',
               color: 'white',
               border: 'none',
               borderRadius: '10px',
@@ -316,7 +316,7 @@ export default function AdminOrders() {
               setPage(1); 
             }}
             style={{
-              background: '#fee2e2', color: '#dc2626',
+              background: '#fee2e2', color: '#C62828',
               border: 'none', padding: '9px 16px',
               borderRadius: '8px', fontWeight: '600',
               cursor: 'pointer', fontSize: '13px',
@@ -361,11 +361,11 @@ export default function AdminOrders() {
                     href={`/admin/orders/${order.id}`}
                     style={{
                       fontWeight: '800',
-                      color: '#7c3aed',
+                      color: '#264653',
                       fontFamily: 'monospace',
                       textDecoration: 'none',
                       fontSize: '13px',
-                      background: '#f3f0ff',
+                      background: '#FBF5E6',
                       padding: '3px 8px',
                       borderRadius: '6px',
                       whiteSpace: 'nowrap',
@@ -396,7 +396,7 @@ export default function AdminOrders() {
                 </td>
 
                 <td>
-                  <strong style={{ color: '#ff6b9d', fontSize: '14px', whiteSpace: 'nowrap' }}>
+                  <strong style={{ color: '#E53935', fontSize: '14px', whiteSpace: 'nowrap' }}>
                     ₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}
                   </strong>
                 </td>
@@ -437,7 +437,7 @@ export default function AdminOrders() {
                     <Link
                       href={`/admin/orders/${order.id}`}
                       style={{
-                        background: '#ede9fe', color: '#7c3aed',
+                        background: '#EEF3F5', color: '#264653',
                         padding: '5px 8px', borderRadius: '6px',
                         fontSize: '11px', fontWeight: '700',
                         textDecoration: 'none', whiteSpace: 'nowrap',
@@ -467,8 +467,8 @@ export default function AdminOrders() {
                 className={orderStyles.mobileOrderId}
                 style={{
                   fontFamily: 'monospace',
-                  background: '#f3f0ff',
-                  color: '#7c3aed',
+                  background: '#FBF5E6',
+                  color: '#264653',
                   padding: '3px 10px',
                   borderRadius: '6px',
                   fontWeight: '800',
@@ -524,7 +524,7 @@ export default function AdminOrders() {
                 <Link
                   href={`/admin/orders/${order.id}`}
                   style={{
-                    background: '#ede9fe', color: '#7c3aed',
+                    background: '#EEF3F5', color: '#264653',
                     padding: '6px 10px', borderRadius: '6px',
                     fontSize: '12px', fontWeight: '700',
                     textDecoration: 'none',
@@ -561,8 +561,8 @@ export default function AdminOrders() {
 
       <style>{`
         @keyframes pulseRed {
-          0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
-          50%      { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+          0%, 100% { box-shadow: 0 0 0 0 rgba(229,57,53, 0.4); }
+          50%      { box-shadow: 0 0 0 6px rgba(229,57,53, 0); }
         }
       `}</style>
     </div>

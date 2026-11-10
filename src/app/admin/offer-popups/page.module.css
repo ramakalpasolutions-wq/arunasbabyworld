@@ -16,7 +16,7 @@
 }
 
 .addBtn {
-  background: #e91e63;
+  background: #E53935;
   color: white;
   border: none;
   padding: 10px 20px;
@@ -136,7 +136,7 @@
 }
 
 .badgeInactive {
-  background: #fce4ec;
+  background: #FDE7E6;
   color: #c62828;
   padding: 2px 8px;
   border-radius: 4px;

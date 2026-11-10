@@ -1,6 +1,8 @@
 
 import MainLayout from '@/components/layout/MainLayout';
 import ProductDetailClient from './ProductDetailClient';
+import { cache } from 'react';
+import { permanentRedirect } from 'next/navigation';
 import prisma from '@/lib/prisma';
 
 const SITE_URL = 'https://www.arunasbabyworld.com';
@@ -19,16 +21,18 @@ function cleanDescription(value) {
     .slice(0, 160);
 }
 
-async function getProduct(id) {
-  // Prisma MongoDB ObjectId validation
-  if (!/^[a-f0-9]{24}$/i.test(id)) {
-    return null;
+// The URL segment is the product slug; old links that carry the database ID still work
+const getProduct = cache(async (idOrSlug) => {
+  const key = decodeURIComponent(String(idOrSlug || '')).trim();
+  if (!key) return null;
+
+  if (/^[a-f0-9]{24}$/i.test(key)) {
+    const byId = await prisma.product.findUnique({ where: { id: key } });
+    if (byId) return byId;
   }
 
-  return prisma.product.findUnique({
-    where: { id },
-  });
-}
+  return prisma.product.findUnique({ where: { slug: key } });
+});
 
 // ================================================
 // DYNAMIC PRODUCT SEO METADATA
@@ -58,7 +62,7 @@ export async function generateMetadata({ params }) {
     ) ||
     `Shop ${productName} online at Arunas Baby World. Explore baby products, clothing, toys and more.`;
 
-  const productUrl = `${SITE_URL}/products/${id}`;
+  const productUrl = `${SITE_URL}/products/${product.slug || product.id}`;
 
   // Product image or first available variant image
   const imageUrl =
@@ -108,9 +112,16 @@ export async function generateMetadata({ params }) {
 export default async function ProductDetailPage({ params }) {
   const { id } = await params;
 
+  const product = await getProduct(id);
+
+  // Opened with the database ID: send the visitor to the readable URL
+  if (product?.slug && decodeURIComponent(id) !== product.slug) {
+    permanentRedirect(`/products/${product.slug}`);
+  }
+
   return (
     <MainLayout>
-      <ProductDetailClient id={id} />
+      <ProductDetailClient id={product?.id || id} />
     </MainLayout>
   );
 }

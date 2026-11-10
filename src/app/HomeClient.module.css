@@ -1,47 +1,47 @@
 /* C:\Users\user\arunasbabyworld\src\app\HomeClient.module.css */
 
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Fredoka+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Baloo+2:wght@500;600;700;800&display=swap');
 
 /* ============================================================
    ROOT TOKENS
 ============================================================ */
 :root {
-  --orange:        #FF6B35;
-  --orange-dark:   #E8551F;
-  --orange-light:  #FFD4B8;
-  --orange-soft:   #FFF3EC;
-  --orange-glow:   rgba(255, 107, 53, 0.25);
-  --purple:        #7B2FBE;
-  --purple-dark:   #5E1F9A;
-  --purple-light:  #DFC5F8;
-  --purple-soft:   #F3E8FF;
-  --purple-glow:   rgba(123, 47, 190, 0.25);
-  --pink:          #EC4899;
-  --blue:          #0EA5E9;
-  --green:         #10B981;
-  --red:           #EF4444;
-  --yellow:        #F59E0B;
-  --text-dark:     #2D1A4A;
-  --text-mid:      #6B4E8A;
-  --text-muted:    #9585B0;
-  --bg-page:       #FFFBFE;
-  --bg-soft:       #FBF7FF;
-  --border:        #EDD9FF;
+  --orange:        #E53935;
+  --orange-dark:   #C62828;
+  --orange-light:  #F6D28B;
+  --orange-soft:   #FFF6E5;
+  --orange-glow:   rgba(229,57,53, 0.25);
+  --purple:        #264653;
+  --purple-dark:   #1B3540;
+  --purple-light:  #C9D6DB;
+  --purple-soft:   #EEF3F5;
+  --purple-glow:   rgba(38,70,83, 0.25);
+  --pink:          #E53935;
+  --blue:          #1E88E5;
+  --green:         #43A047;
+  --red:           #E53935;
+  --yellow:        #F2B33D;
+  --text-dark:     #264653;
+  --text-mid:      #4F6B76;
+  --text-muted:    #8A9BA3;
+  --bg-page:       #FFFBF2;
+  --bg-soft:       #FFFBF2;
+  --border:        #E8E2D2;
   --white:         #FFFFFF;
-  --font-display:  'Fredoka One', cursive;
+  --font-display:  'Baloo 2', cursive;
   --font-body:     'Nunito', sans-serif;
   --spring:        all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
   --smooth:        all 0.40s cubic-bezier(0.22, 1, 0.36, 1);
   --bounce:        all 0.45s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-  --shadow-sm:     0 4px 16px rgba(123, 47, 190, 0.08);
-  --shadow-md:     0 8px 32px rgba(123, 47, 190, 0.14);
-  --shadow-lg:     0 20px 60px rgba(123, 47, 190, 0.20);
-  --shadow-orange: 0 8px 32px rgba(255, 107, 53, 0.28);
-  --shadow-purple: 0 8px 32px rgba(123, 47, 190, 0.28);
-  --shadow-3d:     0 25px 50px -12px rgba(45, 26, 74, 0.25);
-  --grad-warm:     linear-gradient(135deg, #FF6B35 0%, #FF4081 50%, #7B2FBE 100%);
-  --grad-cool:     linear-gradient(135deg, #0EA5E9 0%, #7B2FBE 100%);
-  --grad-rainbow:  linear-gradient(90deg, #FF6B35, #7B2FBE, #FF8C5A, #9B4FDE, #FF6B35);
+  --shadow-sm:     0 4px 16px rgba(38,70,83, 0.08);
+  --shadow-md:     0 8px 32px rgba(38,70,83, 0.14);
+  --shadow-lg:     0 20px 60px rgba(38,70,83, 0.20);
+  --shadow-orange: 0 8px 32px rgba(229,57,53, 0.28);
+  --shadow-purple: 0 8px 32px rgba(38,70,83, 0.28);
+  --shadow-3d:     0 25px 50px -12px rgba(38,70,83, 0.25);
+  --grad-warm:     linear-gradient(135deg, #3A6373 0%, #3A6373 50%, #264653 100%);
+  --grad-cool:     linear-gradient(135deg, #1E88E5 0%, #264653 100%);
+  --grad-rainbow:  linear-gradient(90deg, #3A6373, #264653, #3A6373, #3A6373, #3A6373);
 }
 
 /* ============================================================
@@ -220,8 +220,8 @@
 /* ============================================================
    SELECTION
 ============================================================ */
-.home ::selection     { background: rgba(123, 47, 190, 0.20); color: var(--purple-dark); }
-.home ::-moz-selection{ background: rgba(123, 47, 190, 0.20); color: var(--purple-dark); }
+.home ::selection     { background: rgba(38,70,83, 0.20); color: var(--purple-dark); }
+.home ::-moz-selection{ background: rgba(38,70,83, 0.20); color: var(--purple-dark); }
 
 /* ============================================================
    GLOBAL KEYFRAMES
@@ -312,7 +312,7 @@
 ============================================================ */
 .promoSection {
   padding: clamp(28px, 4vw, 56px) clamp(12px, 2.5vw, 28px) clamp(56px, 5vw, 80px);
-  background: linear-gradient(135deg, #FFF7F0 0%, #F8F0FF 50%, #F0F8FF 100%);
+  background: linear-gradient(135deg, #FFFBF2 0%, #FFFBF2 50%, #F0F8FF 100%);
   position: relative;
   overflow: hidden;
 }
@@ -336,12 +336,12 @@
 .promoBadge {
   display: inline-block;
   padding: 6px 18px;
-  background: linear-gradient(135deg, #FFF5F0, #F5F0FF);
-  border: 1.5px solid #FFD4B8;
+  background: linear-gradient(135deg, #FFFBF2, #FBF5E6);
+  border: 1.5px solid #F6D28B;
   border-radius: 999px;
   font-size: clamp(0.62rem, 1vw, 0.74rem);
   font-weight: 800;
-  color: #FF6B35;
+  color: #E53935;
   text-transform: uppercase;
   letter-spacing: 1.2px;
   font-family: 'Nunito', sans-serif;
@@ -350,14 +350,14 @@
 .promoTitle {
   font-size: clamp(1.4rem, 3vw, 2.2rem);
   font-weight: 900;
-  color: #2D1A4A;
+  color: #264653;
   margin: 0;
   font-family: 'Nunito', sans-serif;
 }
 
 .promoDesc {
   font-size: clamp(0.82rem, 1.2vw, 0.92rem);
-  color: #9585B0;
+  color: #8A9BA3;
   margin: 0;
   font-weight: 500;
   font-family: 'Nunito', sans-serif;
@@ -459,7 +459,7 @@
   padding: clamp(16px, 2.5vw, 28px) clamp(14px, 2vw, 24px) clamp(8px, 1.2vw, 14px);
   font-size: clamp(1rem, 1.8vw, 1.6rem);
   font-weight: 600;
-  color: #2D1A4A;
+  color: #264653;
   font-family: 'Nunito', sans-serif;
   text-align: center;
   letter-spacing: 0.3px;
@@ -538,7 +538,7 @@
 .promoOffer {
   font-size: clamp(1.2rem, 3.2vw, 2.4rem);
   font-weight: 900;
-  color: #1a1a2e;
+  color: #1B3540;
   font-family: 'Nunito', sans-serif;
   letter-spacing: 0.5px;
   line-height: 1.1;
@@ -549,7 +549,7 @@
 
 .promoBtn {
   padding: clamp(9px, 1.3vw, 13px) clamp(24px, 3vw, 38px);
-  background: #1a1a2e;
+  background: #1B3540;
   color: white;
   border: none;
   border-radius: 999px;
@@ -559,15 +559,15 @@
   cursor: pointer;
   letter-spacing: 1.5px;
   text-transform: uppercase;
-  box-shadow: 0 6px 16px rgba(26, 26, 46, 0.25);
+  box-shadow: 0 6px 16px rgba(27,53,64, 0.25);
   transition: background 0.25s ease, transform 0.25s ease, box-shadow 0.25s ease;
   white-space: nowrap;
 }
 
 .promoBtn:hover {
-  background: #2D1A4A;
+  background: #264653;
   transform: scale(1.05) translateY(-2px);
-  box-shadow: 0 10px 24px rgba(26, 26, 46, 0.35);
+  box-shadow: 0 10px 24px rgba(27,53,64, 0.35);
 }
 
 /* Dots */
@@ -585,22 +585,22 @@
   width: 10px;
   height: 10px;
   border-radius: 50%;
-  border: 2px solid rgba(45, 26, 74, 0.30);
-  background: rgba(45, 26, 74, 0.12);
+  border: 2px solid rgba(38,70,83, 0.30);
+  background: rgba(38,70,83, 0.12);
   cursor: pointer;
   padding: 0;
   transition: all 0.3s ease;
 }
 
 .promoDot:hover {
-  background: rgba(45, 26, 74, 0.35);
+  background: rgba(38,70,83, 0.35);
   transform: scale(1.2);
 }
 
 .promoDotActive {
   width: 32px;
   border-radius: 999px;
-  background: linear-gradient(90deg, #FF6B35, #7B2FBE);
+  background: linear-gradient(90deg, #3A6373, #264653);
   border-color: transparent;
 }
 

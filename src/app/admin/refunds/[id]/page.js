@@ -6,11 +6,11 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 const STATUS_CONFIG = {
-  pending:      { label: 'Pending',      color: '#F59E0B', bg: '#FEF3C7', icon: '🟡', desc: 'Waiting for action' },
-  scheduled:    { label: 'Scheduled',    color: '#F97316', bg: '#FFEDD5', icon: '⏱️', desc: 'Auto-refund scheduled in 2 minutes' },
-  processing:   { label: 'Processing',   color: '#3B82F6', bg: '#DBEAFE', icon: '⚙️', desc: 'Refund being processed' },
-  completed:    { label: 'Completed',    color: '#10B981', bg: '#D1FAE5', icon: '✅', desc: 'Refund successfully sent' },
-  failed:       { label: 'Failed',       color: '#EF4444', bg: '#FEE2E2', icon: '❌', desc: 'Refund failed' },
+  pending:      { label: 'Pending',      color: '#F2B33D', bg: '#FEF3C7', icon: '🟡', desc: 'Waiting for action' },
+  scheduled:    { label: 'Scheduled',    color: '#FB8C00', bg: '#FFEDD5', icon: '⏱️', desc: 'Auto-refund scheduled in 2 minutes' },
+  processing:   { label: 'Processing',   color: '#1E88E5', bg: '#DBEAFE', icon: '⚙️', desc: 'Refund being processed' },
+  completed:    { label: 'Completed',    color: '#43A047', bg: '#D1FAE5', icon: '✅', desc: 'Refund successfully sent' },
+  failed:       { label: 'Failed',       color: '#E53935', bg: '#FEE2E2', icon: '❌', desc: 'Refund failed' },
   not_required: { label: 'Not Required', color: '#6B7280', bg: '#F3F4F6', icon: 'ℹ️', desc: 'No refund needed' },
 };
 
@@ -201,7 +201,7 @@ export default function AdminRefundDetail({ params }) {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: '60px', color: '#9585B0', fontFamily: 'Nunito, sans-serif' }}>
+      <div style={{ textAlign: 'center', padding: '60px', color: '#8A9BA3', fontFamily: 'Nunito, sans-serif' }}>
         <div style={{ fontSize: '2.5rem', marginBottom: '12px' }}>⏳</div>
         <p style={{ fontWeight: '700' }}>Loading refund...</p>
       </div>
@@ -212,9 +212,9 @@ export default function AdminRefundDetail({ params }) {
     return (
       <div style={{ textAlign: 'center', padding: '60px', fontFamily: 'Nunito, sans-serif' }}>
         <div style={{ fontSize: '3rem', marginBottom: '12px' }}>❌</div>
-        <h2 style={{ color: '#2D1A4A', margin: '0 0 12px' }}>Refund not found</h2>
+        <h2 style={{ color: '#264653', margin: '0 0 12px' }}>Refund not found</h2>
         <button onClick={() => router.back()} style={{
-          padding: '10px 24px', background: '#7B2FBE', color: 'white',
+          padding: '10px 24px', background: '#264653', color: 'white',
           border: 'none', borderRadius: '10px', fontWeight: '700', cursor: 'pointer',
           fontFamily: 'inherit',
         }}>
@@ -249,15 +249,15 @@ export default function AdminRefundDetail({ params }) {
         <div>
           <Link href="/admin/refunds" style={{
             display: 'inline-flex', alignItems: 'center', gap: '6px',
-            color: '#7B2FBE', textDecoration: 'none', fontWeight: '700',
+            color: '#264653', textDecoration: 'none', fontWeight: '700',
             fontSize: '0.84rem', marginBottom: '12px',
           }}>
             ← Back to Refunds
           </Link>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: '800', margin: '0 0 4px', color: '#2D1A4A' }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: '800', margin: '0 0 4px', color: '#264653' }}>
             Refund #{refund.id?.slice(-8).toUpperCase()}
           </h1>
-          <p style={{ color: '#9585B0', margin: 0, fontSize: '0.84rem', fontWeight: '600' }}>
+          <p style={{ color: '#8A9BA3', margin: 0, fontSize: '0.84rem', fontWeight: '600' }}>
             Created {new Date(refund.createdAt).toLocaleDateString('en-IN', {
               day: 'numeric', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit',
             })}
@@ -282,7 +282,7 @@ export default function AdminRefundDetail({ params }) {
       {isScheduled && timeLeft !== null && timeLeft > 0 && (
         <div style={{
           background: 'linear-gradient(135deg, #FFEDD5, #FED7AA)',
-          border: '3px solid #F97316',
+          border: '3px solid #FB8C00',
           borderRadius: '20px',
           padding: '28px',
           marginBottom: '24px',
@@ -302,7 +302,7 @@ export default function AdminRefundDetail({ params }) {
               </p>
               <p style={{
                 margin: 0, fontSize: '4rem', fontWeight: '900',
-                color: '#EA580C', lineHeight: 1, fontFamily: 'monospace',
+                color: '#FB8C00', lineHeight: 1, fontFamily: 'monospace',
                 letterSpacing: '2px',
               }}>
                 {formattedTime}
@@ -321,12 +321,12 @@ export default function AdminRefundDetail({ params }) {
               style={{
                 padding: '18px 30px',
                 background: 'white',
-                color: '#DC2626',
-                border: '2px solid #EF4444',
+                color: '#C62828',
+                border: '2px solid #E53935',
                 borderRadius: '14px',
                 fontWeight: '800', fontSize: '1.05rem',
                 cursor: 'pointer', fontFamily: 'inherit',
-                boxShadow: '0 6px 18px rgba(239,68,68,0.25)',
+                boxShadow: '0 6px 18px rgba(229,57,53,0.25)',
               }}
             >
               🛑 Cancel Refund
@@ -344,7 +344,7 @@ export default function AdminRefundDetail({ params }) {
             <div style={{
               height: '100%',
               width: `${((120 - timeLeft) / 120) * 100}%`,
-              background: 'linear-gradient(90deg, #F97316, #EA580C)',
+              background: 'linear-gradient(90deg, #FB8C00, #FB8C00)',
               borderRadius: '999px',
               transition: 'width 1s linear',
               boxShadow: '0 0 10px rgba(249,115,22,0.5)',
@@ -364,7 +364,7 @@ export default function AdminRefundDetail({ params }) {
       {isScheduled && timeLeft === 0 && (
         <div style={{
           background: 'linear-gradient(135deg, #DBEAFE, #BFDBFE)',
-          border: '3px solid #3B82F6',
+          border: '3px solid #1E88E5',
           borderRadius: '16px',
           padding: '24px',
           marginBottom: '24px',
@@ -388,24 +388,24 @@ export default function AdminRefundDetail({ params }) {
           {/* Refund Amount Card */}
           <div style={{
             background: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)',
-            border: '2px solid #10B981',
+            border: '2px solid #43A047',
             borderRadius: '16px',
             padding: '24px',
             textAlign: 'center',
           }}>
             <p style={{
               margin: '0 0 6px', fontSize: '0.78rem', fontWeight: '800',
-              color: '#065F46', textTransform: 'uppercase', letterSpacing: '0.8px',
+              color: '#1B5E20', textTransform: 'uppercase', letterSpacing: '0.8px',
             }}>
               Refund Amount
             </p>
             <p style={{
               margin: 0, fontSize: '2.4rem', fontWeight: '900',
-              color: '#10B981', lineHeight: 1,
+              color: '#43A047', lineHeight: 1,
             }}>
               ₹{refund.amount?.toLocaleString('en-IN')}
             </p>
-            <p style={{ margin: '8px 0 0', fontSize: '0.82rem', color: '#047857', fontWeight: '700' }}>
+            <p style={{ margin: '8px 0 0', fontSize: '0.82rem', color: '#2E7D32', fontWeight: '700' }}>
               {statusCfg.desc}
             </p>
           </div>
@@ -413,9 +413,9 @@ export default function AdminRefundDetail({ params }) {
           {/* Customer Info */}
           <div style={{
             background: 'white', borderRadius: '14px',
-            border: '1.5px solid #EDD9FF', padding: '20px',
+            border: '1.5px solid #E8E2D2', padding: '20px',
           }}>
-            <h3 style={{ margin: '0 0 14px', fontSize: '1rem', fontWeight: '800', color: '#2D1A4A' }}>
+            <h3 style={{ margin: '0 0 14px', fontSize: '1rem', fontWeight: '800', color: '#264653' }}>
               👤 Customer Details
             </h3>
             <div style={{ display: 'grid', gap: '10px' }}>
@@ -426,7 +426,7 @@ export default function AdminRefundDetail({ params }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
                 <span style={labelTextStyle}>Email</span>
                 <a href={`mailto:${refund.user?.email}`} style={{
-                  color: '#7B2FBE', textDecoration: 'none', fontWeight: '700', fontSize: '0.86rem',
+                  color: '#264653', textDecoration: 'none', fontWeight: '700', fontSize: '0.86rem',
                 }}>
                   {refund.user?.email || '—'}
                 </a>
@@ -435,7 +435,7 @@ export default function AdminRefundDetail({ params }) {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
                   <span style={labelTextStyle}>Phone</span>
                   <a href={`tel:${refund.user.phone}`} style={{
-                    color: '#7B2FBE', textDecoration: 'none', fontWeight: '700', fontSize: '0.86rem',
+                    color: '#264653', textDecoration: 'none', fontWeight: '700', fontSize: '0.86rem',
                   }}>
                     📞 {refund.user.phone}
                   </a>
@@ -447,12 +447,12 @@ export default function AdminRefundDetail({ params }) {
           {/* Refund Method */}
           <div style={{
             background: 'white', borderRadius: '14px',
-            border: `2px solid ${isUPI ? '#10B981' : isBank ? '#3B82F6' : '#7B2FBE'}`,
+            border: `2px solid ${isUPI ? '#43A047' : isBank ? '#1E88E5' : '#264653'}`,
             padding: '20px',
           }}>
             <h3 style={{
               margin: '0 0 14px', fontSize: '1rem', fontWeight: '800',
-              color: isUPI ? '#10B981' : isBank ? '#3B82F6' : '#7B2FBE',
+              color: isUPI ? '#43A047' : isBank ? '#1E88E5' : '#264653',
             }}>
               {isUPI && '📱 UPI Refund Details'}
               {isBank && '🏦 Bank Transfer Details'}
@@ -464,13 +464,13 @@ export default function AdminRefundDetail({ params }) {
                 padding: '14px 18px', background: '#ECFDF5',
                 border: '1.5px solid #A7F3D0', borderRadius: '10px',
               }}>
-                <p style={{ margin: '0 0 6px', fontSize: '0.74rem', fontWeight: '800', color: '#065F46', textTransform: 'uppercase' }}>
+                <p style={{ margin: '0 0 6px', fontSize: '0.74rem', fontWeight: '800', color: '#1B5E20', textTransform: 'uppercase' }}>
                   UPI ID — Copy to send refund
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                   <code style={{
                     fontSize: '1.1rem', fontWeight: '800',
-                    color: '#10B981', fontFamily: 'monospace', wordBreak: 'break-all',
+                    color: '#43A047', fontFamily: 'monospace', wordBreak: 'break-all',
                   }}>
                     {refund.bankDetails.upiId}
                   </code>
@@ -480,7 +480,7 @@ export default function AdminRefundDetail({ params }) {
                       toast.success('UPI ID copied!');
                     }}
                     style={{
-                      padding: '4px 12px', background: '#10B981', color: 'white',
+                      padding: '4px 12px', background: '#43A047', color: 'white',
                       border: 'none', borderRadius: '6px', fontSize: '0.74rem', fontWeight: '700',
                       cursor: 'pointer', fontFamily: 'inherit',
                     }}
@@ -502,13 +502,13 @@ export default function AdminRefundDetail({ params }) {
                 {refund.bankDetails.accountNumber && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
                     <span style={labelTextStyle}>Account Number</span>
-                    <code style={{ fontWeight: '800', color: '#2D1A4A' }}>{refund.bankDetails.accountNumber}</code>
+                    <code style={{ fontWeight: '800', color: '#264653' }}>{refund.bankDetails.accountNumber}</code>
                   </div>
                 )}
                 {refund.bankDetails.ifscCode && (
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
                     <span style={labelTextStyle}>IFSC Code</span>
-                    <code style={{ fontWeight: '800', color: '#2D1A4A' }}>{refund.bankDetails.ifscCode}</code>
+                    <code style={{ fontWeight: '800', color: '#264653' }}>{refund.bankDetails.ifscCode}</code>
                   </div>
                 )}
                 {refund.bankDetails.bankName && (
@@ -525,11 +525,11 @@ export default function AdminRefundDetail({ params }) {
                 padding: '14px 18px', background: '#ECFDF5',
                 border: '1.5px solid #A7F3D0', borderRadius: '10px',
               }}>
-                <p style={{ margin: '0 0 8px', fontSize: '0.86rem', color: '#065F46', fontWeight: '700' }}>
+                <p style={{ margin: '0 0 8px', fontSize: '0.86rem', color: '#1B5E20', fontWeight: '700' }}>
                   ⚡ Auto-refund via Razorpay
                 </p>
                 {refund.razorpayRefundId && (
-                  <code style={{ fontSize: '0.78rem', color: '#10B981', fontFamily: 'monospace', wordBreak: 'break-all' }}>
+                  <code style={{ fontSize: '0.78rem', color: '#43A047', fontFamily: 'monospace', wordBreak: 'break-all' }}>
                     {refund.razorpayRefundId}
                   </code>
                 )}
@@ -541,15 +541,15 @@ export default function AdminRefundDetail({ params }) {
           {refund.reason && (
             <div style={{
               background: 'white', borderRadius: '14px',
-              border: '1.5px solid #EDD9FF', padding: '20px',
+              border: '1.5px solid #E8E2D2', padding: '20px',
             }}>
-              <h3 style={{ margin: '0 0 10px', fontSize: '1rem', fontWeight: '800', color: '#2D1A4A' }}>
+              <h3 style={{ margin: '0 0 10px', fontSize: '1rem', fontWeight: '800', color: '#264653' }}>
                 📝 Reason
               </h3>
               <p style={{
                 margin: 0, padding: '12px 14px',
-                background: '#FBF7FF', borderRadius: '10px',
-                color: '#6B4E8A', fontSize: '0.88rem', fontWeight: '600',
+                background: '#FFFBF2', borderRadius: '10px',
+                color: '#4F6B76', fontSize: '0.88rem', fontWeight: '600',
               }}>
                 {refund.reason}
               </p>
@@ -560,16 +560,16 @@ export default function AdminRefundDetail({ params }) {
           {refund.order && (
             <div style={{
               background: 'white', borderRadius: '14px',
-              border: '1.5px solid #EDD9FF', padding: '20px',
+              border: '1.5px solid #E8E2D2', padding: '20px',
             }}>
-              <h3 style={{ margin: '0 0 14px', fontSize: '1rem', fontWeight: '800', color: '#2D1A4A' }}>
+              <h3 style={{ margin: '0 0 14px', fontSize: '1rem', fontWeight: '800', color: '#264653' }}>
                 📦 Order Info
               </h3>
               <div style={{ display: 'grid', gap: '10px' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
                   <span style={labelTextStyle}>Order ID</span>
                   <Link href={`/admin/orders/${refund.orderId}`} style={{
-                    color: '#7B2FBE', fontFamily: 'monospace', fontWeight: '800',
+                    color: '#264653', fontFamily: 'monospace', fontWeight: '800',
                     textDecoration: 'none', fontSize: '0.86rem',
                   }}>
                     #{refund.orderId?.slice(-12).toUpperCase()}
@@ -577,7 +577,7 @@ export default function AdminRefundDetail({ params }) {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
                   <span style={labelTextStyle}>Order Total</span>
-                  <strong style={{ color: '#FF6B35', fontSize: '0.95rem' }}>
+                  <strong style={{ color: '#E53935', fontSize: '0.95rem' }}>
                     ₹{refund.order.totalPrice?.toLocaleString('en-IN')}
                   </strong>
                 </div>
@@ -596,11 +596,11 @@ export default function AdminRefundDetail({ params }) {
           {/* Notes */}
           <div style={{
             background: 'white', borderRadius: '14px',
-            border: '1.5px solid #EDD9FF', padding: '20px',
+            border: '1.5px solid #E8E2D2', padding: '20px',
           }}>
             <label style={{
               display: 'block', fontSize: '0.74rem', fontWeight: '800',
-              color: '#7B2FBE', marginBottom: '6px', textTransform: 'uppercase',
+              color: '#264653', marginBottom: '6px', textTransform: 'uppercase',
               letterSpacing: '0.6px',
             }}>
               📝 Admin Notes
@@ -612,10 +612,10 @@ export default function AdminRefundDetail({ params }) {
               rows={3}
               style={{
                 width: '100%', padding: '10px 12px',
-                border: '1.5px solid #EDD9FF', borderRadius: '10px',
+                border: '1.5px solid #E8E2D2', borderRadius: '10px',
                 fontFamily: 'inherit', fontSize: '0.84rem',
                 resize: 'vertical', outline: 'none',
-                boxSizing: 'border-box', color: '#2D1A4A',
+                boxSizing: 'border-box', color: '#264653',
               }}
             />
           </div>
@@ -623,9 +623,9 @@ export default function AdminRefundDetail({ params }) {
           {/* Action buttons */}
           <div style={{
             background: 'white', borderRadius: '14px',
-            border: '1.5px solid #EDD9FF', padding: '20px',
+            border: '1.5px solid #E8E2D2', padding: '20px',
           }}>
-            <h3 style={{ margin: '0 0 14px', fontSize: '1rem', fontWeight: '800', color: '#2D1A4A' }}>
+            <h3 style={{ margin: '0 0 14px', fontSize: '1rem', fontWeight: '800', color: '#264653' }}>
               ⚡ Admin Actions
             </h3>
 
@@ -652,12 +652,12 @@ export default function AdminRefundDetail({ params }) {
                   disabled={updating}
                   style={{
                     width: '100%', padding: '16px',
-                    background: 'linear-gradient(135deg, #10B981, #059669)',
+                    background: 'linear-gradient(135deg, #43A047, #388E3C)',
                     color: 'white', border: 'none', borderRadius: '12px',
                     fontWeight: '900', fontSize: '1.05rem',
                     cursor: 'pointer', fontFamily: 'inherit',
                     marginBottom: '10px',
-                    boxShadow: '0 8px 22px rgba(16,185,129,0.35)',
+                    boxShadow: '0 8px 22px rgba(67,160,71,0.35)',
                   }}
                 >
                   {updating ? '⏳ Scheduling...' : '✅ Accept Return & Auto-Refund'}
@@ -668,7 +668,7 @@ export default function AdminRefundDetail({ params }) {
                   disabled={updating}
                   style={{
                     width: '100%', padding: '10px',
-                    background: 'white', color: '#10B981',
+                    background: 'white', color: '#43A047',
                     border: '1.5px solid #A7F3D0', borderRadius: '10px',
                     fontWeight: '700', fontSize: '0.86rem',
                     cursor: 'pointer', fontFamily: 'inherit',
@@ -683,7 +683,7 @@ export default function AdminRefundDetail({ params }) {
                   disabled={updating}
                   style={{
                     width: '100%', padding: '10px',
-                    background: 'white', color: '#EF4444',
+                    background: 'white', color: '#E53935',
                     border: '1.5px solid #FCA5A5', borderRadius: '10px',
                     fontWeight: '700', fontSize: '0.86rem',
                     cursor: 'pointer', fontFamily: 'inherit',
@@ -714,22 +714,22 @@ export default function AdminRefundDetail({ params }) {
             {isCompleted && (
               <div style={{
                 padding: '24px', background: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)',
-                border: '2px solid #10B981', borderRadius: '12px',
+                border: '2px solid #43A047', borderRadius: '12px',
                 textAlign: 'center',
               }}>
                 <div style={{ fontSize: '3.5rem' }}>✅</div>
-                <p style={{ margin: '8px 0 0', fontSize: '1.2rem', color: '#065F46', fontWeight: '900' }}>
+                <p style={{ margin: '8px 0 0', fontSize: '1.2rem', color: '#1B5E20', fontWeight: '900' }}>
                   Refund Completed!
                 </p>
                 {refund.processedAt && (
-                  <p style={{ margin: '6px 0 0', fontSize: '0.84rem', color: '#047857', fontWeight: '700' }}>
+                  <p style={{ margin: '6px 0 0', fontSize: '0.84rem', color: '#2E7D32', fontWeight: '700' }}>
                     {new Date(refund.processedAt).toLocaleDateString('en-IN', {
                       day: 'numeric', month: 'long', year: 'numeric',
                       hour: '2-digit', minute: '2-digit',
                     })}
                   </p>
                 )}
-                <p style={{ margin: '12px 0 0', fontSize: '0.78rem', color: '#065F46', fontWeight: '600' }}>
+                <p style={{ margin: '12px 0 0', fontSize: '0.78rem', color: '#1B5E20', fontWeight: '600' }}>
                   Customer received ₹{refund.amount?.toLocaleString('en-IN')}
                 </p>
               </div>
@@ -739,7 +739,7 @@ export default function AdminRefundDetail({ params }) {
             {refund.refundStatus === 'processing' && (
               <div style={{
                 padding: '24px', background: '#DBEAFE',
-                border: '2px solid #3B82F6', borderRadius: '12px',
+                border: '2px solid #1E88E5', borderRadius: '12px',
                 textAlign: 'center',
               }}>
                 <div style={{ fontSize: '3rem' }}>⚙️</div>
@@ -753,7 +753,7 @@ export default function AdminRefundDetail({ params }) {
                   onClick={() => handleStatusUpdate('completed')}
                   style={{
                     marginTop: '14px',
-                    padding: '10px 24px', background: '#10B981', color: 'white',
+                    padding: '10px 24px', background: '#43A047', color: 'white',
                     border: 'none', borderRadius: '10px', fontSize: '0.84rem',
                     fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit',
                   }}
@@ -783,7 +783,7 @@ export default function AdminRefundDetail({ params }) {
                   <button
                     onClick={handleAcceptReturn}
                     style={{
-                      padding: '8px 20px', background: '#3B82F6', color: 'white',
+                      padding: '8px 20px', background: '#1E88E5', color: 'white',
                       border: 'none', borderRadius: '8px', fontSize: '0.82rem',
                       fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit',
                     }}
@@ -793,7 +793,7 @@ export default function AdminRefundDetail({ params }) {
                   <button
                     onClick={() => handleStatusUpdate('completed')}
                     style={{
-                      padding: '8px 20px', background: '#10B981', color: 'white',
+                      padding: '8px 20px', background: '#43A047', color: 'white',
                       border: 'none', borderRadius: '8px', fontSize: '0.82rem',
                       fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit',
                     }}
@@ -808,18 +808,18 @@ export default function AdminRefundDetail({ params }) {
           {/* Timeline */}
           <div style={{
             background: 'white', borderRadius: '14px',
-            border: '1.5px solid #EDD9FF', padding: '20px',
+            border: '1.5px solid #E8E2D2', padding: '20px',
           }}>
-            <h3 style={{ margin: '0 0 14px', fontSize: '0.96rem', fontWeight: '800', color: '#2D1A4A' }}>
+            <h3 style={{ margin: '0 0 14px', fontSize: '0.96rem', fontWeight: '800', color: '#264653' }}>
               🕒 Timeline
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <TimelineItem label="Created" date={refund.createdAt} color="#7B2FBE" />
+              <TimelineItem label="Created" date={refund.createdAt} color="#264653" />
               {refund.scheduledAt && (
-                <TimelineItem label="Scheduled" date={refund.scheduledAt} color="#F97316" />
+                <TimelineItem label="Scheduled" date={refund.scheduledAt} color="#FB8C00" />
               )}
               {refund.processedAt && (
-                <TimelineItem label="Processed" date={refund.processedAt} color="#10B981" />
+                <TimelineItem label="Processed" date={refund.processedAt} color="#43A047" />
               )}
             </div>
           </div>
@@ -847,14 +847,14 @@ export default function AdminRefundDetail({ params }) {
 
 const labelTextStyle = {
   fontSize: '0.82rem',
-  color: '#9585B0',
+  color: '#8A9BA3',
   fontWeight: '600',
   margin: 0,
 };
 
 const valueTextStyle = {
   fontSize: '0.88rem',
-  color: '#2D1A4A',
+  color: '#264653',
   fontWeight: '700',
 };
 
@@ -866,10 +866,10 @@ function TimelineItem({ label, date, color }) {
         background: color, flexShrink: 0,
       }} />
       <div style={{ flex: 1 }}>
-        <p style={{ margin: 0, fontSize: '0.78rem', color: '#9585B0', fontWeight: '600' }}>
+        <p style={{ margin: 0, fontSize: '0.78rem', color: '#8A9BA3', fontWeight: '600' }}>
           {label}
         </p>
-        <p style={{ margin: 0, fontSize: '0.84rem', color: '#2D1A4A', fontWeight: '700' }}>
+        <p style={{ margin: 0, fontSize: '0.84rem', color: '#264653', fontWeight: '700' }}>
           {new Date(date).toLocaleDateString('en-IN', {
             day: 'numeric', month: 'short', year: 'numeric',
             hour: '2-digit', minute: '2-digit',

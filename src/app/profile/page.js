@@ -20,8 +20,8 @@ export default function ProfilePage() {
         }}>
           <div style={{
             width: '40px', height: '40px',
-            border: '4px solid #fce4ec',
-            borderTop: '4px solid #ff6b9d',
+            border: '4px solid #FDE7E6',
+            borderTop: '4px solid #E53935',
             borderRadius: '50%',
             animation: 'spin 0.8s linear infinite',
           }} />

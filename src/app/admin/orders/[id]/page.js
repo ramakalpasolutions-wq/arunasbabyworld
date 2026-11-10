@@ -13,14 +13,14 @@ const STATUS_OPTIONS = [
 ];
 
 const STATUS_COLOR = {
-  Pending:          '#f59e0b',
-  Confirmed:        '#3b82f6',
-  Processing:       '#8b5cf6',
+  Pending:          '#F2B33D',
+  Confirmed:        '#1E88E5',
+  Processing:       '#3A6373',
   Shipped:          '#06b6d4',
-  Delivered:        '#10b981',
-  Cancelled:        '#ef4444',
+  Delivered:        '#43A047',
+  Cancelled:        '#E53935',
   Refunded:         '#6b7280',
-  Return_Requested: '#f97316',
+  Return_Requested: '#FB8C00',
 };
 
 const STATUS_STEPS = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered'];
@@ -118,7 +118,7 @@ function ShipButton({ order, onSuccess }) {
     return (
       <div style={{
         padding: '14px 16px',
-        background: 'linear-gradient(135deg, #E0F2FE, #EDE9FE)',
+        background: 'linear-gradient(135deg, #E0F2FE, #EEF3F5)',
         border: '1.5px solid #7DD3FC',
         borderRadius: '12px',
       }}>
@@ -237,7 +237,7 @@ function ShipButton({ order, onSuccess }) {
           style={{
             width: '100%', padding: '12px',
             background: manualAwb.trim() && !loading
-              ? 'linear-gradient(135deg, #10B981, #059669)'
+              ? 'linear-gradient(135deg, #43A047, #388E3C)'
               : '#E5E7EB',
             color: manualAwb.trim() && !loading ? 'white' : '#9CA3AF',
             border: 'none', borderRadius: '10px',
@@ -486,7 +486,7 @@ function AdminCancelModal({ order, onClose, onSuccess }) {
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800', color: '#DC2626' }}>
+            <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '800', color: '#C62828' }}>
               ❌ Cancel & Refund Order
             </h2>
             <p style={{ margin: '4px 0 0', fontSize: '0.82rem', color: '#7F1D1D', fontWeight: '700', fontFamily: 'monospace' }}>
@@ -498,7 +498,7 @@ function AdminCancelModal({ order, onClose, onSuccess }) {
             style={{
               background: 'white', border: '1.5px solid #E5E7EB',
               width: '34px', height: '34px', borderRadius: '50%',
-              cursor: 'pointer', color: '#DC2626', fontSize: '1rem', fontWeight: '700',
+              cursor: 'pointer', color: '#C62828', fontSize: '1rem', fontWeight: '700',
             }}
           >
             ✕
@@ -520,13 +520,13 @@ function AdminCancelModal({ order, onClose, onSuccess }) {
                 {order.paymentMethod} · {isPaid ? '✅ Paid' : '⏳ Not Paid'}
               </p>
             </div>
-            <strong style={{ color: '#FF6B35', fontSize: '1.1rem' }}>
+            <strong style={{ color: '#E53935', fontSize: '1.1rem' }}>
               ₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}
             </strong>
           </div>
 
           <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: '800', color: '#1F2937', marginBottom: '8px' }}>
-            Cancellation Reason <span style={{ color: '#EF4444' }}>*</span>
+            Cancellation Reason <span style={{ color: '#E53935' }}>*</span>
           </label>
 
           <div style={{ display: 'grid', gap: '6px', marginBottom: '12px' }}>
@@ -542,7 +542,7 @@ function AdminCancelModal({ order, onClose, onSuccess }) {
                 <input
                   type="radio" name="cancelReason" value={r}
                   checked={reason === r} onChange={e => setReason(e.target.value)}
-                  style={{ accentColor: '#EF4444' }}
+                  style={{ accentColor: '#E53935' }}
                 />
                 {r}
               </label>
@@ -569,15 +569,15 @@ function AdminCancelModal({ order, onClose, onSuccess }) {
               <div style={{
                 padding: '12px 14px',
                 background: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)',
-                border: '1.5px solid #10B981',
+                border: '1.5px solid #43A047',
                 borderRadius: '12px', marginBottom: '14px',
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               }}>
                 <div>
-                  <p style={{ margin: 0, fontSize: '0.74rem', fontWeight: '800', color: '#065F46', textTransform: 'uppercase' }}>
+                  <p style={{ margin: 0, fontSize: '0.74rem', fontWeight: '800', color: '#1B5E20', textTransform: 'uppercase' }}>
                     💰 Refund Amount
                   </p>
-                  <p style={{ margin: '3px 0 0', fontSize: '1.4rem', fontWeight: '900', color: '#10B981' }}>
+                  <p style={{ margin: '3px 0 0', fontSize: '1.4rem', fontWeight: '900', color: '#43A047' }}>
                     ₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}
                   </p>
                 </div>
@@ -585,7 +585,7 @@ function AdminCancelModal({ order, onClose, onSuccess }) {
               </div>
 
               <label style={{ display: 'block', fontSize: '0.84rem', fontWeight: '800', color: '#1F2937', marginBottom: '8px' }}>
-                Refund Method <span style={{ color: '#EF4444' }}>*</span>
+                Refund Method <span style={{ color: '#E53935' }}>*</span>
               </label>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px', marginBottom: '14px' }}>
@@ -595,7 +595,7 @@ function AdminCancelModal({ order, onClose, onSuccess }) {
                     style={{
                       padding: '14px', textAlign: 'center',
                       background: refundMethod === 'razorpay' ? '#F0FDF4' : 'white',
-                      border: `2px solid ${refundMethod === 'razorpay' ? '#10B981' : '#E5E7EB'}`,
+                      border: `2px solid ${refundMethod === 'razorpay' ? '#43A047' : '#E5E7EB'}`,
                       borderRadius: '12px', cursor: 'pointer',
                       transition: 'all 0.2s', position: 'relative',
                     }}
@@ -603,13 +603,13 @@ function AdminCancelModal({ order, onClose, onSuccess }) {
                     <div style={{ fontSize: '1.6rem', marginBottom: '6px' }}>⚡</div>
                     <p style={{
                       margin: '0 0 4px', fontSize: '0.86rem', fontWeight: '800',
-                      color: refundMethod === 'razorpay' ? '#059669' : '#374151',
+                      color: refundMethod === 'razorpay' ? '#388E3C' : '#374151',
                     }}>
                       Auto Razorpay
                     </p>
                     <span style={{
                       display: 'inline-block', fontSize: '0.62rem', fontWeight: '700',
-                      background: '#D1FAE5', color: '#065F46',
+                      background: '#D1FAE5', color: '#1B5E20',
                       padding: '2px 8px', borderRadius: '999px',
                     }}>
                       Instant / 2-3 hrs
@@ -618,7 +618,7 @@ function AdminCancelModal({ order, onClose, onSuccess }) {
                       <div style={{
                         position: 'absolute', top: '6px', right: '6px',
                         width: '18px', height: '18px', borderRadius: '50%',
-                        background: '#10B981', color: 'white',
+                        background: '#43A047', color: 'white',
                         display: 'flex', alignItems: 'center', justifyContent: 'center',
                         fontSize: '0.68rem', fontWeight: '900',
                       }}>✓</div>
@@ -631,7 +631,7 @@ function AdminCancelModal({ order, onClose, onSuccess }) {
                   style={{
                     padding: '14px', textAlign: 'center',
                     background: refundMethod === 'manual' ? '#EFF6FF' : 'white',
-                    border: `2px solid ${refundMethod === 'manual' ? '#3B82F6' : '#E5E7EB'}`,
+                    border: `2px solid ${refundMethod === 'manual' ? '#1E88E5' : '#E5E7EB'}`,
                     borderRadius: '12px', cursor: 'pointer',
                     transition: 'all 0.2s', position: 'relative',
                   }}
@@ -650,7 +650,7 @@ function AdminCancelModal({ order, onClose, onSuccess }) {
                     <div style={{
                       position: 'absolute', top: '6px', right: '6px',
                       width: '18px', height: '18px', borderRadius: '50%',
-                      background: '#3B82F6', color: 'white',
+                      background: '#1E88E5', color: 'white',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       fontSize: '0.68rem', fontWeight: '900',
                     }}>✓</div>
@@ -785,11 +785,11 @@ function AdminCancelModal({ order, onClose, onSuccess }) {
               disabled={loading}
               style={{
                 flex: 1.5, padding: '12px',
-                background: loading ? '#FCA5A5' : 'linear-gradient(135deg, #EF4444, #DC2626)',
+                background: loading ? '#FCA5A5' : 'linear-gradient(135deg, #E53935, #C62828)',
                 color: 'white', border: 'none', borderRadius: '10px',
                 fontWeight: '800', cursor: loading ? 'wait' : 'pointer',
                 fontFamily: 'Nunito, sans-serif',
-                boxShadow: '0 4px 12px rgba(239,68,68,0.25)',
+                boxShadow: '0 4px 12px rgba(229,57,53,0.25)',
               }}
             >
               {loading
@@ -949,7 +949,7 @@ export default function AdminOrderDetail({ params }) {
     }}>
       <div style={{
         width: '40px', height: '40px',
-        border: '4px solid #fce4ec', borderTop: '4px solid #ff6b9d',
+        border: '4px solid #FDE7E6', borderTop: '4px solid #E53935',
         borderRadius: '50%', animation: 'spin 0.8s linear infinite',
       }} />
       <p style={{ color: '#888' }}>Loading order details...</p>
@@ -991,7 +991,7 @@ export default function AdminOrderDetail({ params }) {
               Order{' '}
               <span style={{
                 fontFamily: 'monospace',
-                background: 'linear-gradient(135deg, #7c3aed, #a855f7)',
+                background: 'linear-gradient(135deg, #264653, #a855f7)',
                 WebkitBackgroundClip: 'text',
                 WebkitTextFillColor: 'transparent',
                 backgroundClip: 'text',
@@ -1023,12 +1023,12 @@ export default function AdminOrderDetail({ params }) {
               onClick={() => setShowPrintBill(true)}
               style={{
                 padding: '8px 16px',
-                background: 'linear-gradient(135deg, #10B981, #059669)',
+                background: 'linear-gradient(135deg, #43A047, #388E3C)',
                 color: 'white', border: 'none',
                 borderRadius: '10px', fontWeight: '800',
                 fontSize: '13px', cursor: 'pointer',
                 fontFamily: 'Nunito, sans-serif',
-                boxShadow: '0 4px 12px rgba(16,185,129,0.25)',
+                boxShadow: '0 4px 12px rgba(67,160,71,0.25)',
                 display: 'inline-flex', alignItems: 'center', gap: '6px',
               }}
             >
@@ -1041,12 +1041,12 @@ export default function AdminOrderDetail({ params }) {
               onClick={() => setShowAdminCancelModal(true)}
               style={{
                 padding: '8px 16px',
-                background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+                background: 'linear-gradient(135deg, #E53935, #C62828)',
                 color: 'white', border: 'none',
                 borderRadius: '10px', fontWeight: '800',
                 fontSize: '13px', cursor: 'pointer',
                 fontFamily: 'Nunito, sans-serif',
-                boxShadow: '0 4px 12px rgba(239,68,68,0.25)',
+                boxShadow: '0 4px 12px rgba(229,57,53,0.25)',
               }}
             >
               ❌ Cancel & Refund
@@ -1063,14 +1063,14 @@ export default function AdminOrderDetail({ params }) {
       {isReturnRequested && returnReq && (
         <div style={{
           background: 'linear-gradient(135deg, #FFF7ED, #FFEDD5)',
-          border: '2px solid #F97316', borderRadius: '16px',
+          border: '2px solid #FB8C00', borderRadius: '16px',
           padding: '20px 24px', marginBottom: '20px',
           boxShadow: '0 8px 24px rgba(249,115,22,0.15)',
         }}>
           <div style={{ display: 'flex', alignItems: 'flex-start', gap: '14px', marginBottom: '16px' }}>
             <div style={{
               width: '50px', height: '50px', borderRadius: '12px',
-              background: 'linear-gradient(135deg, #F97316, #EA580C)',
+              background: 'linear-gradient(135deg, #FB8C00, #FB8C00)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '1.6rem', color: 'white', flexShrink: 0,
             }}>🔄</div>
@@ -1084,7 +1084,7 @@ export default function AdminOrderDetail({ params }) {
             </div>
             <span style={{
               padding: '6px 14px', background: 'white',
-              color: '#F97316', border: '2px solid #FDBA74',
+              color: '#FB8C00', border: '2px solid #FDBA74',
               borderRadius: '999px', fontSize: '0.78rem', fontWeight: '800',
             }}>
               ⏳ Pending Action
@@ -1101,12 +1101,12 @@ export default function AdminOrderDetail({ params }) {
               <p style={{ margin: '4px 0 0', fontSize: '0.86rem', color: '#7C2D12', fontWeight: '700' }}>{returnReq.reason}</p>
             </div>
             <div style={{ padding: '12px 14px', background: 'white', borderRadius: '10px', border: '1.5px solid #A7F3D0' }}>
-              <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '800', color: '#065F46', textTransform: 'uppercase' }}>💰 Refund Amount</p>
-              <p style={{ margin: '4px 0 0', fontSize: '1.1rem', color: '#10B981', fontWeight: '900' }}>₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}</p>
+              <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '800', color: '#1B5E20', textTransform: 'uppercase' }}>💰 Refund Amount</p>
+              <p style={{ margin: '4px 0 0', fontSize: '1.1rem', color: '#43A047', fontWeight: '900' }}>₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}</p>
             </div>
             <div style={{ padding: '12px 14px', background: 'white', borderRadius: '10px', border: '1.5px solid #FED7AA' }}>
               <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '800', color: '#9A3412', textTransform: 'uppercase' }}>🟡 Refund Status</p>
-              <p style={{ margin: '4px 0 0', fontSize: '0.86rem', color: '#F97316', fontWeight: '800' }}>{refund?.refundStatus || 'Under Review'}</p>
+              <p style={{ margin: '4px 0 0', fontSize: '0.86rem', color: '#FB8C00', fontWeight: '800' }}>{refund?.refundStatus || 'Under Review'}</p>
             </div>
           </div>
 
@@ -1118,12 +1118,12 @@ export default function AdminOrderDetail({ params }) {
             }}>
               <span style={{ fontSize: '1.5rem' }}>📱</span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '800', color: '#065F46', textTransform: 'uppercase' }}>Send Refund to UPI ID</p>
-                <p style={{ margin: '4px 0 0', fontSize: '1.1rem', fontWeight: '800', color: '#10B981', fontFamily: 'monospace', wordBreak: 'break-all' }}>{returnReq.upiId}</p>
+                <p style={{ margin: 0, fontSize: '0.7rem', fontWeight: '800', color: '#1B5E20', textTransform: 'uppercase' }}>Send Refund to UPI ID</p>
+                <p style={{ margin: '4px 0 0', fontSize: '1.1rem', fontWeight: '800', color: '#43A047', fontFamily: 'monospace', wordBreak: 'break-all' }}>{returnReq.upiId}</p>
               </div>
               <button
                 onClick={() => { navigator.clipboard.writeText(returnReq.upiId); toast.success('UPI ID copied!'); }}
-                style={{ padding: '8px 16px', background: '#10B981', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '0.84rem', cursor: 'pointer' }}
+                style={{ padding: '8px 16px', background: '#43A047', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '700', fontSize: '0.84rem', cursor: 'pointer' }}
               >
                 📋 Copy
               </button>
@@ -1160,33 +1160,33 @@ export default function AdminOrderDetail({ params }) {
           }}>
             {refund?.refundStatus === 'pending' && (
               <button onClick={() => handleProcessRefund('processing')} disabled={processingRefund}
-                style={{ padding: '12px 16px', background: 'linear-gradient(135deg, #3B82F6, #2563EB)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize: '0.88rem', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>
+                style={{ padding: '12px 16px', background: 'linear-gradient(135deg, #1E88E5, #1E88E5)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize: '0.88rem', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>
                 {processingRefund ? '⏳...' : '⚙️ Mark Processing'}
               </button>
             )}
             {refund && refund.refundStatus !== 'completed' && refund.refundStatus !== 'failed' && (
               <button onClick={() => handleProcessRefund('completed')} disabled={processingRefund}
-                style={{ padding: '12px 16px', background: 'linear-gradient(135deg, #10B981, #059669)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize: '0.88rem', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>
+                style={{ padding: '12px 16px', background: 'linear-gradient(135deg, #43A047, #388E3C)', color: 'white', border: 'none', borderRadius: '10px', fontWeight: '800', fontSize: '0.88rem', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>
                 {processingRefund ? '⏳...' : '✅ Mark Completed'}
               </button>
             )}
             {refund?.refundStatus !== 'completed' && (
               <button onClick={handleRejectReturn} disabled={processingRefund}
-                style={{ padding: '12px 16px', background: 'white', color: '#EF4444', border: '2px solid #FCA5A5', borderRadius: '10px', fontWeight: '800', fontSize: '0.88rem', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>
+                style={{ padding: '12px 16px', background: 'white', color: '#E53935', border: '2px solid #FCA5A5', borderRadius: '10px', fontWeight: '800', fontSize: '0.88rem', cursor: 'pointer', fontFamily: 'Nunito, sans-serif' }}>
                 ❌ Reject Return
               </button>
             )}
             {refund && (
               <Link href={`/admin/refunds/${refund.id}`}
-                style={{ padding: '12px 16px', background: 'white', color: '#7B2FBE', border: '2px solid #DDD6FE', borderRadius: '10px', fontWeight: '800', fontSize: '0.88rem', textAlign: 'center', textDecoration: 'none', fontFamily: 'Nunito, sans-serif' }}>
+                style={{ padding: '12px 16px', background: 'white', color: '#264653', border: '2px solid #DDE5E8', borderRadius: '10px', fontWeight: '800', fontSize: '0.88rem', textAlign: 'center', textDecoration: 'none', fontFamily: 'Nunito, sans-serif' }}>
                 👁️ View Refund
               </Link>
             )}
           </div>
 
           {refund?.refundStatus === 'completed' && (
-            <div style={{ marginTop: '16px', padding: '14px', background: '#ECFDF5', border: '2px solid #10B981', borderRadius: '10px', textAlign: 'center' }}>
-              <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', color: '#065F46' }}>✅ Refund Completed Successfully</p>
+            <div style={{ marginTop: '16px', padding: '14px', background: '#ECFDF5', border: '2px solid #43A047', borderRadius: '10px', textAlign: 'center' }}>
+              <p style={{ margin: 0, fontSize: '1.1rem', fontWeight: '800', color: '#1B5E20' }}>✅ Refund Completed Successfully</p>
             </div>
           )}
 
@@ -1232,7 +1232,7 @@ export default function AdminOrderDetail({ params }) {
       {isCancelled && (
         <div style={{
           background: order.orderStatus === 'Refunded' ? '#ECFDF5' : '#fee2e2',
-          border: `1.5px solid ${order.orderStatus === 'Refunded' ? '#10B981' : '#fca5a5'}`,
+          border: `1.5px solid ${order.orderStatus === 'Refunded' ? '#43A047' : '#fca5a5'}`,
           borderRadius: '12px', padding: '16px',
           display: 'flex', gap: '12px', alignItems: 'flex-start',
           marginBottom: '20px',
@@ -1241,20 +1241,20 @@ export default function AdminOrderDetail({ params }) {
             {order.orderStatus === 'Refunded' ? '💰' : '❌'}
           </span>
           <div style={{ flex: 1 }}>
-            <strong style={{ color: order.orderStatus === 'Refunded' ? '#065F46' : '#DC2626' }}>
+            <strong style={{ color: order.orderStatus === 'Refunded' ? '#1B5E20' : '#C62828' }}>
               Order {order.orderStatus}
             </strong>
             <p style={{ margin: '4px 0 0', fontSize: '13px', color: '#666' }}>
               {order.cancelReason && <>Reason: <strong>{order.cancelReason}</strong><br /></>}
               {order.cancelledAt && <>Cancelled on: {new Date(order.cancelledAt).toLocaleDateString('en-IN')}<br /></>}
               {order.refundStatus === 'processing' && (
-                <span style={{ color: '#3B82F6', fontWeight: '700' }}>⚙️ Refund Processing</span>
+                <span style={{ color: '#1E88E5', fontWeight: '700' }}>⚙️ Refund Processing</span>
               )}
               {order.refundStatus === 'completed' && (
-                <span style={{ color: '#10B981', fontWeight: '800' }}>✅ Refund Completed — ₹{Math.round(order.refundAmount)?.toLocaleString('en-IN')}</span>
+                <span style={{ color: '#43A047', fontWeight: '800' }}>✅ Refund Completed — ₹{Math.round(order.refundAmount)?.toLocaleString('en-IN')}</span>
               )}
               {order.refundStatus === 'pending' && (
-                <span style={{ color: '#F59E0B', fontWeight: '700' }}>⏳ Refund Pending</span>
+                <span style={{ color: '#F2B33D', fontWeight: '700' }}>⏳ Refund Pending</span>
               )}
             </p>
           </div>
@@ -1286,19 +1286,19 @@ export default function AdminOrderDetail({ params }) {
               <div><label>Name</label><p>{order.user?.name || '—'}</p></div>
               <div>
                 <label>Email</label>
-                <p><a href={`mailto:${order.user?.email}`} style={{ color: '#7c3aed', textDecoration: 'none' }}>{order.user?.email || '—'}</a></p>
+                <p><a href={`mailto:${order.user?.email}`} style={{ color: '#264653', textDecoration: 'none' }}>{order.user?.email || '—'}</a></p>
               </div>
               <div>
                 <label>Phone</label>
                 <p>
                   {order.shippingAddress?.phone
-                    ? <a href={`tel:${order.shippingAddress.phone}`} style={{ color: '#7c3aed', textDecoration: 'none' }}>📞 {order.shippingAddress.phone}</a>
+                    ? <a href={`tel:${order.shippingAddress.phone}`} style={{ color: '#264653', textDecoration: 'none' }}>📞 {order.shippingAddress.phone}</a>
                     : '—'}
                 </p>
               </div>
               <div>
                 <label>Payment Status</label>
-                <p style={{ color: order.isPaid ? '#10b981' : '#f59e0b', fontWeight: '700' }}>
+                <p style={{ color: order.isPaid ? '#43A047' : '#F2B33D', fontWeight: '700' }}>
                   {order.isPaid ? `✅ Paid on ${new Date(order.paidAt).toLocaleDateString('en-IN')}` : '⏳ Pending'}
                 </p>
               </div>
@@ -1319,7 +1319,7 @@ export default function AdminOrderDetail({ params }) {
                 <p style={{ fontWeight: '700', fontSize: '15px', marginBottom: '6px' }}>
                   {order.shippingAddress.name}
                   {gunturLocation && (
-                    <span style={{ marginLeft: '10px', padding: '2px 8px', background: '#D1FAE5', color: '#065F46', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>
+                    <span style={{ marginLeft: '10px', padding: '2px 8px', background: '#D1FAE5', color: '#1B5E20', borderRadius: '999px', fontSize: '11px', fontWeight: '800' }}>
                       📍 Guntur Location
                     </span>
                   )}
@@ -1344,7 +1344,7 @@ export default function AdminOrderDetail({ params }) {
               </div>
               <div className={styles.priceRow}>
                 <span>Shipping</span>
-                <span style={{ color: order.shippingPrice === 0 ? '#10b981' : '#C2410C', fontWeight: '800' }}>
+                <span style={{ color: order.shippingPrice === 0 ? '#43A047' : '#C2410C', fontWeight: '800' }}>
                   {order.shippingPrice === 0 ? '🎉 FREE' : `₹${Math.round(order.shippingPrice)?.toLocaleString('en-IN')}`}
                 </span>
               </div>
@@ -1352,11 +1352,11 @@ export default function AdminOrderDetail({ params }) {
               {/* Dynamic Breakdown Note */}
               <div style={{ marginTop: '8px', padding: '8px 10px', background: '#F8FAFC', border: '1px solid #E2E8F0', borderRadius: '8px', fontSize: '11px', color: '#475569', lineHeight: 1.5 }}>
                 {gunturLocation && hasFood ? (
-                  <p style={{ margin: 0, color: '#065F46', fontWeight: '700' }}>📍 Guntur Offer: Baby Food items qualify for free shipping!</p>
+                  <p style={{ margin: 0, color: '#1B5E20', fontWeight: '700' }}>📍 Guntur Offer: Baby Food items qualify for free shipping!</p>
                 ) : hasFood ? (
                   <p style={{ margin: 0, color: '#C2410C', fontWeight: '700' }}>🍼 Baby Food item shipping applied (Outside Guntur)</p>
                 ) : order.shippingPrice === 0 ? (
-                  <p style={{ margin: 0, color: '#065F46', fontWeight: '700' }}>✅ Free delivery (non-food order ≥ ₹800)</p>
+                  <p style={{ margin: 0, color: '#1B5E20', fontWeight: '700' }}>✅ Free delivery (non-food order ≥ ₹800)</p>
                 ) : (
                   <p style={{ margin: 0, color: '#6B21A8', fontWeight: '700' }}>📦 Standard shipping (order below ₹800)</p>
                 )}
@@ -1381,7 +1381,7 @@ export default function AdminOrderDetail({ params }) {
             </div>
             <div className={styles.totalRow}>
               <span>Total</span>
-              <strong style={{ color: '#ff6b9d', fontSize: '1.2rem' }}>
+              <strong style={{ color: '#E53935', fontSize: '1.2rem' }}>
                 ₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}
               </strong>
             </div>
@@ -1435,11 +1435,11 @@ export default function AdminOrderDetail({ params }) {
           )}
 
           {hasRefund && (
-            <div className={styles.card} style={{ background: 'linear-gradient(135deg, #F5F3FF, #EDE9FE)' }}>
-              <h3 style={{ color: '#7B2FBE' }}>🔗 Quick Links</h3>
+            <div className={styles.card} style={{ background: 'linear-gradient(135deg, #FBF5E6, #EEF3F5)' }}>
+              <h3 style={{ color: '#264653' }}>🔗 Quick Links</h3>
               <Link href={`/admin/refunds/${refund.id}`} style={{
                 display: 'block', padding: '10px 14px', background: 'white',
-                color: '#7B2FBE', border: '1.5px solid #DDD6FE', borderRadius: '10px',
+                color: '#264653', border: '1.5px solid #DDE5E8', borderRadius: '10px',
                 textAlign: 'center', textDecoration: 'none', fontWeight: '800',
                 fontSize: '0.86rem', marginBottom: '8px',
               }}>
@@ -1447,7 +1447,7 @@ export default function AdminOrderDetail({ params }) {
               </Link>
               <Link href="/admin/refunds" style={{
                 display: 'block', padding: '10px 14px', background: 'white',
-                color: '#7B2FBE', border: '1.5px solid #DDD6FE', borderRadius: '10px',
+                color: '#264653', border: '1.5px solid #DDE5E8', borderRadius: '10px',
                 textAlign: 'center', textDecoration: 'none', fontWeight: '800', fontSize: '0.86rem',
               }}>
                 📊 All Refunds Dashboard
@@ -1457,8 +1457,8 @@ export default function AdminOrderDetail({ params }) {
 
           {order.isDelivered && !isReturnRequested && (
             <div className={styles.card} style={{ background: '#d1fae5', border: '1px solid #6ee7b7' }}>
-              <h3 style={{ color: '#065f46' }}>🎉 Delivered</h3>
-              <p style={{ color: '#047857', fontSize: '13px' }}>
+              <h3 style={{ color: '#1B5E20' }}>🎉 Delivered</h3>
+              <p style={{ color: '#2E7D32', fontSize: '13px' }}>
                 Delivered on {order.deliveredAt
                   ? new Date(order.deliveredAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })
                   : '—'}

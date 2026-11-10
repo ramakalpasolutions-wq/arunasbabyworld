@@ -7,16 +7,16 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 const STATUS_CONFIG = {
-  pending:          { label: 'Pending Approval', color: '#F59E0B', bg: '#FEF3C7', icon: '🟡' },
-  approved:         { label: 'Approved',         color: '#3B82F6', bg: '#DBEAFE', icon: '✅' },
-  picked_up:        { label: 'Picked Up',        color: '#8B5CF6', bg: '#EDE9FE', icon: '📦' },
+  pending:          { label: 'Pending Approval', color: '#F2B33D', bg: '#FEF3C7', icon: '🟡' },
+  approved:         { label: 'Approved',         color: '#1E88E5', bg: '#DBEAFE', icon: '✅' },
+  picked_up:        { label: 'Picked Up',        color: '#3A6373', bg: '#EEF3F5', icon: '📦' },
   received:         { label: 'Received',         color: '#6366F1', bg: '#E0E7FF', icon: '📬' },
-  verified:         { label: 'Verified',         color: '#10B981', bg: '#D1FAE5', icon: '🔍' },
-  awaiting_payment: { label: 'Awaiting Payment', color: '#F97316', bg: '#FFEDD5', icon: '💳' },
-  ready_to_ship:    { label: 'Ready to Ship',    color: '#10B981', bg: '#D1FAE5', icon: '🎁' },
+  verified:         { label: 'Verified',         color: '#43A047', bg: '#D1FAE5', icon: '🔍' },
+  awaiting_payment: { label: 'Awaiting Payment', color: '#FB8C00', bg: '#FFEDD5', icon: '💳' },
+  ready_to_ship:    { label: 'Ready to Ship',    color: '#43A047', bg: '#D1FAE5', icon: '🎁' },
   shipped:          { label: 'Shipped',          color: '#06B6D4', bg: '#CFFAFE', icon: '🚚' },
-  completed:        { label: 'Completed',        color: '#10B981', bg: '#D1FAE5', icon: '🎉' },
-  rejected:         { label: 'Rejected',         color: '#EF4444', bg: '#FEE2E2', icon: '❌' },
+  completed:        { label: 'Completed',        color: '#43A047', bg: '#D1FAE5', icon: '🎉' },
+  rejected:         { label: 'Rejected',         color: '#E53935', bg: '#FEE2E2', icon: '❌' },
 };
 
 const WORKFLOW_STEPS = [
@@ -258,7 +258,7 @@ export default function AdminExchangeDetail({ params }) {
                 <div key={step.key} className="exd-step">
                   <div className="exd-step-circle" style={{
                     background: isDone
-                      ? 'linear-gradient(135deg,#10B981,#059669)'
+                      ? 'linear-gradient(135deg,#43A047,#388E3C)'
                       : isCurrent
                         ? `linear-gradient(135deg,${cfg.color},${cfg.color}CC)`
                         : '#E5E7EB',
@@ -268,14 +268,14 @@ export default function AdminExchangeDetail({ params }) {
                     {isDone ? '✓' : step.icon}
                   </div>
                   <p className="exd-step-label" style={{
-                    color: isCurrent ? cfg.color : isDone ? '#10B981' : '#9CA3AF',
+                    color: isCurrent ? cfg.color : isDone ? '#43A047' : '#9CA3AF',
                     fontWeight: isCurrent ? 800 : isDone ? 700 : 600,
                   }}>
                     {step.label}
                   </p>
                   {i < WORKFLOW_STEPS.length - 1 && (
                     <div className="exd-step-line" style={{
-                      background: isDone ? '#10B981' : '#E5E7EB',
+                      background: isDone ? '#43A047' : '#E5E7EB',
                     }} />
                   )}
                 </div>
@@ -560,14 +560,14 @@ export default function AdminExchangeDetail({ params }) {
           <div className="exd-card">
             <h3 className="exd-card-title">🕒 Timeline</h3>
             <div className="exd-timeline">
-              <TimelineItem label="Created"  date={exchange.createdAt}  color="#F59E0B" />
-              {exchange.approvedAt  && <TimelineItem label="Approved"   date={exchange.approvedAt}  color="#3B82F6" />}
-              {exchange.pickedUpAt  && <TimelineItem label="Picked Up"  date={exchange.pickedUpAt}  color="#8B5CF6" />}
+              <TimelineItem label="Created"  date={exchange.createdAt}  color="#F2B33D" />
+              {exchange.approvedAt  && <TimelineItem label="Approved"   date={exchange.approvedAt}  color="#1E88E5" />}
+              {exchange.pickedUpAt  && <TimelineItem label="Picked Up"  date={exchange.pickedUpAt}  color="#3A6373" />}
               {exchange.receivedAt  && <TimelineItem label="Received"   date={exchange.receivedAt}  color="#6366F1" />}
-              {exchange.verifiedAt  && <TimelineItem label="Verified"   date={exchange.verifiedAt}  color="#10B981" />}
+              {exchange.verifiedAt  && <TimelineItem label="Verified"   date={exchange.verifiedAt}  color="#43A047" />}
               {exchange.shippedAt   && <TimelineItem label="Shipped"    date={exchange.shippedAt}   color="#06B6D4" />}
-              {exchange.completedAt && <TimelineItem label="Completed"  date={exchange.completedAt} color="#10B981" />}
-              {exchange.rejectedAt  && <TimelineItem label="Rejected"   date={exchange.rejectedAt}  color="#EF4444" />}
+              {exchange.completedAt && <TimelineItem label="Completed"  date={exchange.completedAt} color="#43A047" />}
+              {exchange.rejectedAt  && <TimelineItem label="Rejected"   date={exchange.rejectedAt}  color="#E53935" />}
             </div>
           </div>
         </div>
@@ -648,23 +648,23 @@ export default function AdminExchangeDetail({ params }) {
           text-align: center;
           padding: 80px 20px;
           font-family: 'Nunito', sans-serif;
-          color: #9585B0;
+          color: #8A9BA3;
         }
         .exd-loading-icon, .exd-notfound-icon { font-size: 2.5rem; margin-bottom: 12px; }
         .exd-loading p { font-weight: 700; margin: 0; }
-        .exd-notfound h2 { color: #2D1A4A; margin: 0 0 12px; }
+        .exd-notfound h2 { color: #264653; margin: 0 0 12px; }
         .exd-back-link {
           display: inline-flex;
           align-items: center;
           gap: 6px;
-          color: #7C3AED;
+          color: #264653;
           text-decoration: none;
           font-weight: 700;
           font-size: 0.84rem;
         }
         .exd-notfound .exd-back-link {
           padding: 10px 24px;
-          background: #7C3AED;
+          background: #264653;
           color: white;
           border-radius: 10px;
           margin-top: 12px;
@@ -684,10 +684,10 @@ export default function AdminExchangeDetail({ params }) {
           font-size: 1.5rem;
           font-weight: 800;
           margin: 10px 0 4px;
-          color: #2D1A4A;
+          color: #264653;
         }
         .exd-subtitle {
-          color: #9585B0;
+          color: #8A9BA3;
           margin: 0;
           font-size: 0.84rem;
           font-weight: 600;
@@ -708,7 +708,7 @@ export default function AdminExchangeDetail({ params }) {
         .exd-card {
           background: white;
           border-radius: 14px;
-          border: 1.5px solid #EDD9FF;
+          border: 1.5px solid #E8E2D2;
           padding: 18px;
           margin-bottom: 16px;
         }
@@ -716,7 +716,7 @@ export default function AdminExchangeDetail({ params }) {
           margin: 0 0 14px;
           font-size: 1rem;
           font-weight: 800;
-          color: #2D1A4A;
+          color: #264653;
         }
 
         /* WORKFLOW */
@@ -799,8 +799,8 @@ export default function AdminExchangeDetail({ params }) {
           text-transform: uppercase;
           letter-spacing: 0.6px;
         }
-        .exd-badge-old { background: #EF4444; }
-        .exd-badge-new { background: #10B981; }
+        .exd-badge-old { background: #E53935; }
+        .exd-badge-new { background: #43A047; }
         .exd-product img {
           width: 80px;
           height: 80px;
@@ -819,20 +819,20 @@ export default function AdminExchangeDetail({ params }) {
           -webkit-box-orient: vertical;
         }
         .exd-product-old .exd-product-name { color: #7F1D1D; }
-        .exd-product-new .exd-product-name { color: #065F46; }
+        .exd-product-new .exd-product-name { color: #1B5E20; }
         .exd-product-price { font-size: 1.1rem; }
-        .exd-price-old { color: #DC2626; }
-        .exd-price-new { color: #10B981; }
+        .exd-price-old { color: #C62828; }
+        .exd-price-new { color: #43A047; }
         .exd-product-meta {
           margin: 6px 0 0;
           font-size: 0.74rem;
           font-weight: 600;
         }
         .exd-product-old .exd-product-meta { color: #7F1D1D; }
-        .exd-product-new .exd-product-meta { color: #065F46; }
+        .exd-product-new .exd-product-meta { color: #1B5E20; }
         .exd-arrow {
           font-size: 2rem;
-          color: #7C3AED;
+          color: #264653;
           font-weight: 900;
           text-align: center;
         }
@@ -872,8 +872,8 @@ export default function AdminExchangeDetail({ params }) {
         .exd-pay .exd-price-diff-sub    { color: #78350F; }
         .exd-refund .exd-price-diff-sub { color: #1E40AF; }
         .exd-price-diff-amount { font-size: 1.2rem; }
-        .exd-pay .exd-price-diff-amount    { color: #F59E0B; }
-        .exd-refund .exd-price-diff-amount { color: #3B82F6; }
+        .exd-pay .exd-price-diff-amount    { color: #F2B33D; }
+        .exd-refund .exd-price-diff-amount { color: #1E88E5; }
 
         /* PAY STATUS */
         .exd-pay-status {
@@ -893,11 +893,11 @@ export default function AdminExchangeDetail({ params }) {
           font-size: 0.84rem;
           font-weight: 800;
         }
-        .exd-paid .exd-pay-status-text   { color: #065F46; }
+        .exd-paid .exd-pay-status-text   { color: #1B5E20; }
         .exd-unpaid .exd-pay-status-text { color: #92400E; }
         .exd-pay-link {
           padding: 6px 14px;
-          background: #F97316;
+          background: #FB8C00;
           color: white;
           border-radius: 8px;
           text-decoration: none;
@@ -920,16 +920,16 @@ export default function AdminExchangeDetail({ params }) {
         }
         .exd-info-label {
           font-size: 0.82rem;
-          color: #9585B0;
+          color: #8A9BA3;
           font-weight: 600;
         }
         .exd-info-value {
           font-size: 0.88rem;
-          color: #2D1A4A;
+          color: #264653;
           font-weight: 700;
         }
         .exd-info-link {
-          color: #7C3AED;
+          color: #264653;
           text-decoration: none;
           font-weight: 700;
           font-size: 0.86rem;
@@ -938,26 +938,26 @@ export default function AdminExchangeDetail({ params }) {
         /* REASON */
         .exd-reason-box {
           padding: 12px 14px;
-          background: #FBF7FF;
+          background: #FFFBF2;
           border-radius: 10px;
         }
         .exd-reason-label {
           margin: 0;
           font-size: 0.74rem;
           font-weight: 800;
-          color: #7C3AED;
+          color: #264653;
           text-transform: uppercase;
         }
         .exd-reason-text {
           margin: 4px 0 0;
           font-size: 0.88rem;
-          color: #2D1A4A;
+          color: #264653;
           font-weight: 600;
         }
         .exd-reason-desc {
           margin: 8px 0 0;
           font-size: 0.82rem;
-          color: #6B4E8A;
+          color: #4F6B76;
           font-weight: 600;
           font-style: italic;
         }
@@ -972,13 +972,13 @@ export default function AdminExchangeDetail({ params }) {
         .exd-address-name {
           margin: 0;
           font-weight: 800;
-          color: #2D1A4A;
+          color: #264653;
           font-size: 0.94rem;
         }
         .exd-address-line {
           margin: 2px 0;
           font-size: 0.84rem;
-          color: #6B4E8A;
+          color: #4F6B76;
           font-weight: 600;
         }
 
@@ -989,7 +989,7 @@ export default function AdminExchangeDetail({ params }) {
           border: 1px solid;
           border-radius: 10px;
         }
-        .exd-tracking-pickup    { background: #EDE9FE; border-color: #DDD6FE; }
+        .exd-tracking-pickup    { background: #EEF3F5; border-color: #DDE5E8; }
         .exd-tracking-shipment  { background: #CFFAFE; border-color: #A5F3FC; }
         .exd-tracking-label {
           margin: 0;
@@ -997,7 +997,7 @@ export default function AdminExchangeDetail({ params }) {
           font-weight: 800;
           text-transform: uppercase;
         }
-        .exd-tracking-pickup   .exd-tracking-label { color: #6D28D9; }
+        .exd-tracking-pickup   .exd-tracking-label { color: #1B3540; }
         .exd-tracking-shipment .exd-tracking-label { color: #0E7490; }
         .exd-tracking-number {
           margin: 4px 0 0;
@@ -1005,7 +1005,7 @@ export default function AdminExchangeDetail({ params }) {
           font-weight: 800;
           font-family: monospace;
         }
-        .exd-tracking-pickup   .exd-tracking-number { color: #5B21B6; }
+        .exd-tracking-pickup   .exd-tracking-number { color: #1B3540; }
         .exd-tracking-shipment .exd-tracking-number { color: #155E75; }
 
         /* REJECTION */
@@ -1019,7 +1019,7 @@ export default function AdminExchangeDetail({ params }) {
           margin: 0 0 6px;
           font-size: 0.96rem;
           font-weight: 800;
-          color: #DC2626;
+          color: #C62828;
         }
         .exd-rejection p {
           margin: 0;
@@ -1033,7 +1033,7 @@ export default function AdminExchangeDetail({ params }) {
           display: block;
           font-size: 0.74rem;
           font-weight: 800;
-          color: #7C3AED;
+          color: #264653;
           margin-bottom: 6px;
           text-transform: uppercase;
           letter-spacing: 0.6px;
@@ -1041,17 +1041,17 @@ export default function AdminExchangeDetail({ params }) {
         .exd-textarea, .exd-input {
           width: 100%;
           padding: 10px 12px;
-          border: 1.5px solid #EDD9FF;
+          border: 1.5px solid #E8E2D2;
           border-radius: 10px;
           font-family: inherit;
           font-size: 0.88rem;
           outline: none;
           box-sizing: border-box;
-          color: #2D1A4A;
+          color: #264653;
           margin-bottom: 10px;
           resize: vertical;
         }
-        .exd-textarea:focus, .exd-input:focus { border-color: #7C3AED; }
+        .exd-textarea:focus, .exd-input:focus { border-color: #264653; }
 
         /* ACTIONS */
         .exd-actions { position: sticky; top: 16px; }
@@ -1059,10 +1059,10 @@ export default function AdminExchangeDetail({ params }) {
         .exd-info-text {
           margin: 0 0 14px;
           padding: 10px 12px;
-          background: #F5F3FF;
+          background: #FBF5E6;
           border-radius: 8px;
           font-size: 0.82rem;
-          color: #6D28D9;
+          color: #1B3540;
           font-weight: 600;
         }
 
@@ -1084,14 +1084,14 @@ export default function AdminExchangeDetail({ params }) {
         }
         .exd-btn:hover:not(:disabled) { opacity: 0.92; }
         .exd-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-        .exd-btn-success { background: linear-gradient(135deg,#10B981,#059669); color: white; }
-        .exd-btn-purple  { background: linear-gradient(135deg,#8B5CF6,#7C3AED); color: white; }
+        .exd-btn-success { background: linear-gradient(135deg,#43A047,#388E3C); color: white; }
+        .exd-btn-purple  { background: linear-gradient(135deg,#3A6373,#264653); color: white; }
         .exd-btn-indigo  { background: linear-gradient(135deg,#6366F1,#4F46E5); color: white; }
-        .exd-btn-orange  { background: linear-gradient(135deg,#F97316,#EA580C); color: white; }
-        .exd-btn-danger  { background: linear-gradient(135deg,#EF4444,#DC2626); color: white; }
+        .exd-btn-orange  { background: linear-gradient(135deg,#FB8C00,#FB8C00); color: white; }
+        .exd-btn-danger  { background: linear-gradient(135deg,#E53935,#C62828); color: white; }
         .exd-btn-danger-outline {
           background: white;
-          color: #EF4444;
+          color: #E53935;
           border: 1.5px solid #FCA5A5;
         }
         .exd-btn-cancel {
@@ -1116,14 +1116,14 @@ export default function AdminExchangeDetail({ params }) {
           font-size: 1rem;
           font-weight: 800;
         }
-        .exd-completed-box .exd-status-text { color: #065F46; }
+        .exd-completed-box .exd-status-text { color: #1B5E20; }
         .exd-rejected-box  .exd-status-text { color: #991B1B; }
         .exd-status-date {
           margin: 4px 0 0;
           font-size: 0.78rem;
           font-weight: 600;
         }
-        .exd-completed-box .exd-status-date { color: #047857; }
+        .exd-completed-box .exd-status-date { color: #2E7D32; }
         .exd-rejected-box  .exd-status-date { color: #7F1D1D; }
 
         /* TIMELINE */
@@ -1133,7 +1133,7 @@ export default function AdminExchangeDetail({ params }) {
         .exd-modal-text {
           margin: 0 0 14px;
           font-size: 0.86rem;
-          color: #6B4E8A;
+          color: #4F6B76;
         }
         .exd-modal-actions {
           display: flex;
@@ -1143,7 +1143,7 @@ export default function AdminExchangeDetail({ params }) {
         .exd-modal-divider {
           margin: 8px 0;
           font-size: 0.78rem;
-          color: #9585B0;
+          color: #8A9BA3;
           font-weight: 600;
           text-align: center;
         }
@@ -1185,8 +1185,8 @@ function TimelineItem({ label, date, color }) {
         background: color, flexShrink: 0,
       }} />
       <div style={{ flex: 1 }}>
-        <p style={{ margin: 0, fontSize: '0.78rem', color: '#9585B0', fontWeight: 600 }}>{label}</p>
-        <p style={{ margin: 0, fontSize: '0.82rem', color: '#2D1A4A', fontWeight: 700 }}>
+        <p style={{ margin: 0, fontSize: '0.78rem', color: '#8A9BA3', fontWeight: 600 }}>{label}</p>
+        <p style={{ margin: 0, fontSize: '0.82rem', color: '#264653', fontWeight: 700 }}>
           {new Date(date).toLocaleDateString('en-IN', {
             day: 'numeric', month: 'short', year: 'numeric',
             hour: '2-digit', minute: '2-digit',
@@ -1222,13 +1222,13 @@ function Modal({ children, onClose, title }) {
       }}>
         <div style={{
           padding: '16px 20px',
-          borderBottom: '1.5px solid #F3E8FF',
+          borderBottom: '1.5px solid #EEF3F5',
           display: 'flex',
           alignItems: 'center', justifyContent: 'space-between',
         }}>
           <h3 style={{
             margin: 0, fontSize: '1.05rem',
-            fontWeight: 800, color: '#2D1A4A',
+            fontWeight: 800, color: '#264653',
           }}>{title}</h3>
           <button onClick={onClose} style={{
             background: '#F3F4F6', border: 'none', borderRadius: 8,

@@ -4,12 +4,12 @@
    TOKENS
 ============================================================ */
 :root {
-  --c-orange:        #FF6B35;
-  --c-purple:        #7B2FBE;
-  --c-text:          #1E0A3C;
-  --c-text-muted:    #9B8AB0;
+  --c-orange:        #E53935;
+  --c-purple:        #264653;
+  --c-text:          #1B3540;
+  --c-text-muted:    #8A9BA3;
   --c-white:         #FFFFFF;
-  --c-border:        #EDE0FF;
+  --c-border:        #FBF5E6;
   --radius:          12px;
 }
 
@@ -26,7 +26,7 @@
 .skeletonImage {
   width: 100%;
   aspect-ratio: 1 / 1;
-  background: linear-gradient(90deg, #f0e8ff 0%, #fde8d8 40%, #f0e8ff 80%);
+  background: linear-gradient(90deg, #FBF5E6 0%, #FDEBC8 40%, #FBF5E6 80%);
   background-size: 200% 100%;
   animation: skeletonPulse 1.6s ease-in-out infinite;
 }
@@ -41,7 +41,7 @@
 .skeletonLine {
   height: 10px;
   border-radius: 5px;
-  background: linear-gradient(90deg, #ede4ff 0%, #ffe4d4 40%, #ede4ff 80%);
+  background: linear-gradient(90deg, #FBF5E6 0%, #FDEBC8 40%, #FBF5E6 80%);
   background-size: 200% 100%;
   animation: skeletonPulse 1.6s ease-in-out infinite;
 }
@@ -70,14 +70,14 @@
   cursor: pointer;
   position: relative;
   transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-  box-shadow: 0 1px 6px rgba(123,47,190,0.06);
+  box-shadow: 0 1px 6px rgba(38,70,83,0.06);
   height: 100%;
 }
 
 .card:hover {
   transform: translateY(-3px);
   border-color: var(--accent, var(--c-orange));
-  box-shadow: 0 8px 20px rgba(255,107,53,0.14);
+  box-shadow: 0 8px 20px rgba(229,57,53,0.14);
 }
 
 /* ============================================================
@@ -96,7 +96,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  background: linear-gradient(135deg, #FFF2EB 0%, #F5EEFF 100%);
+  background: linear-gradient(135deg, #FFF6E5 0%, #FBF5E6 100%);
 }
 
 .imgSkeletonEmoji {
@@ -143,9 +143,9 @@
   font-size: 10px;
   font-weight: 800;
   font-family: 'Nunito', sans-serif;
-  background: linear-gradient(135deg, #FF6B35, #E55520);
+  background: linear-gradient(135deg, #E53935, #C62828);
   color: white;
-  box-shadow: 0 2px 6px rgba(255,107,53,0.30);
+  box-shadow: 0 2px 6px rgba(229,57,53,0.30);
   z-index: 3;
 }
 
@@ -166,7 +166,7 @@
   align-items: center;
   justify-content: center;
   z-index: 3;
-  box-shadow: 0 2px 8px rgba(123,47,190,0.10);
+  box-shadow: 0 2px 8px rgba(38,70,83,0.10);
   backdrop-filter: blur(6px);
   transition: transform 0.2s ease, background 0.2s ease;
   padding: 0;
@@ -183,7 +183,7 @@
 }
 
 .wishActive {
-  background: #FFE8D6;
+  background: #FDEBC8;
   border-color: var(--c-orange);
 }
 
@@ -193,7 +193,7 @@
 .oos {
   position: absolute;
   inset: 0;
-  background: rgba(30,10,60,0.55);
+  background: rgba(27,53,64,0.55);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -209,7 +209,7 @@
   font-weight: 800;
   padding: 4px 12px;
   border-radius: 999px;
-  border: 1.5px solid #DDB8FF;
+  border: 1.5px solid #C9D6DB;
   text-transform: uppercase;
 }
 
@@ -275,12 +275,12 @@
   cursor: pointer;
   width: 100%;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
-  box-shadow: 0 2px 8px rgba(255,107,53,0.20);
+  box-shadow: 0 2px 8px rgba(229,57,53,0.20);
 }
 
 .cartBtn:hover:not(.cartDisabled) {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(255,107,53,0.30);
+  box-shadow: 0 4px 12px rgba(229,57,53,0.30);
 }
 
 .cartInner {
@@ -322,7 +322,7 @@
 }
 
 .cartDisabled {
-  background: linear-gradient(135deg, #D0C0E0, #BEB0CC) !important;
+  background: linear-gradient(135deg, #C9D6DB, #B5C2C8) !important;
   box-shadow: none !important;
   cursor: not-allowed;
 }
@@ -380,7 +380,7 @@
 @media (hover: none) {
   .card:hover {
     transform: none;
-    box-shadow: 0 2px 10px rgba(255,107,53,0.10);
+    box-shadow: 0 2px 10px rgba(229,57,53,0.10);
   }
   .card:hover .image {
     transform: none;

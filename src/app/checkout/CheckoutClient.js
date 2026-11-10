@@ -279,7 +279,7 @@ export default function CheckoutClient() {
           email: session.user.email,
           contact: address.phone,
         },
-        theme: { color: '#ff6b9d' },
+        theme: { color: '#E53935' },
 
         modal: {
           ondismiss: async () => {
@@ -353,7 +353,7 @@ export default function CheckoutClient() {
       icon: '💳',
       title: 'Credit/Debit Card',
       subtitle: 'Visa, Mastercard, RuPay',
-      color: '#3B82F6',
+      color: '#1E88E5',
       method: 'Razorpay',
       disabled: false,
     },
@@ -362,7 +362,7 @@ export default function CheckoutClient() {
       icon: '📱',
       title: 'UPI',
       subtitle: 'GPay, PhonePe, Paytm',
-      color: '#10B981',
+      color: '#43A047',
       badge: 'Paytm',
       method: 'Razorpay',
       recommended: true,
@@ -373,7 +373,7 @@ export default function CheckoutClient() {
       icon: '🏦',
       title: 'Net Banking',
       subtitle: 'Available on orders above ₹2000',
-      color: '#F59E0B',
+      color: '#F2B33D',
       method: 'Razorpay',
       disabled: totalPrice < 2000,
     },
@@ -382,7 +382,7 @@ export default function CheckoutClient() {
       icon: '📊',
       title: 'EMI',
       subtitle: 'Available on orders above ₹3000',
-      color: '#8B5CF6',
+      color: '#3A6373',
       method: 'Razorpay',
       disabled: totalPrice < 3000,
     },
@@ -391,7 +391,7 @@ export default function CheckoutClient() {
       icon: '💵',
       title: 'Cash on Delivery',
       subtitle: isCodAvailable ? 'Pay when you receive (+₹20 COD fee)' : codDisabledReason,
-      color: '#EF4444',
+      color: '#E53935',
       method: 'COD',
       disabled: !isCodAvailable,
     },
@@ -558,7 +558,7 @@ export default function CheckoutClient() {
                 <div style={{
                   padding: '14px 16px',
                   background: '#FFFBEB',
-                  border: '1.5px solid #F59E0B',
+                  border: '1.5px solid #F2B33D',
                   borderRadius: '12px',
                   color: '#92400E',
                   fontSize: '0.88rem',
@@ -573,20 +573,20 @@ export default function CheckoutClient() {
 
               <div style={{
                 padding: '20px',
-                background: 'linear-gradient(135deg, #FFF5F7, #F3E8FF)',
+                background: 'linear-gradient(135deg, #FFF5F4, #EEF3F5)',
                 borderRadius: '14px',
-                border: '2px solid #FFE4EC',
+                border: '2px solid #FDE7E6',
                 marginBottom: '20px',
                 textAlign: 'center',
               }}>
                 <div style={{ fontSize: '3rem', marginBottom: '10px' }}>🛍️</div>
-                <p style={{ margin: 0, fontSize: '0.92rem', color: '#6B4E8A', fontWeight: '700', fontFamily: 'Nunito, sans-serif' }}>
+                <p style={{ margin: 0, fontSize: '0.92rem', color: '#4F6B76', fontWeight: '700', fontFamily: 'Nunito, sans-serif' }}>
                   Total Amount to Pay
                 </p>
-                <p style={{ margin: '6px 0 0', fontSize: '2rem', fontWeight: '900', color: '#BE185D', fontFamily: 'Nunito, sans-serif' }}>
+                <p style={{ margin: '6px 0 0', fontSize: '2rem', fontWeight: '900', color: '#C62828', fontFamily: 'Nunito, sans-serif' }}>
                   ₹{fmt(totalPrice)}
                 </p>
-                <p style={{ margin: '8px 0 0', fontSize: '0.78rem', color: '#9585B0', fontWeight: '600', fontFamily: 'Nunito, sans-serif' }}>
+                <p style={{ margin: '8px 0 0', fontSize: '0.78rem', color: '#8A9BA3', fontWeight: '600', fontFamily: 'Nunito, sans-serif' }}>
                   {items.reduce((a, i) => a + i.quantity, 0)} items · Delivery to {address.city}
                 </p>
               </div>
@@ -607,7 +607,7 @@ export default function CheckoutClient() {
                   style={{
                     flex: 1,
                     padding: '14px 24px',
-                    background: !isFoodMovValid ? '#9CA3AF' : 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                    background: !isFoodMovValid ? '#9CA3AF' : 'linear-gradient(135deg, #3A6373, #264653)',
                     color: 'white',
                     border: 'none',
                     borderRadius: '12px',
@@ -615,7 +615,7 @@ export default function CheckoutClient() {
                     fontWeight: '800',
                     fontFamily: 'Nunito, sans-serif',
                     cursor: (loading || !isFoodMovValid) ? 'not-allowed' : 'pointer',
-                    boxShadow: !isFoodMovValid ? 'none' : '0 6px 20px rgba(255,107,53,0.30)',
+                    boxShadow: !isFoodMovValid ? 'none' : '0 6px 20px rgba(229,57,53,0.30)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -761,7 +761,7 @@ export default function CheckoutClient() {
                     alignItems: 'center',
                     gap: '6px',
                   }}>
-                    📍 Deliver to <span style={{ color: '#FF6B35' }}>{address.name}</span>, {address.pincode}
+                    📍 Deliver to <span style={{ color: '#E53935' }}>{address.name}</span>, {address.pincode}
                   </p>
                   <p style={{
                     margin: '4px 0 0',
@@ -781,11 +781,11 @@ export default function CheckoutClient() {
                   style={{
                     padding: '5px 12px',
                     background: 'white',
-                    border: '1.5px solid #FF6B35',
+                    border: '1.5px solid #E53935',
                     borderRadius: '6px',
                     fontSize: '0.72rem',
                     fontWeight: '800',
-                    color: '#FF6B35',
+                    color: '#E53935',
                     cursor: 'pointer',
                     fontFamily: 'Nunito, sans-serif',
                     letterSpacing: '0.5px',
@@ -870,7 +870,7 @@ export default function CheckoutClient() {
                       <p style={{
                         margin: '3px 0 0',
                         fontSize: '0.76rem',
-                        color: opt.disabled ? '#EF4444' : '#6B7280',
+                        color: opt.disabled ? '#E53935' : '#6B7280',
                         fontWeight: '600',
                       }}>
                         {opt.subtitle}
@@ -892,13 +892,13 @@ export default function CheckoutClient() {
                         top: '-8px',
                         right: '12px',
                         padding: '2px 10px',
-                        background: 'linear-gradient(135deg, #10B981, #059669)',
+                        background: 'linear-gradient(135deg, #43A047, #388E3C)',
                         color: 'white',
                         borderRadius: '999px',
                         fontSize: '0.62rem',
                         fontWeight: '800',
                         letterSpacing: '0.4px',
-                        boxShadow: '0 3px 8px rgba(16,185,129,0.35)',
+                        boxShadow: '0 3px 8px rgba(67,160,71,0.35)',
                       }}>
                         ⭐ RECOMMENDED
                       </div>
@@ -922,7 +922,7 @@ export default function CheckoutClient() {
                   margin: 0,
                   fontSize: '0.78rem',
                   fontWeight: '700',
-                  color: '#166534',
+                  color: '#1B5E20',
                   fontFamily: 'Nunito, sans-serif',
                 }}>
                   Most parents prefer: Instant Payments & Refunds

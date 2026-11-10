@@ -89,15 +89,15 @@ export default function AdminSettingsPage() {
 
   const inp = {
     width: '100%', padding: '10px 12px',
-    border: '2px solid #EDD9FF', borderRadius: '10px',
+    border: '2px solid #E8E2D2', borderRadius: '10px',
     fontSize: '14px', fontFamily: 'Nunito, sans-serif',
-    outline: 'none', background: 'white', color: '#2D1A4A',
+    outline: 'none', background: 'white', color: '#264653',
     boxSizing: 'border-box',
   };
 
   const lbl = {
     display: 'block', fontSize: '11px', fontWeight: '800',
-    color: '#7B2FBE', marginBottom: '6px',
+    color: '#264653', marginBottom: '6px',
     textTransform: 'uppercase', letterSpacing: '0.5px',
   };
 
@@ -105,7 +105,7 @@ export default function AdminSettingsPage() {
     return (
       <div style={{ padding: '40px', textAlign: 'center', fontFamily: 'Nunito, sans-serif' }}>
         <div style={{ fontSize: '2rem', marginBottom: '12px' }}>⏳</div>
-        <p style={{ color: '#9585B0', fontWeight: '700' }}>Loading settings...</p>
+        <p style={{ color: '#8A9BA3', fontWeight: '700' }}>Loading settings...</p>
       </div>
     );
   }
@@ -117,10 +117,10 @@ export default function AdminSettingsPage() {
         marginBottom: '24px', flexWrap: 'wrap', gap: '12px',
       }}>
         <div>
-          <h1 style={{ fontSize: '1.7rem', fontWeight: '900', color: '#2D1A4A', margin: '0 0 4px' }}>
+          <h1 style={{ fontSize: '1.7rem', fontWeight: '900', color: '#264653', margin: '0 0 4px' }}>
             ⚙️ Company Settings
           </h1>
-          <p style={{ color: '#9585B0', margin: 0, fontSize: '0.9rem' }}>
+          <p style={{ color: '#8A9BA3', margin: 0, fontSize: '0.9rem' }}>
             These details will appear on invoices and bills
           </p>
         </div>
@@ -129,12 +129,12 @@ export default function AdminSettingsPage() {
           disabled={saving}
           style={{
             padding: '11px 26px',
-            background: saving ? '#ccc' : 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+            background: saving ? '#ccc' : 'linear-gradient(135deg,#3A6373,#264653)',
             color: 'white', border: 'none', borderRadius: '12px',
             fontSize: '14px', fontWeight: '800',
             cursor: saving ? 'not-allowed' : 'pointer',
             fontFamily: 'inherit',
-            boxShadow: saving ? 'none' : '0 6px 18px rgba(255,107,53,0.30)',
+            boxShadow: saving ? 'none' : '0 6px 18px rgba(229,57,53,0.30)',
           }}
         >
           {saving ? '⏳ Saving...' : '💾 Save Settings'}
@@ -144,10 +144,10 @@ export default function AdminSettingsPage() {
       {/* Company Info Section */}
       <div style={{
         background: 'white', borderRadius: '16px', padding: '24px',
-        border: '2px solid #EDD9FF', marginBottom: '20px',
-        boxShadow: '0 4px 16px rgba(123,47,190,0.06)',
+        border: '2px solid #E8E2D2', marginBottom: '20px',
+        boxShadow: '0 4px 16px rgba(38,70,83,0.06)',
       }}>
-        <h2 style={{ fontSize: '1.1rem', fontWeight: '900', color: '#7B2FBE', marginTop: 0, marginBottom: '18px' }}>
+        <h2 style={{ fontSize: '1.1rem', fontWeight: '900', color: '#264653', marginTop: 0, marginBottom: '18px' }}>
           🏢 Company Information
         </h2>
 
@@ -183,7 +183,7 @@ export default function AdminSettingsPage() {
                   alt="Logo"
                   style={{
                     width: '80px', height: '80px', objectFit: 'contain',
-                    border: '2px solid #EDD9FF', borderRadius: '10px',
+                    border: '2px solid #E8E2D2', borderRadius: '10px',
                     padding: '4px', background: 'white',
                   }}
                 />
@@ -191,12 +191,12 @@ export default function AdminSettingsPage() {
               <label style={{
                 display: 'inline-block',
                 padding: '10px 20px',
-                background: 'linear-gradient(135deg,#F3E8FF,#EDE9FE)',
-                border: '2px dashed #7B2FBE',
+                background: 'linear-gradient(135deg,#EEF3F5,#EEF3F5)',
+                border: '2px dashed #264653',
                 borderRadius: '10px',
                 cursor: uploading ? 'not-allowed' : 'pointer',
                 fontWeight: '800',
-                color: '#7B2FBE',
+                color: '#264653',
                 fontSize: '13px',
               }}>
                 <input
@@ -213,7 +213,7 @@ export default function AdminSettingsPage() {
                   type="button"
                   onClick={() => set('logoUrl', '')}
                   style={{
-                    padding: '8px 14px', background: '#FEE2E2', color: '#DC2626',
+                    padding: '8px 14px', background: '#FEE2E2', color: '#C62828',
                     border: '1.5px solid #FCA5A5', borderRadius: '8px',
                     fontSize: '12px', fontWeight: '700', cursor: 'pointer',
                     fontFamily: 'inherit',
@@ -230,10 +230,10 @@ export default function AdminSettingsPage() {
       {/* Address Section */}
       <div style={{
         background: 'white', borderRadius: '16px', padding: '24px',
-        border: '2px solid #EDD9FF', marginBottom: '20px',
-        boxShadow: '0 4px 16px rgba(123,47,190,0.06)',
+        border: '2px solid #E8E2D2', marginBottom: '20px',
+        boxShadow: '0 4px 16px rgba(38,70,83,0.06)',
       }}>
-        <h2 style={{ fontSize: '1.1rem', fontWeight: '900', color: '#7B2FBE', marginTop: 0, marginBottom: '18px' }}>
+        <h2 style={{ fontSize: '1.1rem', fontWeight: '900', color: '#264653', marginTop: 0, marginBottom: '18px' }}>
           📍 Address
         </h2>
 
@@ -298,10 +298,10 @@ export default function AdminSettingsPage() {
       {/* Contact Section */}
       <div style={{
         background: 'white', borderRadius: '16px', padding: '24px',
-        border: '2px solid #EDD9FF', marginBottom: '20px',
-        boxShadow: '0 4px 16px rgba(123,47,190,0.06)',
+        border: '2px solid #E8E2D2', marginBottom: '20px',
+        boxShadow: '0 4px 16px rgba(38,70,83,0.06)',
       }}>
-        <h2 style={{ fontSize: '1.1rem', fontWeight: '900', color: '#7B2FBE', marginTop: 0, marginBottom: '18px' }}>
+        <h2 style={{ fontSize: '1.1rem', fontWeight: '900', color: '#264653', marginTop: 0, marginBottom: '18px' }}>
           📞 Contact Information
         </h2>
 
@@ -352,10 +352,10 @@ export default function AdminSettingsPage() {
       {/* Tax Info Section */}
       <div style={{
         background: 'white', borderRadius: '16px', padding: '24px',
-        border: '2px solid #EDD9FF', marginBottom: '20px',
-        boxShadow: '0 4px 16px rgba(123,47,190,0.06)',
+        border: '2px solid #E8E2D2', marginBottom: '20px',
+        boxShadow: '0 4px 16px rgba(38,70,83,0.06)',
       }}>
-        <h2 style={{ fontSize: '1.1rem', fontWeight: '900', color: '#7B2FBE', marginTop: 0, marginBottom: '18px' }}>
+        <h2 style={{ fontSize: '1.1rem', fontWeight: '900', color: '#264653', marginTop: 0, marginBottom: '18px' }}>
           🧾 Tax Information
         </h2>
 
@@ -388,10 +388,10 @@ export default function AdminSettingsPage() {
       {/* Invoice Settings */}
       <div style={{
         background: 'white', borderRadius: '16px', padding: '24px',
-        border: '2px solid #EDD9FF', marginBottom: '20px',
-        boxShadow: '0 4px 16px rgba(123,47,190,0.06)',
+        border: '2px solid #E8E2D2', marginBottom: '20px',
+        boxShadow: '0 4px 16px rgba(38,70,83,0.06)',
       }}>
-        <h2 style={{ fontSize: '1.1rem', fontWeight: '900', color: '#7B2FBE', marginTop: 0, marginBottom: '18px' }}>
+        <h2 style={{ fontSize: '1.1rem', fontWeight: '900', color: '#264653', marginTop: 0, marginBottom: '18px' }}>
           📄 Invoice Settings
         </h2>
 
@@ -406,7 +406,7 @@ export default function AdminSettingsPage() {
               maxLength={5}
               style={inp}
             />
-            <p style={{ fontSize: '11px', color: '#9585B0', marginTop: '4px', fontWeight: '600' }}>
+            <p style={{ fontSize: '11px', color: '#8A9BA3', marginTop: '4px', fontWeight: '600' }}>
               Example: INV-001, ABW-001
             </p>
           </div>
@@ -438,10 +438,10 @@ export default function AdminSettingsPage() {
       {/* Bank Details (Optional) */}
       <div style={{
         background: 'white', borderRadius: '16px', padding: '24px',
-        border: '2px solid #EDD9FF', marginBottom: '20px',
-        boxShadow: '0 4px 16px rgba(123,47,190,0.06)',
+        border: '2px solid #E8E2D2', marginBottom: '20px',
+        boxShadow: '0 4px 16px rgba(38,70,83,0.06)',
       }}>
-        <h2 style={{ fontSize: '1.1rem', fontWeight: '900', color: '#7B2FBE', marginTop: 0, marginBottom: '18px' }}>
+        <h2 style={{ fontSize: '1.1rem', fontWeight: '900', color: '#264653', marginTop: 0, marginBottom: '18px' }}>
           🏦 Bank Details (Optional — shown on invoice)
         </h2>
 
@@ -501,12 +501,12 @@ export default function AdminSettingsPage() {
           disabled={saving}
           style={{
             padding: '14px 40px',
-            background: saving ? '#ccc' : 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+            background: saving ? '#ccc' : 'linear-gradient(135deg,#3A6373,#264653)',
             color: 'white', border: 'none', borderRadius: '12px',
             fontSize: '15px', fontWeight: '900',
             cursor: saving ? 'not-allowed' : 'pointer',
             fontFamily: 'inherit',
-            boxShadow: saving ? 'none' : '0 8px 24px rgba(255,107,53,0.30)',
+            boxShadow: saving ? 'none' : '0 8px 24px rgba(229,57,53,0.30)',
           }}
         >
           {saving ? '⏳ Saving...' : '💾 Save All Settings'}

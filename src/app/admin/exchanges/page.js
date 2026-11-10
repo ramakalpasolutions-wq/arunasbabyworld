@@ -6,16 +6,16 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 
 const STATUS_CONFIG = {
-  pending:          { label: 'Pending',         color: '#F59E0B', bg: '#FEF3C7' },
-  approved:         { label: 'Approved',        color: '#3B82F6', bg: '#DBEAFE' },
-  picked_up:        { label: 'Picked Up',       color: '#8B5CF6', bg: '#EDE9FE' },
+  pending:          { label: 'Pending',         color: '#F2B33D', bg: '#FEF3C7' },
+  approved:         { label: 'Approved',        color: '#1E88E5', bg: '#DBEAFE' },
+  picked_up:        { label: 'Picked Up',       color: '#3A6373', bg: '#EEF3F5' },
   received:         { label: 'Received',        color: '#6366F1', bg: '#E0E7FF' },
-  verified:         { label: 'Verified',        color: '#10B981', bg: '#D1FAE5' },
-  awaiting_payment: { label: 'Awaiting Pay',    color: '#F97316', bg: '#FFEDD5' },
-  ready_to_ship:    { label: 'Ready to Ship',   color: '#10B981', bg: '#D1FAE5' },
+  verified:         { label: 'Verified',        color: '#43A047', bg: '#D1FAE5' },
+  awaiting_payment: { label: 'Awaiting Pay',    color: '#FB8C00', bg: '#FFEDD5' },
+  ready_to_ship:    { label: 'Ready to Ship',   color: '#43A047', bg: '#D1FAE5' },
   shipped:          { label: 'Shipped',         color: '#06B6D4', bg: '#CFFAFE' },
-  completed:        { label: 'Completed',       color: '#10B981', bg: '#D1FAE5' },
-  rejected:         { label: 'Rejected',        color: '#EF4444', bg: '#FEE2E2' },
+  completed:        { label: 'Completed',       color: '#43A047', bg: '#D1FAE5' },
+  rejected:         { label: 'Rejected',        color: '#E53935', bg: '#FEE2E2' },
 };
 
 export default function AdminExchangesPage() {
@@ -108,11 +108,11 @@ export default function AdminExchangesPage() {
       <div className="ex-stats">
         {[
           { label: 'Total',       value: stats.total      || 0, color: '#6b7280' },
-          { label: 'Pending',     value: stats.pending    || 0, color: '#F59E0B' },
-          { label: 'Approved',    value: stats.approved   || 0, color: '#3B82F6' },
-          { label: 'In Progress', value: stats.inProgress || 0, color: '#8B5CF6' },
-          { label: 'Completed',   value: stats.completed  || 0, color: '#10B981' },
-          { label: 'Rejected',    value: stats.rejected   || 0, color: '#EF4444' },
+          { label: 'Pending',     value: stats.pending    || 0, color: '#F2B33D' },
+          { label: 'Approved',    value: stats.approved   || 0, color: '#1E88E5' },
+          { label: 'In Progress', value: stats.inProgress || 0, color: '#3A6373' },
+          { label: 'Completed',   value: stats.completed  || 0, color: '#43A047' },
+          { label: 'Rejected',    value: stats.rejected   || 0, color: '#E53935' },
         ].map(s => (
           <div key={s.label} className="ex-stat" style={{ borderLeftColor: s.color }}>
             <span className="ex-stat-label">{s.label}</span>
@@ -476,7 +476,7 @@ export default function AdminExchangesPage() {
           min-width: 180px;
         }
         .ex-filters input:focus,
-        .ex-filters select:focus { border-color: #7c3aed; }
+        .ex-filters select:focus { border-color: #264653; }
 
         /* ═══════ DESKTOP TABLE ═══════ */
         .ex-table-wrap {
@@ -517,7 +517,7 @@ export default function AdminExchangesPage() {
         .ex-table code {
           font-family: monospace;
           font-size: 0.78rem;
-          color: #7c3aed;
+          color: #264653;
           font-weight: 700;
         }
 
@@ -543,7 +543,7 @@ export default function AdminExchangesPage() {
         }
 
         .ex-link {
-          color: #7c3aed;
+          color: #264653;
           text-decoration: none;
           font-family: monospace;
           font-size: 0.82rem;
@@ -564,12 +564,12 @@ export default function AdminExchangesPage() {
           text-overflow: ellipsis;
           white-space: nowrap;
         }
-        .ex-old-price { color: #dc2626; font-size: 0.85rem; font-weight: 700; }
-        .ex-new-price { color: #059669; font-size: 0.85rem; font-weight: 700; }
+        .ex-old-price { color: #C62828; font-size: 0.85rem; font-weight: 700; }
+        .ex-new-price { color: #388E3C; font-size: 0.85rem; font-weight: 700; }
 
         .ex-diff-zero   { color: #9ca3af; font-weight: 600; }
         .ex-diff-pay    { color: #d97706; font-weight: 700; }
-        .ex-diff-refund { color: #2563eb; font-weight: 700; }
+        .ex-diff-refund { color: #1E88E5; font-weight: 700; }
 
         .ex-status {
           padding: 5px 12px;
@@ -599,15 +599,15 @@ export default function AdminExchangesPage() {
           transition: all 0.15s;
         }
         .ex-btn-view {
-          background: #7c3aed;
+          background: #264653;
           color: white;
         }
-        .ex-btn-view:hover { background: #6d28d9; }
+        .ex-btn-view:hover { background: #1B3540; }
         .ex-btn-delete {
-          background: #ef4444;
+          background: #E53935;
           color: white;
         }
-        .ex-btn-delete:hover { background: #dc2626; }
+        .ex-btn-delete:hover { background: #C62828; }
         .ex-btn-cancel {
           background: white;
           color: #374151;
@@ -625,7 +625,7 @@ export default function AdminExchangesPage() {
         .ex-card {
           background: white;
           border: 1px solid #e5e7eb;
-          border-top: 4px solid #7c3aed;
+          border-top: 4px solid #264653;
           border-radius: 12px;
           padding: 16px;
           display: flex;
@@ -643,7 +643,7 @@ export default function AdminExchangesPage() {
         .ex-card-id {
           font-family: monospace;
           font-size: 0.88rem;
-          color: #7c3aed;
+          color: #264653;
           font-weight: 700;
         }
         .ex-card-section {
@@ -692,8 +692,8 @@ export default function AdminExchangesPage() {
           border-radius: 8px;
           border: 1px solid #e5e7eb;
         }
-        .ex-card-prod-old { border-left: 3px solid #dc2626; }
-        .ex-card-prod-new { border-left: 3px solid #059669; }
+        .ex-card-prod-old { border-left: 3px solid #C62828; }
+        .ex-card-prod-new { border-left: 3px solid #388E3C; }
         .ex-prod-label {
           font-size: 0.65rem;
           font-weight: 700;
@@ -713,7 +713,7 @@ export default function AdminExchangesPage() {
           min-height: 2.3em;
         }
         .ex-arrow {
-          color: #7c3aed;
+          color: #264653;
           font-size: 1.4rem;
           font-weight: 800;
           flex-shrink: 0;
@@ -797,7 +797,7 @@ export default function AdminExchangesPage() {
           color: #374151;
         }
         .ex-modal-body p { margin: 0 0 8px; }
-        .ex-warn { color: #ef4444; font-weight: 600; }
+        .ex-warn { color: #E53935; font-weight: 600; }
         .ex-modal-actions {
           padding: 0 18px 18px;
           display: flex;

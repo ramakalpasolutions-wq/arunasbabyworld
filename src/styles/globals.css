@@ -1,68 +1,68 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Fredoka+One&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Baloo+2:wght@500;600;700;800&display=swap');
 
 /* ============================================================
    GLOBAL DESIGN TOKENS
    ============================================================ */
 :root {
-  --orange:             #FF6B35;
-  --orange-dark:        #E8551F;
-  --orange-mid:         #FF8C5A;
-  --orange-light:       #FFD4B8;
-  --orange-soft:        #FFF3EC;
-  --orange-pastel:      #FFE8D6;
+  --orange:             #E53935;
+  --orange-dark:        #C62828;
+  --orange-mid:         #EF5350;
+  --orange-light:       #F6D28B;
+  --orange-soft:        #FFF6E5;
+  --orange-pastel:      #FDEBC8;
 
-  --purple:             #7B2FBE;
-  --purple-dark:        #5E1F9A;
-  --purple-mid:         #9B4FDE;
-  --purple-light:       #DFC5F8;
-  --purple-soft:        #F3E8FF;
-  --purple-pastel:      #EDD9FF;
+  --purple:             #264653;
+  --purple-dark:        #1B3540;
+  --purple-mid:         #3A6373;
+  --purple-light:       #C9D6DB;
+  --purple-soft:        #EEF3F5;
+  --purple-pastel:      #E8E2D2;
 
-  --pastel-pink:        #FFD6E7;
+  --pastel-pink:        #FDE7E6;
   --pastel-yellow:      #FFF3B0;
   --pastel-green:       #C8F7C5;
   --pastel-blue:        #C5E8FF;
   --pastel-mint:        #B8F0E0;
-  --pastel-lavender:    #E8D5FF;
-  --pastel-peach:       #FFD8C0;
-  --pastel-rose:        #FFCCD5;
+  --pastel-lavender:    #DDE5E8;
+  --pastel-peach:       #FDEBC8;
+  --pastel-rose:        #FDE7E6;
 
-  --success:            #22C55E;
-  --danger:             #EF4444;
-  --warning:            #F59E0B;
-  --info:               #7B2FBE;
+  --success:            #43A047;
+  --danger:             #E53935;
+  --warning:            #F2B33D;
+  --info:               #264653;
 
-  --text-primary:       #2D1A4A;
-  --text-secondary:     #6B4E8A;
-  --text-muted:         #A892C0;
-  --text-light:         #C4B0D8;
+  --text-primary:       #264653;
+  --text-secondary:     #4F6B76;
+  --text-muted:         #8A9BA3;
+  --text-light:         #B5C2C8;
 
-  --bg-primary:         #FFFBFE;
-  --bg-secondary:       #FDF5FF;
-  --bg-tertiary:        #F8EEFF;
-  --bg-orange-soft:     #FFF6F0;
-  --bg-purple-soft:     #F5EEFF;
+  --bg-primary:         #FFFBF2;
+  --bg-secondary:       #FFFBF2;
+  --bg-tertiary:        #FFFBF2;
+  --bg-orange-soft:     #FFFBF2;
+  --bg-purple-soft:     #FBF5E6;
 
-  --border:             #EDD9FF;
-  --border-light:       #F5EEFF;
-  --border-orange:      #FFD4B8;
+  --border:             #E8E2D2;
+  --border-light:       #FBF5E6;
+  --border-orange:      #F6D28B;
 
-  --grad-hero:          linear-gradient(135deg, #FF6B35 0%, #7B2FBE 100%);
-  --grad-orange:        linear-gradient(135deg, #FF6B35, #FF8C5A);
-  --grad-purple:        linear-gradient(135deg, #7B2FBE, #9B4FDE);
-  --grad-warm:          linear-gradient(135deg, #FF6B35, #FFB347, #7B2FBE);
-  --grad-pastel:        linear-gradient(135deg, #FFE8D6, #EDD9FF);
-  --grad-card:          linear-gradient(160deg, #FFF6F0 0%, #F5EEFF 100%);
-  --grad-rainbow:       linear-gradient(90deg, #FF6B35, #FFB347, #7B2FBE, #FF6B35);
+  --grad-hero:          linear-gradient(135deg, #3A6373 0%, #264653 100%);
+  --grad-orange:        linear-gradient(135deg, #E53935, #EF5350);
+  --grad-purple:        linear-gradient(135deg, #264653, #3A6373);
+  --grad-warm:          linear-gradient(135deg, #3A6373, #F2B33D, #264653);
+  --grad-pastel:        linear-gradient(135deg, #FDEBC8, #E8E2D2);
+  --grad-card:          linear-gradient(160deg, #FFFBF2 0%, #FBF5E6 100%);
+  --grad-rainbow:       linear-gradient(90deg, #3A6373, #F2B33D, #264653, #3A6373);
 
-  --shadow-xs:          0 2px 8px rgba(123,47,190,0.08);
-  --shadow-sm:          0 4px 16px rgba(123,47,190,0.10);
-  --shadow-md:          0 8px 28px rgba(123,47,190,0.14);
-  --shadow-lg:          0 16px 48px rgba(123,47,190,0.18);
-  --shadow-xl:          0 24px 64px rgba(123,47,190,0.22);
-  --shadow-orange:      0 8px 28px rgba(255,107,53,0.25);
-  --shadow-purple:      0 8px 28px rgba(123,47,190,0.25);
-  --shadow-card:        0 4px 20px rgba(123,47,190,0.10);
+  --shadow-xs:          0 2px 8px rgba(38,70,83,0.08);
+  --shadow-sm:          0 4px 16px rgba(38,70,83,0.10);
+  --shadow-md:          0 8px 28px rgba(38,70,83,0.14);
+  --shadow-lg:          0 16px 48px rgba(38,70,83,0.18);
+  --shadow-xl:          0 24px 64px rgba(38,70,83,0.22);
+  --shadow-orange:      0 8px 28px rgba(229,57,53,0.25);
+  --shadow-purple:      0 8px 28px rgba(38,70,83,0.25);
+  --shadow-card:        0 4px 20px rgba(38,70,83,0.10);
 
   --radius-xs:          6px;
   --radius-sm:          10px;
@@ -73,7 +73,7 @@
   --radius-full:        9999px;
 
   --font-body:          'Nunito', sans-serif;
-  --font-display:       'Fredoka One', cursive;
+  --font-display:       'Baloo 2', cursive;
 
   --transition:         all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   --transition-fast:    all 0.15s ease;
@@ -198,7 +198,7 @@ input, textarea, select {
 }
 .btn-primary:hover {
   transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 12px 36px rgba(255,107,53,0.35);
+  box-shadow: 0 12px 36px rgba(229,57,53,0.35);
 }
 .btn-primary:active { transform: translateY(-1px) scale(0.99); }
 
@@ -209,7 +209,7 @@ input, textarea, select {
 }
 .btn-purple:hover {
   transform: translateY(-3px) scale(1.02);
-  box-shadow: 0 12px 36px rgba(123,47,190,0.35);
+  box-shadow: 0 12px 36px rgba(38,70,83,0.35);
 }
 
 .btn-secondary {
@@ -283,8 +283,8 @@ input, textarea, select {
 .btn-bounce:hover { animation: btnBounce 0.5s ease; }
 
 @keyframes pulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(255,107,53,0.40); }
-  50%       { box-shadow: 0 0 0 10px rgba(255,107,53,0); }
+  0%, 100% { box-shadow: 0 0 0 0 rgba(229,57,53,0.40); }
+  50%       { box-shadow: 0 0 0 10px rgba(229,57,53,0); }
 }
 .btn-pulse { animation: pulse 2s ease infinite; }
 
@@ -322,8 +322,8 @@ input, textarea, select {
 
 .badge-orange  { background: var(--orange-soft);   color: var(--orange-dark); border: 1.5px solid var(--orange-light); }
 .badge-purple  { background: var(--purple-soft);   color: var(--purple-dark); border: 1.5px solid var(--purple-light); }
-.badge-success { background: var(--pastel-green);  color: #166534; border: 1.5px solid #86EFAC; }
-.badge-danger  { background: var(--pastel-rose);   color: #9F1239; border: 1.5px solid #FDA4AF; }
+.badge-success { background: var(--pastel-green);  color: #1B5E20; border: 1.5px solid #86EFAC; }
+.badge-danger  { background: var(--pastel-rose);   color: #9F1239; border: 1.5px solid #F5B7B5; }
 .badge-warning { background: var(--pastel-yellow); color: #78350F; border: 1.5px solid #FCD34D; }
 
 /* ============================================================
@@ -448,7 +448,7 @@ input, textarea, select {
 }
 .form-control:focus {
   border-color: var(--orange);
-  box-shadow: 0 0 0 4px rgba(255,107,53,0.12);
+  box-shadow: 0 0 0 4px rgba(229,57,53,0.12);
 }
 .form-control::placeholder { color: var(--text-light); }
 

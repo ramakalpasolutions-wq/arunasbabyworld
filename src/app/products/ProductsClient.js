@@ -16,9 +16,9 @@ const SORT_OPTIONS = [
 ];
 
 const GENDER_OPTIONS = [
-  { value: 'boy',    label: '👦 Boy',    color: '#0EA5E9' },
-  { value: 'girl',   label: '👧 Girl',   color: '#EC4899' },
-  { value: 'unisex', label: '👶 Unisex', color: '#10B981' },
+  { value: 'boy',    label: '👦 Boy',    color: '#1E88E5' },
+  { value: 'girl',   label: '👧 Girl',   color: '#E53935' },
+  { value: 'unisex', label: '👶 Unisex', color: '#43A047' },
 ];
 
 const CATEGORY_ORDER = [
@@ -34,10 +34,10 @@ const CATEGORY_ICONS = {
 };
 
 const DISCOUNT_TIERS = [
-  { value: '10', label: '10% or more', color: '#F59E0B' },
-  { value: '20', label: '20% or more', color: '#F97316' },
-  { value: '30', label: '30% or more', color: '#EF4444' },
-  { value: '50', label: '50% or more', color: '#DC2626' },
+  { value: '10', label: '10% or more', color: '#F2B33D' },
+  { value: '20', label: '20% or more', color: '#FB8C00' },
+  { value: '30', label: '30% or more', color: '#E53935' },
+  { value: '50', label: '50% or more', color: '#C62828' },
 ];
 
 const RATING_OPTIONS = [
@@ -107,7 +107,9 @@ function AutoScrollCatBar({ categories, currentCategory, handleCategoryClick, ca
   }, [catLoading, categories.length]);
 
   const isCatActive = (cat) =>
-    cat.id === '' ? !currentCategory : currentCategory === cat.id;
+    cat.id === ''
+      ? !currentCategory
+      : currentCategory === cat.id || currentCategory === cat.slug;
 
   if (catLoading) {
     return (
@@ -136,7 +138,7 @@ function AutoScrollCatBar({ categories, currentCategory, handleCategoryClick, ca
             <button
               key={`${cat.id || 'all'}-${i}`}
               className={`${styles.mobileCatPill} ${isCatActive(cat) ? styles.mobileCatPillActive : ''}`}
-              onClick={() => handleCategoryClick(cat.id)}
+              onClick={() => handleCategoryClick(cat.id ? (cat.slug || cat.id) : '')}
             >
               <span className={styles.mobileCatIcon}>
                 {cat.icon || CATEGORY_ICONS[cat.slug] || CATEGORY_ICONS.default}
@@ -406,8 +408,21 @@ export default function ProductsClient() {
     setActiveQuick('all');
   }, [updateUrl]);
 
-  const isCategoryActive = (cat) => filters.category === cat.id;
-  const selectedCategory = categories.find(c => c.id === filters.category);
+  // URL carries the category slug; old links with an ID or a name still match
+  const matchesCategory = (cat, value) => {
+    if (!value) return false;
+    const v = String(value).trim().toLowerCase();
+    return cat.id === value || cat.slug === v || (cat.name || '').toLowerCase() === v;
+  };
+  const isCategoryActive = (cat) => matchesCategory(cat, filters.category);
+  const selectedCategory = categories.find(c => matchesCategory(c, filters.category));
+
+  // Old links that carry a category ID get rewritten to the readable slug
+  useEffect(() => {
+    if (selectedCategory?.slug && filters.category !== selectedCategory.slug) {
+      updateUrl({ category: selectedCategory.slug });
+    }
+  }, [selectedCategory, filters.category, updateUrl]);
   const selectedCategoryName = selectedCategory?.name || '';
 
   const pageTitle = filters.search
@@ -451,16 +466,16 @@ export default function ProductsClient() {
               style={{
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 width: '100%', padding: '7px 10px', textAlign: 'left',
-                background: filters.gender === g.value ? '#FFF0F5' : 'transparent',
-                border: filters.gender === g.value ? '1.5px solid #FF3F6C' : '1px solid transparent',
+                background: filters.gender === g.value ? '#FFF5F4' : 'transparent',
+                border: filters.gender === g.value ? '1.5px solid #E53935' : '1px solid transparent',
                 borderRadius: '8px', fontSize: '0.84rem',
                 fontWeight: filters.gender === g.value ? '800' : '600',
-                color: filters.gender === g.value ? '#FF3F6C' : '#535766',
+                color: filters.gender === g.value ? '#E53935' : '#535766',
                 cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.2s Ease',
               }}
             >
               <span>{g.label}</span>
-              {filters.gender === g.value && <span style={{ fontSize: '0.9rem', color: '#FF3F6C' }}>✓</span>}
+              {filters.gender === g.value && <span style={{ fontSize: '0.9rem', color: '#E53935' }}>✓</span>}
             </button>
           ))}
         </div>
@@ -476,7 +491,7 @@ export default function ProductsClient() {
               <span className={styles.catIcon}>🌟</span><span className={styles.catName}>All</span>
             </button>
             {categories.map(cat => (
-              <button key={cat.id} type="button" className={`${styles.catBtn} ${isCategoryActive(cat) ? styles.catBtnActive : ''}`} onClick={() => handleCategoryClick(cat.id)}>
+              <button key={cat.id} type="button" className={`${styles.catBtn} ${isCategoryActive(cat) ? styles.catBtnActive : ''}`} onClick={() => handleCategoryClick(cat.id ? (cat.slug || cat.id) : '')}>
                 <span className={styles.catIcon}>{cat.icon || CATEGORY_ICONS[cat.slug] || '📦'}</span>
                 <span className={styles.catName}>{cat.name}</span>
                 {cat.productCount > 0 && <span className={styles.catCount}>({cat.productCount})</span>}
@@ -494,9 +509,9 @@ export default function ProductsClient() {
           <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '2px' }}>
             {brands.map(b => (
               <button key={b} type="button" onClick={() => updateUrl({ brand: b === filters.brand ? '' : b })} style={{
-                padding: '6px 8px', textAlign: 'left', background: filters.brand === b ? '#FFF0F5' : 'transparent',
+                padding: '6px 8px', textAlign: 'left', background: filters.brand === b ? '#FFF5F4' : 'transparent',
                 border: 'none', borderRadius: '4px', fontSize: '0.82rem', fontWeight: filters.brand === b ? '800' : '600',
-                color: filters.brand === b ? '#FF3F6C' : '#535766', cursor: 'pointer', fontFamily: 'inherit',
+                color: filters.brand === b ? '#E53935' : '#535766', cursor: 'pointer', fontFamily: 'inherit',
               }}>
                 {b} {filters.brand === b && '✓'}
               </button>
@@ -543,7 +558,7 @@ export default function ProductsClient() {
               right: `${100 - maxPct}%`,
               height: '5px',
               borderRadius: '999px',
-              background: '#2563EB',
+              background: '#1E88E5',
             }} />
 
             <input
@@ -605,10 +620,10 @@ export default function ProductsClient() {
         {DISCOUNT_TIERS.map(t => (
           <button key={t.value} type="button" onClick={() => updateUrl({ discount: t.value === filters.discount ? '' : t.value })} style={{
             display: 'block', width: '100%', padding: '6px 8px', textAlign: 'left',
-            background: filters.discount === t.value ? '#FFF0F5' : 'transparent',
+            background: filters.discount === t.value ? '#FFF5F4' : 'transparent',
             border: 'none', borderRadius: '4px', fontSize: '0.82rem',
             fontWeight: filters.discount === t.value ? '800' : '600',
-            color: filters.discount === t.value ? '#FF3F6C' : '#535766',
+            color: filters.discount === t.value ? '#E53935' : '#535766',
             cursor: 'pointer', fontFamily: 'inherit', marginBottom: '2px',
           }}>
             {t.label} {filters.discount === t.value && '✓'}
@@ -621,10 +636,10 @@ export default function ProductsClient() {
         {RATING_OPTIONS.map(o => (
           <button key={o.value} type="button" onClick={() => updateUrl({ rating: o.value === filters.rating ? '' : o.value })} style={{
             display: 'block', width: '100%', padding: '6px 8px', textAlign: 'left',
-            background: filters.rating === o.value ? '#FFF0F5' : 'transparent',
+            background: filters.rating === o.value ? '#FFF5F4' : 'transparent',
             border: 'none', borderRadius: '4px', fontSize: '0.82rem',
             fontWeight: filters.rating === o.value ? '800' : '600',
-            color: filters.rating === o.value ? '#FF3F6C' : '#535766',
+            color: filters.rating === o.value ? '#E53935' : '#535766',
             cursor: 'pointer', fontFamily: 'inherit', marginBottom: '2px',
           }}>
             {o.stars} & above {filters.rating === o.value && '✓'}
@@ -690,7 +705,7 @@ export default function ProductsClient() {
               <span>☰</span>
               <span className={styles.filterToggleText}>Filter</span>
               {activeFilterCount > 0 && (
-                <span style={{ marginLeft: '4px', padding: '1px 6px', background: '#FF3F6C', color: 'white', borderRadius: '999px', fontSize: '0.66rem', fontWeight: '900' }}>
+                <span style={{ marginLeft: '4px', padding: '1px 6px', background: '#E53935', color: 'white', borderRadius: '999px', fontSize: '0.66rem', fontWeight: '900' }}>
                   {activeFilterCount}
                 </span>
               )}
@@ -781,7 +796,7 @@ export default function ProductsClient() {
                 {loadingMore && (
                   <div style={{ display: 'flex', justifyContent: 'center', padding: '24px 0' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', color: '#94969F', fontSize: '0.84rem', fontWeight: '700' }}>
-                      <div style={{ width: '22px', height: '22px', border: '3px solid #E9E9ED', borderTop: '3px solid #FF3F6C', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+                      <div style={{ width: '22px', height: '22px', border: '3px solid #E9E9ED', borderTop: '3px solid #E53935', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
                       Loading more...
                     </div>
                   </div>
@@ -848,7 +863,7 @@ export default function ProductsClient() {
           width: 22px;
           height: 22px;
           border-radius: 50%;
-          background: #2563EB;
+          background: #1E88E5;
           border: 4px solid white;
           box-shadow: 0 2px 8px rgba(37, 99, 235, 0.45);
           cursor: pointer;
@@ -868,7 +883,7 @@ export default function ProductsClient() {
           width: 22px;
           height: 22px;
           border-radius: 50%;
-          background: #2563EB;
+          background: #1E88E5;
           border: 4px solid white;
           box-shadow: 0 2px 8px rgba(37, 99, 235, 0.45);
           cursor: pointer;

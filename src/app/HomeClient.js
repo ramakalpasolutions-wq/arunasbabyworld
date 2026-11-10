@@ -26,23 +26,23 @@ function useSectionSettings(initialSettings = {}) {
    DEFAULTS
 ═══════════════════════════════════════ */
 const DEFAULT_BRANDS = [
-  { id: '1',  name: 'Mothercare',    color: '#FF6B35', link: '/products' },
-  { id: '2',  name: 'Babyhug',       color: '#7B2FBE', link: '/products' },
-  { id: '3',  name: 'Ed-a-Mamma',    color: '#FF8C5A', link: '/products' },
-  { id: '4',  name: 'Gini & Jony',   color: '#9B4FDE', link: '/products' },
-  { id: '5',  name: 'Chicco',        color: '#FF6B35', link: '/products' },
-  { id: '6',  name: 'Mee Mee',       color: '#7B2FBE', link: '/products' },
-  { id: '7',  name: 'Himalaya Baby', color: '#FF8C5A', link: '/products' },
-  { id: '8',  name: 'Mamaearth',     color: '#9B4FDE', link: '/products' },
-  { id: '9',  name: 'Fisher-Price',  color: '#FF6B35', link: '/products' },
-  { id: '10', name: 'Funskool',      color: '#7B2FBE', link: '/products' },
+  { id: '1',  name: 'Mothercare',    color: '#E53935', link: '/products' },
+  { id: '2',  name: 'Babyhug',       color: '#264653', link: '/products' },
+  { id: '3',  name: 'Ed-a-Mamma',    color: '#EF5350', link: '/products' },
+  { id: '4',  name: 'Gini & Jony',   color: '#3A6373', link: '/products' },
+  { id: '5',  name: 'Chicco',        color: '#E53935', link: '/products' },
+  { id: '6',  name: 'Mee Mee',       color: '#264653', link: '/products' },
+  { id: '7',  name: 'Himalaya Baby', color: '#EF5350', link: '/products' },
+  { id: '8',  name: 'Mamaearth',     color: '#3A6373', link: '/products' },
+  { id: '9',  name: 'Fisher-Price',  color: '#E53935', link: '/products' },
+  { id: '10', name: 'Funskool',      color: '#264653', link: '/products' },
 ];
 
 const DEFAULT_BUDGET = [
-  { price: 499,  emoji: '🎀', color: '#FF6B35', offer: 'UNDER', link: '/products?maxPrice=499'  },
-  { price: 899,  emoji: '🧸', color: '#7B2FBE', offer: 'UNDER', link: '/products?maxPrice=899'  },
-  { price: 1299, emoji: '🍼', color: '#FF8C5A', offer: 'UNDER', link: '/products?maxPrice=1299' },
-  { price: 1999, emoji: '🎁', color: '#9B4FDE', offer: 'UNDER', link: '/products?maxPrice=1999' },
+  { price: 499,  emoji: '🎀', color: '#E53935', offer: 'UNDER', link: '/products?maxPrice=499'  },
+  { price: 899,  emoji: '🧸', color: '#264653', offer: 'UNDER', link: '/products?maxPrice=899'  },
+  { price: 1299, emoji: '🍼', color: '#EF5350', offer: 'UNDER', link: '/products?maxPrice=1299' },
+  { price: 1999, emoji: '🎁', color: '#3A6373', offer: 'UNDER', link: '/products?maxPrice=1999' },
 ];
 
 function getSectionBackgroundUrl(items = []) {
@@ -121,13 +121,13 @@ function BrandsSection({ brands, sectionSettings = {} }) {
   };
 
   return (
-    <section style={{ background: 'white', borderTop: '7px solid #F3E8FF', borderBottom: '1px solid #F3E8FF', overflow: 'hidden', padding: '0' }}>
-      <div style={{ height: '4px', background: 'linear-gradient(90deg, #FF6B35, #7B2FBE, #FF8C5A, #9B4FDE, #FF6B35)', backgroundSize: '300% 100%', animation: 'rainbowShift 4s linear infinite' }} />
+    <section style={{ background: 'white', borderTop: '7px solid #EEF3F5', borderBottom: '1px solid #EEF3F5', overflow: 'hidden', padding: '0' }}>
+      <div style={{ height: '4px', background: 'linear-gradient(90deg, #3A6373, #264653, #3A6373, #3A6373, #3A6373)', backgroundSize: '300% 100%', animation: 'rainbowShift 4s linear infinite' }} />
 
       {(s.title || s.description) && (
         <div style={{ textAlign: 'center', padding: '10px 16px 0', fontFamily: 'Nunito, sans-serif' }}>
-          {s.title && <p style={{ fontSize: '0.78rem', fontWeight: '800', color: '#7B2FBE', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '1px' }}>{secTitle}</p>}
-          {secDesc  && <p style={{ fontSize: '0.72rem', color: '#9585B0', margin: 0, fontWeight: '500' }}>{secDesc}</p>}
+          {s.title && <p style={{ fontSize: '0.78rem', fontWeight: '800', color: '#264653', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: '1px' }}>{secTitle}</p>}
+          {secDesc  && <p style={{ fontSize: '0.72rem', color: '#8A9BA3', margin: 0, fontWeight: '500' }}>{secDesc}</p>}
         </div>
       )}
 
@@ -152,17 +152,17 @@ function BrandsSection({ brands, sectionSettings = {} }) {
                     key={`list${loopIdx}-${brand.id || i}`}
                     href={brandLink}
                     title={brand.name ? `Shop ${brand.name} products` : 'Shop products'}
-                    style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', textDecoration: 'none', padding: '7px 16px', borderRadius: '999px', border: `1.5px solid ${brand.color || '#7B2FBE'}25`, background: `${brand.color || '#7B2FBE'}08`, flexShrink: 0, whiteSpace: 'nowrap', transition: 'all 0.2s ease' }}
-                    onMouseEnter={e => { e.currentTarget.style.background = `${brand.color || '#7B2FBE'}18`; e.currentTarget.style.borderColor = brand.color || '#7B2FBE'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
-                    onMouseLeave={e => { e.currentTarget.style.background = `${brand.color || '#7B2FBE'}08`; e.currentTarget.style.borderColor = `${brand.color || '#7B2FBE'}25`; e.currentTarget.style.transform = 'translateY(0)'; }}
+                    style={{ display: 'inline-flex', alignItems: 'center', gap: '7px', textDecoration: 'none', padding: '7px 16px', borderRadius: '999px', border: `1.5px solid ${brand.color || '#264653'}25`, background: `${brand.color || '#264653'}08`, flexShrink: 0, whiteSpace: 'nowrap', transition: 'all 0.2s ease' }}
+                    onMouseEnter={e => { e.currentTarget.style.background = `${brand.color || '#264653'}18`; e.currentTarget.style.borderColor = brand.color || '#264653'; e.currentTarget.style.transform = 'translateY(-2px)'; }}
+                    onMouseLeave={e => { e.currentTarget.style.background = `${brand.color || '#264653'}08`; e.currentTarget.style.borderColor = `${brand.color || '#264653'}25`; e.currentTarget.style.transform = 'translateY(0)'; }}
                   >
                     {brand.logo?.url ? (
                       <img src={brand.logo.url} alt={brand.name || 'Brand'} style={{ width: brand.name ? '32px' : '80px', height: brand.name ? '49px' : '47px', objectFit: 'contain', borderRadius: '4px', flexShrink: 0 }} />
                     ) : (
-                      <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: brand.color || '#7B2FBE', flexShrink: 0 }} />
+                      <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: brand.color || '#264653', flexShrink: 0 }} />
                     )}
                     {brand.name && (
-                      <span style={{ fontSize: '0.84rem', fontWeight: '800', color: brand.color || '#7B2FBE', fontFamily: 'Nunito, sans-serif' }}>{brand.name}</span>
+                      <span style={{ fontSize: '0.84rem', fontWeight: '800', color: brand.color || '#264653', fontFamily: 'Nunito, sans-serif' }}>{brand.name}</span>
                     )}
                   </Link>
                 );
@@ -275,7 +275,7 @@ function SeasonBanner({ banners, sectionSettings = {} }) {
                       />
                     )
                   ) : (
-                    <div className="kidNoMedia" style={{ background: `linear-gradient(135deg, ${b.bgColor || '#FFD4B8'}, #FFE8B0)` }}>
+                    <div className="kidNoMedia" style={{ background: `linear-gradient(135deg, ${b.bgColor || '#F6D28B'}, #FFE8B0)` }}>
                       <span>{b.emoji || '🎁'}</span>
                     </div>
                   )}
@@ -328,24 +328,24 @@ function SeasonBanner({ banners, sectionSettings = {} }) {
       </div>
 
       <style jsx>{`
-        .kidFestivalSection { position:relative; padding:32px 0 36px; overflow:hidden; background: linear-gradient(135deg,#FFF9F0 0%,#FFE8F0 100%); }
+        .kidFestivalSection { position:relative; padding:32px 0 36px; overflow:hidden; background: linear-gradient(135deg,#FFF9F0 0%,#FDE7E6 100%); }
         .kidFestivalInner { width:100%; margin:0 auto; position:relative; z-index:2; }
         .kidFestivalHeader { text-align:center; margin-bottom:16px; padding:0 16px; }
-        .kidFestivalHeader h2 { font-size:clamp(1.2rem,2.4vw,1.8rem); font-weight:900; color:#2D1A4A; margin:0 0 4px; font-family:'Nunito',sans-serif; }
-        .kidFestivalHeader p { font-size:0.92rem; color:#6B4E8A; margin:0; font-weight:600; font-family:'Nunito',sans-serif; }
+        .kidFestivalHeader h2 { font-size:clamp(1.2rem,2.4vw,1.8rem); font-weight:900; color:#264653; margin:0 0 4px; font-family:'Nunito',sans-serif; }
+        .kidFestivalHeader p { font-size:0.92rem; color:#4F6B76; margin:0; font-weight:600; font-family:'Nunito',sans-serif; }
         .kidFestivalCard { position:relative; width:100%; max-width:100vw; margin:0 auto; background:#000; overflow:hidden; max-height:90vh; }
         .kidFestivalSlide { position:absolute; inset:0; transition:opacity 0.5s ease; }
         .kidMediaWrap { position:absolute; inset:0; width:100%; height:100%; display:flex; align-items:center; justify-content:center; background:#000; }
         .kidMedia { width:100%; height:100%; object-fit:contain; }
         .kidTextOverlay { position:absolute; inset:0; background:linear-gradient(to top,rgba(0,0,0,0.75) 0%,transparent 100%); z-index:3; pointer-events:none; }
         .kidTextContent { position:absolute; left:0; right:0; bottom:0; padding:24px; z-index:4; display:flex; flex-direction:column; align-items:flex-start; }
-        .kidFestivalBadge { padding:6px 16px; background:white; color:#FF6B35; border-radius:999px; font-size:0.75rem; font-weight:900; margin-bottom:8px; font-family:'Nunito',sans-serif; }
+        .kidFestivalBadge { padding:6px 16px; background:white; color:#E53935; border-radius:999px; font-size:0.75rem; font-weight:900; margin-bottom:8px; font-family:'Nunito',sans-serif; }
         .kidTextContent h2 { font-size:clamp(1.2rem,3vw,2.4rem); font-weight:900; color:white; margin:0 0 8px; font-family:'Nunito',sans-serif; }
         .kidTextContent p { font-size:0.9rem; color:white; margin:0 0 12px; font-family:'Nunito',sans-serif; }
-        .kidShopBtn { padding:10px 24px; background:linear-gradient(135deg,#FF6B35,#7B2FBE); color:white; border-radius:999px; text-decoration:none; font-weight:800; font-family:'Nunito',sans-serif; }
-        .kidMuteBtn { position:absolute; top:16px; right:16px; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.95); color:#2D1A4A; border:2px solid rgba(255,107,53,0.4); cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; z-index:6; }
-        .kidUnmutePrompt { position:absolute; top:70px; right:16px; padding:9px 16px; background:linear-gradient(135deg,#FF6B35,#FF4081); color:white; border:2px solid white; border-radius:999px; font-size:13px; font-weight:800; font-family:'Nunito',sans-serif; cursor:pointer; z-index:7; }
-        .kidNav { position:absolute; top:50%; transform:translateY(-50%); width:46px; height:46px; border-radius:50%; background:rgba(255,255,255,0.95); border:2px solid rgba(255,107,53,0.4); font-size:1.6rem; cursor:pointer; color:#2D1A4A; z-index:5; display:flex; align-items:center; justify-content:center; font-weight:900; }
+        .kidShopBtn { padding:10px 24px; background:linear-gradient(135deg,#3A6373,#264653); color:white; border-radius:999px; text-decoration:none; font-weight:800; font-family:'Nunito',sans-serif; }
+        .kidMuteBtn { position:absolute; top:16px; right:16px; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.95); color:#264653; border:2px solid rgba(229,57,53,0.4); cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; z-index:6; }
+        .kidUnmutePrompt { position:absolute; top:70px; right:16px; padding:9px 16px; background:linear-gradient(135deg,#E53935,#E53935); color:white; border:2px solid white; border-radius:999px; font-size:13px; font-weight:800; font-family:'Nunito',sans-serif; cursor:pointer; z-index:7; }
+        .kidNav { position:absolute; top:50%; transform:translateY(-50%); width:46px; height:46px; border-radius:50%; background:rgba(255,255,255,0.95); border:2px solid rgba(229,57,53,0.4); font-size:1.6rem; cursor:pointer; color:#264653; z-index:5; display:flex; align-items:center; justify-content:center; font-weight:900; }
         .kidNavLeft { left:20px; }
         .kidNavRight { right:20px; }
         .kidDots { position:absolute; bottom:18px; left:50%; transform:translateX(-50%); display:flex; gap:8px; z-index:5; }
@@ -381,7 +381,7 @@ function BudgetSection({ banners, sectionSettings = {} }) {
   return (
     <section style={{ padding: 'clamp(36px,5vw,60px) clamp(12px,3vw,40px) clamp(48px,6vw,80px)', background: 'linear-gradient(180deg,#f0e0cc 0%,#e0d0be 20%,#c8dce8 50%,#b0d4e8 100%)', textAlign: 'center', position: 'relative', overflow: 'hidden' }}>
       <div style={{ display: 'inline-block', background: '#fff', padding: 'clamp(10px,2vw,14px) clamp(28px,4vw,48px)', borderRadius: '4px', boxShadow: '0 3px 14px rgba(0,0,0,0.10)', marginBottom: secDesc ? '8px' : 'clamp(28px,4vw,44px)', position: 'relative', zIndex: 2, maxWidth: '90%' }}>
-        <h2 style={{ fontSize: 'clamp(1rem,2.5vw,1.9rem)', fontWeight: '900', color: '#1a1a2e', margin: 0, fontFamily: 'Nunito, sans-serif', textTransform: 'uppercase', letterSpacing: 'clamp(1.5px,0.3vw,3px)', whiteSpace: 'nowrap' }}>
+        <h2 style={{ fontSize: 'clamp(1rem,2.5vw,1.9rem)', fontWeight: '900', color: '#1B3540', margin: 0, fontFamily: 'Nunito, sans-serif', textTransform: 'uppercase', letterSpacing: 'clamp(1.5px,0.3vw,3px)', whiteSpace: 'nowrap' }}>
           {secEmoji} {secTitle}
         </h2>
       </div>
@@ -403,7 +403,7 @@ function BudgetSection({ banners, sectionSettings = {} }) {
               <p style={{ fontSize: 'clamp(0.62rem,1.2vw,1rem)', fontWeight: '900', color: '#1a1a8e', margin: '0 0 4px', fontFamily: 'Nunito, sans-serif', textTransform: 'uppercase', letterSpacing: 'clamp(2px,0.5vw,4px)' }}>{item.offer}</p>
               <p style={{ fontSize: 'clamp(1.5rem,6vw,4.5rem)', fontWeight: '900', color: '#1a1a8e', margin: 0, lineHeight: 1.1, fontFamily: 'Nunito, sans-serif', letterSpacing: '-1px', display: 'flex', alignItems: 'flex-end', justifyContent: 'center', gap: '2px', whiteSpace: 'nowrap' }}>
                 {item.price}
-                <span style={{ fontSize: '0.30em', marginBottom: 'clamp(4px,1vw,14px)', color: '#FF6B35', fontWeight: '900' }}>›</span>
+                <span style={{ fontSize: '0.30em', marginBottom: 'clamp(4px,1vw,14px)', color: '#E53935', fontWeight: '900' }}>›</span>
               </p>
             </div>
           </Link>
@@ -430,13 +430,13 @@ function SunnySection({ banners, sectionSettings = {} }) {
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <span style={{ display: 'inline-block', padding: '4px 14px', background: 'linear-gradient(135deg,#FFF9EC,#FFF3EC)', border: '1.5px solid #FFD4B8', borderRadius: '999px', fontSize: '0.70rem', fontWeight: '800', color: '#FF6B35', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', fontFamily: 'Nunito, sans-serif' }}>
+            <span style={{ display: 'inline-block', padding: '4px 14px', background: 'linear-gradient(135deg,#FFF9EC,#FFF6E5)', border: '1.5px solid #F6D28B', borderRadius: '999px', fontSize: '0.70rem', fontWeight: '800', color: '#E53935', textTransform: 'uppercase', letterSpacing: '0.8px', marginBottom: '8px', fontFamily: 'Nunito, sans-serif' }}>
               {secEmoji} Collections
             </span>
-            <h2 style={{ fontSize: 'clamp(1.3rem,2.5vw,2rem)', fontWeight: '800', color: '#2D1A4A', margin: '0 0 4px', fontFamily: 'Nunito, sans-serif' }}>{secEmoji} {secTitle}</h2>
-            {secDesc && <p style={{ fontSize: '0.84rem', color: '#9585B0', margin: 0, fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>{secDesc}</p>}
+            <h2 style={{ fontSize: 'clamp(1.3rem,2.5vw,2rem)', fontWeight: '800', color: '#264653', margin: '0 0 4px', fontFamily: 'Nunito, sans-serif' }}>{secEmoji} {secTitle}</h2>
+            {secDesc && <p style={{ fontSize: '0.84rem', color: '#8A9BA3', margin: 0, fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>{secDesc}</p>}
           </div>
-          <Link href="/products" style={{ padding: '9px 20px', background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)', color: 'white', borderRadius: '999px', textDecoration: 'none', fontSize: '0.82rem', fontWeight: '700', fontFamily: 'Nunito, sans-serif' }}>
+          <Link href="/products" style={{ padding: '9px 20px', background: 'linear-gradient(135deg,#3A6373,#264653)', color: 'white', borderRadius: '999px', textDecoration: 'none', fontSize: '0.82rem', fontWeight: '700', fontFamily: 'Nunito, sans-serif' }}>
             {secBtn} →
           </Link>
         </div>
@@ -465,7 +465,7 @@ function SunnySection({ banners, sectionSettings = {} }) {
           .sunnyDashedBorder { border:3px solid #E03F4F; background:white; box-sizing:border-box; border-radius:24px; box-shadow:0 6px 18px rgba(224,63,79,0.18); transition:all 0.3s ease; width:100%; height:280px; }
           .cleanCard:hover .sunnyDashedBorder { border-color:#C92A3A; box-shadow:0 14px 36px rgba(224,63,79,0.35); transform:translateY(-6px); }
           .sunnyImgWrap { position:relative; width:100%; height:100%; overflow:hidden; border-radius:20px; }
-          .sunnyTitleStrip { position:absolute; left:0; bottom:0; right:0; background:#1a1a2e; padding:10px 12px; text-align:center; }
+          .sunnyTitleStrip { position:absolute; left:0; bottom:0; right:0; background:#1B3540; padding:10px 12px; text-align:center; }
           .sunnyTitleStrip span { font-size:11px; font-weight:900; color:white; letter-spacing:0.8px; text-transform:uppercase; font-family:'Nunito',sans-serif; }
           @media(max-width:1024px){.sunnyGrid{grid-template-columns:repeat(3,1fr);gap:14px}.sunnyDashedBorder{height:260px}}
           @media(max-width:700px) {.sunnyGrid{grid-template-columns:repeat(2,1fr);gap:12px}.sunnyDashedBorder{height:240px}}
@@ -534,11 +534,11 @@ function GenderSection({ banners, sectionSettings = {} }) {
       </div>
 
       <style jsx>{`
-        .herHimSection { padding: clamp(36px, 5vw, 60px) clamp(12px, 2vw, 20px); background: linear-gradient(180deg, #FFF5F8 0%, #F0F8FF 100%); position: relative; overflow: hidden; }
+        .herHimSection { padding: clamp(36px, 5vw, 60px) clamp(12px, 2vw, 20px); background: linear-gradient(180deg, #FFF5F4 0%, #F0F8FF 100%); position: relative; overflow: hidden; }
         .herHimHeader { text-align: center; margin-bottom: 32px; position: relative; z-index: 2; }
-        .herHimBadge { display: inline-block; padding: 6px 20px; background: rgba(255, 255, 255, 0.95); border: 1.5px solid #FFB6D9; border-radius: 999px; font-size: 0.72rem; font-weight: 800; color: #E91E63; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 14px; font-family: 'Nunito', sans-serif; box-shadow: 0 4px 14px rgba(233, 30, 99, 0.12); }
-        .herHimTitle { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 900; color: #2D1A4A; margin: 0 0 8px; font-family: 'Nunito', sans-serif; }
-        .herHimDesc { font-size: 0.95rem; color: #9585B0; margin: 0; font-weight: 500; font-family: 'Nunito', sans-serif; }
+        .herHimBadge { display: inline-block; padding: 6px 20px; background: rgba(255, 255, 255, 0.95); border: 1.5px solid #F5B7B5; border-radius: 999px; font-size: 0.72rem; font-weight: 800; color: #E53935; text-transform: uppercase; letter-spacing: 1.2px; margin-bottom: 14px; font-family: 'Nunito', sans-serif; box-shadow: 0 4px 14px rgba(229,57,53, 0.12); }
+        .herHimTitle { font-size: clamp(1.6rem, 3vw, 2.4rem); font-weight: 900; color: #264653; margin: 0 0 8px; font-family: 'Nunito', sans-serif; }
+        .herHimDesc { font-size: 0.95rem; color: #8A9BA3; margin: 0; font-weight: 500; font-family: 'Nunito', sans-serif; }
         .herHimWrapper { max-width: 1200px; margin: 0 auto; padding: 0; }
         .herHimCard { position: relative; background: linear-gradient(180deg, #BFE3F2 0%, #A8D4E8 40%, #C9B89C 70%, #B8A88C 100%); border-radius: 32px; overflow: hidden; min-height: clamp(380px, 50vw, 540px); box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15); padding: clamp(20px, 3vw, 40px) clamp(20px, 3vw, 40px) clamp(80px, 10vw, 120px); display: flex; align-items: flex-end; justify-content: center; }
         .bgTextHer, .bgTextHim { position: absolute; top: 50%; transform: translateY(-50%); font-size: clamp(8rem, 22vw, 22rem); font-weight: 900; color: rgba(255, 255, 255, 0.55); font-family: 'Nunito', 'Arial Black', sans-serif; letter-spacing: -0.05em; line-height: 0.85; pointer-events: none; user-select: none; z-index: 1; }
@@ -551,7 +551,7 @@ function GenderSection({ banners, sectionSettings = {} }) {
         .herHimImgWrap:hover .herHimImg { transform: translateY(-8px) scale(1.03); }
         .herHimFallback { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 8rem; }
         .herHimButtons { position: absolute; bottom: clamp(24px, 4vw, 50px); left: 50%; transform: translateX(-50%); display: flex; gap: clamp(60px, 18vw, 220px); z-index: 5; }
-        .ctaPill { display: inline-flex; align-items: center; gap: 4px; padding: clamp(10px, 1.5vw, 14px) clamp(28px, 4vw, 44px); background: linear-gradient(135deg, #FFE85C 0%, #FFD93D 100%); color: #1a1a2e; font-family: 'Nunito', sans-serif; font-weight: 900; font-size: clamp(0.95rem, 1.8vw, 1.2rem); text-decoration: none; border-radius: 999px; letter-spacing: 1px; box-shadow: 0 6px 0 #C9A52E, 0 10px 20px rgba(0, 0, 0, 0.20); border: 3px solid #1a1a2e; transition: all 0.2s ease; text-transform: uppercase; }
+        .ctaPill { display: inline-flex; align-items: center; gap: 4px; padding: clamp(10px, 1.5vw, 14px) clamp(28px, 4vw, 44px); background: linear-gradient(135deg, #FFE85C 0%, #F9B800 100%); color: #1B3540; font-family: 'Nunito', sans-serif; font-weight: 900; font-size: clamp(0.95rem, 1.8vw, 1.2rem); text-decoration: none; border-radius: 999px; letter-spacing: 1px; box-shadow: 0 6px 0 #C9A52E, 0 10px 20px rgba(0, 0, 0, 0.20); border: 3px solid #1B3540; transition: all 0.2s ease; text-transform: uppercase; }
         .ctaPill:hover { transform: translateY(-3px); box-shadow: 0 9px 0 #C9A52E, 0 14px 26px rgba(0, 0, 0, 0.25); }
         @media (max-width: 768px) { .herHimCard { min-height: 360px; padding: 20px 16px 90px; border-radius: 24px; } .bgTextHer, .bgTextHim { font-size: clamp(6rem, 26vw, 12rem); } .herHimImages { gap: 12px; } .herHimImgWrap { height: clamp(220px, 45vw, 320px); } .herHimButtons { gap: clamp(40px, 22vw, 100px); bottom: 20px; } .ctaPill { padding: 9px 22px; font-size: 0.9rem; } }
         @media (max-width: 480px) { .herHimSection { padding: 28px 10px; } .herHimCard { min-height: 320px; padding: 16px 10px 80px; border-radius: 20px; } .bgTextHer, .bgTextHim { font-size: 7rem; } .herHimImgWrap { height: 220px; } .herHimButtons { gap: 50px; } .ctaPill { padding: 8px 18px; font-size: 0.85rem; } }
@@ -600,7 +600,7 @@ function PromoSection({ banners, sectionSettings = {} }) {
               const offerText = b.offer         || '';
               const btnText   = b.buttonText    || 'SHOP NOW';
               const link      = b.buttonLink    || '/products';
-              const accent    = b.color         || '#FF6B9D';
+              const accent    = b.color         || '#E53935';
 
               return (
                 <div key={b.id || i} className={`promoSlide ${isActive ? 'promoSlideActive' : ''}`}>
@@ -649,33 +649,33 @@ function PromoSection({ banners, sectionSettings = {} }) {
         </div>
 
         <style jsx>{`
-          .promoSec { padding: clamp(36px, 5vw, 60px) clamp(12px, 2vw, 20px); background: linear-gradient(135deg, #FFF9F5 0%, #FFF0F8 50%, #F5F0FF 100%); }
+          .promoSec { padding: clamp(36px, 5vw, 60px) clamp(12px, 2vw, 20px); background: linear-gradient(135deg, #FFFBF2 0%, #FFF5F4 50%, #FBF5E6 100%); }
           .promoWrap { max-width: 1300px; margin: 0 auto; }
           .promoHead { text-align: center; margin-bottom: 28px; }
-          .promoBadge { display: inline-block; padding: 5px 18px; background: linear-gradient(135deg, #FFF3EC, #FFE8F5); border: 1.5px solid #FFD4B8; border-radius: 999px; font-size: 0.72rem; font-weight: 800; color: #FF6B35; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; font-family: 'Nunito', sans-serif; }
-          .promoTitle { font-size: clamp(1.4rem, 2.6vw, 2.2rem); font-weight: 900; color: #2D1A4A; margin: 0 0 6px; font-family: 'Nunito', sans-serif; }
-          .promoDesc { font-size: 0.9rem; color: #9585B0; margin: 0; font-weight: 500; font-family: 'Nunito', sans-serif; }
+          .promoBadge { display: inline-block; padding: 5px 18px; background: linear-gradient(135deg, #FFF6E5, #FDE7E6); border: 1.5px solid #F6D28B; border-radius: 999px; font-size: 0.72rem; font-weight: 800; color: #E53935; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px; font-family: 'Nunito', sans-serif; }
+          .promoTitle { font-size: clamp(1.4rem, 2.6vw, 2.2rem); font-weight: 900; color: #264653; margin: 0 0 6px; font-family: 'Nunito', sans-serif; }
+          .promoDesc { font-size: 0.9rem; color: #8A9BA3; margin: 0; font-weight: 500; font-family: 'Nunito', sans-serif; }
           .promoCarousel { position: relative; width: 100%; aspect-ratio: 21 / 9; min-height: 360px; max-height: 560px; border-radius: 24px; overflow: hidden; box-shadow: 0 14px 44px rgba(0, 0, 0, 0.12); background: #000; }
           .promoSlide { position: absolute; inset: 0; opacity: 0; transition: opacity 0.7s ease; pointer-events: none; z-index: 1; }
           .promoSlideActive { opacity: 1; pointer-events: auto; z-index: 2; }
           .promoCard { position: relative; display: block; width: 100%; height: 100%; text-decoration: none; color: inherit; }
           .promoMediaWrap { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 1; overflow: hidden; }
           .promoMedia { width: 100%; height: 100%; object-fit: cover; object-position: center; display: block; }
-          .promoNoMedia { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 6rem; background: linear-gradient(135deg, #FFE8D6, #F5E6FF); }
+          .promoNoMedia { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; font-size: 6rem; background: linear-gradient(135deg, #FDEBC8, #FBF5E6); }
           .promoOverlay { position: absolute; inset: 0; z-index: 2; background: linear-gradient(to left, rgba(0, 0, 0, 0.82) 0%, rgba(0, 0, 0, 0.65) 30%, rgba(0, 0, 0, 0.25) 55%, transparent 75%); }
           .promoContent { position: absolute; top: 0; right: 0; bottom: 0; width: 50%; z-index: 3; padding: clamp(24px, 4vw, 56px); display: flex; flex-direction: column; justify-content: center; align-items: flex-start; gap: clamp(10px, 1.8vw, 18px); color: #fff; }
           .promoTagBadge { display: inline-block; padding: 5px 14px; border-radius: 999px; font-size: 0.68rem; font-weight: 800; color: #fff; text-transform: uppercase; letter-spacing: 1.2px; font-family: 'Nunito', sans-serif; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3); }
           .promoCardTitle { font-size: clamp(1.3rem, 2.6vw, 2.4rem); font-weight: 900; color: #fff; margin: 0; line-height: 1.15; font-family: 'Nunito', sans-serif; text-shadow: 0 2px 12px rgba(0, 0, 0, 0.7), 0 0 4px rgba(0, 0, 0, 0.5); }
           .promoCardDesc { font-size: clamp(0.85rem, 1.3vw, 1rem); font-weight: 500; color: rgba(255, 255, 255, 0.92); margin: 0; line-height: 1.55; font-family: 'Nunito', sans-serif; text-shadow: 0 1px 6px rgba(0, 0, 0, 0.6); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
           .promoOfferRow { display: flex; align-items: baseline; gap: 6px; margin-top: 4px; }
-          .promoOfferLabel { font-size: clamp(0.75rem, 1.2vw, 0.95rem); font-weight: 800; color: #FFD93D; font-family: 'Nunito', sans-serif; letter-spacing: 1px; }
-          .promoOfferNum { font-size: clamp(2rem, 4.5vw, 3.5rem); font-weight: 900; line-height: 1; color: #FFD93D; font-family: 'Nunito', sans-serif; letter-spacing: -1.5px; }
-          .promoOfferPct { font-size: clamp(0.9rem, 1.6vw, 1.3rem); font-weight: 900; color: #FFD93D; font-family: 'Nunito', sans-serif; }
-          .promoBtn { display: inline-flex; align-items: center; gap: 6px; padding: clamp(10px, 1.5vw, 14px) clamp(24px, 3vw, 36px); background: linear-gradient(135deg, #FF6B35, #FF4081, #7B2FBE); color: #fff; border: 2px solid rgba(255, 255, 255, 0.85); border-radius: 999px; font-size: clamp(0.8rem, 1.3vw, 0.95rem); font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; cursor: pointer; font-family: 'Nunito', sans-serif; box-shadow: 0 8px 22px rgba(255, 107, 53, 0.5); transition: transform 0.25s ease; }
+          .promoOfferLabel { font-size: clamp(0.75rem, 1.2vw, 0.95rem); font-weight: 800; color: #F9B800; font-family: 'Nunito', sans-serif; letter-spacing: 1px; }
+          .promoOfferNum { font-size: clamp(2rem, 4.5vw, 3.5rem); font-weight: 900; line-height: 1; color: #F9B800; font-family: 'Nunito', sans-serif; letter-spacing: -1.5px; }
+          .promoOfferPct { font-size: clamp(0.9rem, 1.6vw, 1.3rem); font-weight: 900; color: #F9B800; font-family: 'Nunito', sans-serif; }
+          .promoBtn { display: inline-flex; align-items: center; gap: 6px; padding: clamp(10px, 1.5vw, 14px) clamp(24px, 3vw, 36px); background: linear-gradient(135deg, #3A6373, #3A6373, #264653); color: #fff; border: 2px solid rgba(255, 255, 255, 0.85); border-radius: 999px; font-size: clamp(0.8rem, 1.3vw, 0.95rem); font-weight: 800; letter-spacing: 1.2px; text-transform: uppercase; cursor: pointer; font-family: 'Nunito', sans-serif; box-shadow: 0 8px 22px rgba(229,57,53, 0.5); transition: transform 0.25s ease; }
           .promoBtn:hover { transform: translateY(-3px) scale(1.04); }
           .promoDots { position: absolute; bottom: 16px; left: 50%; transform: translateX(-50%); display: flex; gap: 8px; z-index: 5; }
           .promoDot { width: 10px; height: 10px; border-radius: 50%; background: rgba(255, 255, 255, 0.5); border: 2px solid rgba(255, 255, 255, 0.7); cursor: pointer; padding: 0; transition: all 0.3s ease; }
-          .promoDotActive { width: 32px; border-radius: 999px; background: linear-gradient(90deg, #FF6B35, #7B2FBE); border-color: #fff; }
+          .promoDotActive { width: 32px; border-radius: 999px; background: linear-gradient(90deg, #3A6373, #264653); border-color: #fff; }
           @media (max-width: 900px) { .promoCarousel { aspect-ratio: 4 / 5; min-height: 460px; max-height: none; } .promoOverlay { background: linear-gradient(to top, rgba(0, 0, 0, 0.88) 0%, rgba(0, 0, 0, 0.7) 25%, rgba(0, 0, 0, 0.35) 50%, transparent 75%); } .promoContent { top: auto; right: 0; bottom: 0; left: 0; width: 100%; padding: 24px 22px 46px; justify-content: flex-end; gap: 10px; } }
           @media (max-width: 560px) { .promoCarousel { aspect-ratio: 3 / 4; min-height: 420px; border-radius: 18px; } .promoContent { padding: 20px 18px 44px; } .promoCardTitle { font-size: 1.15rem; } .promoCardDesc { font-size: 0.78rem; -webkit-line-clamp: 2; } .promoOfferNum { font-size: 2rem; } .promoBtn { padding: 9px 22px; font-size: 0.78rem; } }
         `}</style>
@@ -694,13 +694,13 @@ function CategorySection({ banners, sectionSettings = {} }) {
   const secDesc  = s.description || '';
 
   const DEFAULT_CATEGORIES = [
-    { id:'d1', title:'Clothing',        image:{ url:'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?w=500&h=600&fit=crop&auto=format' }, buttonLink:'/products?category=clothing',           color:'#FF6B35' },
-    { id:'d2', title:'Toys & Games',    image:{ url:'https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=500&h=600&fit=crop&auto=format'  }, buttonLink:'/products?category=toys',               color:'#EF4444' },
-    { id:'d3', title:'Baby Food',       image:{ url:'https://images.unsplash.com/photo-1607532941433-304659e8198a?w=500&h=600&fit=crop&auto=format' }, buttonLink:'/products?category=food',              color:'#10B981' },
-    { id:'d4', title:'Personal Care',   image:{ url:'https://images.unsplash.com/photo-1599735362298-10f9a84d3e89?w=500&h=600&fit=crop&auto=format' }, buttonLink:'/products?category=personal-care',     color:'#7B2FBE' },
-    { id:'d5', title:'Skin Care',       image:{ url:'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=500&h=600&fit=crop&auto=format'  }, buttonLink:'/products?category=health-care',       color:'#0EA5E9' },
-    { id:'d6', title:'Electric Rides',  image:{ url:'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=500&h=600&fit=crop&auto=format' }, buttonLink:'/products?category=electric-vehicles', color:'#F59E0B' },
-    { id:'d7', title:'Cradles & Cribs', image:{ url:'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=500&h=600&fit=crop&auto=format'  }, buttonLink:'/products?category=cradles-cribs',     color:'#EC4899' },
+    { id:'d1', title:'Clothing',        image:{ url:'https://images.unsplash.com/photo-1622290291468-a28f7a7dc6a8?w=500&h=600&fit=crop&auto=format' }, buttonLink:'/products?category=clothing',           color:'#E53935' },
+    { id:'d2', title:'Toys & Games',    image:{ url:'https://images.unsplash.com/photo-1558060370-d644479cb6f7?w=500&h=600&fit=crop&auto=format'  }, buttonLink:'/products?category=toys',               color:'#E53935' },
+    { id:'d3', title:'Baby Food',       image:{ url:'https://images.unsplash.com/photo-1607532941433-304659e8198a?w=500&h=600&fit=crop&auto=format' }, buttonLink:'/products?category=food',              color:'#43A047' },
+    { id:'d4', title:'Personal Care',   image:{ url:'https://images.unsplash.com/photo-1599735362298-10f9a84d3e89?w=500&h=600&fit=crop&auto=format' }, buttonLink:'/products?category=personal-care',     color:'#264653' },
+    { id:'d5', title:'Skin Care',       image:{ url:'https://images.unsplash.com/photo-1556228578-0d85b1a4d571?w=500&h=600&fit=crop&auto=format'  }, buttonLink:'/products?category=health-care',       color:'#1E88E5' },
+    { id:'d6', title:'Electric Rides',  image:{ url:'https://images.unsplash.com/photo-1503454537195-1dcabb73ffb9?w=500&h=600&fit=crop&auto=format' }, buttonLink:'/products?category=electric-vehicles', color:'#F2B33D' },
+    { id:'d7', title:'Cradles & Cribs', image:{ url:'https://images.unsplash.com/photo-1555252333-9f8e92e65df9?w=500&h=600&fit=crop&auto=format'  }, buttonLink:'/products?category=cradles-cribs',     color:'#E53935' },
   ];
 
   const categories = banners?.length > 0 ? banners : DEFAULT_CATEGORIES;
@@ -710,18 +710,18 @@ function CategorySection({ banners, sectionSettings = {} }) {
     <section style={{ padding: 'clamp(36px,5vw,52px) clamp(12px,2vw,16px)', background: 'linear-gradient(180deg,#fff 0%,#f8f9fb 100%)' }}>
       <div style={{ maxWidth: '1300px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-          <h2 style={{ fontSize: 'clamp(1.1rem,2.5vw,1.8rem)', fontWeight: '900', color: '#1a1a2e', margin: '0 0 8px', fontFamily: 'Nunito, sans-serif', textTransform: 'uppercase', letterSpacing: '2px' }}>
+          <h2 style={{ fontSize: 'clamp(1.1rem,2.5vw,1.8rem)', fontWeight: '900', color: '#1B3540', margin: '0 0 8px', fontFamily: 'Nunito, sans-serif', textTransform: 'uppercase', letterSpacing: '2px' }}>
             {secEmoji} {secTitle}
           </h2>
-          {secDesc && <p style={{ fontSize: '0.85rem', color: '#9585B0', margin: '0 0 10px', fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>{secDesc}</p>}
-          <div style={{ width: '60px', height: '3px', background: 'linear-gradient(90deg,#FF6B35,#7B2FBE)', borderRadius: '999px', margin: '0 auto' }} />
+          {secDesc && <p style={{ fontSize: '0.85rem', color: '#8A9BA3', margin: '0 0 10px', fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>{secDesc}</p>}
+          <div style={{ width: '60px', height: '3px', background: 'linear-gradient(90deg,#3A6373,#264653)', borderRadius: '999px', margin: '0 auto' }} />
         </div>
 
         <div className="promoGrid" style={{ '--cols': cols }}>
           {categories.map((cat, i) => {
             const imgUrl = cat.image?.url || null;
             const link   = cat.buttonLink || '/products';
-            const color  = cat.color      || '#FF6B35';
+            const color  = cat.color      || '#E53935';
             const name   = cat.title      || 'Category';
             return (
               <Link key={cat.id || i} href={link} style={{ textDecoration: 'none' }}>
@@ -736,7 +736,7 @@ function CategorySection({ banners, sectionSettings = {} }) {
                       ? <img src={imgUrl} alt={name} style={{ width:'100%',height:'100%',objectFit:'cover',objectPosition:'center',display:'block',transition:'transform 0.4s ease' }} />
                       : <div style={{ width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'3rem',background:`${color}15`,color,fontWeight:'900' }}>{name.charAt(0)}</div>}
                   </div>
-                  <div style={{ padding: '11px 6px', background: '#1a1a2e', textAlign: 'center' }}>
+                  <div style={{ padding: '11px 6px', background: '#1B3540', textAlign: 'center' }}>
                     <p style={{ fontSize: 'clamp(0.62rem,1.1vw,0.78rem)', fontWeight: '800', color: '#fff', margin: 0, fontFamily: 'Nunito, sans-serif', textTransform: 'uppercase', letterSpacing: '0.3px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '4px', lineHeight: 1.3, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                       {name}<span style={{ fontSize: '0.85rem', flexShrink: 0 }}>›</span>
                     </p>
@@ -771,17 +771,17 @@ function BabyFoodSection({ banners, sectionSettings = {} }) {
   const secBtn   = s.buttonText  || 'View All Baby Food';
 
   if (!banners?.length) return null;
-  const foodColors = ['#FF6B35','#10B981','#EF4444','#0EA5E9','#F59E0B','#7B2FBE'];
+  const foodColors = ['#E53935','#43A047','#E53935','#1E88E5','#F2B33D','#264653'];
 
   return (
-    <section style={{ padding: 'clamp(40px,6vw,60px) 20px', background: 'linear-gradient(135deg,#FFFBF5 0%,#F0FDF4 50%,#F3E8FF 100%)' }}>
+    <section style={{ padding: 'clamp(40px,6vw,60px) 20px', background: 'linear-gradient(135deg,#FFFBF5 0%,#F0FDF4 50%,#EEF3F5 100%)' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ textAlign: 'center', marginBottom: '36px' }}>
-          <span style={{ display:'inline-block', padding:'5px 18px', background:'linear-gradient(135deg,#FFFBF5,#F0FDF4)', border:'1.5px solid #BBF7D0', borderRadius:'999px', fontSize:'0.72rem', fontWeight:'800', color:'#166534', textTransform:'uppercase', letterSpacing:'1px', marginBottom:'12px', fontFamily:'Nunito,sans-serif' }}>
+          <span style={{ display:'inline-block', padding:'5px 18px', background:'linear-gradient(135deg,#FFFBF5,#F0FDF4)', border:'1.5px solid #BBF7D0', borderRadius:'999px', fontSize:'0.72rem', fontWeight:'800', color:'#1B5E20', textTransform:'uppercase', letterSpacing:'1px', marginBottom:'12px', fontFamily:'Nunito,sans-serif' }}>
             🍎 Nutrition First
           </span>
-          <h2 style={{ fontSize:'clamp(1.6rem,3vw,2.6rem)', fontWeight:'800', color:'#2D1A4A', margin:'0 0 8px', fontFamily:'Nunito,sans-serif' }}>{secEmoji} {secTitle}</h2>
-          {secDesc && <p style={{ fontSize:'0.88rem', color:'#9585B0', margin:0, fontWeight:'500', fontFamily:'Nunito,sans-serif' }}>{secDesc}</p>}
+          <h2 style={{ fontSize:'clamp(1.6rem,3vw,2.6rem)', fontWeight:'800', color:'#264653', margin:'0 0 8px', fontFamily:'Nunito,sans-serif' }}>{secEmoji} {secTitle}</h2>
+          {secDesc && <p style={{ fontSize:'0.88rem', color:'#8A9BA3', margin:0, fontWeight:'500', fontFamily:'Nunito,sans-serif' }}>{secDesc}</p>}
         </div>
 
         <div className="bfGrid">
@@ -799,7 +799,7 @@ function BabyFoodSection({ banners, sectionSettings = {} }) {
                       : <span style={{ fontSize:'4rem' }}>{banner.emoji||'🍼'}</span>}
                   </div>
                   <div className="bfInfo">
-                    <h3 style={{ fontSize:'0.92rem', fontWeight:'800', color:'#2D1A4A', margin:'0 0 4px', fontFamily:'Nunito,sans-serif' }}>{banner.title}</h3>
+                    <h3 style={{ fontSize:'0.92rem', fontWeight:'800', color:'#264653', margin:'0 0 4px', fontFamily:'Nunito,sans-serif' }}>{banner.title}</h3>
                     <span style={{ fontSize:'0.78rem', fontWeight:'800', color, fontFamily:'Nunito,sans-serif' }}>Shop Now →</span>
                   </div>
                 </div>
@@ -809,7 +809,7 @@ function BabyFoodSection({ banners, sectionSettings = {} }) {
         </div>
 
         <div style={{ textAlign:'center', marginTop:'32px' }}>
-          <Link href="/products?category=food" style={{ display:'inline-flex', alignItems:'center', gap:'8px', padding:'11px 28px', background:'linear-gradient(135deg,#10B981,#059669)', color:'white', borderRadius:'999px', textDecoration:'none', fontWeight:'800', fontSize:'0.90rem', boxShadow:'0 6px 18px rgba(16,185,129,0.28)', fontFamily:'Nunito,sans-serif' }}>
+          <Link href="/products?category=food" style={{ display:'inline-flex', alignItems:'center', gap:'8px', padding:'11px 28px', background:'linear-gradient(135deg,#43A047,#388E3C)', color:'white', borderRadius:'999px', textDecoration:'none', fontWeight:'800', fontSize:'0.90rem', boxShadow:'0 6px 18px rgba(67,160,71,0.28)', fontFamily:'Nunito,sans-serif' }}>
             {secBtn} 🍎
           </Link>
         </div>
@@ -844,19 +844,19 @@ function ToysSection({ banners, sectionSettings = {} }) {
     <section style={{ position:'relative', padding:'clamp(36px,5vw,68px) clamp(12px,2vw,20px)', overflow:'hidden' }}>
       {sectionBg
         ? <img src={sectionBg} alt="bg" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', opacity:0.18, filter:'blur(1px)' }} />
-        : <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg,#FEF2F2 0%,#FFF7ED 50%,#FDF4FF 100%)' }} />}
+        : <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg,#FEF2F2 0%,#FFF7ED 50%,#FFFBF2 100%)' }} />}
       <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg,rgba(255,255,255,0.58),rgba(255,255,255,0.82))' }} />
 
       <div style={{ maxWidth:'1200px', margin:'0 auto', position:'relative', zIndex:2 }}>
         <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:'28px', flexWrap:'wrap', gap:'12px' }}>
           <div>
-            <span style={{ display:'inline-block', padding:'4px 14px', background:'rgba(255,255,255,0.72)', border:'1.5px solid #FCA5A5', borderRadius:'999px', fontSize:'0.70rem', fontWeight:'800', color:'#DC2626', textTransform:'uppercase', letterSpacing:'0.8px', marginBottom:'8px', fontFamily:'Nunito,sans-serif' }}>
+            <span style={{ display:'inline-block', padding:'4px 14px', background:'rgba(255,255,255,0.72)', border:'1.5px solid #FCA5A5', borderRadius:'999px', fontSize:'0.70rem', fontWeight:'800', color:'#C62828', textTransform:'uppercase', letterSpacing:'0.8px', marginBottom:'8px', fontFamily:'Nunito,sans-serif' }}>
               🎠 Play Time
             </span>
-            <h2 style={{ fontSize:'clamp(1.3rem,2.5vw,2rem)', fontWeight:'800', color:'#2D1A4A', margin:'0 0 4px', fontFamily:'Nunito,sans-serif' }}>{secEmoji} {secTitle}</h2>
-            {secDesc && <p style={{ fontSize:'0.84rem', color:'#9585B0', margin:0, fontWeight:'500', fontFamily:'Nunito,sans-serif' }}>{secDesc}</p>}
+            <h2 style={{ fontSize:'clamp(1.3rem,2.5vw,2rem)', fontWeight:'800', color:'#264653', margin:'0 0 4px', fontFamily:'Nunito,sans-serif' }}>{secEmoji} {secTitle}</h2>
+            {secDesc && <p style={{ fontSize:'0.84rem', color:'#8A9BA3', margin:0, fontWeight:'500', fontFamily:'Nunito,sans-serif' }}>{secDesc}</p>}
           </div>
-          <Link href="/products?category=toys" style={{ padding:'9px 20px', background:'linear-gradient(135deg,#EF4444,#7B2FBE)', color:'white', borderRadius:'999px', textDecoration:'none', fontSize:'0.82rem', fontWeight:'700', fontFamily:'Nunito,sans-serif' }}>
+          <Link href="/products?category=toys" style={{ padding:'9px 20px', background:'linear-gradient(135deg,#3A6373,#264653)', color:'white', borderRadius:'999px', textDecoration:'none', fontSize:'0.82rem', fontWeight:'700', fontFamily:'Nunito,sans-serif' }}>
             {secBtn} →
           </Link>
         </div>
@@ -865,18 +865,18 @@ function ToysSection({ banners, sectionSettings = {} }) {
           {banners.map((banner, i) => {
             const frontImg = banner.image?.url || null;
             const link     = banner.buttonLink || '/products?category=toys';
-            const color    = banner.color || '#EF4444';
+            const color    = banner.color || '#E53935';
             return (
               <SimpleCard key={banner.id || i} href={link}>
                 <div className="toysCard">
-                  <div className="toysImgWrap" style={{ background: frontImg ? '#fffaf9' : 'linear-gradient(135deg,#FEF2F2,#FFF7ED)' }}>
+                  <div className="toysImgWrap" style={{ background: frontImg ? '#FFFBF2' : 'linear-gradient(135deg,#FEF2F2,#FFF7ED)' }}>
                     {frontImg
                       ? <img src={frontImg} alt={banner.title} style={{ width:'100%',height:'100%',objectFit:'contain',padding:'12px',boxSizing:'border-box' }} />
                       : <span style={{ fontSize:'4rem' }}>{banner.emoji||'🧸'}</span>}
                     <div style={{ position:'absolute', top:'10px', left:'10px', padding:'4px 10px', borderRadius:'999px', background:color, color:'white', fontSize:'10px', fontWeight:'800', fontFamily:'Nunito,sans-serif' }}>Play</div>
                   </div>
                   <div className="toysInfo">
-                    <h3 style={{ fontSize:'0.92rem', fontWeight:'800', color:'#2D1A4A', margin:'0 0 5px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontFamily:'Nunito,sans-serif' }}>{banner.title}</h3>
+                    <h3 style={{ fontSize:'0.92rem', fontWeight:'800', color:'#264653', margin:'0 0 5px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontFamily:'Nunito,sans-serif' }}>{banner.title}</h3>
                     <span style={{ fontSize:'0.80rem', fontWeight:'800', color, fontFamily:'Nunito,sans-serif' }}>Shop Now →</span>
                   </div>
                 </div>
@@ -951,8 +951,8 @@ function CareSection({ personalCareBanners, healthCareBanners, sectionSettings =
         <div style={{ width:'5px', height:'38px', borderRadius:'999px', background:accentColor, boxShadow:`0 0 12px ${accentColor}80`, flexShrink:0 }} />
         <div style={{ minWidth:0 }}>
           <p style={{ fontSize:'0.68rem', fontWeight:'800', color:accentColor, margin:'0 0 2px', textTransform:'uppercase', letterSpacing:'1.2px', fontFamily:'Nunito,sans-serif' }}>{subtitle}</p>
-          <h3 style={{ fontSize:'clamp(1.15rem,2.2vw,1.5rem)', fontWeight:'800', color:'#2D1A4A', margin:'0 0 2px', fontFamily:'Nunito,sans-serif' }}>{title}</h3>
-          {description && <p style={{ fontSize:'0.80rem', color:'#9585B0', margin:0, fontWeight:'500', fontFamily:'Nunito,sans-serif' }}>{description}</p>}
+          <h3 style={{ fontSize:'clamp(1.15rem,2.2vw,1.5rem)', fontWeight:'800', color:'#264653', margin:'0 0 2px', fontFamily:'Nunito,sans-serif' }}>{title}</h3>
+          {description && <p style={{ fontSize:'0.80rem', color:'#8A9BA3', margin:0, fontWeight:'500', fontFamily:'Nunito,sans-serif' }}>{description}</p>}
         </div>
       </div>
       <Link href={linkAll} style={{ padding:'8px 20px', background:`linear-gradient(135deg,${accentColor},${accentColor}DD)`, color:'white', borderRadius:'999px', textDecoration:'none', fontSize:'0.78rem', fontWeight:'800', fontFamily:'Nunito,sans-serif', boxShadow:`0 6px 16px ${accentColor}45`, whiteSpace:'nowrap', flexShrink:0 }}>
@@ -1002,20 +1002,20 @@ function CareSection({ personalCareBanners, healthCareBanners, sectionSettings =
   };
 
   return (
-    <section style={{ padding:'clamp(42px,6vw,68px) 0', background:'linear-gradient(135deg,#FAFAFA 0%,#F8F4FF 50%,#F0FDF4 100%)', overflow:'hidden' }}>
+    <section style={{ padding:'clamp(42px,6vw,68px) 0', background:'linear-gradient(135deg,#FAFAFA 0%,#FFFBF2 50%,#F0FDF4 100%)', overflow:'hidden' }}>
       <div style={{ maxWidth:'1200px', margin:'0 auto', padding:'0 20px' }}>
         <div style={{ textAlign:'center', marginBottom:'40px' }}>
-          <span style={{ display:'inline-block', padding:'6px 20px', background:'linear-gradient(135deg,#F3E8FF,#ECFDF5)', border:'1.5px solid #DFC5F8', borderRadius:'999px', fontSize:'0.72rem', fontWeight:'800', color:'#7B2FBE', textTransform:'uppercase', letterSpacing:'1.2px', marginBottom:'12px', fontFamily:'Nunito,sans-serif' }}>
+          <span style={{ display:'inline-block', padding:'6px 20px', background:'linear-gradient(135deg,#EEF3F5,#ECFDF5)', border:'1.5px solid #C9D6DB', borderRadius:'999px', fontSize:'0.72rem', fontWeight:'800', color:'#264653', textTransform:'uppercase', letterSpacing:'1.2px', marginBottom:'12px', fontFamily:'Nunito,sans-serif' }}>
             {wellnessBadge}
           </span>
-          <h2 style={{ fontSize:'clamp(1.6rem,3vw,2.4rem)', fontWeight:'800', color:'#2D1A4A', margin:'0 0 8px', fontFamily:'Nunito,sans-serif' }}>{wellnessTitle}</h2>
-          <p style={{ fontSize:'0.92rem', color:'#9585B0', margin:0, fontWeight:'500', fontFamily:'Nunito,sans-serif' }}>{wellnessDesc}</p>
+          <h2 style={{ fontSize:'clamp(1.6rem,3vw,2.4rem)', fontWeight:'800', color:'#264653', margin:'0 0 8px', fontFamily:'Nunito,sans-serif' }}>{wellnessTitle}</h2>
+          <p style={{ fontSize:'0.92rem', color:'#8A9BA3', margin:0, fontWeight:'500', fontFamily:'Nunito,sans-serif' }}>{wellnessDesc}</p>
         </div>
 
         {personalItems.length > 0 && (
           <div style={{ marginBottom:'48px' }}>
-            <SectionHeader title={personalTitle} subtitle={personalSub} description={personalDesc} accentColor="#7B2FBE" linkAll="/products?category=personal-care" btnText={personalBtn} />
-            <BentoGrid items={personalItems} accentColor="#7B2FBE" />
+            <SectionHeader title={personalTitle} subtitle={personalSub} description={personalDesc} accentColor="#264653" linkAll="/products?category=personal-care" btnText={personalBtn} />
+            <BentoGrid items={personalItems} accentColor="#264653" />
           </div>
         )}
 
@@ -1024,12 +1024,12 @@ function CareSection({ personalCareBanners, healthCareBanners, sectionSettings =
         )}
 
         {healthItems.length > 0 && (
-          <SectionHeader title={healthTitle} subtitle={healthSub} description={healthDesc} accentColor="#10B981" linkAll="/products?category=health-care" btnText={healthBtn} />
+          <SectionHeader title={healthTitle} subtitle={healthSub} description={healthDesc} accentColor="#43A047" linkAll="/products?category=health-care" btnText={healthBtn} />
         )}
       </div>
 
       {healthItems.length > 0 && (
-        <HealthMarquee items={healthItems} accentColor="#10B981" />
+        <HealthMarquee items={healthItems} accentColor="#43A047" />
       )}
 
       <style>{`
@@ -1068,15 +1068,15 @@ function EVSection({ banners, sectionSettings = {} }) {
 
   return (
     <section style={{ position:'relative', padding:'clamp(40px,6vw,60px) 20px', overflow:'hidden' }}>
-      <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg,#E8F4FD 0%,#F0E6FF 30%,#FFF0F5 60%,#E8FFF5 100%)', zIndex:0 }} />
+      <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg,#E8F4FD 0%,#FBF5E6 30%,#FFF5F4 60%,#E8FFF5 100%)', zIndex:0 }} />
 
       <div style={{ maxWidth:'1200px', margin:'0 auto', position:'relative', zIndex:1 }}>
         <div style={{ textAlign:'center', marginBottom:'36px' }}>
           <span style={{ display:'inline-block', padding:'5px 18px', background:'rgba(255,255,255,0.80)', border:'1.5px solid rgba(14,165,233,0.30)', borderRadius:'999px', fontSize:'0.72rem', fontWeight:'800', color:'#0c4a6e', textTransform:'uppercase', letterSpacing:'1px', marginBottom:'12px', fontFamily:'Nunito,sans-serif' }}>
             ⚡ Kids Electric Rides
           </span>
-          <h2 style={{ fontSize:'clamp(1.6rem,3vw,2.6rem)', fontWeight:'800', color:'#2D1A4A', margin:'0 0 8px', fontFamily:'Nunito,sans-serif' }}>{secEmoji} {secTitle}</h2>
-          {secDesc && <p style={{ fontSize:'0.88rem', color:'#9585B0', margin:0, fontWeight:'500', fontFamily:'Nunito,sans-serif' }}>{secDesc}</p>}
+          <h2 style={{ fontSize:'clamp(1.6rem,3vw,2.6rem)', fontWeight:'800', color:'#264653', margin:'0 0 8px', fontFamily:'Nunito,sans-serif' }}>{secEmoji} {secTitle}</h2>
+          {secDesc && <p style={{ fontSize:'0.88rem', color:'#8A9BA3', margin:0, fontWeight:'500', fontFamily:'Nunito,sans-serif' }}>{secDesc}</p>}
         </div>
 
         <div className="evGrid">
@@ -1085,7 +1085,7 @@ function EVSection({ banners, sectionSettings = {} }) {
             return (
               <SimpleCard key={i} href={item.buttonLink || '/products?category=electric-vehicles'}>
                 <div className="evRedBorder">
-                  <div className="evImgWrap" style={{ background: frontImg ? '#f0f8ff' : 'linear-gradient(135deg,#E0F2FE,#F3E8FF)' }}>
+                  <div className="evImgWrap" style={{ background: frontImg ? '#f0f8ff' : 'linear-gradient(135deg,#E0F2FE,#EEF3F5)' }}>
                     {frontImg
                       ? <img src={frontImg} alt={item.title} style={{ width:'100%',height:'100%',objectFit:'contain',padding:'12px',boxSizing:'border-box' }} />
                       : <span style={{ fontSize:'5rem' }}>{item.emoji||'🚗'}</span>}
@@ -1096,12 +1096,12 @@ function EVSection({ banners, sectionSettings = {} }) {
                     )}
                   </div>
                   <div className="evInfo">
-                    <h3 style={{ fontSize:'0.92rem', fontWeight:'800', color:'#2D1A4A', margin:'0 0 8px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontFamily:'Nunito,sans-serif' }}>{item.title}</h3>
+                    <h3 style={{ fontSize:'0.92rem', fontWeight:'800', color:'#264653', margin:'0 0 8px', overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontFamily:'Nunito,sans-serif' }}>{item.title}</h3>
                     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between' }}>
-                      <span style={{ fontSize:'1.1rem', fontWeight:'900', color:'#0EA5E9', fontFamily:'Nunito,sans-serif' }}>
+                      <span style={{ fontSize:'1.1rem', fontWeight:'900', color:'#1E88E5', fontFamily:'Nunito,sans-serif' }}>
                         {item.price ? `₹${Number(item.price).toLocaleString('en-IN')}` : 'View'}
                       </span>
-                      <span style={{ padding:'6px 14px', background:'linear-gradient(135deg,#0EA5E9,#7B2FBE)', color:'white', borderRadius:'999px', fontSize:'0.76rem', fontWeight:'800', fontFamily:'Nunito,sans-serif' }}>🛒 Shop</span>
+                      <span style={{ padding:'6px 14px', background:'linear-gradient(135deg,#1E88E5,#264653)', color:'white', borderRadius:'999px', fontSize:'0.76rem', fontWeight:'800', fontFamily:'Nunito,sans-serif' }}>🛒 Shop</span>
                     </div>
                   </div>
                 </div>
@@ -1111,7 +1111,7 @@ function EVSection({ banners, sectionSettings = {} }) {
         </div>
 
         <div style={{ textAlign:'center', marginTop:'32px' }}>
-          <Link href="/products?category=electric-vehicles" style={{ display:'inline-flex', alignItems:'center', gap:'8px', padding:'12px 30px', background:'linear-gradient(135deg,#0EA5E9,#7B2FBE)', color:'white', borderRadius:'999px', textDecoration:'none', fontWeight:'800', fontSize:'0.92rem', boxShadow:'0 6px 20px rgba(14,165,233,0.28)', fontFamily:'Nunito,sans-serif' }}>
+          <Link href="/products?category=electric-vehicles" style={{ display:'inline-flex', alignItems:'center', gap:'8px', padding:'12px 30px', background:'linear-gradient(135deg,#1E88E5,#264653)', color:'white', borderRadius:'999px', textDecoration:'none', fontWeight:'800', fontSize:'0.92rem', boxShadow:'0 6px 20px rgba(14,165,233,0.28)', fontFamily:'Nunito,sans-serif' }}>
             {secBtn} ⚡
           </Link>
         </div>
@@ -1153,22 +1153,22 @@ function TrendingFeaturedSection({ trending, featured, sectionSettings = {} }) {
       <div style={{ maxWidth:'1200px', margin:'0 auto' }}>
         <div style={{ display:'flex', alignItems:'flex-end', justifyContent:'space-between', marginBottom:'28px', flexWrap:'wrap', gap:'12px' }}>
           <div>
-            <span style={{ display:'block', padding:'4px 14px', background:'linear-gradient(135deg,#FFF3EC,#F3E8FF)', border:'1.5px solid #FFD4B8', borderRadius:'999px', fontSize:'0.70rem', fontWeight:'800', color:'#FF6B35', textTransform:'uppercase', letterSpacing:'0.8px', marginBottom:'8px', fontFamily:'Nunito,sans-serif', width:'fit-content' }}>
+            <span style={{ display:'block', padding:'4px 14px', background:'linear-gradient(135deg,#FFF6E5,#EEF3F5)', border:'1.5px solid #F6D28B', borderRadius:'999px', fontSize:'0.70rem', fontWeight:'800', color:'#E53935', textTransform:'uppercase', letterSpacing:'0.8px', marginBottom:'8px', fontFamily:'Nunito,sans-serif', width:'fit-content' }}>
               This Week
             </span>
-            <h2 style={{ fontSize:'clamp(1.3rem,2.5vw,2rem)', fontWeight:'800', color:'#2D1A4A', margin:'0 0 4px', fontFamily:'Nunito,sans-serif' }}>{secEmoji} {secTitle}</h2>
-            {secDesc && <p style={{ fontSize:'0.84rem', color:'#9585B0', margin:0, fontWeight:'500', fontFamily:'Nunito,sans-serif' }}>{secDesc}</p>}
+            <h2 style={{ fontSize:'clamp(1.3rem,2.5vw,2rem)', fontWeight:'800', color:'#264653', margin:'0 0 4px', fontFamily:'Nunito,sans-serif' }}>{secEmoji} {secTitle}</h2>
+            {secDesc && <p style={{ fontSize:'0.84rem', color:'#8A9BA3', margin:0, fontWeight:'500', fontFamily:'Nunito,sans-serif' }}>{secDesc}</p>}
           </div>
           <div style={{ display:'flex', gap:'8px', flexWrap:'wrap' }}>
-            <Link href="/products?trending=true" style={{ padding:'8px 16px', background:'linear-gradient(135deg,#FF6B35,#FF8C5A)', color:'white', borderRadius:'999px', textDecoration:'none', fontSize:'0.78rem', fontWeight:'700', fontFamily:'Nunito,sans-serif' }}>🔥 Trending →</Link>
-            <Link href="/products?featured=true" style={{ padding:'8px 16px', background:'linear-gradient(135deg,#7B2FBE,#9B4FDE)', color:'white', borderRadius:'999px', textDecoration:'none', fontSize:'0.78rem', fontWeight:'700', fontFamily:'Nunito,sans-serif' }}>⭐ Featured →</Link>
+            <Link href="/products?trending=true" style={{ padding:'8px 16px', background:'linear-gradient(135deg,#E53935,#EF5350)', color:'white', borderRadius:'999px', textDecoration:'none', fontSize:'0.78rem', fontWeight:'700', fontFamily:'Nunito,sans-serif' }}>🔥 Trending →</Link>
+            <Link href="/products?featured=true" style={{ padding:'8px 16px', background:'linear-gradient(135deg,#264653,#3A6373)', color:'white', borderRadius:'999px', textDecoration:'none', fontSize:'0.78rem', fontWeight:'700', fontFamily:'Nunito,sans-serif' }}>⭐ Featured →</Link>
           </div>
         </div>
 
         <div style={{ display:'grid', gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))', gap:'18px' }}>
           {display.map(p => (
             <div key={`${p._label}-${p.id}`} style={{ position:'relative' }}>
-              <div style={{ position:'absolute', top:'10px', left:'10px', zIndex:10, padding:'3px 9px', borderRadius:'999px', fontSize:'10px', fontWeight:'800', background: p._label==='trending' ? 'linear-gradient(135deg,#FF6B35,#FF8C5A)' : 'linear-gradient(135deg,#7B2FBE,#9B4FDE)', color:'white', fontFamily:'Nunito,sans-serif', boxShadow:'0 2px 8px rgba(0,0,0,0.15)' }}>
+              <div style={{ position:'absolute', top:'10px', left:'10px', zIndex:10, padding:'3px 9px', borderRadius:'999px', fontSize:'10px', fontWeight:'800', background: p._label==='trending' ? 'linear-gradient(135deg,#E53935,#EF5350)' : 'linear-gradient(135deg,#264653,#3A6373)', color:'white', fontFamily:'Nunito,sans-serif', boxShadow:'0 2px 8px rgba(0,0,0,0.15)' }}>
                 {p._label === 'trending' ? '🔥 Hot' : '⭐ Pick'}
               </div>
               <ProductCard product={p} />
@@ -1191,7 +1191,7 @@ function CTASection({ sectionSettings = {} }) {
 
   return (
     <section style={{ position:'relative', overflow:'hidden' }}>
-      <div style={{ background:'linear-gradient(135deg,#FF6B35 0%,#FF8C5A 25%,#7B2FBE 65%,#9B4FDE 100%)', padding:'clamp(48px,8vw,88px) 20px', position:'relative' }}>
+      <div style={{ background:'linear-gradient(135deg,#3A6373 0%,#3A6373 25%,#264653 65%,#3A6373 100%)', padding:'clamp(48px,8vw,88px) 20px', position:'relative' }}>
         {[{ top:'-80px', right:'-80px', size:'320px' }, { bottom:'-60px', left:'-60px', size:'280px' }].map((b, i) => (
           <div key={i} style={{ position:'absolute', top:b.top, bottom:b.bottom, left:b.left, right:b.right, width:b.size, height:b.size, borderRadius:'50%', background:'rgba(255,255,255,0.10)', pointerEvents:'none' }} />
         ))}
@@ -1204,7 +1204,7 @@ function CTASection({ sectionSettings = {} }) {
               <h2 style={{ fontSize:'clamp(1.5rem,3.5vw,2.8rem)', fontWeight:'800', color:'white', margin:'0 0 16px', lineHeight:1.18, fontFamily:'Nunito,sans-serif' }}>{secTitle}</h2>
               <p style={{ fontSize:'clamp(0.88rem,1.5vw,1rem)', color:'rgba(255,255,255,0.92)', margin:'0 0 28px', lineHeight:1.75, fontWeight:'500', maxWidth:'480px', fontFamily:'Nunito,sans-serif' }}>{secDesc}</p>
               <div style={{ display:'flex', alignItems:'center', gap:'16px', flexWrap:'wrap' }}>
-                <Link href="/register" style={{ display:'inline-flex', alignItems:'center', gap:'8px', padding:'clamp(11px,2vw,14px) clamp(22px,3vw,32px)', background:'white', color:'#FF6B35', borderRadius:'999px', textDecoration:'none', fontWeight:'800', fontSize:'clamp(0.88rem,1.5vw,0.96rem)', boxShadow:'0 10px 32px rgba(0,0,0,0.18)', fontFamily:'Nunito,sans-serif' }}>
+                <Link href="/register" style={{ display:'inline-flex', alignItems:'center', gap:'8px', padding:'clamp(11px,2vw,14px) clamp(22px,3vw,32px)', background:'white', color:'#E53935', borderRadius:'999px', textDecoration:'none', fontWeight:'800', fontSize:'clamp(0.88rem,1.5vw,0.96rem)', boxShadow:'0 10px 32px rgba(0,0,0,0.18)', fontFamily:'Nunito,sans-serif' }}>
                   {secBtn} →
                 </Link>
                 <Link href="/products" style={{ color:'rgba(255,255,255,0.92)', fontWeight:'700', fontSize:'0.92rem', textDecoration:'none', borderBottom:'2px solid rgba(255,255,255,0.45)', paddingBottom:'2px', fontFamily:'Nunito,sans-serif' }}>
@@ -1227,7 +1227,7 @@ function CTASection({ sectionSettings = {} }) {
                 <div key={i} style={{ position:'absolute', top:b.top, bottom:b.bottom, left:b.left, right:b.right, background:'white', borderRadius:'12px', padding:'8px 12px', boxShadow:'0 8px 20px rgba(0,0,0,0.14)', display:'flex', alignItems:'center', gap:'7px', animation:`badgeFloat 3s ease-in-out infinite ${b.delay}` }}>
                   <span style={{ fontSize:'1.2rem' }}>{b.icon}</span>
                   <div>
-                    <p style={{ margin:0, fontSize:'0.68rem', fontWeight:'700', color:'#FF6B35', fontFamily:'Nunito,sans-serif' }}>{b.num}</p>
+                    <p style={{ margin:0, fontSize:'0.68rem', fontWeight:'700', color:'#E53935', fontFamily:'Nunito,sans-serif' }}>{b.num}</p>
                     <p style={{ margin:0, fontSize:'0.60rem', color:'#888', fontFamily:'Nunito,sans-serif' }}>{b.sub}</p>
                   </div>
                 </div>
@@ -1253,15 +1253,15 @@ function DynamicCustomSection({ sectionKey, banners = [], sectionSettings = {} }
   if (!banners?.length) return null;
 
   return (
-    <section style={{ padding: 'clamp(36px,5vw,60px) clamp(12px,2vw,20px)', background: 'linear-gradient(180deg,#ffffff 0%,#f9f6ff 100%)' }}>
+    <section style={{ padding: 'clamp(36px,5vw,60px) clamp(12px,2vw,20px)', background: 'linear-gradient(180deg,#ffffff 0%,#FFFBF2 100%)' }}>
       <div style={{ maxWidth: '1200px', margin: '0 auto' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '28px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <span style={{ display: 'inline-block', padding: '4px 14px', background: '#FFF3EC', border: '1.5px solid #FFD4B8', borderRadius: '999px', fontSize: '0.70rem', fontWeight: '800', color: '#FF6B35', textTransform: 'uppercase', marginBottom: '8px', fontFamily: 'Nunito, sans-serif' }}>
+            <span style={{ display: 'inline-block', padding: '4px 14px', background: '#FFF6E5', border: '1.5px solid #F6D28B', borderRadius: '999px', fontSize: '0.70rem', fontWeight: '800', color: '#E53935', textTransform: 'uppercase', marginBottom: '8px', fontFamily: 'Nunito, sans-serif' }}>
               {secEmoji} Collection
             </span>
-            <h2 style={{ fontSize: 'clamp(1.3rem,2.5vw,2rem)', fontWeight: '800', color: '#2D1A4A', margin: '0 0 4px', fontFamily: 'Nunito, sans-serif' }}>{secEmoji} {secTitle}</h2>
-            {secDesc && <p style={{ fontSize: '0.84rem', color: '#9585B0', margin: 0, fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>{secDesc}</p>}
+            <h2 style={{ fontSize: 'clamp(1.3rem,2.5vw,2rem)', fontWeight: '800', color: '#264653', margin: '0 0 4px', fontFamily: 'Nunito, sans-serif' }}>{secEmoji} {secTitle}</h2>
+            {secDesc && <p style={{ fontSize: '0.84rem', color: '#8A9BA3', margin: 0, fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>{secDesc}</p>}
           </div>
         </div>
 
@@ -1269,7 +1269,7 @@ function DynamicCustomSection({ sectionKey, banners = [], sectionSettings = {} }
           {banners.map((banner, i) => {
             const frontImg = banner.image?.url || null;
             const link     = banner.buttonLink || '/products';
-            const color    = banner.color || '#FF6B35';
+            const color    = banner.color || '#E53935';
             const isVideo  = isVideoUrl(frontImg);
 
             return (
@@ -1289,8 +1289,8 @@ function DynamicCustomSection({ sectionKey, banners = [], sectionSettings = {} }
                     )}
                   </div>
                   <div className="dynamicInfo">
-                    <h3 style={{ fontSize: '0.98rem', fontWeight: '800', color: '#2D1A4A', margin: '0 0 4px', fontFamily: 'Nunito, sans-serif' }}>{banner.title}</h3>
-                    {banner.subtitle && <p style={{ fontSize: '0.78rem', color: '#9585B0', margin: '0 0 8px', fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>{banner.subtitle}</p>}
+                    <h3 style={{ fontSize: '0.98rem', fontWeight: '800', color: '#264653', margin: '0 0 4px', fontFamily: 'Nunito, sans-serif' }}>{banner.title}</h3>
+                    {banner.subtitle && <p style={{ fontSize: '0.78rem', color: '#8A9BA3', margin: '0 0 8px', fontWeight: '500', fontFamily: 'Nunito, sans-serif' }}>{banner.subtitle}</p>}
                     <span style={{ fontSize: '0.82rem', fontWeight: '800', color, fontFamily: 'Nunito, sans-serif' }}>
                       {banner.buttonText || 'Shop Now'} →
                     </span>

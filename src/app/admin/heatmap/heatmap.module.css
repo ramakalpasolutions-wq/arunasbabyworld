@@ -100,7 +100,7 @@
   height: 8px;
   width: 150px;
   border-radius: 4px;
-  background: linear-gradient(90deg, #E2E8F0, #F472B6, #A855F7, #7B2FBE);
+  background: linear-gradient(90deg, #E2E8F0, #F472B6, #A855F7, #264653);
 }
 
 /* List */
@@ -145,7 +145,7 @@
 
 .count {
   font-weight: 800;
-  color: #7B2FBE;
+  color: #264653;
 }
 
 .percentage {
@@ -206,5 +206,5 @@
   min-height: 50vh;
   font-size: 1.2rem;
   font-weight: 700;
-  color: #7B2FBE;
+  color: #264653;
 }

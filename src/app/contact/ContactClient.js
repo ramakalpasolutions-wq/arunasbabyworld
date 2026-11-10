@@ -65,7 +65,7 @@ export default function ContactClient() {
 
           {/* Card 1 — Call */}
           <div className={styles.contactCard}>
-            <div className={styles.cardIconWrap} style={{ background: 'linear-gradient(135deg, #ff6b9d, #ff8fab)' }}>
+            <div className={styles.cardIconWrap} style={{ background: 'linear-gradient(135deg, #E53935, #EF5350)' }}>
               <span>📞</span>
             </div>
             <div className={styles.cardBody}>
@@ -73,14 +73,14 @@ export default function ContactClient() {
               <p>+91 99665 43759</p>
               <span>Mon–Sat, 9am–10pm</span>
             </div>
-            <a href="tel:+919052999659" className={styles.cardBtn} style={{ '--btn-color': '#ff6b9d' }}>
+            <a href="tel:+919052999659" className={styles.cardBtn} style={{ '--btn-color': '#E53935' }}>
               Call Now →
             </a>
           </div>
 
           {/* Card 2 — Email */}
           <div className={styles.contactCard}>
-            <div className={styles.cardIconWrap} style={{ background: 'linear-gradient(135deg, #7c3aed, #9f7aea)' }}>
+            <div className={styles.cardIconWrap} style={{ background: 'linear-gradient(135deg, #264653, #3A6373)' }}>
               <span>✉️</span>
             </div>
             <div className={styles.cardBody}>
@@ -88,14 +88,14 @@ export default function ContactClient() {
               <p>Arunasbabyworld947@gmail.com</p>
               <span>Reply within 24 hours</span>
             </div>
-            <a href="mailto:Arunasbabyworld947@gmail.com" className={styles.cardBtn} style={{ '--btn-color': '#7c3aed' }}>
+            <a href="mailto:Arunasbabyworld947@gmail.com" className={styles.cardBtn} style={{ '--btn-color': '#264653' }}>
               Send Email →
             </a>
           </div>
 
           {/* Card 3 — Track Order */}
           <div className={styles.contactCard}>
-            <div className={styles.cardIconWrap} style={{ background: 'linear-gradient(135deg, #10b981, #34d399)' }}>
+            <div className={styles.cardIconWrap} style={{ background: 'linear-gradient(135deg, #43A047, #66BB6A)' }}>
               <span>🚚</span>
             </div>
             <div className={styles.cardBody}>
@@ -103,14 +103,14 @@ export default function ContactClient() {
               <p>Fast Delivery</p>
               <span>Pan India shipping</span>
             </div>
-            <a href="/orders" className={styles.cardBtn} style={{ '--btn-color': '#10b981' }}>
+            <a href="/orders" className={styles.cardBtn} style={{ '--btn-color': '#43A047' }}>
               Track Now →
             </a>
           </div>
 
           {/* Card 4 — Visit */}
           <div className={styles.contactCard}>
-            <div className={styles.cardIconWrap} style={{ background: 'linear-gradient(135deg, #f59e0b, #fbbf24)' }}>
+            <div className={styles.cardIconWrap} style={{ background: 'linear-gradient(135deg, #F2B33D, #F2B33D)' }}>
               <span>📍</span>
             </div>
             <div className={styles.cardBody}>
@@ -118,7 +118,7 @@ export default function ContactClient() {
               <p>Koritepadu</p>
               <span>Guntur – 522007</span>
             </div>
-            <a href="#map" className={styles.cardBtn} style={{ '--btn-color': '#f59e0b' }}>
+            <a href="#map" className={styles.cardBtn} style={{ '--btn-color': '#F2B33D' }}>
               View Map →
             </a>
           </div>
@@ -278,7 +278,7 @@ export default function ContactClient() {
                   display: 'block',
                   textAlign: 'center',
                   padding: '12px',
-                  background: 'linear-gradient(135deg, #ff6b9d, #7c3aed)',
+                  background: 'linear-gradient(135deg, #3A6373, #264653)',
                   color: 'white',
                   textDecoration: 'none',
                   fontWeight: '700',

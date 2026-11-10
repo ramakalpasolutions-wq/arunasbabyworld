@@ -177,7 +177,7 @@
   font-weight: 600;
   font-size: 0.88rem;
   margin-bottom: 3px;
-  color: #1a1a2e;
+  color: #1B3540;
 }
 
 .itemSub {
@@ -188,7 +188,7 @@
 .itemTotal {
   font-weight: 700;
   font-size: 0.9rem;
-  color: #ff6b9d;
+  color: #E53935;
 }
 
 /* ===== DETAIL GRID ===== */
@@ -242,7 +242,7 @@
 }
 
 .discountRow {
-  color: #10b981;
+  color: #43A047;
   font-weight: 600;
 }
 

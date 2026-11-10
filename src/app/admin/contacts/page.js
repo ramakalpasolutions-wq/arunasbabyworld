@@ -47,7 +47,7 @@ export default function AdminContacts() {
             {contacts.length} total messages
             {unread > 0 && (
               <span style={{
-                marginLeft: '8px', background: '#ff6b9d',
+                marginLeft: '8px', background: '#E53935',
                 color: 'white', padding: '2px 10px',
                 borderRadius: '20px', fontSize: '12px', fontWeight: '700',
               }}>
@@ -84,7 +84,7 @@ export default function AdminContacts() {
                 onClick={() => handleDelete(confirmId)}
                 disabled={deleting === confirmId}
                 style={{
-                  background: 'linear-gradient(135deg, #ff6b9d, #7c3aed)',
+                  background: 'linear-gradient(135deg, #3A6373, #264653)',
                   color: 'white', border: 'none',
                   padding: '11px 24px', borderRadius: '10px',
                   fontWeight: '700', fontSize: '14px',
@@ -173,12 +173,12 @@ export default function AdminContacts() {
             </div>
 
             <div style={{
-              background: '#fff8fb', border: '1px solid #ffd6e7',
-              borderLeft: '4px solid #ff6b9d',
+              background: '#fff8fb', border: '1px solid #FDE7E6',
+              borderLeft: '4px solid #E53935',
               padding: '14px', borderRadius: '10px', marginBottom: '18px',
             }}>
               <p style={{
-                fontWeight: '700', color: '#ff6b9d',
+                fontWeight: '700', color: '#E53935',
                 fontSize: '13px', margin: '0 0 6px',
               }}>💬 Message:</p>
               <p style={{
@@ -193,7 +193,7 @@ export default function AdminContacts() {
                 href={`mailto:${selected.email}?subject=Re: ${selected.subject || 'Your inquiry'}`}
                 style={{
                   flex: 1, minWidth: '120px',
-                  background: 'linear-gradient(135deg, #ff6b9d, #7c3aed)',
+                  background: 'linear-gradient(135deg, #3A6373, #264653)',
                   color: 'white', padding: '12px',
                   borderRadius: '10px', textDecoration: 'none',
                   textAlign: 'center', fontWeight: '700', fontSize: '14px',
@@ -208,7 +208,7 @@ export default function AdminContacts() {
                 style={{
                   padding: '12px 16px', border: '1.5px solid #fecdd3',
                   borderRadius: '10px', cursor: 'pointer',
-                  background: '#fff1f2', color: '#ff6b9d',
+                  background: '#fff1f2', color: '#E53935',
                   fontWeight: '700', fontSize: '14px',
                 }}
               >
@@ -261,7 +261,7 @@ export default function AdminContacts() {
                     {!c.isRead && (
                       <span style={{
                         width: '7px', height: '7px', borderRadius: '50%',
-                        background: '#ff6b9d', display: 'inline-block', flexShrink: 0,
+                        background: '#E53935', display: 'inline-block', flexShrink: 0,
                       }} />
                     )}
                     <strong style={{ whiteSpace: 'nowrap' }}>{c.name}</strong>
@@ -269,7 +269,7 @@ export default function AdminContacts() {
                 </td>
                 <td style={{ color: '#666', fontSize: '13px' }}>
                   <a href={`mailto:${c.email}`}
-                    style={{ color: '#7c3aed', textDecoration: 'none' }}>
+                    style={{ color: '#264653', textDecoration: 'none' }}>
                     {c.email}
                   </a>
                 </td>
@@ -301,7 +301,7 @@ export default function AdminContacts() {
                   <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                     {/* View */}
                     <button onClick={() => setSelected(c)} style={{
-                      background: '#ede9fe', color: '#7c3aed', border: 'none',
+                      background: '#EEF3F5', color: '#264653', border: 'none',
                       padding: '6px 10px', borderRadius: '8px',
                       fontSize: '12px', fontWeight: '700',
                       cursor: 'pointer', whiteSpace: 'nowrap',
@@ -317,7 +317,7 @@ export default function AdminContacts() {
                           onClick={() => handleDelete(c.id)}
                           disabled={deleting === c.id}
                           style={{
-                            background: 'linear-gradient(135deg,#ff6b9d,#7c3aed)',
+                            background: 'linear-gradient(135deg,#3A6373,#264653)',
                             color: 'white', border: 'none',
                             padding: '6px 10px', borderRadius: '8px',
                             fontSize: '12px', fontWeight: '700',
@@ -343,7 +343,7 @@ export default function AdminContacts() {
                       <button
                         onClick={() => setConfirmId(c.id)}
                         style={{
-                          background: '#fff1f2', color: '#ff6b9d',
+                          background: '#fff1f2', color: '#E53935',
                           border: '1px solid #fecdd3',
                           padding: '6px 10px', borderRadius: '8px',
                           fontSize: '12px', fontWeight: '700',
@@ -374,7 +374,7 @@ export default function AdminContacts() {
             {/* Avatar */}
             <div style={{
               width: '44px', height: '44px', borderRadius: '50%',
-              background: 'linear-gradient(135deg, #ff6b9d, #7c3aed)',
+              background: 'linear-gradient(135deg, #3A6373, #264653)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: 'white', fontWeight: '700', fontSize: '1rem', flexShrink: 0,
             }}>
@@ -391,7 +391,7 @@ export default function AdminContacts() {
                   {!c.isRead && (
                     <span style={{
                       width: '7px', height: '7px', borderRadius: '50%',
-                      background: '#ff6b9d', display: 'inline-block', marginRight: '5px',
+                      background: '#E53935', display: 'inline-block', marginRight: '5px',
                     }} />
                   )}
                   {c.name}
@@ -405,7 +405,7 @@ export default function AdminContacts() {
 
               {/* Email + Subject */}
               <div className={styles.mobileCardMeta}>
-                <span style={{ color: '#7c3aed', fontSize: '0.75rem' }}>{c.email}</span>
+                <span style={{ color: '#264653', fontSize: '0.75rem' }}>{c.email}</span>
                 <span style={{
                   background: '#f3f4f6', padding: '1px 6px',
                   borderRadius: '4px', fontSize: '11px', fontWeight: '600', color: '#555',
@@ -425,7 +425,7 @@ export default function AdminContacts() {
               {/* ── Mobile Action Buttons ── */}
               <div className={styles.mobileCardActions}>
                 <button onClick={() => setSelected(c)} style={{
-                  background: '#ede9fe', color: '#7c3aed',
+                  background: '#EEF3F5', color: '#264653',
                   border: 'none', padding: '6px 12px',
                   borderRadius: '8px', fontSize: '12px',
                   fontWeight: '700', cursor: 'pointer',
@@ -440,7 +440,7 @@ export default function AdminContacts() {
                       onClick={() => handleDelete(c.id)}
                       disabled={deleting === c.id}
                       style={{
-                        background: 'linear-gradient(135deg,#ff6b9d,#7c3aed)',
+                        background: 'linear-gradient(135deg,#3A6373,#264653)',
                         color: 'white', border: 'none',
                         padding: '6px 10px', borderRadius: '8px',
                         fontSize: '12px', fontWeight: '700',
@@ -465,7 +465,7 @@ export default function AdminContacts() {
                   <button
                     onClick={() => setConfirmId(c.id)}
                     style={{
-                      background: '#fff1f2', color: '#ff6b9d',
+                      background: '#fff1f2', color: '#E53935',
                       border: '1px solid #fecdd3',
                       padding: '6px 12px', borderRadius: '8px',
                       fontSize: '12px', fontWeight: '700', cursor: 'pointer',

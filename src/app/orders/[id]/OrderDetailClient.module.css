@@ -112,7 +112,7 @@
   border-color: var(--primary);
   background: var(--primary);
   color: white;
-  box-shadow: 0 0 0 4px rgba(255,107,157,0.2);
+  box-shadow: 0 0 0 4px rgba(229,57,53,0.2);
 }
 
 .stepLabel { font-size: 0.72rem; font-weight: 600; text-align: center; }
@@ -269,8 +269,8 @@
   font-size: 1.6rem;
 }
 
-.deliveredCard strong { display: block; color: #065f46; font-size: 0.9rem; }
-.deliveredCard p      { color: #047857; font-size: 0.82rem; }
+.deliveredCard strong { display: block; color: #1B5E20; font-size: 0.9rem; }
+.deliveredCard p      { color: #2E7D32; font-size: 0.82rem; }
 
 /* ══════════════════════════════════════
    RESPONSIVE

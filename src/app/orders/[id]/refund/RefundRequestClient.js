@@ -116,10 +116,10 @@ export default function RefundRequestClient({ id }) {
       }}>
         <div style={{
           width: '44px', height: '44px',
-          border: '4px solid #F3E8FF', borderTop: '4px solid #7B2FBE',
+          border: '4px solid #EEF3F5', borderTop: '4px solid #264653',
           borderRadius: '50%', animation: 'spin 0.8s linear infinite',
         }} />
-        <p style={{ color: '#9585B0', fontFamily: 'Nunito, sans-serif', fontWeight: '600' }}>
+        <p style={{ color: '#8A9BA3', fontFamily: 'Nunito, sans-serif', fontWeight: '600' }}>
           Loading order...
         </p>
         <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -132,10 +132,10 @@ export default function RefundRequestClient({ id }) {
     return (
       <div style={{ textAlign: 'center', padding: '80px 20px', fontFamily: 'Nunito, sans-serif' }}>
         <div style={{ fontSize: '3rem', marginBottom: '16px' }}>📦</div>
-        <h2 style={{ color: '#2D1A4A' }}>Order not found</h2>
+        <h2 style={{ color: '#264653' }}>Order not found</h2>
         <Link href="/profile?tab=orders" style={{
           display: 'inline-block', marginTop: '16px', padding: '12px 28px',
-          background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+          background: 'linear-gradient(135deg,#3A6373,#264653)',
           color: 'white', borderRadius: '12px', textDecoration: 'none', fontWeight: '800',
         }}>
           ← Back to Orders
@@ -203,7 +203,7 @@ export default function RefundRequestClient({ id }) {
     display: 'block',
     fontSize: '0.78rem',
     fontWeight: '800',
-    color: '#7B2FBE',
+    color: '#264653',
     marginBottom: '6px',
     textTransform: 'uppercase',
     letterSpacing: '0.6px',
@@ -219,7 +219,7 @@ export default function RefundRequestClient({ id }) {
       {/* ── Back link ── */}
       <Link href={`/orders/${id}`} style={{
         display: 'inline-flex', alignItems: 'center', gap: '6px',
-        color: '#7B2FBE', textDecoration: 'none', fontWeight: '700',
+        color: '#264653', textDecoration: 'none', fontWeight: '700',
         fontSize: '0.88rem', marginBottom: '20px',
       }}>
         ← Back to Order
@@ -227,20 +227,20 @@ export default function RefundRequestClient({ id }) {
 
       {/* ── Header ── */}
       <div style={{
-        background: 'linear-gradient(135deg, #F5F3FF 0%, #EDE9FE 100%)',
+        background: 'linear-gradient(135deg, #FBF5E6 0%, #EEF3F5 100%)',
         borderRadius: '24px', padding: 'clamp(24px,3vw,36px)',
         marginBottom: '24px',
-        border: '1.5px solid #EDD9FF',
+        border: '1.5px solid #E8E2D2',
         textAlign: 'center',
       }}>
         <div style={{ fontSize: '3rem', marginBottom: '8px' }}>💰</div>
         <h1 style={{
           fontSize: 'clamp(1.5rem,2.5vw,2rem)',
-          fontWeight: '800', color: '#2D1A4A', margin: '0 0 6px',
+          fontWeight: '800', color: '#264653', margin: '0 0 6px',
         }}>
           Request Refund
         </h1>
-        <p style={{ color: '#6B4E8A', margin: 0, fontSize: '0.92rem', fontWeight: '600' }}>
+        <p style={{ color: '#4F6B76', margin: 0, fontSize: '0.92rem', fontWeight: '600' }}>
           Order #{order.id?.slice(-12).toUpperCase()}
         </p>
       </div>
@@ -248,7 +248,7 @@ export default function RefundRequestClient({ id }) {
       {/* ── Refund Amount Card ── */}
       <div style={{
         background: 'linear-gradient(135deg, #ECFDF5, #D1FAE5)',
-        border: '2px solid #10B981',
+        border: '2px solid #43A047',
         borderRadius: '20px',
         padding: '24px',
         marginBottom: '20px',
@@ -258,13 +258,13 @@ export default function RefundRequestClient({ id }) {
         <div>
           <p style={{
             margin: '0 0 4px', fontSize: '0.78rem', fontWeight: '800',
-            color: '#065F46', textTransform: 'uppercase', letterSpacing: '0.8px',
+            color: '#1B5E20', textTransform: 'uppercase', letterSpacing: '0.8px',
           }}>
             Refund Amount
           </p>
           <p style={{
             margin: 0, fontSize: '2.2rem', fontWeight: '900',
-            color: '#10B981', lineHeight: 1,
+            color: '#43A047', lineHeight: 1,
           }}>
             ₹{order.totalPrice?.toLocaleString('en-IN')}
           </p>
@@ -276,7 +276,7 @@ export default function RefundRequestClient({ id }) {
       {isRazorpayPaid && (
         <div style={{
           background: 'linear-gradient(135deg, #F0FDF4, #DCFCE7)',
-          border: '2px solid #10B981',
+          border: '2px solid #43A047',
           borderRadius: '16px',
           padding: '16px 20px',
           marginBottom: '20px',
@@ -284,10 +284,10 @@ export default function RefundRequestClient({ id }) {
         }}>
           <span style={{ fontSize: '2rem' }}>⚡</span>
           <div>
-            <strong style={{ color: '#065F46', display: 'block', fontSize: '0.96rem' }}>
+            <strong style={{ color: '#1B5E20', display: 'block', fontSize: '0.96rem' }}>
               Instant Auto-Refund
             </strong>
-            <p style={{ margin: '2px 0 0', fontSize: '0.84rem', color: '#047857', fontWeight: '600' }}>
+            <p style={{ margin: '2px 0 0', fontSize: '0.84rem', color: '#2E7D32', fontWeight: '600' }}>
               Since you paid via Razorpay, refund will be initiated instantly to your original payment method (2–3 hours).
             </p>
           </div>
@@ -298,12 +298,12 @@ export default function RefundRequestClient({ id }) {
       <div style={{
         background: 'white', borderRadius: '20px', padding: '20px',
         marginBottom: '20px',
-        border: '1.5px solid #F3E8FF',
-        boxShadow: '0 4px 20px rgba(123,47,190,0.06)',
+        border: '1.5px solid #EEF3F5',
+        boxShadow: '0 4px 20px rgba(38,70,83,0.06)',
       }}>
         <h3 style={{
           margin: '0 0 16px', fontSize: '1rem', fontWeight: '800',
-          color: '#2D1A4A',
+          color: '#264653',
         }}>
           🛍️ Items in this order ({order.orderItems?.length})
         </h3>
@@ -312,7 +312,7 @@ export default function RefundRequestClient({ id }) {
             <div key={i} style={{
               display: 'flex', alignItems: 'center', gap: '12px',
               padding: '10px', background: '#FAFAFA',
-              borderRadius: '12px', border: '1px solid #F3E8FF',
+              borderRadius: '12px', border: '1px solid #EEF3F5',
             }}>
               <img
                 src={item.image || 'https://via.placeholder.com/50'}
@@ -321,17 +321,17 @@ export default function RefundRequestClient({ id }) {
               />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <p style={{
-                  fontSize: '0.88rem', fontWeight: '700', color: '#2D1A4A',
+                  fontSize: '0.88rem', fontWeight: '700', color: '#264653',
                   margin: '0 0 2px',
                   overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
                 }}>
                   {item.name}
                 </p>
-                <p style={{ fontSize: '0.76rem', color: '#9585B0', margin: 0, fontWeight: '600' }}>
+                <p style={{ fontSize: '0.76rem', color: '#8A9BA3', margin: 0, fontWeight: '600' }}>
                   Qty: {item.quantity} × ₹{item.price?.toLocaleString('en-IN')}
                 </p>
               </div>
-              <strong style={{ color: '#FF6B35', fontSize: '0.92rem' }}>
+              <strong style={{ color: '#E53935', fontSize: '0.92rem' }}>
                 ₹{(item.price * item.quantity).toLocaleString('en-IN')}
               </strong>
             </div>
@@ -343,14 +343,14 @@ export default function RefundRequestClient({ id }) {
       <div style={{
         background: 'white', borderRadius: '20px', padding: '24px',
         marginBottom: '20px',
-        border: '1.5px solid #F3E8FF',
-        boxShadow: '0 4px 20px rgba(123,47,190,0.06)',
+        border: '1.5px solid #EEF3F5',
+        boxShadow: '0 4px 20px rgba(38,70,83,0.06)',
       }}>
         <h3 style={{
           margin: '0 0 16px', fontSize: '1rem', fontWeight: '800',
-          color: '#2D1A4A',
+          color: '#264653',
         }}>
-          📝 Reason for Refund <span style={{ color: '#EF4444' }}>*</span>
+          📝 Reason for Refund <span style={{ color: '#E53935' }}>*</span>
         </h3>
 
         <div style={{ display: 'grid', gap: '8px' }}>
@@ -360,8 +360,8 @@ export default function RefundRequestClient({ id }) {
               <label key={label} style={{
                 display: 'flex', alignItems: 'center', gap: '12px',
                 padding: '14px 16px',
-                background: selected ? '#F5F3FF' : 'white',
-                border: `1.5px solid ${selected ? '#7B2FBE' : '#E5E7EB'}`,
+                background: selected ? '#FBF5E6' : 'white',
+                border: `1.5px solid ${selected ? '#264653' : '#E5E7EB'}`,
                 borderRadius: '12px', cursor: 'pointer',
                 transition: 'all 0.15s',
               }}>
@@ -372,8 +372,8 @@ export default function RefundRequestClient({ id }) {
                 />
                 <div style={{
                   width: '20px', height: '20px', borderRadius: '50%',
-                  border: `2px solid ${selected ? '#7B2FBE' : '#D1D5DB'}`,
-                  background: selected ? '#7B2FBE' : 'white',
+                  border: `2px solid ${selected ? '#264653' : '#D1D5DB'}`,
+                  background: selected ? '#264653' : 'white',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                   flexShrink: 0, transition: 'all 0.15s',
                 }}>
@@ -383,7 +383,7 @@ export default function RefundRequestClient({ id }) {
                 <span style={{
                   fontSize: '0.92rem',
                   fontWeight: selected ? '800' : '600',
-                  color: selected ? '#7B2FBE' : '#374151',
+                  color: selected ? '#264653' : '#374151',
                 }}>
                   {label}
                 </span>
@@ -413,14 +413,14 @@ export default function RefundRequestClient({ id }) {
       <div style={{
         background: 'white', borderRadius: '20px', padding: '24px',
         marginBottom: '20px',
-        border: '1.5px solid #F3E8FF',
-        boxShadow: '0 4px 20px rgba(123,47,190,0.06)',
+        border: '1.5px solid #EEF3F5',
+        boxShadow: '0 4px 20px rgba(38,70,83,0.06)',
       }}>
         <h3 style={{
           margin: '0 0 16px', fontSize: '1rem', fontWeight: '800',
-          color: '#2D1A4A',
+          color: '#264653',
         }}>
-          💳 Choose Refund Method <span style={{ color: '#EF4444' }}>*</span>
+          💳 Choose Refund Method <span style={{ color: '#E53935' }}>*</span>
         </h3>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px' }}>
@@ -430,7 +430,7 @@ export default function RefundRequestClient({ id }) {
             style={{
               padding: '20px', textAlign: 'center',
               background: refundMethod === 'upi' ? '#F0FDF4' : 'white',
-              border: `2px solid ${refundMethod === 'upi' ? '#10B981' : '#E5E7EB'}`,
+              border: `2px solid ${refundMethod === 'upi' ? '#43A047' : '#E5E7EB'}`,
               borderRadius: '14px', cursor: 'pointer',
               transition: 'all 0.2s', position: 'relative',
             }}
@@ -438,13 +438,13 @@ export default function RefundRequestClient({ id }) {
             <div style={{ fontSize: '2.2rem', marginBottom: '10px' }}>📱</div>
             <p style={{
               margin: '0 0 6px', fontSize: '0.96rem', fontWeight: '800',
-              color: refundMethod === 'upi' ? '#059669' : '#374151',
+              color: refundMethod === 'upi' ? '#388E3C' : '#374151',
             }}>
               UPI ID
             </p>
             <span style={{
               display: 'inline-block', fontSize: '0.68rem', fontWeight: '800',
-              background: '#D1FAE5', color: '#065F46',
+              background: '#D1FAE5', color: '#1B5E20',
               padding: '3px 10px', borderRadius: '999px', border: '1px solid #A7F3D0',
             }}>
               ⚡ Faster — 1–2 days
@@ -453,7 +453,7 @@ export default function RefundRequestClient({ id }) {
               <div style={{
                 position: 'absolute', top: '10px', right: '10px',
                 width: '24px', height: '24px', borderRadius: '50%',
-                background: '#10B981', color: 'white',
+                background: '#43A047', color: 'white',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '0.78rem', fontWeight: '900',
               }}>
@@ -468,7 +468,7 @@ export default function RefundRequestClient({ id }) {
             style={{
               padding: '20px', textAlign: 'center',
               background: refundMethod === 'bank' ? '#EFF6FF' : 'white',
-              border: `2px solid ${refundMethod === 'bank' ? '#3B82F6' : '#E5E7EB'}`,
+              border: `2px solid ${refundMethod === 'bank' ? '#1E88E5' : '#E5E7EB'}`,
               borderRadius: '14px', cursor: 'pointer',
               transition: 'all 0.2s', position: 'relative',
             }}
@@ -491,7 +491,7 @@ export default function RefundRequestClient({ id }) {
               <div style={{
                 position: 'absolute', top: '10px', right: '10px',
                 width: '24px', height: '24px', borderRadius: '50%',
-                background: '#3B82F6', color: 'white',
+                background: '#1E88E5', color: 'white',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '0.78rem', fontWeight: '900',
               }}>
@@ -508,7 +508,7 @@ export default function RefundRequestClient({ id }) {
             border: '1.5px solid #BBF7D0', borderRadius: '14px',
           }}>
             <label style={labelStyle}>
-              UPI ID <span style={{ color: '#EF4444' }}>*</span>
+              UPI ID <span style={{ color: '#E53935' }}>*</span>
             </label>
             <input
               type="text"
@@ -517,7 +517,7 @@ export default function RefundRequestClient({ id }) {
               placeholder="yourname@upi (e.g. john@oksbi)"
               style={inputStyle}
             />
-            <p style={{ fontSize: '0.76rem', color: '#065F46', margin: '8px 0 0', fontWeight: '600' }}>
+            <p style={{ fontSize: '0.76rem', color: '#1B5E20', margin: '8px 0 0', fontWeight: '600' }}>
               💡 Make sure UPI ID is correct. Refund cannot be reversed once initiated.
             </p>
           </div>
@@ -532,7 +532,7 @@ export default function RefundRequestClient({ id }) {
             <div style={{ display: 'grid', gap: '14px' }}>
               <div>
                 <label style={labelStyle}>
-                  Account Holder Name <span style={{ color: '#EF4444' }}>*</span>
+                  Account Holder Name <span style={{ color: '#E53935' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -545,7 +545,7 @@ export default function RefundRequestClient({ id }) {
 
               <div>
                 <label style={labelStyle}>
-                  Account Number <span style={{ color: '#EF4444' }}>*</span>
+                  Account Number <span style={{ color: '#E53935' }}>*</span>
                 </label>
                 <input
                   type="text"
@@ -562,7 +562,7 @@ export default function RefundRequestClient({ id }) {
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
                 <div>
                   <label style={labelStyle}>
-                    IFSC Code <span style={{ color: '#EF4444' }}>*</span>
+                    IFSC Code <span style={{ color: '#E53935' }}>*</span>
                   </label>
                   <input
                     type="text"
@@ -611,7 +611,7 @@ export default function RefundRequestClient({ id }) {
           style={{
             flex: '2 1 220px', padding: '14px',
             background: isValid && !submitting
-              ? 'linear-gradient(135deg, #7B2FBE, #9333EA)'
+              ? 'linear-gradient(135deg, #264653, #264653)'
               : '#E5E7EB',
             color: isValid && !submitting ? 'white' : '#9CA3AF',
             border: 'none', borderRadius: '12px',
@@ -619,7 +619,7 @@ export default function RefundRequestClient({ id }) {
             fontFamily: 'Nunito, sans-serif',
             cursor: isValid && !submitting ? 'pointer' : 'not-allowed',
             boxShadow: isValid && !submitting
-              ? '0 8px 22px rgba(123,47,190,0.30)'
+              ? '0 8px 22px rgba(38,70,83,0.30)'
               : 'none',
           }}
         >
@@ -629,7 +629,7 @@ export default function RefundRequestClient({ id }) {
 
       <p style={{
         textAlign: 'center', marginTop: '16px',
-        fontSize: '0.78rem', color: '#9585B0', fontWeight: '600',
+        fontSize: '0.78rem', color: '#8A9BA3', fontWeight: '600',
       }}>
         🔒 Your bank/UPI details are securely encrypted and never shared.
       </p>
@@ -646,11 +646,11 @@ function NotEligible({ icon, title, message, orderId }) {
       fontFamily: 'Nunito, sans-serif',
     }}>
       <div style={{ fontSize: '4rem', marginBottom: '16px' }}>{icon}</div>
-      <h2 style={{ color: '#2D1A4A', fontSize: '1.5rem', margin: '0 0 12px' }}>{title}</h2>
-      <p style={{ color: '#6B4E8A', margin: '0 0 24px', fontSize: '0.94rem' }}>{message}</p>
+      <h2 style={{ color: '#264653', fontSize: '1.5rem', margin: '0 0 12px' }}>{title}</h2>
+      <p style={{ color: '#4F6B76', margin: '0 0 24px', fontSize: '0.94rem' }}>{message}</p>
       <Link href={`/orders/${orderId}`} style={{
         display: 'inline-block', padding: '14px 32px',
-        background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+        background: 'linear-gradient(135deg,#3A6373,#264653)',
         color: 'white', borderRadius: '12px', textDecoration: 'none',
         fontWeight: '800', fontSize: '0.95rem',
       }}>

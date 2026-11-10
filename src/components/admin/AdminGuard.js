@@ -64,8 +64,8 @@ function LoadingSpinner() {
       <div style={{
         width: '48px',
         height: '48px',
-        border: '4px solid rgba(255,107,53,0.15)',
-        borderTop: '4px solid #FF6B35',
+        border: '4px solid rgba(229,57,53,0.15)',
+        borderTop: '4px solid #E53935',
         borderRadius: '50%',
         animation: 'spin 0.7s linear infinite',
       }} />

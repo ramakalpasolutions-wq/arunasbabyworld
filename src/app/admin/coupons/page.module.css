@@ -11,7 +11,7 @@
   border-radius: var(--radius-xl, 16px);
   padding: 20px;
   box-shadow: var(--shadow-card, 0 2px 10px rgba(0,0,0,0.04));
-  border: 2px dashed var(--primary, #FF6B35);
+  border: 2px dashed var(--primary, #E53935);
   position: relative;
   transition: var(--transition, all 0.2s ease);
 }
@@ -37,7 +37,7 @@
   border-radius: 8px;
   border: 1.5px solid #fee2e2;
   background: #fef2f2;
-  color: #dc2626;
+  color: #C62828;
   font-size: 0.95rem;
   cursor: pointer;
   display: flex;
@@ -48,9 +48,9 @@
 }
 
 .deleteBtn:hover:not(:disabled) {
-  background: #dc2626;
+  background: #C62828;
   color: white;
-  border-color: #dc2626;
+  border-color: #C62828;
   transform: scale(1.08);
   box-shadow: 0 4px 12px rgba(220,38,38,0.35);
 }
@@ -74,13 +74,13 @@
   font-family: monospace;
   font-size: 1.1rem;
   font-weight: 800;
-  color: var(--primary, #FF6B35);
+  color: var(--primary, #E53935);
   letter-spacing: 2px;
   word-break: break-all;
 }
 
 .active {
-  color: #059669;
+  color: #388E3C;
   font-size: 0.72rem;
   font-weight: 700;
   background: #d1fae5;
@@ -102,7 +102,7 @@
 .discount {
   font-size: 1.4rem;
   font-weight: 800;
-  color: #1a1a2e;
+  color: #1B3540;
   margin-bottom: 6px;
 }
 
@@ -133,7 +133,7 @@
   margin-top: 10px;
   padding: 7px 10px;
   background: linear-gradient(135deg, #fef3c7, #fde68a);
-  border: 1px solid #f59e0b;
+  border: 1px solid #F2B33D;
   border-radius: 8px;
   color: #92400e;
   font-size: 0.74rem;

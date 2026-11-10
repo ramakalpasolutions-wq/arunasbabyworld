@@ -281,10 +281,10 @@ export default function GSTReportsPage() {
         marginBottom: '24px', flexWrap: 'wrap', gap: '12px',
       }}>
         <div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: '900', color: '#2D1A4A', margin: '0 0 4px' }}>
+          <h1 style={{ fontSize: '1.6rem', fontWeight: '900', color: '#264653', margin: '0 0 4px' }}>
             📊 GST Reports
           </h1>
-          <p style={{ color: '#9585B0', margin: 0, fontSize: '0.88rem' }}>
+          <p style={{ color: '#8A9BA3', margin: 0, fontSize: '0.88rem' }}>
             Generate GST-compliant sales reports for filing
           </p>
         </div>
@@ -293,9 +293,9 @@ export default function GSTReportsPage() {
       {/* Date Selection */}
       <div style={{
         background: 'white', borderRadius: '16px', padding: '24px',
-        border: '2px solid #EDD9FF', marginBottom: '20px',
+        border: '2px solid #E8E2D2', marginBottom: '20px',
       }}>
-        <h3 style={{ margin: '0 0 16px', fontSize: '1rem', fontWeight: '800', color: '#2D1A4A' }}>
+        <h3 style={{ margin: '0 0 16px', fontSize: '1rem', fontWeight: '800', color: '#264653' }}>
           📅 Select Period
         </h3>
 
@@ -335,9 +335,9 @@ export default function GSTReportsPage() {
               onChange={e => setStartDate(e.target.value)}
               style={{
                 width: '100%', padding: '10px 12px',
-                border: '2px solid #EDD9FF', borderRadius: '10px',
+                border: '2px solid #E8E2D2', borderRadius: '10px',
                 fontSize: '0.88rem', fontFamily: 'inherit',
-                fontWeight: '700', color: '#2D1A4A', outline: 'none',
+                fontWeight: '700', color: '#264653', outline: 'none',
                 boxSizing: 'border-box',
               }}
             />
@@ -352,9 +352,9 @@ export default function GSTReportsPage() {
               onChange={e => setEndDate(e.target.value)}
               style={{
                 width: '100%', padding: '10px 12px',
-                border: '2px solid #EDD9FF', borderRadius: '10px',
+                border: '2px solid #E8E2D2', borderRadius: '10px',
                 fontSize: '0.88rem', fontFamily: 'inherit',
-                fontWeight: '700', color: '#2D1A4A', outline: 'none',
+                fontWeight: '700', color: '#264653', outline: 'none',
                 boxSizing: 'border-box',
               }}
             />
@@ -364,7 +364,7 @@ export default function GSTReportsPage() {
             disabled={loading}
             style={{
               padding: '10px 24px',
-              background: loading ? '#ccc' : 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+              background: loading ? '#ccc' : 'linear-gradient(135deg, #3A6373, #264653)',
               color: 'white', border: 'none', borderRadius: '10px',
               fontSize: '0.88rem', fontWeight: '800',
               cursor: loading ? 'not-allowed' : 'pointer',
@@ -384,16 +384,16 @@ export default function GSTReportsPage() {
           gap: '12px', marginBottom: '20px',
         }}>
           {[
-            { label: 'Total Orders', value: summary.totalOrders, icon: '🛍️', color: '#7B2FBE' },
+            { label: 'Total Orders', value: summary.totalOrders, icon: '🛍️', color: '#264653' },
             { label: 'Taxable Value', value: `₹${fmt(summary.totalTaxable)}`, icon: '📋', color: '#0369A1' },
-            { label: 'CGST', value: `₹${fmt(summary.totalCGST)}`, icon: '🏛️', color: '#10B981' },
-            { label: 'SGST', value: `₹${fmt(summary.totalSGST)}`, icon: '🏛️', color: '#F59E0B' },
-            { label: 'IGST', value: `₹${fmt(summary.totalIGST)}`, icon: '🌐', color: '#EF4444' },
-            { label: 'Total Amount', value: `₹${fmt(summary.totalAmount)}`, icon: '💰', color: '#FF6B35' },
+            { label: 'CGST', value: `₹${fmt(summary.totalCGST)}`, icon: '🏛️', color: '#43A047' },
+            { label: 'SGST', value: `₹${fmt(summary.totalSGST)}`, icon: '🏛️', color: '#F2B33D' },
+            { label: 'IGST', value: `₹${fmt(summary.totalIGST)}`, icon: '🌐', color: '#E53935' },
+            { label: 'Total Amount', value: `₹${fmt(summary.totalAmount)}`, icon: '💰', color: '#E53935' },
           ].map((card, i) => (
             <div key={i} style={{
               background: 'white', borderRadius: '14px', padding: '16px',
-              border: '2px solid #EDD9FF', textAlign: 'center',
+              border: '2px solid #E8E2D2', textAlign: 'center',
             }}>
               <div style={{ fontSize: '1.4rem', marginBottom: '6px' }}>{card.icon}</div>
               <div style={{ fontSize: '0.70rem', fontWeight: '800', color: '#6B7280', textTransform: 'uppercase', marginBottom: '4px' }}>
@@ -415,12 +415,12 @@ export default function GSTReportsPage() {
             disabled={downloading}
             style={{
               padding: '14px 32px',
-              background: downloading ? '#ccc' : 'linear-gradient(135deg, #10B981, #059669)',
+              background: downloading ? '#ccc' : 'linear-gradient(135deg, #43A047, #388E3C)',
               color: 'white', border: 'none', borderRadius: '12px',
               fontSize: '0.95rem', fontWeight: '900',
               cursor: downloading ? 'not-allowed' : 'pointer',
               fontFamily: 'inherit',
-              boxShadow: downloading ? 'none' : '0 6px 18px rgba(16,185,129,0.30)',
+              boxShadow: downloading ? 'none' : '0 6px 18px rgba(67,160,71,0.30)',
               display: 'inline-flex', alignItems: 'center', gap: '8px',
             }}
           >
@@ -433,14 +433,14 @@ export default function GSTReportsPage() {
       {report && report.length > 0 && (
         <div style={{
           background: 'white', borderRadius: '16px',
-          border: '2px solid #EDD9FF', overflow: 'hidden',
+          border: '2px solid #E8E2D2', overflow: 'hidden',
         }}>
           <div style={{
-            padding: '14px 20px', background: 'linear-gradient(135deg, #FFF5EE, #F5EDFF)',
-            borderBottom: '2px solid #EDD9FF',
+            padding: '14px 20px', background: 'linear-gradient(135deg, #FFFBF2, #FBF5E6)',
+            borderBottom: '2px solid #E8E2D2',
             display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           }}>
-            <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '800', color: '#2D1A4A' }}>
+            <h3 style={{ margin: 0, fontSize: '0.95rem', fontWeight: '800', color: '#264653' }}>
               📋 Sales Register Preview ({report.length} orders)
             </h3>
             <span style={{ fontSize: '0.76rem', color: '#6B7280', fontWeight: '700' }}>
@@ -454,12 +454,12 @@ export default function GSTReportsPage() {
               fontSize: '0.80rem', fontFamily: 'Nunito, sans-serif',
             }}>
               <thead>
-                <tr style={{ background: '#F8F4FF' }}>
+                <tr style={{ background: '#FFFBF2' }}>
                   {['#', 'Invoice', 'Date', 'Customer', 'State', 'Taxable', 'CGST', 'SGST', 'IGST', 'Total', 'Payment'].map(h => (
                     <th key={h} style={{
                       padding: '10px 12px', textAlign: 'left',
-                      fontWeight: '800', color: '#6B4E8A',
-                      borderBottom: '2px solid #EDD9FF',
+                      fontWeight: '800', color: '#4F6B76',
+                      borderBottom: '2px solid #E8E2D2',
                       whiteSpace: 'nowrap',
                       fontSize: '0.72rem', textTransform: 'uppercase',
                     }}>
@@ -471,31 +471,31 @@ export default function GSTReportsPage() {
               <tbody>
                 {report.slice(0, 50).map((r, i) => (
                   <tr key={i} style={{
-                    borderBottom: '1px solid #F3E8FF',
+                    borderBottom: '1px solid #EEF3F5',
                     background: i % 2 === 0 ? 'white' : '#FDFBFF',
                   }}>
                     <td style={{ padding: '8px 12px', color: '#6B7280' }}>{i + 1}</td>
-                    <td style={{ padding: '8px 12px', fontWeight: '700', fontFamily: 'monospace', color: '#7B2FBE' }}>{r.invoiceNo}</td>
+                    <td style={{ padding: '8px 12px', fontWeight: '700', fontFamily: 'monospace', color: '#264653' }}>{r.invoiceNo}</td>
                     <td style={{ padding: '8px 12px', whiteSpace: 'nowrap' }}>{r.date}</td>
                     <td style={{ padding: '8px 12px', fontWeight: '700' }}>{r.customerName}</td>
                     <td style={{ padding: '8px 12px', fontSize: '0.74rem' }}>{r.customerState}</td>
                     <td style={{ padding: '8px 12px', fontWeight: '700' }}>₹{fmt(r.taxableValue)}</td>
-                    <td style={{ padding: '8px 12px', color: '#10B981', fontWeight: '700' }}>₹{fmt(r.cgst)}</td>
-                    <td style={{ padding: '8px 12px', color: '#F59E0B', fontWeight: '700' }}>₹{fmt(r.sgst)}</td>
-                    <td style={{ padding: '8px 12px', color: '#EF4444', fontWeight: '700' }}>₹{fmt(r.igst)}</td>
-                    <td style={{ padding: '8px 12px', fontWeight: '800', color: '#FF6B35' }}>₹{fmt(r.totalAmount)}</td>
+                    <td style={{ padding: '8px 12px', color: '#43A047', fontWeight: '700' }}>₹{fmt(r.cgst)}</td>
+                    <td style={{ padding: '8px 12px', color: '#F2B33D', fontWeight: '700' }}>₹{fmt(r.sgst)}</td>
+                    <td style={{ padding: '8px 12px', color: '#E53935', fontWeight: '700' }}>₹{fmt(r.igst)}</td>
+                    <td style={{ padding: '8px 12px', fontWeight: '800', color: '#E53935' }}>₹{fmt(r.totalAmount)}</td>
                     <td style={{ padding: '8px 12px', fontSize: '0.74rem' }}>{r.paymentMethod}</td>
                   </tr>
                 ))}
               </tbody>
               <tfoot>
                 <tr style={{ background: '#F0FDF4', fontWeight: '800' }}>
-                  <td colSpan={5} style={{ padding: '10px 12px', color: '#065F46' }}>TOTAL ({report.length} orders)</td>
-                  <td style={{ padding: '10px 12px', color: '#065F46' }}>₹{fmt(summary?.totalTaxable)}</td>
-                  <td style={{ padding: '10px 12px', color: '#10B981' }}>₹{fmt(summary?.totalCGST)}</td>
-                  <td style={{ padding: '10px 12px', color: '#F59E0B' }}>₹{fmt(summary?.totalSGST)}</td>
-                  <td style={{ padding: '10px 12px', color: '#EF4444' }}>₹{fmt(summary?.totalIGST)}</td>
-                  <td style={{ padding: '10px 12px', color: '#FF6B35' }}>₹{fmt(summary?.totalAmount)}</td>
+                  <td colSpan={5} style={{ padding: '10px 12px', color: '#1B5E20' }}>TOTAL ({report.length} orders)</td>
+                  <td style={{ padding: '10px 12px', color: '#1B5E20' }}>₹{fmt(summary?.totalTaxable)}</td>
+                  <td style={{ padding: '10px 12px', color: '#43A047' }}>₹{fmt(summary?.totalCGST)}</td>
+                  <td style={{ padding: '10px 12px', color: '#F2B33D' }}>₹{fmt(summary?.totalSGST)}</td>
+                  <td style={{ padding: '10px 12px', color: '#E53935' }}>₹{fmt(summary?.totalIGST)}</td>
+                  <td style={{ padding: '10px 12px', color: '#E53935' }}>₹{fmt(summary?.totalAmount)}</td>
                   <td></td>
                 </tr>
               </tfoot>
@@ -506,7 +506,7 @@ export default function GSTReportsPage() {
             <div style={{
               padding: '12px 20px', textAlign: 'center',
               color: '#6B7280', fontSize: '0.82rem', fontWeight: '700',
-              borderTop: '1px solid #EDD9FF',
+              borderTop: '1px solid #E8E2D2',
             }}>
               Showing 50 of {report.length} orders. Download XLSX for full report.
             </div>
@@ -519,10 +519,10 @@ export default function GSTReportsPage() {
         <div style={{
           textAlign: 'center', padding: '60px 20px',
           background: 'white', borderRadius: '16px',
-          border: '2px solid #EDD9FF',
+          border: '2px solid #E8E2D2',
         }}>
           <div style={{ fontSize: '3rem', marginBottom: '12px' }}>📭</div>
-          <h3 style={{ margin: '0 0 8px', color: '#2D1A4A', fontWeight: '800' }}>No orders found</h3>
+          <h3 style={{ margin: '0 0 8px', color: '#264653', fontWeight: '800' }}>No orders found</h3>
           <p style={{ color: '#6B7280', margin: 0 }}>
             No paid orders in the selected date range
           </p>

@@ -126,12 +126,12 @@ export default function AboutClient() {
           </div>
           <div className={styles.whyGrid}>
             {[
-              { icon: '🛡️', title: 'Safety First', desc: 'Every product passes rigorous safety testing. We verify certifications and reject products that don\'t meet our standards.', color: '#ff6b9d' },
-              { icon: '💰', title: 'Best Prices', desc: 'We negotiate directly with manufacturers so you get premium quality at prices that fit a family budget.', color: '#7c3aed' },
-              { icon: '🚀', title: 'Fast Delivery', desc: 'Express delivery in 24 hours for metro cities. Standard delivery across 19,000+ pin codes in India.', color: '#0ea5e9' },
-              { icon: '♻️', title: 'Easy Returns', desc: '30-day no-questions-asked return policy. Because we know parenting is unpredictable.', color: '#10b981' },
-              { icon: '🎓', title: 'Expert Curation', desc: 'Our team of pediatricians and parents curate every product. No guesswork — just trusted choices.', color: '#f59e0b' },
-              { icon: '💬', title: 'Parent Community', desc: 'Join 5 lakh parents in our community. Share experiences, get advice, and grow together.', color: '#ef4444' },
+              { icon: '🛡️', title: 'Safety First', desc: 'Every product passes rigorous safety testing. We verify certifications and reject products that don\'t meet our standards.', color: '#E53935' },
+              { icon: '💰', title: 'Best Prices', desc: 'We negotiate directly with manufacturers so you get premium quality at prices that fit a family budget.', color: '#264653' },
+              { icon: '🚀', title: 'Fast Delivery', desc: 'Express delivery in 24 hours for metro cities. Standard delivery across 19,000+ pin codes in India.', color: '#1E88E5' },
+              { icon: '♻️', title: 'Easy Returns', desc: '30-day no-questions-asked return policy. Because we know parenting is unpredictable.', color: '#43A047' },
+              { icon: '🎓', title: 'Expert Curation', desc: 'Our team of pediatricians and parents curate every product. No guesswork — just trusted choices.', color: '#F2B33D' },
+              { icon: '💬', title: 'Parent Community', desc: 'Join 5 lakh parents in our community. Share experiences, get advice, and grow together.', color: '#E53935' },
             ].map((item, i) => (
               <div key={item.title} className={`${styles.whyCard} reveal`} style={{ animationDelay: `${i * 0.1}s` }}>
                 <div className={styles.whyIcon} style={{ background: `${item.color}15`, color: item.color }}>{item.icon}</div>

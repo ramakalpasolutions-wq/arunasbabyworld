@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;800;900&family=Nunito:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Baloo+2:wght@500;600;700;800&family=Nunito:wght@400;500;600;700;800&display=swap');
 
 .heroWrap {
   --container: 1900px;
@@ -258,7 +258,7 @@ video.heroMedia {
   right: 4%;
   width: 18px;
   height: 18px;
-  background: #f5b5c5;
+  background: #F5B7B5;
   clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
   animation: shapeFloat 6s ease-in-out infinite;
 }
@@ -269,7 +269,7 @@ video.heroMedia {
   right: 8%;
   width: 22px;
   height: 22px;
-  background: #f5b5c5;
+  background: #F5B7B5;
   clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
   animation: shapeFloat 8s ease-in-out infinite reverse;
 }
@@ -280,7 +280,7 @@ video.heroMedia {
   right: 3%;
   width: 20px;
   height: 20px;
-  background: #f5b5c5;
+  background: #F5B7B5;
   clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
   animation: shapeFloat 7s ease-in-out infinite;
 }
@@ -303,7 +303,7 @@ video.heroMedia {
   right: 6%;
   width: 16px;
   height: 16px;
-  background: #f5b5c5;
+  background: #F5B7B5;
   clip-path: polygon(50% 0%, 100% 100%, 0% 100%);
   animation: shapeFloat 10s ease-in-out infinite;
 }
@@ -342,7 +342,7 @@ video.heroMedia {
 
 .headline {
   margin: 0 0 24px;
-  font-family: 'Playfair Display', 'Nunito', serif;
+  font-family: 'Baloo 2', 'Nunito', serif;
   font-size: clamp(2.6rem, 5vw, 4.4rem);
   line-height: 1.05;
   font-weight: 800;

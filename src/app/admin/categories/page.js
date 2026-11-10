@@ -9,15 +9,15 @@ import styles from './page.module.css';
    ✅ But admin can ALSO add custom categories now
    ============================================================ */
 const ALLOWED_CATEGORIES = [
-  { slug: 'clothing',          name: 'Clothing',          icon: '', color: '#FF6B35' },
-  { slug: 'personal-care',     name: 'Personal Care',     icon: '', color: '#7B2FBE' },
-  { slug: 'health-care',       name: 'Health Care',       icon: '', color: '#0EA5E9' },
-  { slug: 'baby-gear',         name: 'Baby Gear',         icon: '', color: '#10B981' },
-  { slug: 'walkers',           name: 'Walkers',           icon: '', color: '#F59E0B' },
-  { slug: 'toys',              name: 'Toys',              icon: '', color: '#EF4444' },
-  { slug: 'cradles-cribs',     name: 'Cradles & Cribs',   icon: '', color: '#8B5CF6' },
-  { slug: 'electric-vehicles', name: 'Electric Vehicles', icon: '', color: '#059669' },
-  { slug: 'food',              name: 'Food',              icon: '', color: '#F97316' },
+  { slug: 'clothing',          name: 'Clothing',          icon: '', color: '#E53935' },
+  { slug: 'personal-care',     name: 'Personal Care',     icon: '', color: '#264653' },
+  { slug: 'health-care',       name: 'Health Care',       icon: '', color: '#1E88E5' },
+  { slug: 'baby-gear',         name: 'Baby Gear',         icon: '', color: '#43A047' },
+  { slug: 'walkers',           name: 'Walkers',           icon: '', color: '#F2B33D' },
+  { slug: 'toys',              name: 'Toys',              icon: '', color: '#E53935' },
+  { slug: 'cradles-cribs',     name: 'Cradles & Cribs',   icon: '', color: '#3A6373' },
+  { slug: 'electric-vehicles', name: 'Electric Vehicles', icon: '', color: '#388E3C' },
+  { slug: 'food',              name: 'Food',              icon: '', color: '#FB8C00' },
 ];
 
 export default function AdminCategories() {
@@ -29,7 +29,7 @@ export default function AdminCategories() {
   const [isCustom,   setIsCustom]   = useState(false);
 
   const emptyForm = {
-    name: '', description: '', color: '#FF6B35',
+    name: '', description: '', color: '#E53935',
     icon: '', type: 'normal',
   };
 
@@ -75,7 +75,7 @@ export default function AdminCategories() {
     setForm({
       name:        cat.name        || '',
       description: cat.description || '',
-      color:       cat.color       || '#FF6B35',
+      color:       cat.color       || '#E53935',
       icon:        cat.icon        || '',
       type:        cat.type        || 'normal',
     });
@@ -266,14 +266,14 @@ export default function AdminCategories() {
 
       {/* ── PREDEFINED CATEGORIES INFO BOX ── */}
       <div style={{
-        background: 'linear-gradient(135deg, #FFF3EC, #F3E8FF)',
-        border: '2px solid #EDD9FF',
+        background: 'linear-gradient(135deg, #FFF6E5, #EEF3F5)',
+        border: '2px solid #E8E2D2',
         borderRadius: '16px',
         padding: '16px 20px',
         marginBottom: '24px',
       }}>
         <h4 style={{
-          margin: '0 0 10px', color: '#2D1A4A',
+          margin: '0 0 10px', color: '#264653',
           fontSize: '0.90rem', fontWeight: '800',
         }}>
           ⭐ Predefined Categories (9 recommended)
@@ -294,7 +294,7 @@ export default function AdminCategories() {
               borderRadius: '999px',
               fontSize: '0.78rem',
               fontWeight: '700',
-              color: existingSlugs.includes(cat.slug) ? cat.color : '#DC2626',
+              color: existingSlugs.includes(cat.slug) ? cat.color : '#C62828',
             }}>
               {i + 1}. {cat.icon} {cat.name}
               {existingSlugs.includes(cat.slug) ? ' ✅' : ' ❌ Missing'}
@@ -377,7 +377,7 @@ export default function AdminCategories() {
                     display: 'flex',
                     gap: '8px',
                     marginBottom: '14px',
-                    background: '#F3E8FF',
+                    background: '#EEF3F5',
                     padding: '4px',
                     borderRadius: '12px',
                   }}>
@@ -391,7 +391,7 @@ export default function AdminCategories() {
                         flex: 1,
                         padding: '8px 12px',
                         background: !isCustom ? 'white' : 'transparent',
-                        color: !isCustom ? '#7B2FBE' : '#9585B0',
+                        color: !isCustom ? '#264653' : '#8A9BA3',
                         border: 'none',
                         borderRadius: '8px',
                         fontWeight: '700',
@@ -414,7 +414,7 @@ export default function AdminCategories() {
                         flex: 1,
                         padding: '8px 12px',
                         background: isCustom ? 'white' : 'transparent',
-                        color: isCustom ? '#7B2FBE' : '#9585B0',
+                        color: isCustom ? '#264653' : '#8A9BA3',
                         border: 'none',
                         borderRadius: '8px',
                         fontWeight: '700',
@@ -435,7 +435,7 @@ export default function AdminCategories() {
                         display: 'block',
                         fontSize: '0.78rem',
                         fontWeight: '800',
-                        color: '#9585B0',
+                        color: '#8A9BA3',
                         textTransform: 'uppercase',
                         letterSpacing: '0.5px',
                         marginBottom: '10px',
@@ -460,7 +460,7 @@ export default function AdminCategories() {
                               style={{
                                 padding: '7px 16px',
                                 borderRadius: '999px',
-                                border: `2px solid ${selected ? cat.color : '#EDD9FF'}`,
+                                border: `2px solid ${selected ? cat.color : '#E8E2D2'}`,
                                 background: exists
                                   ? '#F3F4F6'
                                   : selected ? cat.color : 'white',
@@ -482,7 +482,7 @@ export default function AdminCategories() {
                         })}
                       </div>
                       <p style={{
-                        fontSize: '0.72rem', color: '#9585B0',
+                        fontSize: '0.72rem', color: '#8A9BA3',
                         marginTop: '8px', fontWeight: '600',
                       }}>
                         ✅ = Already in database. Switch to "Custom" tab to create your own category.

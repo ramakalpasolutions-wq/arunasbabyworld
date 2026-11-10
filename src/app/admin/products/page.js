@@ -160,9 +160,9 @@ export default function AdminProducts() {
                   key={cat.id}
                   className={`${styles.catPill} ${isActive ? styles.catPillOn : ''}`}
                   style={isActive ? {
-                    background:  cat.color || '#FF6B35',
-                    borderColor: cat.color || '#FF6B35',
-                    boxShadow:   `0 4px 14px ${cat.color || '#FF6B35'}40`,
+                    background:  cat.color || '#E53935',
+                    borderColor: cat.color || '#E53935',
+                    boxShadow:   `0 4px 14px ${cat.color || '#E53935'}40`,
                   } : {}}
                   onClick={() => handleCatFilter(cat.id)}
                 >
@@ -179,7 +179,7 @@ export default function AdminProducts() {
             <span className={styles.filterSummaryLabel}>Active filters:</span>
 
             {search && (
-              <span className={styles.filterTag} style={{ background: '#FF6B35' }}>
+              <span className={styles.filterTag} style={{ background: '#E53935' }}>
                 🔍 &quot;{search}&quot;
                 <button
                   className={styles.filterTagClose}
@@ -193,7 +193,7 @@ export default function AdminProducts() {
               return cat ? (
                 <span
                   className={styles.filterTag}
-                  style={{ background: cat.color || '#7B2FBE' }}
+                  style={{ background: cat.color || '#264653' }}
                 >
                   {cat.icon || '📦'} {cat.name}
                   <button

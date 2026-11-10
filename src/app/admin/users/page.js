@@ -79,8 +79,8 @@ export default function AdminUsers() {
           right: '20px',
           zIndex: 9999,
           background: toast.type === 'success'
-            ? 'linear-gradient(135deg, #059669, #10b981)'
-            : 'linear-gradient(135deg, #dc2626, #ef4444)',
+            ? 'linear-gradient(135deg, #388E3C, #43A047)'
+            : 'linear-gradient(135deg, #C62828, #E53935)',
           color: 'white',
           padding: '12px 20px',
           borderRadius: '12px',
@@ -101,10 +101,10 @@ export default function AdminUsers() {
           <h1>Users 👥</h1>
           <p style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
             <span>{users.length} total</span>
-            <span style={{ color: '#059669', fontWeight: '700' }}>
+            <span style={{ color: '#388E3C', fontWeight: '700' }}>
               ● {activeCount} active
             </span>
-            <span style={{ color: '#dc2626', fontWeight: '700' }}>
+            <span style={{ color: '#C62828', fontWeight: '700' }}>
               ○ {inactiveCount} inactive
             </span>
           </p>
@@ -127,7 +127,7 @@ export default function AdminUsers() {
             background: 'white',
             transition: 'all 0.2s',
           }}
-          onFocus={e => e.target.style.borderColor = '#FF6B35'}
+          onFocus={e => e.target.style.borderColor = '#E53935'}
           onBlur={e => e.target.style.borderColor = '#e5e7eb'}
         />
       </div>
@@ -165,9 +165,9 @@ export default function AdminUsers() {
                     <div style={{
                       width: '36px', height: '36px', borderRadius: '50%',
                       background: user.role === 'admin'
-                        ? 'linear-gradient(135deg, #7c3aed, #ff6b9d)'
+                        ? 'linear-gradient(135deg, #264653, #3A6373)'
                         : user.isActive
-                          ? 'linear-gradient(135deg, #FF6B35, #ff9a56)'
+                          ? 'linear-gradient(135deg, #E53935, #ff9a56)'
                           : 'linear-gradient(135deg, #e5e7eb, #d1d5db)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
                       color: user.isActive || user.role === 'admin' ? 'white' : '#9ca3af',
@@ -177,7 +177,7 @@ export default function AdminUsers() {
                       {user.name?.[0]?.toUpperCase() || 'U'}
                     </div>
                     <strong style={{
-                      color: user.isActive ? '#1a1a2e' : '#9ca3af',
+                      color: user.isActive ? '#1B3540' : '#9ca3af',
                       textDecoration: user.isActive ? 'none' : 'line-through',
                     }}>
                       {user.name}
@@ -198,8 +198,8 @@ export default function AdminUsers() {
                 {/* Role */}
                 <td>
                   <span style={{
-                    background: user.role === 'admin' ? '#f3e8ff' : '#f3f4f6',
-                    color: user.role === 'admin' ? '#7B2FBE' : '#6b7280',
+                    background: user.role === 'admin' ? '#EEF3F5' : '#f3f4f6',
+                    color: user.role === 'admin' ? '#264653' : '#6b7280',
                     padding: '3px 10px',
                     borderRadius: '999px',
                     fontSize: '0.75rem', fontWeight: '700',
@@ -213,7 +213,7 @@ export default function AdminUsers() {
                 <td style={{ fontSize: '13px', color: '#666', textAlign: 'center' }}>
                   <span style={{
                     background: '#fff7ed',
-                    color: '#FF6B35',
+                    color: '#E53935',
                     padding: '2px 8px',
                     borderRadius: '999px',
                     fontSize: '0.75rem',
@@ -267,7 +267,7 @@ export default function AdminUsers() {
                         background: user.isActive
                           ? 'linear-gradient(135deg, #fee2e2, #fecaca)'
                           : 'linear-gradient(135deg, #d1fae5, #a7f3d0)',
-                        color: user.isActive ? '#dc2626' : '#059669',
+                        color: user.isActive ? '#C62828' : '#388E3C',
                         whiteSpace: 'nowrap',
                         boxShadow: user.isActive
                           ? '0 2px 8px rgba(220,38,38,0.15)'
@@ -316,9 +316,9 @@ export default function AdminUsers() {
             <div style={{
               width: '44px', height: '44px', borderRadius: '50%',
               background: user.role === 'admin'
-                ? 'linear-gradient(135deg, #7c3aed, #ff6b9d)'
+                ? 'linear-gradient(135deg, #264653, #3A6373)'
                 : user.isActive
-                  ? 'linear-gradient(135deg, #FF6B35, #ff9a56)'
+                  ? 'linear-gradient(135deg, #E53935, #ff9a56)'
                   : 'linear-gradient(135deg, #e5e7eb, #d1d5db)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               color: user.isActive || user.role === 'admin' ? 'white' : '#9ca3af',
@@ -337,14 +337,14 @@ export default function AdminUsers() {
                   className={styles.mobileCardName}
                   style={{
                     textDecoration: user.isActive ? 'none' : 'line-through',
-                    color: user.isActive ? '#1a1a2e' : '#9ca3af',
+                    color: user.isActive ? '#1B3540' : '#9ca3af',
                   }}
                 >
                   {user.name}
                 </div>
                 <span style={{
-                  background: user.role === 'admin' ? '#f3e8ff' : '#f3f4f6',
-                  color: user.role === 'admin' ? '#7B2FBE' : '#6b7280',
+                  background: user.role === 'admin' ? '#EEF3F5' : '#f3f4f6',
+                  color: user.role === 'admin' ? '#264653' : '#6b7280',
                   padding: '2px 8px',
                   borderRadius: '999px',
                   fontSize: '0.68rem', fontWeight: '700',
@@ -373,7 +373,7 @@ export default function AdminUsers() {
               )}
 
               {/* Orders */}
-              <div style={{ fontSize: '0.78rem', color: '#FF6B35', fontWeight: '700' }}>
+              <div style={{ fontSize: '0.78rem', color: '#E53935', fontWeight: '700' }}>
                 🛍️ {user._count?.orders || 0} order{(user._count?.orders || 0) !== 1 ? 's' : ''}
               </div>
 
@@ -415,7 +415,7 @@ export default function AdminUsers() {
                         background: user.isActive
                           ? 'linear-gradient(135deg, #fee2e2, #fecaca)'
                           : 'linear-gradient(135deg, #d1fae5, #a7f3d0)',
-                        color: user.isActive ? '#dc2626' : '#059669',
+                        color: user.isActive ? '#C62828' : '#388E3C',
                         whiteSpace: 'nowrap',
                         flexShrink: 0,
                       }}

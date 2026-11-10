@@ -214,7 +214,7 @@ export default function Header() {
       e.preventDefault();
       if (selectedIndex >= 0 && searchResults[selectedIndex]) {
         const product = searchResults[selectedIndex];
-        router.push(`/products/${product.id}`);
+        router.push(`/products/${product.slug || product.id}`);
         setSearchOpen(false);
         setSearchQuery('');
         setSelectedIndex(-1);
@@ -294,7 +294,7 @@ export default function Header() {
                 left: 0,
                 right: 0,
                 background: 'white',
-                border: '1.5px solid #38BDF8',
+                border: '1.5px solid #4FA3F0',
                 borderRadius: '16px',
                 boxShadow: '0 12px 40px rgba(3, 105, 161, 0.15)',
                 maxHeight: '70vh',
@@ -340,7 +340,7 @@ export default function Header() {
                       return (
                         <Link
                           key={product.id}
-                          href={`/products/${product.id}`}
+                          href={`/products/${product.slug || product.id}`}
                           onClick={() => {
                             saveRecentSearch(searchQuery);
                             setSearchOpen(false);
@@ -401,7 +401,7 @@ export default function Header() {
                       onClick={() => handleSearch()}
                       style={{
                         width: '100%', padding: '12px 16px',
-                        background: 'linear-gradient(135deg, #38BDF8, #0369A1)',
+                        background: 'linear-gradient(135deg, #4FA3F0, #0369A1)',
                         color: 'white', border: 'none',
                         fontSize: '0.84rem', fontWeight: '800',
                         cursor: 'pointer', display: 'flex',
@@ -428,7 +428,7 @@ export default function Header() {
                       onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
                       style={{
                         display: 'inline-block', padding: '8px 20px',
-                        background: '#38BDF8', color: 'white',
+                        background: '#4FA3F0', color: 'white',
                         borderRadius: '8px', textDecoration: 'none',
                         fontSize: '0.80rem', fontWeight: '700',
                       }}
@@ -456,7 +456,7 @@ export default function Header() {
                             onClick={clearRecentSearches}
                             style={{
                               background: 'none', border: 'none',
-                              color: '#EF4444', fontSize: '0.72rem',
+                              color: '#E53935', fontSize: '0.72rem',
                               fontWeight: '700', cursor: 'pointer',
                             }}
                           >
@@ -480,7 +480,7 @@ export default function Header() {
                               }}
                               onMouseEnter={e => {
                                 e.currentTarget.style.background = '#F0F9FF';
-                                e.currentTarget.style.borderColor = '#38BDF8';
+                                e.currentTarget.style.borderColor = '#4FA3F0';
                               }}
                               onMouseLeave={e => {
                                 e.currentTarget.style.background = 'transparent';
@@ -523,7 +523,7 @@ export default function Header() {
                             color: '#0369A1', fontWeight: '700', transition: 'all 0.15s',
                           }}
                           onMouseEnter={e => {
-                            e.currentTarget.style.background = 'linear-gradient(135deg, #38BDF8, #0369A1)';
+                            e.currentTarget.style.background = 'linear-gradient(135deg, #4FA3F0, #0369A1)';
                             e.currentTarget.style.color = 'white';
                           }}
                           onMouseLeave={e => {
@@ -550,7 +550,7 @@ export default function Header() {
                         {navCategories.slice(0, 6).map(cat => (
                           <Link
                             key={cat.id}
-                            href={`/products?category=${cat.id}`}
+                            href={`/products?category=${cat.slug || cat.id}`}
                             onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
                             style={{
                               padding: '5px 10px', background: 'white',
@@ -559,7 +559,7 @@ export default function Header() {
                               fontWeight: '700', textDecoration: 'none',
                               transition: 'all 0.15s',
                             }}
-                            onMouseEnter={e => { e.currentTarget.style.borderColor = '#38BDF8'; e.currentTarget.style.color = '#0369A1'; }}
+                            onMouseEnter={e => { e.currentTarget.style.borderColor = '#4FA3F0'; e.currentTarget.style.color = '#0369A1'; }}
                             onMouseLeave={e => { e.currentTarget.style.borderColor = '#E5E7EB'; e.currentTarget.style.color = '#334155'; }}
                           >
                             {cat.name}
@@ -721,7 +721,7 @@ export default function Header() {
               onMouseEnter={() => setActiveMega(cat.id)}
               onMouseLeave={() => setActiveMega(null)}
             >
-              <Link href={`/products?category=${cat.id}`} className={styles.navLink}>
+              <Link href={`/products?category=${cat.slug || cat.id}`} className={styles.navLink}>
                 {cat.name}
               </Link>
               {activeMega === cat.id && (
@@ -729,7 +729,7 @@ export default function Header() {
                   <div className={styles.megaContent}>
                     <div className={styles.megaCategory}>
                       <h3>{cat.name}</h3>
-                      <Link href={`/products?category=${cat.id}`} className={styles.viewAll}>
+                      <Link href={`/products?category=${cat.slug || cat.id}`} className={styles.viewAll}>
                         View All →
                       </Link>
                     </div>
@@ -821,7 +821,7 @@ export default function Header() {
                     return (
                       <Link
                         key={product.id}
-                        href={`/products/${product.id}`}
+                        href={`/products/${product.slug || product.id}`}
                         onClick={() => {
                           saveRecentSearch(searchQuery);
                           setMobileSearchOpen(false);
@@ -940,7 +940,7 @@ export default function Header() {
                     {navCategories.slice(0, 8).map(cat => (
                       <Link
                         key={cat.id}
-                        href={`/products?category=${cat.id}`}
+                        href={`/products?category=${cat.slug || cat.id}`}
                         onClick={() => { setMobileSearchOpen(false); setSearchQuery(''); }}
                         className={styles.mobileCategoryItem}
                       >
@@ -1004,25 +1004,25 @@ export default function Header() {
 
             <div className={styles.mobileBtnGroup}>
               <Link href="/products?featured=true" className={styles.mobilePill}
-                style={{ background: 'linear-gradient(135deg,#FF6B35,#FF8C5A)' }}
+                style={{ background: 'linear-gradient(135deg,#E53935,#EF5350)' }}
                 onClick={closeMobile}
               >
                 ⭐ Featured
               </Link>
               <Link href="/products?sort=createdAt&order=desc" className={styles.mobilePill}
-                style={{ background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)' }}
+                style={{ background: 'linear-gradient(135deg,#264653,#3A6373)' }}
                 onClick={closeMobile}
               >
                 ✨ New
               </Link>
               <Link href="/products?trending=true" className={styles.mobilePill}
-                style={{ background: 'linear-gradient(135deg,#FF3366,#FF6B35)' }}
+                style={{ background: 'linear-gradient(135deg,#E53935,#E53935)' }}
                 onClick={closeMobile}
               >
                 🔥 Trending
               </Link>
               <Link href="/contact" className={styles.mobilePill}
-                style={{ background: 'linear-gradient(135deg,#0EA5E9,#7B2FBE)' }}
+                style={{ background: 'linear-gradient(135deg,#1E88E5,#264653)' }}
                 onClick={closeMobile}
               >
                 📞 Contact

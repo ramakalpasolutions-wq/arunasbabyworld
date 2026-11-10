@@ -4,15 +4,15 @@ import toast from 'react-hot-toast';
 
 /* ── All 9 sections ── */
 const DEFAULT_SECTIONS = [
-  { key: 'hero',          defaultTitle: 'New Arrivals',            defaultEmoji: '🖼️', hint: 'Main hero slider',             color: '#FF6B35' },
-  { key: 'brands',        defaultTitle: 'Top Baby Brands',         defaultEmoji: '🏷️', hint: 'Brand names auto scroll',       color: '#7B2FBE' },
-  { key: 'season',        defaultTitle: 'Summer Collection',       defaultEmoji: '☀️', hint: 'Season/festival banner',        color: '#F59E0B' },
-  { key: 'budget',        defaultTitle: 'Budget Store',            defaultEmoji: '🏪', hint: 'Budget price circles',          color: '#EF4444' },
-  { key: 'new-born',      defaultTitle: 'New Born Baby Collection',defaultEmoji: '👶', hint: 'Girl & Boy image cards',        color: '#EC4899' },
-  { key: 'care',          defaultTitle: 'Personal Care & Health',  defaultEmoji: '🧴', hint: '2-row auto scroll mix',         color: '#10B981' },
-  { key: 'electric',      defaultTitle: 'Electric Rides for Kids', defaultEmoji: '🚗', hint: 'EV product grid',               color: '#0EA5E9' },
-  { key: 'trending',      defaultTitle: 'Trending & Featured Mix', defaultEmoji: '🔥', hint: 'Mixed trending + featured',     color: '#F97316' },
-  { key: 'cta',           defaultTitle: 'Get 10% Off!',            defaultEmoji: '🎁', hint: 'Sign up CTA section',           color: '#7B2FBE' },
+  { key: 'hero',          defaultTitle: 'New Arrivals',            defaultEmoji: '🖼️', hint: 'Main hero slider',             color: '#E53935' },
+  { key: 'brands',        defaultTitle: 'Top Baby Brands',         defaultEmoji: '🏷️', hint: 'Brand names auto scroll',       color: '#264653' },
+  { key: 'season',        defaultTitle: 'Summer Collection',       defaultEmoji: '☀️', hint: 'Season/festival banner',        color: '#F2B33D' },
+  { key: 'budget',        defaultTitle: 'Budget Store',            defaultEmoji: '🏪', hint: 'Budget price circles',          color: '#E53935' },
+  { key: 'new-born',      defaultTitle: 'New Born Baby Collection',defaultEmoji: '👶', hint: 'Girl & Boy image cards',        color: '#E53935' },
+  { key: 'care',          defaultTitle: 'Personal Care & Health',  defaultEmoji: '🧴', hint: '2-row auto scroll mix',         color: '#43A047' },
+  { key: 'electric',      defaultTitle: 'Electric Rides for Kids', defaultEmoji: '🚗', hint: 'EV product grid',               color: '#1E88E5' },
+  { key: 'trending',      defaultTitle: 'Trending & Featured Mix', defaultEmoji: '🔥', hint: 'Mixed trending + featured',     color: '#FB8C00' },
+  { key: 'cta',           defaultTitle: 'Get 10% Off!',            defaultEmoji: '🎁', hint: 'Sign up CTA section',           color: '#264653' },
 ];
 
 const PRESETS = {
@@ -58,7 +58,7 @@ function BrandsManager() {
   const [uploading, setUploading] = useState(false);
 
   // ✅ Empty link by default — auto-filters by name
-  const emptyForm = { name: '', color: '#FF6B35', link: '', isActive: true, order: 0, logo: null };
+  const emptyForm = { name: '', color: '#E53935', link: '', isActive: true, order: 0, logo: null };
   const [form, setForm] = useState(emptyForm);
   const set = (k, v) => setForm(f => ({ ...f, [k]: v }));
 
@@ -84,7 +84,7 @@ function BrandsManager() {
     setEditing(brand);
     setForm({
       name:     brand.name     || '',
-      color:    brand.color    || '#FF6B35',
+      color:    brand.color    || '#E53935',
       link:     brand.link     || '',
       isActive: brand.isActive,
       order:    brand.order    || 0,
@@ -161,14 +161,14 @@ function BrandsManager() {
 
   const inp = {
     width: '100%', padding: '9px 12px',
-    border: '2px solid #EDD9FF', borderRadius: '10px',
+    border: '2px solid #E8E2D2', borderRadius: '10px',
     fontSize: '13px', fontFamily: 'Nunito, sans-serif',
-    outline: 'none', background: 'white', color: '#2D1A4A', boxSizing: 'border-box',
+    outline: 'none', background: 'white', color: '#264653', boxSizing: 'border-box',
   };
 
   const lbl = {
     display: 'block', fontSize: '11px', fontWeight: '800',
-    color: '#7B2FBE', marginBottom: '5px',
+    color: '#264653', marginBottom: '5px',
     textTransform: 'uppercase', letterSpacing: '0.6px',
   };
 
@@ -180,19 +180,19 @@ function BrandsManager() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
         <div>
-          <h3 style={{ fontSize: '1rem', fontWeight: '800', margin: '0 0 3px', color: '#2D1A4A' }}>
+          <h3 style={{ fontSize: '1rem', fontWeight: '800', margin: '0 0 3px', color: '#264653' }}>
             🏷️ Brand Names Management
           </h3>
-          <p style={{ fontSize: '12px', color: '#9585B0', margin: 0, fontWeight: '600' }}>
+          <p style={{ fontSize: '12px', color: '#8A9BA3', margin: 0, fontWeight: '600' }}>
             Click on brand in scroll → filters products by brand automatically
           </p>
         </div>
         <button onClick={openAdd} style={{
           padding: '8px 18px',
-          background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+          background: 'linear-gradient(135deg,#3A6373,#264653)',
           color: 'white', border: 'none', borderRadius: '10px',
           fontSize: '13px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit',
-          boxShadow: '0 4px 14px rgba(255,107,53,0.25)',
+          boxShadow: '0 4px 14px rgba(229,57,53,0.25)',
         }}>
           + Add Brand
         </button>
@@ -214,12 +214,12 @@ function BrandsManager() {
 
       {/* Brand cards grid */}
       {loading ? (
-        <p style={{ color: '#9585B0', fontWeight: '600', textAlign: 'center', padding: '20px' }}>⏳ Loading...</p>
+        <p style={{ color: '#8A9BA3', fontWeight: '600', textAlign: 'center', padding: '20px' }}>⏳ Loading...</p>
       ) : brands.length === 0 ? (
-        <div style={{ textAlign: 'center', padding: '32px', background: '#FBF7FF', borderRadius: '12px', border: '2px dashed #EDD9FF' }}>
-          <p style={{ color: '#9585B0', fontWeight: '700', margin: '0 0 12px' }}>No brands yet</p>
+        <div style={{ textAlign: 'center', padding: '32px', background: '#FFFBF2', borderRadius: '12px', border: '2px dashed #E8E2D2' }}>
+          <p style={{ color: '#8A9BA3', fontWeight: '700', margin: '0 0 12px' }}>No brands yet</p>
           <button onClick={openAdd} style={{
-            padding: '8px 20px', background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+            padding: '8px 20px', background: 'linear-gradient(135deg,#3A6373,#264653)',
             color: 'white', border: 'none', borderRadius: '10px',
             fontSize: '13px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit',
           }}>+ Add First Brand</button>
@@ -277,21 +277,21 @@ function BrandsManager() {
 
                 <div style={{ display: 'flex', gap: '5px' }}>
                   <button onClick={() => openEdit(brand)} style={{
-                    flex: 1, padding: '6px', background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)',
+                    flex: 1, padding: '6px', background: 'linear-gradient(135deg,#264653,#3A6373)',
                     color: 'white', border: 'none', borderRadius: '7px',
                     fontSize: '11px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit',
                   }}>✏️ Edit</button>
                   <button onClick={() => toggleActive(brand)} style={{
                     padding: '6px 9px',
                     background: brand.isActive ? '#d1fae5' : '#f3f4f6',
-                    color: brand.isActive ? '#059669' : '#666',
+                    color: brand.isActive ? '#388E3C' : '#666',
                     border: `1.5px solid ${brand.isActive ? '#6ee7b7' : '#ddd'}`,
                     borderRadius: '7px', fontSize: '11px', cursor: 'pointer', fontFamily: 'inherit',
                   }}>
                     {brand.isActive ? '✅' : '⭕'}
                   </button>
                   <button onClick={() => handleDelete(brand.id)} style={{
-                    padding: '6px 9px', background: '#fee2e2', color: '#dc2626',
+                    padding: '6px 9px', background: '#fee2e2', color: '#C62828',
                     border: '1.5px solid #fca5a5', borderRadius: '7px',
                     fontSize: '11px', cursor: 'pointer', fontFamily: 'inherit',
                   }}>🗑️</button>
@@ -320,15 +320,15 @@ function BrandsManager() {
             onClick={e => e.stopPropagation()}
           >
             <div style={{
-              padding: '16px 20px 12px', borderBottom: '1.5px solid #EDD9FF',
+              padding: '16px 20px 12px', borderBottom: '1.5px solid #E8E2D2',
               display: 'flex', alignItems: 'center', justifyContent: 'space-between',
               position: 'sticky', top: 0, background: 'white', zIndex: 10, borderRadius: '18px 18px 0 0',
             }}>
-              <h3 style={{ fontSize: '1rem', fontWeight: '800', margin: 0, color: '#2D1A4A' }}>
+              <h3 style={{ fontSize: '1rem', fontWeight: '800', margin: 0, color: '#264653' }}>
                 {editing ? '✏️ Edit Brand' : '➕ Add Brand'}
               </h3>
               <button onClick={() => { setShowForm(false); setEditing(null); }}
-                style={{ background: '#f3f4f6', border: 'none', borderRadius: '8px', width: '30px', height: '30px', cursor: 'pointer', fontSize: '0.95rem', fontFamily: 'inherit', color: '#2D1A4A', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                style={{ background: '#f3f4f6', border: 'none', borderRadius: '8px', width: '30px', height: '30px', cursor: 'pointer', fontSize: '0.95rem', fontFamily: 'inherit', color: '#264653', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 ✕
               </button>
             </div>
@@ -341,7 +341,7 @@ function BrandsManager() {
                 <input type="text" value={form.name}
                   onChange={e => set('name', e.target.value)}
                   placeholder="e.g. Mothercare" required style={inp} />
-                <p style={{ margin: '4px 0 0', fontSize: '10px', color: '#9585B0', fontWeight: '600' }}>
+                <p style={{ margin: '4px 0 0', fontSize: '10px', color: '#8A9BA3', fontWeight: '600' }}>
                   💡 Must exactly match brand name in products for filtering
                 </p>
               </div>
@@ -352,7 +352,7 @@ function BrandsManager() {
                 <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                   <input type="color" value={form.color}
                     onChange={e => set('color', e.target.value)}
-                    style={{ width: '44px', height: '38px', border: '2px solid #EDD9FF', borderRadius: '8px', cursor: 'pointer', padding: '2px' }} />
+                    style={{ width: '44px', height: '38px', border: '2px solid #E8E2D2', borderRadius: '8px', cursor: 'pointer', padding: '2px' }} />
                   <input type="text" value={form.color}
                     onChange={e => set('color', e.target.value)}
                     style={{ ...inp, flex: 1 }} />
@@ -389,14 +389,14 @@ function BrandsManager() {
                     margin: '3px 0 0',
                     fontSize: '11px',
                     fontFamily: 'monospace',
-                    color: '#059669',
+                    color: '#388E3C',
                     fontWeight: '800',
                     wordBreak: 'break-all',
                   }}>
                     {previewLink}
                   </p>
                 </div>
-                <p style={{ margin: '4px 0 0', fontSize: '10px', color: '#9585B0', fontWeight: '600' }}>
+                <p style={{ margin: '4px 0 0', fontSize: '10px', color: '#8A9BA3', fontWeight: '600' }}>
                   💡 Leave empty — will auto-filter products by brand name
                 </p>
               </div>
@@ -441,7 +441,7 @@ function BrandsManager() {
                 </label>
                 {form.logo?.url && (
                   <button type="button" onClick={() => set('logo', null)} style={{
-                    marginTop: '5px', width: '100%', background: '#fee2e2', color: '#dc2626',
+                    marginTop: '5px', width: '100%', background: '#fee2e2', color: '#C62828',
                     border: '1px solid #fca5a5', borderRadius: '7px', padding: '5px',
                     fontSize: '10px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit',
                   }}>🗑️ Remove Logo</button>
@@ -457,27 +457,27 @@ function BrandsManager() {
               </div>
 
               {/* Active */}
-              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '700', color: '#2D1A4A' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', fontSize: '14px', fontWeight: '700', color: '#264653' }}>
                 <input type="checkbox" checked={form.isActive}
                   onChange={e => set('isActive', e.target.checked)}
-                  style={{ width: '16px', height: '16px', accentColor: '#FF6B35', cursor: 'pointer' }} />
+                  style={{ width: '16px', height: '16px', accentColor: '#E53935', cursor: 'pointer' }} />
                 ✅ Active — show in brand scroll
               </label>
 
               {/* Buttons */}
               <div style={{ display: 'flex', gap: '10px', marginTop: '4px' }}>
                 <button type="button" onClick={() => { setShowForm(false); setEditing(null); }} style={{
-                  padding: '10px 18px', border: '2px solid #EDD9FF', borderRadius: '10px',
-                  background: 'white', color: '#6B4E8A', fontWeight: '700',
+                  padding: '10px 18px', border: '2px solid #E8E2D2', borderRadius: '10px',
+                  background: 'white', color: '#4F6B76', fontWeight: '700',
                   fontSize: '13px', cursor: 'pointer', fontFamily: 'inherit',
                 }}>Cancel</button>
                 <button type="submit" disabled={saving || uploading} style={{
                   flex: 1, padding: '10px 18px',
-                  background: saving ? '#ccc' : 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+                  background: saving ? '#ccc' : 'linear-gradient(135deg,#3A6373,#264653)',
                   color: 'white', border: 'none', borderRadius: '10px',
                   fontWeight: '800', fontSize: '13px',
                   cursor: saving ? 'not-allowed' : 'pointer', fontFamily: 'inherit',
-                  boxShadow: saving ? 'none' : '0 4px 14px rgba(255,107,53,0.30)',
+                  boxShadow: saving ? 'none' : '0 4px 14px rgba(229,57,53,0.30)',
                 }}>
                   {saving ? '⏳ Saving...' : editing ? '💾 Update Brand' : '✨ Add Brand'}
                 </button>
@@ -554,14 +554,14 @@ export default function SectionSettingsPage() {
 
   const inp = {
     width: '100%', padding: '10px 12px',
-    border: '2px solid #EDD9FF', borderRadius: '10px',
+    border: '2px solid #E8E2D2', borderRadius: '10px',
     fontSize: '14px', fontFamily: 'Nunito, sans-serif',
-    outline: 'none', background: 'white', color: '#2D1A4A', boxSizing: 'border-box',
+    outline: 'none', background: 'white', color: '#264653', boxSizing: 'border-box',
   };
 
   const lbl = {
     display: 'block', fontSize: '11px', fontWeight: '800',
-    color: '#7B2FBE', marginBottom: '5px',
+    color: '#264653', marginBottom: '5px',
     textTransform: 'uppercase', letterSpacing: '0.5px',
   };
 
@@ -571,25 +571,25 @@ export default function SectionSettingsPage() {
       {/* Header */}
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', marginBottom: '24px', flexWrap: 'wrap', gap: '12px' }}>
         <div>
-          <h1 style={{ fontSize: '1.6rem', fontWeight: '800', margin: '0 0 4px', color: '#2D1A4A' }}>
+          <h1 style={{ fontSize: '1.6rem', fontWeight: '800', margin: '0 0 4px', color: '#264653' }}>
             🎨 Section Settings & Brand Manager
           </h1>
-          <p style={{ color: '#9585B0', margin: 0, fontSize: '0.85rem', fontWeight: '600' }}>
+          <p style={{ color: '#8A9BA3', margin: 0, fontSize: '0.85rem', fontWeight: '600' }}>
             Edit section names for seasons + manage brand names shown on home page
           </p>
         </div>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
           <button onClick={resetAll} style={{
-            padding: '9px 18px', background: '#fee2e2', color: '#dc2626',
+            padding: '9px 18px', background: '#fee2e2', color: '#C62828',
             border: '1.5px solid #fca5a5', borderRadius: '10px',
             fontSize: '13px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit',
           }}>↺ Reset All</button>
           <button onClick={saveAll} style={{
             padding: '9px 22px',
-            background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+            background: 'linear-gradient(135deg,#3A6373,#264653)',
             color: 'white', border: 'none', borderRadius: '10px',
             fontSize: '13px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit',
-            boxShadow: '0 4px 14px rgba(255,107,53,0.28)',
+            boxShadow: '0 4px 14px rgba(229,57,53,0.28)',
           }}>💾 Save All</button>
         </div>
       </div>
@@ -598,7 +598,7 @@ export default function SectionSettingsPage() {
       <div style={{
         background: '#F0FDF4', border: '1.5px solid #BBF7D0',
         borderRadius: '12px', padding: '12px 16px', marginBottom: '24px',
-        fontSize: '13px', color: '#166534', lineHeight: 1.7, fontWeight: '600',
+        fontSize: '13px', color: '#1B5E20', lineHeight: 1.7, fontWeight: '600',
       }}>
         💡 Change section names for seasons/occasions. Changes appear on home page after refresh.
         All 9 sections are listed below — each one is fully customizable.
@@ -617,15 +617,15 @@ export default function SectionSettingsPage() {
             <div key={section.key} style={{
               background:   'white',
               borderRadius: '14px',
-              border:       `2px solid ${isEdited ? section.color : '#EDD9FF'}`,
+              border:       `2px solid ${isEdited ? section.color : '#E8E2D2'}`,
               overflow:     'hidden',
-              boxShadow:    isEdited ? `0 4px 16px ${section.color}20` : '0 2px 10px rgba(123,47,190,0.06)',
+              boxShadow:    isEdited ? `0 4px 16px ${section.color}20` : '0 2px 10px rgba(38,70,83,0.06)',
             }}>
               {/* Top bar */}
               <div style={{
                 padding:    '12px 18px',
-                background: isEdited ? `linear-gradient(135deg, ${section.color}10, #F3E8FF)` : '#FBF7FF',
-                borderBottom: '1.5px solid #EDD9FF',
+                background: isEdited ? `linear-gradient(135deg, ${section.color}10, #EEF3F5)` : '#FFFBF2',
+                borderBottom: '1.5px solid #E8E2D2',
                 display:    'flex', alignItems: 'center',
                 justifyContent: 'space-between', gap: '12px', flexWrap: 'wrap',
               }}>
@@ -642,16 +642,16 @@ export default function SectionSettingsPage() {
                     fontSize: '1.5rem', width: '42px', height: '42px',
                     borderRadius: '10px',
                     background: isEdited ? `${section.color}15` : 'white',
-                    border: `2px solid ${isEdited ? section.color : '#EDD9FF'}`,
+                    border: `2px solid ${isEdited ? section.color : '#E8E2D2'}`,
                     display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
                   }}>
                     {emoji}
                   </div>
                   <div>
-                    <h3 style={{ fontSize: '0.92rem', fontWeight: '800', margin: '0 0 2px', color: '#2D1A4A' }}>
+                    <h3 style={{ fontSize: '0.92rem', fontWeight: '800', margin: '0 0 2px', color: '#264653' }}>
                       {emoji} {title}
                     </h3>
-                    <p style={{ fontSize: '11px', color: '#9585B0', margin: 0, fontWeight: '600' }}>
+                    <p style={{ fontSize: '11px', color: '#8A9BA3', margin: 0, fontWeight: '600' }}>
                       {section.hint}
                       {isEdited && (
                         <span style={{
@@ -668,7 +668,7 @@ export default function SectionSettingsPage() {
                 <div style={{ display: 'flex', gap: '7px', flexShrink: 0 }}>
                   {isEdited && (
                     <button onClick={() => resetSection(section.key)} style={{
-                      padding: '6px 12px', background: '#fee2e2', color: '#dc2626',
+                      padding: '6px 12px', background: '#fee2e2', color: '#C62828',
                       border: '1px solid #fca5a5', borderRadius: '7px',
                       fontSize: '12px', fontWeight: '700', cursor: 'pointer', fontFamily: 'inherit',
                     }}>↺</button>
@@ -677,8 +677,8 @@ export default function SectionSettingsPage() {
                     padding: '6px 16px',
                     background: saved === section.key
                       ? '#d1fae5'
-                      : `linear-gradient(135deg, ${section.color}, #7B2FBE)`,
-                    color: saved === section.key ? '#059669' : 'white',
+                      : `linear-gradient(135deg, ${section.color}, #264653)`,
+                    color: saved === section.key ? '#388E3C' : 'white',
                     border: 'none', borderRadius: '7px',
                     fontSize: '12px', fontWeight: '800',
                     cursor: saving === section.key ? 'not-allowed' : 'pointer',
@@ -715,14 +715,14 @@ export default function SectionSettingsPage() {
                   marginBottom: presets.length ? '10px' : 0,
                   display: 'flex', alignItems: 'center', gap: '8px',
                 }}>
-                  <span style={{ fontSize: '11px', color: '#9585B0', fontWeight: '700' }}>Preview:</span>
-                  <span style={{ fontSize: '0.95rem', fontWeight: '800', color: '#2D1A4A' }}>{emoji} {title}</span>
+                  <span style={{ fontSize: '11px', color: '#8A9BA3', fontWeight: '700' }}>Preview:</span>
+                  <span style={{ fontSize: '0.95rem', fontWeight: '800', color: '#264653' }}>{emoji} {title}</span>
                 </div>
 
                 {/* Presets */}
                 {presets.length > 0 && (
                   <div>
-                    <p style={{ fontSize: '11px', fontWeight: '800', color: '#9585B0', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    <p style={{ fontSize: '11px', fontWeight: '800', color: '#8A9BA3', margin: '0 0 6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                       ⚡ Season Presets
                     </p>
                     <div style={{ display: 'flex', gap: '5px', flexWrap: 'wrap' }}>
@@ -731,9 +731,9 @@ export default function SectionSettingsPage() {
                         return (
                           <button key={i} onClick={() => applyPreset(section.key, preset)} style={{
                             padding: '4px 12px',
-                            background: isActive ? `linear-gradient(135deg, ${section.color}, #7B2FBE)` : '#F3E8FF',
-                            color: isActive ? 'white' : '#7B2FBE',
-                            border: isActive ? 'none' : '1.5px solid #DFC5F8',
+                            background: isActive ? `linear-gradient(135deg, ${section.color}, #264653)` : '#EEF3F5',
+                            color: isActive ? 'white' : '#264653',
+                            border: isActive ? 'none' : '1.5px solid #C9D6DB',
                             borderRadius: '999px', fontSize: '12px', fontWeight: '700',
                             cursor: 'pointer', fontFamily: 'inherit', transition: 'all 0.18s',
                           }}>
@@ -754,9 +754,9 @@ export default function SectionSettingsPage() {
       <div style={{
         background:   'white',
         borderRadius: '16px',
-        border:       '2px solid #EDD9FF',
+        border:       '2px solid #E8E2D2',
         padding:      '20px',
-        boxShadow:    '0 4px 16px rgba(123,47,190,0.08)',
+        boxShadow:    '0 4px 16px rgba(38,70,83,0.08)',
       }}>
         <BrandsManager />
       </div>
@@ -764,18 +764,18 @@ export default function SectionSettingsPage() {
       {/* Bottom save */}
       <div style={{
         marginTop: '24px', textAlign: 'center', padding: '20px',
-        background: 'linear-gradient(135deg,#FFF3EC,#F3E8FF)',
-        borderRadius: '14px', border: '1.5px solid #EDD9FF',
+        background: 'linear-gradient(135deg,#FFF6E5,#EEF3F5)',
+        borderRadius: '14px', border: '1.5px solid #E8E2D2',
       }}>
-        <p style={{ color: '#6B4E8A', fontWeight: '600', fontSize: '13px', margin: '0 0 12px' }}>
+        <p style={{ color: '#4F6B76', fontWeight: '600', fontSize: '13px', margin: '0 0 12px' }}>
           💡 After saving section names, refresh the home page ✨
         </p>
         <button onClick={saveAll} style={{
           padding: '12px 36px',
-          background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+          background: 'linear-gradient(135deg,#3A6373,#264653)',
           color: 'white', border: 'none', borderRadius: '12px',
           fontSize: '14px', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit',
-          boxShadow: '0 6px 20px rgba(255,107,53,0.30)',
+          boxShadow: '0 6px 20px rgba(229,57,53,0.30)',
         }}>
           💾 Save All Section Names
         </button>

@@ -69,7 +69,7 @@ export default function AdminSidebar() {
         <div className={styles.logo}>
           <div style={{
             width: '36px', height: '36px', borderRadius: '10px',
-            background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+            background: 'linear-gradient(135deg, #3A6373, #264653)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '1.2rem', flexShrink: 0,
           }}>🍼</div>

@@ -148,13 +148,13 @@ export default function PrintBill({ order, onClose }) {
           border: none;
         }
         .printbill-btn.print {
-          background: linear-gradient(135deg, #10B981, #059669);
+          background: linear-gradient(135deg, #43A047, #388E3C);
           color: white;
-          box-shadow: 0 4px 14px rgba(16,185,129,0.35);
+          box-shadow: 0 4px 14px rgba(67,160,71,0.35);
         }
         .printbill-btn.close {
           background: white;
-          color: #DC2626;
+          color: #C62828;
           border: 2px solid #FCA5A5;
         }
         .printbill-preview-wrap {

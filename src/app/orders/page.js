@@ -16,21 +16,21 @@ export default function OrdersPage() {
         fontFamily: 'Nunito, sans-serif',
         padding: '40px 20px',
         textAlign: 'center',
-        background: 'linear-gradient(135deg, #FFF5EE 0%, #F3E8FF 100%)',
+        background: 'linear-gradient(135deg, #FFFBF2 0%, #EEF3F5 100%)',
       }}>
         <div style={{ fontSize: '4rem' }}>📦</div>
 
         <h1 style={{
           fontSize: 'clamp(1.6rem,3vw,2.2rem)',
           fontWeight: '800',
-          color: '#2D1A4A',
+          color: '#264653',
           margin: 0,
         }}>
           My Orders
         </h1>
 
         <p style={{
-          color: '#9585B0',
+          color: '#8A9BA3',
           fontWeight: '600',
           margin: 0,
           fontSize: '1rem',
@@ -43,14 +43,14 @@ export default function OrdersPage() {
           href="/profile?tab=orders"
           style={{
             padding: '14px 36px',
-            background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+            background: 'linear-gradient(135deg, #3A6373, #264653)',
             color: 'white',
             borderRadius: '999px',
             textDecoration: 'none',
             fontWeight: '800',
             fontSize: '1rem',
             fontFamily: 'Nunito, sans-serif',
-            boxShadow: '0 8px 24px rgba(255,107,53,0.28)',
+            boxShadow: '0 8px 24px rgba(229,57,53,0.28)',
           }}
         >
           📦 View My Orders →
@@ -59,7 +59,7 @@ export default function OrdersPage() {
         <Link
           href="/products"
           style={{
-            color: '#9585B0',
+            color: '#8A9BA3',
             fontWeight: '700',
             fontSize: '0.90rem',
             textDecoration: 'none',

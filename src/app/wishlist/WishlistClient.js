@@ -23,7 +23,7 @@ export default function WishlistClient() {
         <h2 style={{
           fontSize: 'clamp(1.4rem, 4vw, 1.8rem)',
           fontWeight: '800',
-          color: '#1a1a2e',
+          color: '#1B3540',
           margin: 0,
         }}>
           Your wishlist is empty
@@ -53,7 +53,7 @@ export default function WishlistClient() {
         <h1 style={{
           fontSize: 'clamp(1.5rem, 4vw, 2rem)',
           fontWeight: '800',
-          color: '#1a1a2e',
+          color: '#1B3540',
           margin: '0 0 6px',
         }}>
           ❤️ My Wishlist

@@ -175,7 +175,7 @@ export default function MigrateR2Page() {
       maxWidth: '900px',
       margin: '0 auto',
     }}>
-      <h1 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#2D1A4A', marginBottom: '8px' }}>
+      <h1 style={{ fontSize: '1.8rem', fontWeight: '900', color: '#264653', marginBottom: '8px' }}>
         🚀 R2 Migration
       </h1>
       <p style={{ color: '#6B7280', fontSize: '14px', marginBottom: '24px' }}>
@@ -203,7 +203,7 @@ export default function MigrateR2Page() {
       {running && (
         <div style={{
           background: 'linear-gradient(135deg, #EFF6FF, #DBEAFE)',
-          border: '2px solid #3B82F6',
+          border: '2px solid #1E88E5',
           borderRadius: '12px',
           padding: '16px 20px',
           marginBottom: '20px',
@@ -217,7 +217,7 @@ export default function MigrateR2Page() {
             <div style={{
               width: '24px',
               height: '24px',
-              border: '3px solid #3B82F6',
+              border: '3px solid #1E88E5',
               borderTopColor: 'transparent',
               borderRadius: '50%',
               animation: 'spin 1s linear infinite',
@@ -246,10 +246,10 @@ export default function MigrateR2Page() {
           padding: '14px 18px',
           marginBottom: '20px',
         }}>
-          <p style={{ margin: '0 0 8px', fontSize: '13px', fontWeight: '800', color: '#166534' }}>
+          <p style={{ margin: '0 0 8px', fontSize: '13px', fontWeight: '800', color: '#1B5E20' }}>
             ✅ Migration Progress
           </p>
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', fontSize: '12px', color: '#166534' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px', fontSize: '12px', color: '#1B5E20' }}>
             <div>📁 Files copied: <strong>{totals.filesCopied}</strong></div>
             <div>⚠️ File errors: <strong>{totals.fileErrors}</strong></div>
             <div>📦 Products updated: <strong>{totals.productsUpdated}</strong></div>
@@ -269,28 +269,28 @@ export default function MigrateR2Page() {
         <>
           <div style={{
             background: 'white',
-            border: '2px solid #EDD9FF',
+            border: '2px solid #E8E2D2',
             borderRadius: '14px',
             padding: '20px',
             marginBottom: '20px',
           }}>
-            <h3 style={{ margin: '0 0 16px', fontSize: '1rem', color: '#2D1A4A', fontWeight: '800' }}>
+            <h3 style={{ margin: '0 0 16px', fontSize: '1rem', color: '#264653', fontWeight: '800' }}>
               📊 Current Status
             </h3>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
               <div style={{
                 padding: '14px',
-                background: '#FFF5F7',
+                background: '#FFF5F4',
                 border: '1.5px solid #FCA5A5',
                 borderRadius: '10px',
               }}>
-                <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: '800', color: '#DC2626' }}>
+                <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: '800', color: '#C62828' }}>
                   📁 R2 FILES
                 </p>
                 <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                  <div>{status.config.oldPrefix}/: <strong style={{ color: '#DC2626' }}>{status.r2.oldFolderFiles}</strong></div>
-                  <div>{status.config.newPrefix}/: <strong style={{ color: '#059669' }}>{status.r2.newFolderFiles}</strong></div>
+                  <div>{status.config.oldPrefix}/: <strong style={{ color: '#C62828' }}>{status.r2.oldFolderFiles}</strong></div>
+                  <div>{status.config.newPrefix}/: <strong style={{ color: '#388E3C' }}>{status.r2.newFolderFiles}</strong></div>
                 </div>
               </div>
 
@@ -300,7 +300,7 @@ export default function MigrateR2Page() {
                 border: '1.5px solid #86EFAC',
                 borderRadius: '10px',
               }}>
-                <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: '800', color: '#166534' }}>
+                <p style={{ margin: '0 0 8px', fontSize: '12px', fontWeight: '800', color: '#1B5E20' }}>
                   💾 DATABASE
                 </p>
                 <div style={{ fontSize: '13px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
@@ -315,11 +315,11 @@ export default function MigrateR2Page() {
           {/* Actions */}
           <div style={{
             background: 'white',
-            border: '2px solid #EDD9FF',
+            border: '2px solid #E8E2D2',
             borderRadius: '14px',
             padding: '20px',
           }}>
-            <h3 style={{ margin: '0 0 16px', fontSize: '1rem', color: '#2D1A4A', fontWeight: '800' }}>
+            <h3 style={{ margin: '0 0 16px', fontSize: '1rem', color: '#264653', fontWeight: '800' }}>
               ⚡ Actions
             </h3>
 
@@ -329,7 +329,7 @@ export default function MigrateR2Page() {
                 disabled={running}
                 style={{
                   padding: '12px 20px',
-                  background: running ? '#ccc' : 'linear-gradient(135deg,#F59E0B,#D97706)',
+                  background: running ? '#ccc' : 'linear-gradient(135deg,#F2B33D,#D97706)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '10px',
@@ -347,7 +347,7 @@ export default function MigrateR2Page() {
                 disabled={running}
                 style={{
                   padding: '12px 20px',
-                  background: running ? '#ccc' : 'linear-gradient(135deg,#3B82F6,#1E40AF)',
+                  background: running ? '#ccc' : 'linear-gradient(135deg,#1E88E5,#1E40AF)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '10px',
@@ -365,7 +365,7 @@ export default function MigrateR2Page() {
                 disabled={running}
                 style={{
                   padding: '14px 20px',
-                  background: running ? '#ccc' : 'linear-gradient(135deg,#10B981,#059669)',
+                  background: running ? '#ccc' : 'linear-gradient(135deg,#43A047,#388E3C)',
                   color: 'white',
                   border: 'none',
                   borderRadius: '10px',
@@ -373,7 +373,7 @@ export default function MigrateR2Page() {
                   fontSize: '14px',
                   cursor: running ? 'not-allowed' : 'pointer',
                   fontFamily: 'inherit',
-                  boxShadow: running ? 'none' : '0 6px 20px rgba(16,185,129,0.35)',
+                  boxShadow: running ? 'none' : '0 6px 20px rgba(67,160,71,0.35)',
                 }}
               >
                 🚀 Run Full Migration

@@ -8,10 +8,17 @@ export async function GET(request, { params }) {
     const { id } = await params;
     if (!id) return NextResponse.json({ error: 'Product ID required' }, { status: 400 });
 
-    const product = await prisma.product.findUnique({
-      where: { id },
-      include: { category: { select: { name: true, slug: true } } },
-    });
+    // Accept either the database ID or the product slug
+    const include = { category: { select: { name: true, slug: true } } };
+    const isObjectId = /^[a-f0-9]{24}$/i.test(id);
+
+    let product = isObjectId
+      ? await prisma.product.findUnique({ where: { id }, include })
+      : null;
+
+    if (!product) {
+      product = await prisma.product.findUnique({ where: { slug: id }, include });
+    }
 
     if (!product) return NextResponse.json({ error: 'Product not found' }, { status: 404 });
 

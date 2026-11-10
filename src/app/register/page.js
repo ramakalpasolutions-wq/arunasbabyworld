@@ -61,7 +61,7 @@ export default function RegisterPage() {
   const inputStyle = {
     flex: 1, border: 'none', outline: 'none',
     padding: '11px 14px', fontSize: '0.9rem',
-    color: '#1a1a2e', background: 'transparent',
+    color: '#1B3540', background: 'transparent',
     fontFamily: 'inherit',
   };
 
@@ -83,7 +83,7 @@ export default function RegisterPage() {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'center',
-      background: 'linear-gradient(135deg, #fff0f5 0%, #f3e8ff 50%, #e0f2fe 100%)',
+      background: 'linear-gradient(135deg, #FFF5F4 0%, #EEF3F5 50%, #e0f2fe 100%)',
       padding: '20px',
       fontFamily: "'Nunito', sans-serif",
       position: 'relative',
@@ -102,31 +102,31 @@ export default function RegisterPage() {
           gap: '8px',
           padding: '10px 18px',
           background: 'rgba(255, 255, 255, 0.85)',
-          border: '1.5px solid rgba(255, 107, 157, 0.25)',
+          border: '1.5px solid rgba(229,57,53, 0.25)',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           borderRadius: '999px',
-          color: '#7c3aed',
+          color: '#264653',
           fontSize: '0.86rem',
           fontWeight: '800',
           fontFamily: 'Nunito, sans-serif',
           cursor: 'pointer',
           transition: 'all 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
-          boxShadow: '0 4px 16px rgba(124, 58, 237, 0.12)',
+          boxShadow: '0 4px 16px rgba(38,70,83, 0.12)',
         }}
         onMouseEnter={e => {
-          e.currentTarget.style.background = 'linear-gradient(135deg, #ff6b9d, #7c3aed)';
+          e.currentTarget.style.background = 'linear-gradient(135deg, #3A6373, #264653)';
           e.currentTarget.style.color = '#fff';
           e.currentTarget.style.borderColor = 'transparent';
           e.currentTarget.style.transform = 'translateX(-4px)';
-          e.currentTarget.style.boxShadow = '0 8px 24px rgba(124, 58, 237, 0.30)';
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(38,70,83, 0.30)';
         }}
         onMouseLeave={e => {
           e.currentTarget.style.background = 'rgba(255, 255, 255, 0.85)';
-          e.currentTarget.style.color = '#7c3aed';
-          e.currentTarget.style.borderColor = 'rgba(255, 107, 157, 0.25)';
+          e.currentTarget.style.color = '#264653';
+          e.currentTarget.style.borderColor = 'rgba(229,57,53, 0.25)';
           e.currentTarget.style.transform = 'translateX(0)';
-          e.currentTarget.style.boxShadow = '0 4px 16px rgba(124, 58, 237, 0.12)';
+          e.currentTarget.style.boxShadow = '0 4px 16px rgba(38,70,83, 0.12)';
         }}
       >
         <span style={{ fontSize: '1.15rem', lineHeight: 1 }}>←</span>
@@ -147,7 +147,7 @@ export default function RegisterPage() {
           width: '44px',
           height: '44px',
           background: 'rgba(255, 255, 255, 0.85)',
-          border: '1.5px solid rgba(255, 107, 157, 0.25)',
+          border: '1.5px solid rgba(229,57,53, 0.25)',
           backdropFilter: 'blur(12px)',
           WebkitBackdropFilter: 'blur(12px)',
           borderRadius: '50%',
@@ -155,19 +155,19 @@ export default function RegisterPage() {
           fontSize: '1.15rem',
           cursor: 'pointer',
           transition: 'all 0.3s cubic-bezier(0.22, 1, 0.36, 1)',
-          boxShadow: '0 4px 16px rgba(124, 58, 237, 0.12)',
+          boxShadow: '0 4px 16px rgba(38,70,83, 0.12)',
         }}
         onMouseEnter={e => {
-          e.currentTarget.style.background = 'linear-gradient(135deg, #ff6b9d, #7c3aed)';
+          e.currentTarget.style.background = 'linear-gradient(135deg, #3A6373, #264653)';
           e.currentTarget.style.transform = 'scale(1.10) rotate(-8deg)';
-          e.currentTarget.style.boxShadow = '0 8px 24px rgba(124, 58, 237, 0.30)';
+          e.currentTarget.style.boxShadow = '0 8px 24px rgba(38,70,83, 0.30)';
           e.currentTarget.style.borderColor = 'transparent';
         }}
         onMouseLeave={e => {
           e.currentTarget.style.background = 'rgba(255, 255, 255, 0.85)';
           e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
-          e.currentTarget.style.boxShadow = '0 4px 16px rgba(124, 58, 237, 0.12)';
-          e.currentTarget.style.borderColor = 'rgba(255, 107, 157, 0.25)';
+          e.currentTarget.style.boxShadow = '0 4px 16px rgba(38,70,83, 0.12)';
+          e.currentTarget.style.borderColor = 'rgba(229,57,53, 0.25)';
         }}
       >
         🏠
@@ -191,11 +191,11 @@ export default function RegisterPage() {
             <span style={{ fontSize: '2rem' }}>🍼</span>
             <span style={{
               fontSize: '1.6rem', fontWeight: '900',
-              background: 'linear-gradient(135deg, #ff6b9d, #7c3aed)',
+              background: 'linear-gradient(135deg, #3A6373, #264653)',
               WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text',
             }}>Arunas Baby World</span>
           </Link>
-          <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#1a1a2e', margin: '0 0 4px' }}>
+          <h1 style={{ fontSize: '1.5rem', fontWeight: '800', color: '#1B3540', margin: '0 0 4px' }}>
             Create Account ✨
           </h1>
           <p style={{ color: '#888', fontSize: '0.88rem', margin: 0 }}>
@@ -211,7 +211,7 @@ export default function RegisterPage() {
               Full Name *
             </label>
             <div style={fieldWrapStyle}>
-              <span style={{ ...iconBoxStyle, color: '#ff6b9d' }}>👤</span>
+              <span style={{ ...iconBoxStyle, color: '#E53935' }}>👤</span>
               <input
                 style={inputStyle}
                 value={form.name}
@@ -228,7 +228,7 @@ export default function RegisterPage() {
               Email Address *
             </label>
             <div style={fieldWrapStyle}>
-              <span style={{ ...iconBoxStyle, color: '#7c3aed' }}>✉️</span>
+              <span style={{ ...iconBoxStyle, color: '#264653' }}>✉️</span>
               <input
                 type="email"
                 style={inputStyle}
@@ -246,7 +246,7 @@ export default function RegisterPage() {
               Phone Number
             </label>
             <div style={fieldWrapStyle}>
-              <span style={{ ...iconBoxStyle, color: '#0ea5e9' }}>📞</span>
+              <span style={{ ...iconBoxStyle, color: '#1E88E5' }}>📞</span>
               <input
                 style={inputStyle}
                 value={form.phone}
@@ -262,7 +262,7 @@ export default function RegisterPage() {
               Password *
             </label>
             <div style={fieldWrapStyle}>
-              <span style={{ ...iconBoxStyle, color: '#10b981' }}>🔒</span>
+              <span style={{ ...iconBoxStyle, color: '#43A047' }}>🔒</span>
               <input
                 type={showPassword ? 'text' : 'password'}
                 style={inputStyle}
@@ -284,7 +284,7 @@ export default function RegisterPage() {
               Confirm Password *
             </label>
             <div style={fieldWrapStyle}>
-              <span style={{ ...iconBoxStyle, color: '#f59e0b' }}>🔐</span>
+              <span style={{ ...iconBoxStyle, color: '#F2B33D' }}>🔐</span>
               <input
                 type="password"
                 style={inputStyle}
@@ -303,14 +303,14 @@ export default function RegisterPage() {
             style={{
               width: '100%',
               padding: '14px',
-              background: loading ? '#ddd' : 'linear-gradient(135deg, #ff6b9d, #7c3aed)',
+              background: loading ? '#ddd' : 'linear-gradient(135deg, #3A6373, #264653)',
               color: 'white',
               border: 'none',
               borderRadius: '12px',
               fontSize: '1rem',
               fontWeight: '800',
               cursor: loading ? 'not-allowed' : 'pointer',
-              boxShadow: loading ? 'none' : '0 6px 20px rgba(255,107,157,0.35)',
+              boxShadow: loading ? 'none' : '0 6px 20px rgba(229,57,53,0.35)',
               fontFamily: 'inherit',
               marginTop: '4px',
             }}
@@ -322,7 +322,7 @@ export default function RegisterPage() {
         <div style={{ textAlign: 'center', marginTop: '20px' }}>
           <p style={{ color: '#666', fontSize: '0.9rem', margin: 0 }}>
             Already have an account?{' '}
-            <Link href="/login" style={{ color: '#ff6b9d', fontWeight: '800', textDecoration: 'none' }}>
+            <Link href="/login" style={{ color: '#E53935', fontWeight: '800', textDecoration: 'none' }}>
               Login →
             </Link>
           </p>

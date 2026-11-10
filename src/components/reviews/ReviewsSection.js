@@ -65,8 +65,8 @@ export default function ReviewsSection({ productId, productName }) {
         flexWrap: 'wrap',
         gap: '30px',
         padding: '24px',
-        background: 'linear-gradient(135deg, #FFF5F7, #F3E8FF)',
-        border: '2px solid #FFE4EC',
+        background: 'linear-gradient(135deg, #FFF5F4, #EEF3F5)',
+        border: '2px solid #FDE7E6',
         borderRadius: '16px',
         marginBottom: '20px',
       }}>
@@ -78,7 +78,7 @@ export default function ReviewsSection({ productId, productName }) {
             {[1,2,3,4,5].map(s => (
               <span key={s} style={{
                 fontSize: '1.4rem',
-                color: s <= Math.round(stats.avgRating) ? '#FBBF24' : '#E5E7EB',
+                color: s <= Math.round(stats.avgRating) ? '#F2B33D' : '#E5E7EB',
               }}>★</span>
             ))}
           </div>
@@ -98,7 +98,7 @@ export default function ReviewsSection({ productId, productName }) {
                   <div style={{
                     width: `${percent}%`,
                     height: '100%',
-                    background: 'linear-gradient(90deg, #FBBF24, #F59E0B)',
+                    background: 'linear-gradient(90deg, #F2B33D, #F2B33D)',
                     transition: 'width 0.5s ease',
                   }} />
                 </div>
@@ -118,7 +118,7 @@ export default function ReviewsSection({ productId, productName }) {
           style={{
             width: '100%',
             padding: '14px 20px',
-            background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+            background: 'linear-gradient(135deg, #3A6373, #264653)',
             color: 'white',
             border: 'none',
             borderRadius: '12px',
@@ -127,7 +127,7 @@ export default function ReviewsSection({ productId, productName }) {
             cursor: 'pointer',
             fontFamily: 'Nunito, sans-serif',
             marginBottom: '20px',
-            boxShadow: '0 6px 18px rgba(255,107,53,0.30)',
+            boxShadow: '0 6px 18px rgba(229,57,53,0.30)',
           }}
         >
           ✍️ Write a Review
@@ -152,7 +152,7 @@ export default function ReviewsSection({ productId, productName }) {
           </p>
           <Link href={`/login?redirect=/products/${productId}`} style={{
             padding: '8px 20px',
-            background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+            background: 'linear-gradient(135deg, #3A6373, #264653)',
             color: 'white',
             borderRadius: '8px',
             textDecoration: 'none',
@@ -174,7 +174,7 @@ export default function ReviewsSection({ productId, productName }) {
           <p style={{ margin: 0, fontSize: '0.90rem', color: '#1E40AF', fontWeight: '700', fontFamily: 'Nunito, sans-serif' }}>
             🛒 Only verified buyers can review this product
           </p>
-          <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: '#3B82F6', fontWeight: '600', fontFamily: 'Nunito, sans-serif' }}>
+          <p style={{ margin: '4px 0 0', fontSize: '0.78rem', color: '#1E88E5', fontWeight: '600', fontFamily: 'Nunito, sans-serif' }}>
             Purchase this product to share your experience
           </p>
         </div>
@@ -193,7 +193,7 @@ export default function ReviewsSection({ productId, productName }) {
           gap: '12px',
           flexWrap: 'wrap',
         }}>
-          <p style={{ margin: 0, fontSize: '0.90rem', color: '#166534', fontWeight: '700', fontFamily: 'Nunito, sans-serif' }}>
+          <p style={{ margin: 0, fontSize: '0.90rem', color: '#1B5E20', fontWeight: '700', fontFamily: 'Nunito, sans-serif' }}>
             ✅ You already reviewed this product
           </p>
           <button
@@ -201,9 +201,9 @@ export default function ReviewsSection({ productId, productName }) {
             style={{
               padding: '8px 18px',
               background: 'white',
-              border: '2px solid #166534',
+              border: '2px solid #1B5E20',
               borderRadius: '8px',
-              color: '#166534',
+              color: '#1B5E20',
               fontWeight: '800',
               fontSize: '0.85rem',
               cursor: 'pointer',
@@ -333,7 +333,7 @@ function ReviewCard({ review, currentUserId, isAdmin, onDelete, onEdit, onImageC
           <div style={{
             width: '38px', height: '38px',
             borderRadius: '50%',
-            background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+            background: 'linear-gradient(135deg, #3A6373, #264653)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             color: 'white', fontWeight: '900',
             fontFamily: 'Nunito, sans-serif',
@@ -349,7 +349,7 @@ function ReviewCard({ review, currentUserId, isAdmin, onDelete, onEdit, onImageC
                 <span style={{
                   padding: '2px 8px',
                   background: '#D1FAE5',
-                  color: '#065F46',
+                  color: '#1B5E20',
                   borderRadius: '999px',
                   fontSize: '0.65rem',
                   fontWeight: '800',
@@ -363,7 +363,7 @@ function ReviewCard({ review, currentUserId, isAdmin, onDelete, onEdit, onImageC
               {[1,2,3,4,5].map(s => (
                 <span key={s} style={{
                   fontSize: '0.95rem',
-                  color: s <= review.rating ? '#FBBF24' : '#E5E7EB',
+                  color: s <= review.rating ? '#F2B33D' : '#E5E7EB',
                 }}>★</span>
               ))}
             </div>
@@ -430,7 +430,7 @@ function ReviewCard({ review, currentUserId, isAdmin, onDelete, onEdit, onImageC
           style={{
             padding: '5px 12px',
             background: alreadyMarked ? '#DBEAFE' : 'white',
-            border: `1.5px solid ${alreadyMarked ? '#3B82F6' : '#D1D5DB'}`,
+            border: `1.5px solid ${alreadyMarked ? '#1E88E5' : '#D1D5DB'}`,
             borderRadius: '999px',
             fontSize: '0.75rem',
             fontWeight: '700',
@@ -513,7 +513,7 @@ function ReviewForm({ productId, productName, existingReview, onSuccess, onCance
     <form onSubmit={handleSubmit} style={{
       padding: '20px 22px',
       background: 'white',
-      border: '2px solid #FFE4EC',
+      border: '2px solid #FDE7E6',
       borderRadius: '14px',
       marginBottom: '20px',
       display: 'flex',
@@ -525,7 +525,7 @@ function ReviewForm({ productId, productName, existingReview, onSuccess, onCance
       </h3>
 
       <div>
-        <label style={{ fontSize: '0.85rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '6px', display: 'block', fontFamily: 'Nunito, sans-serif' }}>
+        <label style={{ fontSize: '0.85rem', fontWeight: '800', color: '#4F6B76', marginBottom: '6px', display: 'block', fontFamily: 'Nunito, sans-serif' }}>
           Your Rating *
         </label>
         <div style={{ display: 'flex', gap: '4px' }}>
@@ -541,7 +541,7 @@ function ReviewForm({ productId, productName, existingReview, onSuccess, onCance
                 border: 'none',
                 cursor: 'pointer',
                 fontSize: '2rem',
-                color: s <= (hover || rating) ? '#FBBF24' : '#E5E7EB',
+                color: s <= (hover || rating) ? '#F2B33D' : '#E5E7EB',
                 transition: 'color 0.15s',
                 padding: '4px',
                 lineHeight: 1,
@@ -557,7 +557,7 @@ function ReviewForm({ productId, productName, existingReview, onSuccess, onCance
       </div>
 
       <div>
-        <label style={{ fontSize: '0.85rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '6px', display: 'block', fontFamily: 'Nunito, sans-serif' }}>
+        <label style={{ fontSize: '0.85rem', fontWeight: '800', color: '#4F6B76', marginBottom: '6px', display: 'block', fontFamily: 'Nunito, sans-serif' }}>
           Review Title (optional)
         </label>
         <input
@@ -569,7 +569,7 @@ function ReviewForm({ productId, productName, existingReview, onSuccess, onCance
           style={{
             width: '100%',
             padding: '10px 14px',
-            border: '2px solid #EDD9FF',
+            border: '2px solid #E8E2D2',
             borderRadius: '8px',
             fontSize: '0.9rem',
             outline: 'none',
@@ -580,7 +580,7 @@ function ReviewForm({ productId, productName, existingReview, onSuccess, onCance
       </div>
 
       <div>
-        <label style={{ fontSize: '0.85rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '6px', display: 'block', fontFamily: 'Nunito, sans-serif' }}>
+        <label style={{ fontSize: '0.85rem', fontWeight: '800', color: '#4F6B76', marginBottom: '6px', display: 'block', fontFamily: 'Nunito, sans-serif' }}>
           Your Review *
         </label>
         <textarea
@@ -593,7 +593,7 @@ function ReviewForm({ productId, productName, existingReview, onSuccess, onCance
           style={{
             width: '100%',
             padding: '10px 14px',
-            border: '2px solid #EDD9FF',
+            border: '2px solid #E8E2D2',
             borderRadius: '8px',
             fontSize: '0.9rem',
             outline: 'none',
@@ -608,7 +608,7 @@ function ReviewForm({ productId, productName, existingReview, onSuccess, onCance
       </div>
 
       <div>
-        <label style={{ fontSize: '0.85rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '6px', display: 'block', fontFamily: 'Nunito, sans-serif' }}>
+        <label style={{ fontSize: '0.85rem', fontWeight: '800', color: '#4F6B76', marginBottom: '6px', display: 'block', fontFamily: 'Nunito, sans-serif' }}>
           Add Photos (up to 5)
         </label>
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -621,7 +621,7 @@ function ReviewForm({ productId, productName, existingReview, onSuccess, onCance
                 style={{
                   position: 'absolute', top: '-6px', right: '-6px',
                   width: '20px', height: '20px', borderRadius: '50%',
-                  background: '#EF4444', color: 'white', border: 'none',
+                  background: '#E53935', color: 'white', border: 'none',
                   cursor: 'pointer', fontSize: '0.7rem', fontWeight: '900',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
                 }}
@@ -631,21 +631,21 @@ function ReviewForm({ productId, productName, existingReview, onSuccess, onCance
           {images.length < 5 && (
             <label style={{
               width: '70px', height: '70px',
-              border: '2px dashed #FF6B9D',
+              border: '2px dashed #E53935',
               borderRadius: '8px',
               display: 'flex', flexDirection: 'column',
               alignItems: 'center', justifyContent: 'center',
               cursor: uploading ? 'not-allowed' : 'pointer',
-              background: '#FFF5F7',
+              background: '#FFF5F4',
               fontFamily: 'Nunito, sans-serif',
             }}>
               <input type="file" accept="image/*" multiple onChange={handleImageUpload} style={{ display: 'none' }} disabled={uploading} />
               {uploading ? (
-                <span style={{ fontSize: '0.7rem', color: '#FF6B9D', fontWeight: '700' }}>⏳</span>
+                <span style={{ fontSize: '0.7rem', color: '#E53935', fontWeight: '700' }}>⏳</span>
               ) : (
                 <>
                   <span style={{ fontSize: '1.2rem' }}>📷</span>
-                  <span style={{ fontSize: '0.65rem', color: '#FF6B9D', fontWeight: '700' }}>Add</span>
+                  <span style={{ fontSize: '0.65rem', color: '#E53935', fontWeight: '700' }}>Add</span>
                 </>
               )}
             </label>
@@ -667,7 +667,7 @@ function ReviewForm({ productId, productName, existingReview, onSuccess, onCance
         <button type="submit" disabled={submitting || uploading} style={{
           flex: 1,
           padding: '10px 20px',
-          background: submitting ? '#ccc' : 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+          background: submitting ? '#ccc' : 'linear-gradient(135deg, #3A6373, #264653)',
           color: 'white',
           border: 'none',
           borderRadius: '10px',

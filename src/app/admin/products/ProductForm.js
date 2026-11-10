@@ -27,13 +27,13 @@ const CLOTHING_MATERIALS = [
 ];
 
 const PRESET_COLORS = [
-  { name: 'Red',        hex: '#EF4444' },
-  { name: 'Blue',       hex: '#3B82F6' },
-  { name: 'Pink',       hex: '#EC4899' },
-  { name: 'Yellow',     hex: '#F59E0B' },
-  { name: 'Green',      hex: '#10B981' },
-  { name: 'Purple',     hex: '#8B5CF6' },
-  { name: 'Orange',     hex: '#F97316' },
+  { name: 'Red',        hex: '#E53935' },
+  { name: 'Blue',       hex: '#1E88E5' },
+  { name: 'Pink',       hex: '#E53935' },
+  { name: 'Yellow',     hex: '#F2B33D' },
+  { name: 'Green',      hex: '#43A047' },
+  { name: 'Purple',     hex: '#3A6373' },
+  { name: 'Orange',     hex: '#FB8C00' },
   { name: 'White',      hex: '#FFFFFF' },
   { name: 'Black',      hex: '#000000' },
   { name: 'Grey',       hex: '#6B7280' },
@@ -66,14 +66,14 @@ function calcPricing(mrp, discountedPrice) {
 /* ────────────────────────────────────────────────────────────
    PRICE PREVIEW BANNER
    ──────────────────────────────────────────────────────────── */
-function PricePreview({ mrp, discountedPrice, accentColor = '#FF6B35' }) {
+function PricePreview({ mrp, discountedPrice, accentColor = '#E53935' }) {
   const info = calcPricing(mrp, discountedPrice);
   if (!info) return null;
 
   return (
     <div style={{
       marginTop: '10px',
-      background: 'linear-gradient(135deg,#F0FDF4,#FBF7FF)',
+      background: 'linear-gradient(135deg,#F0FDF4,#FFFBF2)',
       border: '2px solid #BBF7D0',
       borderRadius: '12px',
       padding: '12px 16px',
@@ -88,7 +88,7 @@ function PricePreview({ mrp, discountedPrice, accentColor = '#FF6B35' }) {
         border: '1.5px solid #FEE2E2',
       }}>
         <span style={{ fontSize: '0.62rem', fontWeight: '700', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: '0.4px' }}>MRP</span>
-        <span style={{ fontSize: '0.88rem', fontWeight: '800', color: '#9585B0', textDecoration: 'line-through', marginTop: '2px' }}>
+        <span style={{ fontSize: '0.88rem', fontWeight: '800', color: '#8A9BA3', textDecoration: 'line-through', marginTop: '2px' }}>
           ₹{info.mrp.toFixed(2)}
         </span>
       </div>
@@ -135,7 +135,7 @@ function PricePreview({ mrp, discountedPrice, accentColor = '#FF6B35' }) {
 /* ────────────────────────────────────────────────────────────
    PRICE INPUT GROUP — MRP + Discounted Price
    ──────────────────────────────────────────────────────────── */
-function PriceInputGroup({ mrp, discountedPrice, onMrpChange, onDiscountedChange, accentColor = '#FF6B35', required = false }) {
+function PriceInputGroup({ mrp, discountedPrice, onMrpChange, onDiscountedChange, accentColor = '#E53935', required = false }) {
   const info = calcPricing(mrp, discountedPrice);
 
   return (
@@ -146,7 +146,7 @@ function PriceInputGroup({ mrp, discountedPrice, onMrpChange, onDiscountedChange
           <label style={{ fontSize: '0.78rem' }}>
             MRP (₹) {required && '*'}
             <span style={{
-              marginLeft: '6px', fontSize: '0.65rem', color: '#9585B0',
+              marginLeft: '6px', fontSize: '0.65rem', color: '#8A9BA3',
               fontWeight: '600',
             }}>Original Price</span>
           </label>
@@ -154,7 +154,7 @@ function PriceInputGroup({ mrp, discountedPrice, onMrpChange, onDiscountedChange
             <span style={{
               position: 'absolute', left: '10px', top: '50%',
               transform: 'translateY(-50%)',
-              fontSize: '0.85rem', fontWeight: '700', color: '#6B4E8A',
+              fontSize: '0.85rem', fontWeight: '700', color: '#4F6B76',
             }}>₹</span>
             <input
               type="number"
@@ -184,7 +184,7 @@ function PriceInputGroup({ mrp, discountedPrice, onMrpChange, onDiscountedChange
               position: 'absolute', left: '10px', top: '50%',
               transform: 'translateY(-50%)',
               fontSize: '0.85rem', fontWeight: '700',
-              color: discountedPrice && parseFloat(discountedPrice) < parseFloat(mrp) ? '#16A34A' : '#6B4E8A',
+              color: discountedPrice && parseFloat(discountedPrice) < parseFloat(mrp) ? '#16A34A' : '#4F6B76',
             }}>₹</span>
             <input
               type="number"
@@ -197,13 +197,13 @@ function PriceInputGroup({ mrp, discountedPrice, onMrpChange, onDiscountedChange
               max={mrp || undefined}
               style={{
                 paddingLeft: '24px',
-                borderColor: info ? '#22C55E' : undefined,
+                borderColor: info ? '#43A047' : undefined,
               }}
             />
           </div>
           {/* Validation hint */}
           {discountedPrice && mrp && parseFloat(discountedPrice) >= parseFloat(mrp) && (
-            <span style={{ fontSize: '0.65rem', color: '#DC2626', fontWeight: '600', marginTop: '3px', display: 'block' }}>
+            <span style={{ fontSize: '0.65rem', color: '#C62828', fontWeight: '600', marginTop: '3px', display: 'block' }}>
               ⚠️ Sale price must be less than MRP
             </span>
           )}
@@ -233,10 +233,10 @@ function PriceInputGroup({ mrp, discountedPrice, onMrpChange, onDiscountedChange
             💰 Save ₹{info.saved}
           </span>
           <span style={{
-            background: '#F3E8FF', color: '#7B2FBE',
+            background: '#EEF3F5', color: '#264653',
             padding: '3px 10px', borderRadius: '999px',
             fontSize: '0.72rem', fontWeight: '700',
-            border: '1.5px solid #EDD9FF',
+            border: '1.5px solid #E8E2D2',
           }}>
             🏷️ Auto-calculated
           </span>
@@ -249,7 +249,7 @@ function PriceInputGroup({ mrp, discountedPrice, onMrpChange, onDiscountedChange
 /* ────────────────────────────────────────────────────────────
    IMAGE SLOT — single image uploader
    ──────────────────────────────────────────────────────────── */
-function ImageSlot({ slot, image, onUpload, onRemove, uploading, index, accentColor = '#FF6B35' }) {
+function ImageSlot({ slot, image, onUpload, onRemove, uploading, index, accentColor = '#E53935' }) {
   const inputRef = useRef(null);
   const [dragOver, setDragOver] = useState(false);
 
@@ -264,7 +264,7 @@ function ImageSlot({ slot, image, onUpload, onRemove, uploading, index, accentCo
     <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
       <div style={{
         display: 'flex', alignItems: 'center', gap: '4px',
-        fontSize: '0.70rem', fontWeight: '800', color: '#6B4E8A',
+        fontSize: '0.70rem', fontWeight: '800', color: '#4F6B76',
         textTransform: 'uppercase', letterSpacing: '0.3px',
       }}>
         <span>{slot.icon}</span>
@@ -285,12 +285,12 @@ function ImageSlot({ slot, image, onUpload, onRemove, uploading, index, accentCo
         style={{
           width: '100%', aspectRatio: '1',
           border: `2px dashed ${
-            image    ? '#22C55E'  :
+            image    ? '#43A047'  :
             dragOver ? accentColor  :
-            slot.required && !image ? accentColor : '#EDD9FF'
+            slot.required && !image ? accentColor : '#E8E2D2'
           }`,
           borderRadius: '12px',
-          background: image ? 'transparent' : dragOver ? '#F3E8FF' : '#FBF7FF',
+          background: image ? 'transparent' : dragOver ? '#EEF3F5' : '#FFFBF2',
           cursor: image || uploading ? 'default' : 'pointer',
           position: 'relative', overflow: 'hidden',
           transition: 'all 0.2s ease',
@@ -326,7 +326,7 @@ function ImageSlot({ slot, image, onUpload, onRemove, uploading, index, accentCo
             >✕</button>
             <div style={{
               position: 'absolute', bottom: '4px', left: '4px',
-              background: '#22C55E', color: 'white',
+              background: '#43A047', color: 'white',
               width: '18px', height: '18px',
               borderRadius: '50%',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
@@ -357,7 +357,7 @@ function ImageSlot({ slot, image, onUpload, onRemove, uploading, index, accentCo
             <span style={{ fontSize: '1.4rem' }}>{slot.icon}</span>
             <span style={{
               fontSize: '0.62rem', fontWeight: '700',
-              color: '#9585B0', textAlign: 'center',
+              color: '#8A9BA3', textAlign: 'center',
             }}>{slot.label}</span>
           </div>
         )}
@@ -396,19 +396,19 @@ function ColorVariantCard({
 
   return (
     <div style={{
-      border: `2px solid ${variant.colorHex || '#EDD9FF'}`,
+      border: `2px solid ${variant.colorHex || '#E8E2D2'}`,
       borderRadius: '16px',
       padding: '16px',
       marginBottom: '16px',
       background: 'white',
-      boxShadow: `0 4px 16px ${variant.colorHex || '#EDD9FF'}22`,
+      boxShadow: `0 4px 16px ${variant.colorHex || '#E8E2D2'}22`,
     }}>
       {/* Header */}
       <div style={{
         display: 'flex', justifyContent: 'space-between',
         alignItems: 'center', marginBottom: '14px',
         paddingBottom: '12px',
-        borderBottom: `1.5px dashed ${variant.colorHex || '#EDD9FF'}66`,
+        borderBottom: `1.5px dashed ${variant.colorHex || '#E8E2D2'}66`,
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{
@@ -419,10 +419,10 @@ function ColorVariantCard({
             boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
           }} />
           <div>
-            <div style={{ fontSize: '0.92rem', fontWeight: '800', color: '#2D1A4A' }}>
+            <div style={{ fontSize: '0.92rem', fontWeight: '800', color: '#264653' }}>
               {variant.colorName || `Color #${index + 1}`}
             </div>
-            <div style={{ fontSize: '0.70rem', color: '#9585B0', fontFamily: 'monospace' }}>
+            <div style={{ fontSize: '0.70rem', color: '#8A9BA3', fontFamily: 'monospace' }}>
               {variant.colorHex || 'No hex'}
               {pricing && (
                 <span style={{
@@ -439,7 +439,7 @@ function ColorVariantCard({
           type="button"
           onClick={() => onRemove(index)}
           style={{
-            background: '#FEE2E2', color: '#DC2626',
+            background: '#FEE2E2', color: '#C62828',
             border: 'none', padding: '6px 12px',
             borderRadius: '8px', fontSize: '0.78rem',
             fontWeight: '700', cursor: 'pointer',
@@ -468,7 +468,7 @@ function ColorVariantCard({
             onChange={e => set('colorHex', e.target.value)}
             style={{
               width: '44px', height: '40px',
-              border: '2px solid #EDD9FF',
+              border: '2px solid #E8E2D2',
               borderRadius: '8px', cursor: 'pointer',
             }}
           />
@@ -476,7 +476,7 @@ function ColorVariantCard({
             type="button"
             onClick={() => setShowPicker(!showPicker)}
             style={{
-              background: '#F3E8FF', color: '#7B2FBE',
+              background: '#EEF3F5', color: '#264653',
               border: 'none', padding: '8px 12px',
               borderRadius: '8px', fontSize: '0.78rem',
               fontWeight: '700', cursor: 'pointer',
@@ -490,8 +490,8 @@ function ColorVariantCard({
         {showPicker && (
           <div style={{
             marginTop: '10px', padding: '12px',
-            background: '#FBF7FF',
-            border: '1.5px solid #EDD9FF',
+            background: '#FFFBF2',
+            border: '1.5px solid #E8E2D2',
             borderRadius: '10px',
             display: 'flex', flexWrap: 'wrap', gap: '6px',
           }}>
@@ -505,7 +505,7 @@ function ColorVariantCard({
                   display: 'flex', alignItems: 'center', gap: '6px',
                   padding: '4px 10px',
                   background: 'white',
-                  border: `2px solid ${variant.colorHex === p.hex ? '#7B2FBE' : '#EDD9FF'}`,
+                  border: `2px solid ${variant.colorHex === p.hex ? '#264653' : '#E8E2D2'}`,
                   borderRadius: '999px',
                   fontSize: '0.74rem',
                   fontWeight: '700',
@@ -529,7 +529,7 @@ function ColorVariantCard({
       {/* ✅ MRP + Discounted Price + Stock */}
       <div style={{ marginBottom: '12px' }}>
         <label style={{
-          fontSize: '0.78rem', fontWeight: '700', color: '#2D1A4A',
+          fontSize: '0.78rem', fontWeight: '700', color: '#264653',
           display: 'block', marginBottom: '8px',
         }}>
           💰 Pricing *
@@ -537,12 +537,12 @@ function ColorVariantCard({
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '10px' }}>
           {/* MRP */}
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label style={{ fontSize: '0.72rem', color: '#9585B0' }}>MRP (₹) *</label>
+            <label style={{ fontSize: '0.72rem', color: '#8A9BA3' }}>MRP (₹) *</label>
             <div style={{ position: 'relative' }}>
               <span style={{
                 position: 'absolute', left: '9px', top: '50%',
                 transform: 'translateY(-50%)',
-                fontSize: '0.82rem', fontWeight: '700', color: '#9585B0',
+                fontSize: '0.82rem', fontWeight: '700', color: '#8A9BA3',
               }}>₹</span>
               <input
                 type="number"
@@ -566,7 +566,7 @@ function ColorVariantCard({
                 transform: 'translateY(-50%)',
                 fontSize: '0.82rem', fontWeight: '700',
                 color: variant.discountedPrice && parseFloat(variant.discountedPrice) < parseFloat(variant.mrp)
-                  ? '#16A34A' : '#9585B0',
+                  ? '#16A34A' : '#8A9BA3',
               }}>₹</span>
               <input
                 type="number"
@@ -579,7 +579,7 @@ function ColorVariantCard({
                 max={variant.mrp || undefined}
                 style={{
                   paddingLeft: '22px',
-                  borderColor: pricing ? '#22C55E' : undefined,
+                  borderColor: pricing ? '#43A047' : undefined,
                 }}
               />
             </div>
@@ -587,7 +587,7 @@ function ColorVariantCard({
 
           {/* Stock */}
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label style={{ fontSize: '0.72rem', color: '#9585B0' }}>Stock *</label>
+            <label style={{ fontSize: '0.72rem', color: '#8A9BA3' }}>Stock *</label>
             <input
               type="number"
               className="form-control"
@@ -623,13 +623,13 @@ function ColorVariantCard({
               <div style={{ fontSize: '0.85rem', fontWeight: '800', color: '#D97706' }}>₹{pricing.saved}</div>
             </div>
             <div style={{
-              background: `${variant.colorHex || '#FF6B35'}11`,
-              border: `1.5px solid ${variant.colorHex || '#FF6B35'}44`,
+              background: `${variant.colorHex || '#E53935'}11`,
+              border: `1.5px solid ${variant.colorHex || '#E53935'}44`,
               borderRadius: '8px', padding: '6px 10px',
               textAlign: 'center',
             }}>
               <div style={{ fontSize: '0.60rem', fontWeight: '700', color: '#9CA3AF', textTransform: 'uppercase' }}>Sale Price</div>
-              <div style={{ fontSize: '0.85rem', fontWeight: '800', color: variant.colorHex || '#FF6B35' }}>
+              <div style={{ fontSize: '0.85rem', fontWeight: '800', color: variant.colorHex || '#E53935' }}>
                 ₹{pricing.discountedPrice.toFixed(2)}
               </div>
             </div>
@@ -643,7 +643,7 @@ function ColorVariantCard({
             marginTop: '6px', padding: '6px 10px',
             background: '#FEF2F2', border: '1.5px solid #FECACA',
             borderRadius: '8px', fontSize: '0.72rem',
-            color: '#DC2626', fontWeight: '700',
+            color: '#C62828', fontWeight: '700',
           }}>
             ⚠️ Sale price must be less than MRP
           </div>
@@ -656,8 +656,8 @@ function ColorVariantCard({
           Images for {variant.colorName || 'this color'}
           <span style={{
             marginLeft: '8px', fontSize: '0.70rem',
-            background: uploadedImages.length > 0 ? '#22C55E' : '#FFF3EC',
-            color: uploadedImages.length > 0 ? 'white' : '#FF6B35',
+            background: uploadedImages.length > 0 ? '#43A047' : '#FFF6E5',
+            color: uploadedImages.length > 0 ? 'white' : '#E53935',
             padding: '2px 8px', borderRadius: '999px', fontWeight: '700',
           }}>
             {uploadedImages.length}/4 uploaded
@@ -677,7 +677,7 @@ function ColorVariantCard({
               onRemove={(idx) => onRemoveImage(index, idx)}
               uploading={uploadingSlot?.variant === index && uploadingSlot?.slot === slotIdx}
               index={slotIdx}
-              accentColor={variant.colorHex || '#FF6B35'}
+              accentColor={variant.colorHex || '#E53935'}
             />
           ))}
         </div>
@@ -812,7 +812,7 @@ export default function ProductForm({ id }) {
       ...f,
       colorVariants: [...f.colorVariants, {
         colorName:       '',
-        colorHex:        '#FF6B35',
+        colorHex:        '#E53935',
         mrp:             f.mrp || '',
         discountedPrice: f.discountedPrice || '',
         stock:           0,
@@ -1132,18 +1132,18 @@ export default function ProductForm({ id }) {
             {/* ✅ PRODUCT IMAGES + PRICING (shown when NO variants) */}
             {!hasVariants && (
               <div className={styles.card} style={{
-                border: '2px solid #FF6B35',
+                border: '2px solid #E53935',
                 background: 'linear-gradient(135deg, #FFF8F3, #FFF)',
               }}>
                 <h3 style={{
                   display: 'flex', alignItems: 'center',
-                  justifyContent: 'space-between', color: '#FF6B35',
+                  justifyContent: 'space-between', color: '#E53935',
                 }}>
                   <span>🖼️ Product Images & Pricing *</span>
                   <span style={{
                     fontSize: '0.72rem',
-                    background: productImagesUploaded > 0 ? '#22C55E' : '#FFF3EC',
-                    color: productImagesUploaded > 0 ? 'white' : '#FF6B35',
+                    background: productImagesUploaded > 0 ? '#43A047' : '#FFF6E5',
+                    color: productImagesUploaded > 0 ? 'white' : '#E53935',
                     padding: '4px 10px', borderRadius: '999px', fontWeight: '700',
                   }}>
                     {productImagesUploaded}/4 images
@@ -1151,7 +1151,7 @@ export default function ProductForm({ id }) {
                 </h3>
 
                 <p style={{
-                  fontSize: '0.76rem', color: '#9585B0',
+                  fontSize: '0.76rem', color: '#8A9BA3',
                   fontWeight: '600', marginTop: '-6px',
                 }}>
                   💡 Upload images and set pricing. Add color variants below for multiple colors.
@@ -1171,30 +1171,30 @@ export default function ProductForm({ id }) {
                       onRemove={(idx) => handleProductImageRemove(idx)}
                       uploading={uploadingProductSlot === slotIdx}
                       index={slotIdx}
-                      accentColor="#FF6B35"
+                      accentColor="#E53935"
                     />
                   ))}
                 </div>
 
                 {/* ✅ MRP + Sale Price */}
                 <div style={{
-                  background: '#FBF7FF',
-                  border: '1.5px solid #EDD9FF',
+                  background: '#FFFBF2',
+                  border: '1.5px solid #E8E2D2',
                   borderRadius: '12px',
                   padding: '14px',
                   marginBottom: '14px',
                 }}>
                   <div style={{
                     fontSize: '0.82rem', fontWeight: '800',
-                    color: '#2D1A4A', marginBottom: '12px',
+                    color: '#264653', marginBottom: '12px',
                     display: 'flex', alignItems: 'center', gap: '8px',
                   }}>
                     💰 Pricing
                     <span style={{
-                      fontSize: '0.65rem', color: '#9585B0',
+                      fontSize: '0.65rem', color: '#8A9BA3',
                       fontWeight: '600', background: 'white',
                       padding: '2px 8px', borderRadius: '999px',
-                      border: '1.5px solid #EDD9FF',
+                      border: '1.5px solid #E8E2D2',
                     }}>
                       Discount auto-calculated
                     </span>
@@ -1205,13 +1205,13 @@ export default function ProductForm({ id }) {
                     discountedPrice={form.discountedPrice}
                     onMrpChange={val => set('mrp', val)}
                     onDiscountedChange={val => set('discountedPrice', val)}
-                    accentColor="#FF6B35"
+                    accentColor="#E53935"
                     required
                   />
                 </div>
 
                 {/* Full Price Preview */}
-                <PricePreview mrp={form.mrp} discountedPrice={form.discountedPrice} accentColor="#FF6B35" />
+                <PricePreview mrp={form.mrp} discountedPrice={form.discountedPrice} accentColor="#E53935" />
 
                 {/* Stock */}
                 <div className="form-group" style={{ marginTop: '14px' }}>
@@ -1233,7 +1233,7 @@ export default function ProductForm({ id }) {
             {hasVariants && productImagesUploaded > 0 && (
               <div style={{
                 padding: '14px 18px', background: '#FEF3C7',
-                border: '2px solid #F59E0B', borderRadius: '12px',
+                border: '2px solid #F2B33D', borderRadius: '12px',
                 fontSize: '0.82rem', color: '#92400E', fontWeight: '600',
               }}>
                 ℹ️ You have both product images AND color variants.
@@ -1243,24 +1243,24 @@ export default function ProductForm({ id }) {
 
             {/* COLOR VARIANTS */}
             <div className={styles.card} style={{
-              border: '2px solid #7B2FBE',
-              background: 'linear-gradient(135deg, #FBF7FF, #FFF)',
+              border: '2px solid #264653',
+              background: 'linear-gradient(135deg, #FFFBF2, #FFF)',
             }}>
               <h3 style={{
                 display: 'flex', alignItems: 'center',
-                justifyContent: 'space-between', color: '#7B2FBE',
+                justifyContent: 'space-between', color: '#264653',
               }}>
                 <span>🎨 Color Variants ({form.colorVariants.length})</span>
                 <button
                   type="button"
                   onClick={addVariant}
                   style={{
-                    background: 'linear-gradient(135deg,#7B2FBE,#9B4FDE)',
+                    background: 'linear-gradient(135deg,#264653,#3A6373)',
                     color: 'white', border: 'none',
                     padding: '8px 16px', borderRadius: '10px',
                     fontSize: '0.82rem', fontWeight: '700',
                     cursor: 'pointer', fontFamily: 'inherit',
-                    boxShadow: '0 4px 12px rgba(123,47,190,0.3)',
+                    boxShadow: '0 4px 12px rgba(38,70,83,0.3)',
                   }}
                 >
                   + Add Color
@@ -1270,18 +1270,18 @@ export default function ProductForm({ id }) {
               {form.colorVariants.length === 0 ? (
                 <div style={{
                   padding: '30px 20px', textAlign: 'center',
-                  background: '#FBF7FF', border: '2px dashed #EDD9FF',
+                  background: '#FFFBF2', border: '2px dashed #E8E2D2',
                   borderRadius: '12px', marginTop: '12px',
                 }}>
                   <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🎨</div>
-                  <p style={{ fontSize: '0.88rem', fontWeight: '700', color: '#6B4E8A', margin: '0 0 6px' }}>
+                  <p style={{ fontSize: '0.88rem', fontWeight: '700', color: '#4F6B76', margin: '0 0 6px' }}>
                     No color variants (optional)
                   </p>
-                  <p style={{ fontSize: '0.74rem', color: '#9585B0', marginBottom: '14px' }}>
+                  <p style={{ fontSize: '0.74rem', color: '#8A9BA3', marginBottom: '14px' }}>
                     Skip this if your product has only one color.
                   </p>
                   <button type="button" onClick={addVariant} style={{
-                    background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+                    background: 'linear-gradient(135deg,#3A6373,#264653)',
                     color: 'white', border: 'none',
                     padding: '9px 22px', borderRadius: '999px',
                     fontSize: '0.84rem', fontWeight: '700',
@@ -1308,15 +1308,15 @@ export default function ProductForm({ id }) {
                   {/* Summary bar */}
                   <div style={{
                     marginTop: '12px', padding: '14px 18px',
-                    background: 'linear-gradient(135deg,#F0FDF4,#FBF7FF)',
+                    background: 'linear-gradient(135deg,#F0FDF4,#FFFBF2)',
                     border: '2px solid #BBF7D0', borderRadius: '12px',
                     display: 'flex', flexWrap: 'wrap', gap: '14px',
                     fontSize: '0.84rem', fontWeight: '700',
                   }}>
-                    <span style={{ color: '#166534' }}>🎨 {form.colorVariants.length} color(s)</span>
-                    <span style={{ color: '#166534' }}>📦 Total stock: {totalStock} units</span>
+                    <span style={{ color: '#1B5E20' }}>🎨 {form.colorVariants.length} color(s)</span>
+                    <span style={{ color: '#1B5E20' }}>📦 Total stock: {totalStock} units</span>
                     {variantMrps.length > 0 && (
-                      <span style={{ color: '#166534' }}>
+                      <span style={{ color: '#1B5E20' }}>
                         🏷️ MRP: ₹{Math.min(...variantMrps)} – ₹{Math.max(...variantMrps)}
                       </span>
                     )}
@@ -1332,8 +1332,8 @@ export default function ProductForm({ id }) {
 
             {/* Clothing Details */}
             {isClothing && (
-              <div className={styles.card} style={{ border: '2px solid #FF6B35', borderRadius: '16px' }}>
-                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#FF6B35' }}>
+              <div className={styles.card} style={{ border: '2px solid #E53935', borderRadius: '16px' }}>
+                <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#E53935' }}>
                   👗 Clothing Details
                 </h3>
 
@@ -1344,10 +1344,10 @@ export default function ProductForm({ id }) {
                       <button key={g.value} type="button" onClick={() => set('gender', g.value)}
                         style={{
                           padding: '8px 20px', borderRadius: '999px', border: '2px solid',
-                          borderColor: form.gender === g.value ? '#FF6B35' : '#EDD9FF',
+                          borderColor: form.gender === g.value ? '#E53935' : '#E8E2D2',
                           background: form.gender === g.value
-                            ? 'linear-gradient(135deg,#FF6B35,#7B2FBE)' : 'white',
-                          color: form.gender === g.value ? 'white' : '#6B4E8A',
+                            ? 'linear-gradient(135deg,#3A6373,#264653)' : 'white',
+                          color: form.gender === g.value ? 'white' : '#4F6B76',
                           fontWeight: '700', fontSize: '0.88rem', cursor: 'pointer',
                           fontFamily: 'inherit',
                         }}>{g.label}</button>
@@ -1362,9 +1362,9 @@ export default function ProductForm({ id }) {
                       <button key={m} type="button" onClick={() => set('material', m)}
                         style={{
                           padding: '5px 14px', borderRadius: '8px', border: '2px solid',
-                          borderColor: form.material === m ? '#7B2FBE' : '#EDD9FF',
-                          background: form.material === m ? '#F3E8FF' : 'white',
-                          color: form.material === m ? '#7B2FBE' : '#6B4E8A',
+                          borderColor: form.material === m ? '#264653' : '#E8E2D2',
+                          background: form.material === m ? '#EEF3F5' : 'white',
+                          color: form.material === m ? '#264653' : '#4F6B76',
                           fontWeight: '700', fontSize: '0.78rem', cursor: 'pointer',
                           fontFamily: 'inherit',
                         }}>{m}</button>
@@ -1381,10 +1381,10 @@ export default function ProductForm({ id }) {
             {/* Summary Card (variants) */}
             {hasVariants && (
               <div className={styles.card} style={{
-                border: '2px solid #22C55E',
+                border: '2px solid #43A047',
                 background: 'linear-gradient(135deg,#F0FDF4,#FFF)',
               }}>
-                <h3 style={{ color: '#166534' }}>📊 Product Summary</h3>
+                <h3 style={{ color: '#1B5E20' }}>📊 Product Summary</h3>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '10px' }}>
                   {[
                     { label: '🎨 Colors',       value: `${form.colorVariants.length}` },
@@ -1407,8 +1407,8 @@ export default function ProductForm({ id }) {
                       padding: '10px 14px', background: 'white',
                       borderRadius: '8px', fontSize: '0.85rem', fontWeight: '700',
                     }}>
-                      <span style={{ color: '#6B4E8A' }}>{label}</span>
-                      <span style={{ color: '#166534' }}>{value}</span>
+                      <span style={{ color: '#4F6B76' }}>{label}</span>
+                      <span style={{ color: '#1B5E20' }}>{value}</span>
                     </div>
                   ))}
                 </div>
@@ -1458,7 +1458,7 @@ export default function ProductForm({ id }) {
                   placeholder="e.g. 13 yrs, 2 yrs, 6 months, Newborn..." />
                 <small style={{
                   display: 'block', marginTop: '6px',
-                  color: '#9585B0', fontSize: '0.72rem', fontWeight: '600',
+                  color: '#8A9BA3', fontSize: '0.72rem', fontWeight: '600',
                 }}>
                   💡 Type any age (e.g. "13 yrs", "2 yrs", "6 months", "All ages")
                 </small>

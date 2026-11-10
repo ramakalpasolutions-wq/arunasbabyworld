@@ -97,7 +97,7 @@
   border-radius: 8px;
   padding: 10px 14px;
   font-size: 13px;
-  color: #166534;
+  color: #1B5E20;
   margin-bottom: 16px;
 }
 
@@ -105,7 +105,7 @@
 .uploaderWrap { width: 100%; }
 
 .dropZone {
-  border: 2px dashed #ff6b9d;
+  border: 2px dashed #E53935;
   border-radius: 16px;
   padding: 40px 20px;
   text-align: center;
@@ -119,7 +119,7 @@
 }
 
 .dropZone:hover {
-  background: #fff0f5;
+  background: #FFF5F4;
   border-color: #e91e8c;
   transform: scale(1.01);
 }
@@ -148,7 +148,7 @@
 .dropTitle {
   font-size: 16px;
   font-weight: 700;
-  color: #1a1a2e;
+  color: #1B3540;
   margin: 0;
 }
 
@@ -159,7 +159,7 @@
 }
 
 .browseBtn {
-  background: linear-gradient(135deg, #ff6b9d, #7c3aed);
+  background: linear-gradient(135deg, #3A6373, #264653);
   color: white;
   border: none;
   padding: 10px 24px;
@@ -187,7 +187,7 @@
 }
 
 .uploadingState p {
-  color: #ff6b9d;
+  color: #E53935;
   font-weight: 600;
   margin: 0;
 }
@@ -195,8 +195,8 @@
 .spinner {
   width: 40px;
   height: 40px;
-  border: 4px solid #fce4ec;
-  border-top: 4px solid #ff6b9d;
+  border: 4px solid #FDE7E6;
+  border-top: 4px solid #E53935;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }
@@ -218,7 +218,7 @@
 .previewHeader h4 {
   font-size: 14px;
   font-weight: 700;
-  color: #1a1a2e;
+  color: #1B3540;
   margin: 0;
 }
 
@@ -258,7 +258,7 @@
   position: absolute;
   top: 6px;
   left: 6px;
-  background: #ff6b9d;
+  background: #E53935;
   color: white;
   font-size: 10px;
   font-weight: 700;
@@ -311,8 +311,8 @@
 }
 
 .addMoreCard:hover {
-  border-color: #ff6b9d;
-  color: #ff6b9d;
+  border-color: #E53935;
+  color: #E53935;
   background: #fff8fb;
 }
 

@@ -17,14 +17,14 @@ function fmtOrderNum(order) {
 const STATUS_STEPS = ['Pending', 'Confirmed', 'Processing', 'Shipped', 'Delivered'];
 
 const STATUS_COLOR = {
-  Pending:          '#f59e0b',
-  Confirmed:        '#3b82f6',
-  Processing:       '#8b5cf6',
+  Pending:          '#F2B33D',
+  Confirmed:        '#1E88E5',
+  Processing:       '#3A6373',
   Shipped:          '#06b6d4',
-  Delivered:        '#10b981',
-  Cancelled:        '#ef4444',
-  Refunded:         '#10b981',
-  Return_Requested: '#f97316',
+  Delivered:        '#43A047',
+  Cancelled:        '#E53935',
+  Refunded:         '#43A047',
+  Return_Requested: '#FB8C00',
 };
 
 const STATUS_EMOJI = {
@@ -104,7 +104,7 @@ function LiveNimbusTracking({ awb }) {
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <div style={{
             width: '44px', height: '44px', borderRadius: '12px',
-            background: 'linear-gradient(135deg, #0EA5E9, #0369A1)',
+            background: 'linear-gradient(135deg, #1E88E5, #0369A1)',
             display: 'flex', alignItems: 'center', justifyContent: 'center',
             fontSize: '1.4rem', boxShadow: '0 4px 12px rgba(3,105,161,0.30)',
           }}>
@@ -130,7 +130,7 @@ function LiveNimbusTracking({ awb }) {
           <button
             onClick={() => { navigator.clipboard.writeText(awb); toast.success('AWB copied!'); }}
             style={{
-              padding: '6px 12px', background: 'linear-gradient(135deg, #0EA5E9, #0369A1)', color: 'white',
+              padding: '6px 12px', background: 'linear-gradient(135deg, #1E88E5, #0369A1)', color: 'white',
               border: 'none', borderRadius: '8px', fontSize: '0.72rem',
               fontWeight: '800', cursor: 'pointer', fontFamily: 'Nunito, sans-serif',
               boxShadow: '0 3px 8px rgba(3,105,161,0.25)',
@@ -150,7 +150,7 @@ function LiveNimbusTracking({ awb }) {
           {tracking.current_status && (
             <div style={{
               padding: '16px 18px',
-              background: 'linear-gradient(135deg, #E0F2FE 0%, #EDE9FE 100%)',
+              background: 'linear-gradient(135deg, #E0F2FE 0%, #EEF3F5 100%)',
               borderRadius: '14px', marginBottom: '18px',
               display: 'flex', alignItems: 'center', gap: '14px',
               border: '1.5px solid rgba(3,105,161,0.15)',
@@ -183,7 +183,7 @@ function LiveNimbusTracking({ awb }) {
                     <div style={{
                       width: '14px', height: '14px', borderRadius: '50%',
                       background: i === 0
-                        ? 'linear-gradient(135deg, #0EA5E9, #0369A1)'
+                        ? 'linear-gradient(135deg, #1E88E5, #0369A1)'
                         : '#CBD5E1',
                       marginTop: '4px', flexShrink: 0,
                       boxShadow: i === 0 ? '0 0 0 4px rgba(3,105,161,0.15)' : 'none',
@@ -328,7 +328,7 @@ export default function OrderDetailClient({ id }) {
           email: order.user?.email,
           contact: order.shippingAddress?.phone,
         },
-        theme: { color: '#ff6b9d' },
+        theme: { color: '#E53935' },
         modal: {
           ondismiss: async () => {
             setRetrying(false);
@@ -371,10 +371,10 @@ export default function OrderDetailClient({ id }) {
     }}>
       <div style={{
         width: '60px', height: '60px',
-        border: '4px solid #F3E8FF', borderTop: '4px solid #7B2FBE',
+        border: '4px solid #EEF3F5', borderTop: '4px solid #264653',
         borderRadius: '50%', animation: 'spin 0.8s linear infinite',
       }} />
-      <p style={{ color: '#9585B0', fontFamily: 'Nunito, sans-serif', fontWeight: '700', fontSize: '1rem' }}>
+      <p style={{ color: '#8A9BA3', fontFamily: 'Nunito, sans-serif', fontWeight: '700', fontSize: '1rem' }}>
         Loading your order...
       </p>
       <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
@@ -384,13 +384,13 @@ export default function OrderDetailClient({ id }) {
   if (!order) return (
     <div style={{ textAlign: 'center', padding: '100px 20px' }}>
       <div style={{ fontSize: '4rem', marginBottom: '20px' }}>📦</div>
-      <h2 style={{ fontFamily: 'Nunito, sans-serif', color: '#2D1A4A', margin: '0 0 20px' }}>Order not found</h2>
+      <h2 style={{ fontFamily: 'Nunito, sans-serif', color: '#264653', margin: '0 0 20px' }}>Order not found</h2>
       <Link href="/" style={{
         display: 'inline-block', padding: '14px 32px',
-        background: 'linear-gradient(135deg,#FF6B35,#7B2FBE)',
+        background: 'linear-gradient(135deg,#3A6373,#264653)',
         color: 'white', borderRadius: '14px', textDecoration: 'none',
         fontWeight: '800', fontFamily: 'Nunito, sans-serif',
-        boxShadow: '0 6px 20px rgba(255,107,53,0.30)',
+        boxShadow: '0 6px 20px rgba(229,57,53,0.30)',
       }}>
         Go Home
       </Link>
@@ -413,7 +413,7 @@ export default function OrderDetailClient({ id }) {
   return (
     <div style={{
       minHeight: '100vh',
-      background: 'linear-gradient(180deg, #FAFBFF 0%, #FFF5F7 100%)',
+      background: 'linear-gradient(180deg, #FFFBF2 0%, #FFF5F4 100%)',
       fontFamily: 'Nunito, sans-serif',
     }}>
       <div style={{
@@ -425,9 +425,9 @@ export default function OrderDetailClient({ id }) {
           background: 'white',
           borderRadius: '24px',
           padding: 'clamp(20px, 3vw, 32px)',
-          boxShadow: '0 8px 32px rgba(123,47,190,0.10)',
+          boxShadow: '0 8px 32px rgba(38,70,83,0.10)',
           marginBottom: '20px',
-          border: '1px solid rgba(123,47,190,0.08)',
+          border: '1px solid rgba(38,70,83,0.08)',
           position: 'relative',
           overflow: 'hidden',
         }}>
@@ -438,7 +438,7 @@ export default function OrderDetailClient({ id }) {
             width: '240px',
             height: '240px',
             borderRadius: '50%',
-            background: 'radial-gradient(circle, rgba(255,107,53,0.10) 0%, transparent 70%)',
+            background: 'radial-gradient(circle, rgba(229,57,53,0.10) 0%, transparent 70%)',
             pointerEvents: 'none',
           }} />
 
@@ -455,15 +455,15 @@ export default function OrderDetailClient({ id }) {
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '6px',
-                color: '#7B2FBE',
+                color: '#264653',
                 textDecoration: 'none',
                 fontSize: '0.82rem',
                 fontWeight: '800',
                 marginBottom: '12px',
                 padding: '6px 12px',
-                background: '#F3E8FF',
+                background: '#EEF3F5',
                 borderRadius: '999px',
-                border: '1.5px solid #E9D5FF',
+                border: '1.5px solid #DDE5E8',
                 transition: 'all 0.2s',
               }}>
                 ← Back to Orders
@@ -472,7 +472,7 @@ export default function OrderDetailClient({ id }) {
               <h1 style={{
                 fontSize: 'clamp(1.5rem, 3vw, 2.2rem)',
                 fontWeight: '900',
-                color: '#1F0F3A',
+                color: '#1B3540',
                 margin: '0 0 10px',
                 lineHeight: 1.2,
               }}>
@@ -491,14 +491,14 @@ export default function OrderDetailClient({ id }) {
                   alignItems: 'center',
                   gap: '8px',
                   padding: '8px 16px',
-                  background: 'linear-gradient(135deg, #FFF5EE, #F5EDFF)',
-                  border: '1.5px solid #E9D5FF',
+                  background: 'linear-gradient(135deg, #FFFBF2, #FBF5E6)',
+                  border: '1.5px solid #DDE5E8',
                   borderRadius: '12px',
                 }}>
                   <span style={{
                     fontSize: '0.68rem',
                     fontWeight: '900',
-                    color: '#9585B0',
+                    color: '#8A9BA3',
                     textTransform: 'uppercase',
                     letterSpacing: '1px',
                   }}>
@@ -508,7 +508,7 @@ export default function OrderDetailClient({ id }) {
                     fontFamily: 'monospace',
                     fontWeight: '900',
                     fontSize: '1rem',
-                    background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                    background: 'linear-gradient(135deg, #3A6373, #264653)',
                     WebkitBackgroundClip: 'text',
                     WebkitTextFillColor: 'transparent',
                     backgroundClip: 'text',
@@ -530,7 +530,7 @@ export default function OrderDetailClient({ id }) {
               </div>
 
               <p style={{
-                color: '#7B7898',
+                color: '#6F838C',
                 margin: 0,
                 fontWeight: '600',
                 fontSize: '0.85rem',
@@ -546,11 +546,11 @@ export default function OrderDetailClient({ id }) {
 
             <div style={{
               padding: '20px 24px',
-              background: 'linear-gradient(135deg, #FF6B35 0%, #7B2FBE 100%)',
+              background: 'linear-gradient(135deg, #3A6373 0%, #264653 100%)',
               borderRadius: '20px',
               color: 'white',
               textAlign: 'right',
-              boxShadow: '0 8px 24px rgba(123,47,190,0.30)',
+              boxShadow: '0 8px 24px rgba(38,70,83,0.30)',
               minWidth: '180px',
             }}>
               <p style={{
@@ -595,13 +595,13 @@ export default function OrderDetailClient({ id }) {
                 disabled={downloadingInvoice}
                 style={{
                   padding: '10px 18px',
-                  background: downloadingInvoice ? '#F3F4F6' : 'linear-gradient(135deg, #10B981, #059669)',
+                  background: downloadingInvoice ? '#F3F4F6' : 'linear-gradient(135deg, #43A047, #388E3C)',
                   color: downloadingInvoice ? '#9CA3AF' : 'white',
                   border: 'none', borderRadius: '12px',
                   fontWeight: '800', fontSize: '0.85rem',
                   cursor: downloadingInvoice ? 'not-allowed' : 'pointer',
                   fontFamily: 'inherit',
-                  boxShadow: downloadingInvoice ? 'none' : '0 4px 12px rgba(16,185,129,0.25)',
+                  boxShadow: downloadingInvoice ? 'none' : '0 4px 12px rgba(67,160,71,0.25)',
                   display: 'inline-flex', alignItems: 'center', gap: '6px',
                 }}
               >
@@ -620,10 +620,10 @@ export default function OrderDetailClient({ id }) {
                   href={`/orders/${order.id}/exchange`}
                   style={{
                     padding: '10px 18px',
-                    background: 'linear-gradient(135deg, #FF6B35, #EA580C)',
+                    background: 'linear-gradient(135deg, #E53935, #FB8C00)',
                     color: 'white', border: 'none', borderRadius: '12px',
                     fontWeight: '800', fontSize: '0.85rem', textDecoration: 'none',
-                    boxShadow: '0 4px 12px rgba(255,107,53,0.30)',
+                    boxShadow: '0 4px 12px rgba(229,57,53,0.30)',
                     display: 'inline-flex', alignItems: 'center', gap: '6px',
                   }}
                 >
@@ -637,7 +637,7 @@ export default function OrderDetailClient({ id }) {
                 onClick={() => setShowCancelModal(true)}
                 style={{
                   padding: '10px 18px', background: 'white',
-                  color: '#EF4444', border: '2px solid #FECACA',
+                  color: '#E53935', border: '2px solid #FECACA',
                   borderRadius: '12px', fontWeight: '800', fontSize: '0.85rem',
                   fontFamily: 'inherit', cursor: 'pointer',
                 }}
@@ -661,13 +661,13 @@ export default function OrderDetailClient({ id }) {
         {isPaymentFailed && (
           <div style={{
             background: 'linear-gradient(135deg, #FEF2F2, #FEE2E2)',
-            border: '2px solid #EF4444',
+            border: '2px solid #E53935',
             borderRadius: '24px', padding: '24px', marginBottom: '20px',
           }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', gap: '16px', marginBottom: '20px', flexWrap: 'wrap' }}>
               <div style={{
                 width: '56px', height: '56px', borderRadius: '14px',
-                background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+                background: 'linear-gradient(135deg, #E53935, #C62828)',
                 display: 'flex', alignItems: 'center', justifyContent: 'center',
                 fontSize: '1.8rem', flexShrink: 0,
               }}>
@@ -686,7 +686,7 @@ export default function OrderDetailClient({ id }) {
                 disabled={retrying}
                 style={{
                   flex: '1 1 200px', padding: '14px 20px',
-                  background: retrying ? '#F3F4F6' : 'linear-gradient(135deg, #10B981, #059669)',
+                  background: retrying ? '#F3F4F6' : 'linear-gradient(135deg, #43A047, #388E3C)',
                   color: retrying ? '#9CA3AF' : 'white', border: 'none', borderRadius: '12px',
                   fontWeight: '900', fontSize: '0.95rem', cursor: retrying ? 'not-allowed' : 'pointer',
                 }}
@@ -707,8 +707,8 @@ export default function OrderDetailClient({ id }) {
               <div style={{
                 background: 'white', borderRadius: '24px',
                 padding: 'clamp(20px, 3vw, 28px)',
-                boxShadow: '0 8px 32px rgba(123,47,190,0.08)',
-                border: '1px solid rgba(123,47,190,0.08)',
+                boxShadow: '0 8px 32px rgba(38,70,83,0.08)',
+                border: '1px solid rgba(38,70,83,0.08)',
               }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
                   <div style={{
@@ -718,7 +718,7 @@ export default function OrderDetailClient({ id }) {
                     fontSize: '1.4rem', boxShadow: `0 4px 12px ${statusColor}40`,
                   }}>🎯</div>
                   <div>
-                    <h3 style={{ fontSize: '1.1rem', fontWeight: '900', color: '#1F0F3A', margin: 0 }}>Order Progress</h3>
+                    <h3 style={{ fontSize: '1.1rem', fontWeight: '900', color: '#1B3540', margin: 0 }}>Order Progress</h3>
                   </div>
                 </div>
 
@@ -733,7 +733,7 @@ export default function OrderDetailClient({ id }) {
                             width: '52px', height: '52px', borderRadius: '50%',
                             display: 'flex', alignItems: 'center', justifyContent: 'center',
                             fontSize: isCurrent ? '1.4rem' : '1.1rem',
-                            background: isDone ? '#10B981' : isCurrent ? statusColor : '#F3F4F6',
+                            background: isDone ? '#43A047' : isCurrent ? statusColor : '#F3F4F6',
                             color: isDone || isCurrent ? 'white' : '#9CA3AF',
                             fontWeight: '900', border: '3px solid white',
                           }}>
@@ -742,7 +742,7 @@ export default function OrderDetailClient({ id }) {
                           {i < STATUS_STEPS.length - 1 && (
                             <div style={{
                               width: '3px', height: '36px',
-                              background: isDone ? '#10B981' : '#E5E7EB',
+                              background: isDone ? '#43A047' : '#E5E7EB',
                               margin: '4px 0', borderRadius: '999px',
                             }} />
                           )}
@@ -751,7 +751,7 @@ export default function OrderDetailClient({ id }) {
                           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
                             <p style={{
                               fontSize: '1rem', fontWeight: isCurrent ? '900' : isDone ? '800' : '700',
-                              color: isCurrent ? statusColor : isDone ? '#10B981' : '#9CA3AF', margin: 0,
+                              color: isCurrent ? statusColor : isDone ? '#43A047' : '#9CA3AF', margin: 0,
                             }}>{step}</p>
                           </div>
                         </div>
@@ -766,19 +766,19 @@ export default function OrderDetailClient({ id }) {
             <div style={{
               background: 'white', borderRadius: '24px',
               padding: 'clamp(20px, 3vw, 28px)',
-              boxShadow: '0 8px 32px rgba(123,47,190,0.08)',
-              border: '1px solid rgba(123,47,190,0.08)',
+              boxShadow: '0 8px 32px rgba(38,70,83,0.08)',
+              border: '1px solid rgba(38,70,83,0.08)',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '20px' }}>
                 <div style={{
                   width: '44px', height: '44px', borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                  background: 'linear-gradient(135deg, #3A6373, #264653)',
                   display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  fontSize: '1.4rem', boxShadow: '0 4px 12px rgba(123,47,190,0.30)',
+                  fontSize: '1.4rem', boxShadow: '0 4px 12px rgba(38,70,83,0.30)',
                 }}>🛍️</div>
                 <div>
-                  <h3 style={{ fontSize: '1.1rem', fontWeight: '900', color: '#1F0F3A', margin: 0 }}>Ordered Items</h3>
-                  <p style={{ margin: '2px 0 0', fontSize: '0.76rem', color: '#7B7898', fontWeight: '600' }}>
+                  <h3 style={{ fontSize: '1.1rem', fontWeight: '900', color: '#1B3540', margin: 0 }}>Ordered Items</h3>
+                  <p style={{ margin: '2px 0 0', fontSize: '0.76rem', color: '#6F838C', fontWeight: '600' }}>
                     {order.orderItems?.length} product(s)
                   </p>
                 </div>
@@ -801,27 +801,27 @@ export default function OrderDetailClient({ id }) {
             {/* PRICE SUMMARY */}
             <div style={{
               background: 'white', borderRadius: '24px',
-              padding: '24px', boxShadow: '0 8px 32px rgba(123,47,190,0.08)',
-              border: '1px solid rgba(123,47,190,0.08)',
+              padding: '24px', boxShadow: '0 8px 32px rgba(38,70,83,0.08)',
+              border: '1px solid rgba(38,70,83,0.08)',
             }}>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: '900', color: '#1F0F3A', marginBottom: '18px' }}>Price Details</h3>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px dashed #F3E8FF' }}>
-                <span style={{ fontSize: '0.85rem', color: '#6B4E8A', fontWeight: '600' }}>Items Total</span>
-                <span style={{ fontSize: '0.90rem', fontWeight: '800', color: '#2D1A4A' }}>₹{Math.round(order.itemsPrice)?.toLocaleString('en-IN')}</span>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: '900', color: '#1B3540', marginBottom: '18px' }}>Price Details</h3>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px dashed #EEF3F5' }}>
+                <span style={{ fontSize: '0.85rem', color: '#4F6B76', fontWeight: '600' }}>Items Total</span>
+                <span style={{ fontSize: '0.90rem', fontWeight: '800', color: '#264653' }}>₹{Math.round(order.itemsPrice)?.toLocaleString('en-IN')}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px dashed #F3E8FF' }}>
-                <span style={{ fontSize: '0.85rem', color: '#6B4E8A', fontWeight: '600' }}>Shipping</span>
-                <span style={{ fontSize: '0.90rem', fontWeight: '800', color: order.shippingPrice === 0 ? '#10B981' : '#2D1A4A' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', padding: '10px 0', borderBottom: '1px dashed #EEF3F5' }}>
+                <span style={{ fontSize: '0.85rem', color: '#4F6B76', fontWeight: '600' }}>Shipping</span>
+                <span style={{ fontSize: '0.90rem', fontWeight: '800', color: order.shippingPrice === 0 ? '#43A047' : '#264653' }}>
                   {order.shippingPrice === 0 ? 'FREE' : `₹${order.shippingPrice}`}
                 </span>
               </div>
               <div style={{
                 display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                padding: '16px 14px', marginTop: '10px', background: 'linear-gradient(135deg, #FFF5F7, #F3E8FF)',
-                borderRadius: '14px', border: '1.5px solid #FFE4EC',
+                padding: '16px 14px', marginTop: '10px', background: 'linear-gradient(135deg, #FFF5F4, #EEF3F5)',
+                borderRadius: '14px', border: '1.5px solid #FDE7E6',
               }}>
-                <span style={{ fontWeight: '900', color: '#2D1A4A', fontSize: '1rem' }}>Total</span>
-                <strong style={{ fontSize: '1.6rem', color: '#FF6B35', fontWeight: '900' }}>
+                <span style={{ fontWeight: '900', color: '#264653', fontSize: '1rem' }}>Total</span>
+                <strong style={{ fontSize: '1.6rem', color: '#E53935', fontWeight: '900' }}>
                   ₹{Math.round(order.totalPrice)?.toLocaleString('en-IN')}
                 </strong>
               </div>
@@ -830,18 +830,18 @@ export default function OrderDetailClient({ id }) {
             {/* DELIVERY ADDRESS */}
             <div style={{
               background: 'white', borderRadius: '24px', padding: '24px',
-              boxShadow: '0 8px 32px rgba(123,47,190,0.08)', border: '1px solid rgba(123,47,190,0.08)',
+              boxShadow: '0 8px 32px rgba(38,70,83,0.08)', border: '1px solid rgba(38,70,83,0.08)',
             }}>
-              <h3 style={{ fontSize: '1.05rem', fontWeight: '900', color: '#1F0F3A', marginBottom: '18px' }}>Delivery Address</h3>
+              <h3 style={{ fontSize: '1.05rem', fontWeight: '900', color: '#1B3540', marginBottom: '18px' }}>Delivery Address</h3>
               {order.shippingAddress ? (
                 <div style={{
-                  padding: '16px', background: 'linear-gradient(135deg, #F0F9FF, #EDE9FE)',
+                  padding: '16px', background: 'linear-gradient(135deg, #F0F9FF, #EEF3F5)',
                   borderRadius: '14px', border: '1.5px solid #BAE6FD',
                 }}>
-                  <p style={{ fontWeight: '900', color: '#1F0F3A', margin: '0 0 6px', fontSize: '1rem' }}>{order.shippingAddress.name}</p>
-                  <p style={{ color: '#5B21B6', margin: '0 0 4px', fontSize: '0.85rem', fontWeight: '700' }}>📞 {order.shippingAddress.phone}</p>
-                  <p style={{ color: '#6B4E8A', margin: '0 0 4px', fontSize: '0.85rem', fontWeight: '600' }}>🏠 {order.shippingAddress.address}</p>
-                  <p style={{ color: '#6B4E8A', margin: 0, fontSize: '0.85rem', fontWeight: '600' }}>
+                  <p style={{ fontWeight: '900', color: '#1B3540', margin: '0 0 6px', fontSize: '1rem' }}>{order.shippingAddress.name}</p>
+                  <p style={{ color: '#1B3540', margin: '0 0 4px', fontSize: '0.85rem', fontWeight: '700' }}>📞 {order.shippingAddress.phone}</p>
+                  <p style={{ color: '#4F6B76', margin: '0 0 4px', fontSize: '0.85rem', fontWeight: '600' }}>🏠 {order.shippingAddress.address}</p>
+                  <p style={{ color: '#4F6B76', margin: 0, fontSize: '0.85rem', fontWeight: '600' }}>
                     {order.shippingAddress.city}, {order.shippingAddress.state} — <strong>{order.shippingAddress.pincode}</strong>
                   </p>
                 </div>
@@ -887,7 +887,7 @@ export default function OrderDetailClient({ id }) {
             text-align: right;
             flex-shrink: 0;
             padding-left: 14px;
-            border-left: 2px dashed #F3E8FF;
+            border-left: 2px dashed #EEF3F5;
             margin-left: auto;
           }
 
@@ -899,7 +899,7 @@ export default function OrderDetailClient({ id }) {
               border-left: none;
               padding-top: 10px;
               margin-top: 10px;
-              border-top: 2px dashed #F3E8FF;
+              border-top: 2px dashed #EEF3F5;
             }
           }
         `}</style>
@@ -940,11 +940,11 @@ function OrderItemCard({ item, isDelivered }) {
     <div style={{
       background: 'white',
       borderRadius: '16px',
-      border: `2px solid ${isHovered ? '#7B2FBE' : '#F3E8FF'}`,
+      border: `2px solid ${isHovered ? '#264653' : '#EEF3F5'}`,
       // ❌ VERY IMPORTANT: NO "overflow: hidden" HERE!
       // ❌ VERY IMPORTANT: NO "transform" HERE!
       transition: 'border-color 0.25s ease, box-shadow 0.25s ease',
-      boxShadow: isHovered ? '0 10px 30px rgba(123,47,190,0.15)' : '0 2px 8px rgba(123,47,190,0.05)',
+      boxShadow: isHovered ? '0 10px 30px rgba(38,70,83,0.15)' : '0 2px 8px rgba(38,70,83,0.05)',
       display: 'flex',
       flexDirection: 'column',
     }}
@@ -956,21 +956,21 @@ function OrderItemCard({ item, isDelivered }) {
           <div style={{
             width: '84px', height: '84px',
             borderRadius: '14px', overflow: 'hidden',
-            border: '2px solid #F3E8FF', background: '#FAFAFA',
+            border: '2px solid #EEF3F5', background: '#FAFAFA',
           }}>
             <img src={item.image || 'https://via.placeholder.com/84'} alt={item.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
           </div>
           <div style={{
             position: 'absolute', top: '-6px', right: '-6px', minWidth: '28px', height: '28px',
-            padding: '0 8px', borderRadius: '999px', background: 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+            padding: '0 8px', borderRadius: '999px', background: 'linear-gradient(135deg, #3A6373, #264653)',
             color: 'white', fontSize: '0.75rem', fontWeight: '900', display: 'flex', alignItems: 'center', justifyContent: 'center',
-            border: '3px solid white', boxShadow: '0 3px 8px rgba(123,47,190,0.35)',
+            border: '3px solid white', boxShadow: '0 3px 8px rgba(38,70,83,0.35)',
           }}>×{item.quantity}</div>
         </div>
 
         <div style={{ flex: '1 1 150px', minWidth: 0 }}>
           <p style={{
-            fontSize: '0.95rem', fontWeight: '800', color: isHovered ? '#7B2FBE' : '#1F0F3A',
+            fontSize: '0.95rem', fontWeight: '800', color: isHovered ? '#264653' : '#1B3540',
             margin: '0 0 6px', lineHeight: 1.3,
             overflow: 'hidden', textOverflow: 'ellipsis', display: '-webkit-box',
             WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', transition: 'color 0.2s',
@@ -978,16 +978,16 @@ function OrderItemCard({ item, isDelivered }) {
             {item.name}
           </p>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-            <span style={{ padding: '3px 10px', background: '#F3E8FF', color: '#7B2FBE', borderRadius: '999px', fontSize: '0.72rem', fontWeight: '800' }}>
+            <span style={{ padding: '3px 10px', background: '#EEF3F5', color: '#264653', borderRadius: '999px', fontSize: '0.72rem', fontWeight: '800' }}>
               ₹{item.price?.toLocaleString('en-IN')} each
             </span>
           </div>
         </div>
 
         <div className="order-item-subtotal">
-          <p style={{ margin: 0, fontSize: '0.65rem', color: '#9585B0', fontWeight: '800', textTransform: 'uppercase' }}>Subtotal</p>
+          <p style={{ margin: 0, fontSize: '0.65rem', color: '#8A9BA3', fontWeight: '800', textTransform: 'uppercase' }}>Subtotal</p>
           <strong style={{
-            fontSize: '1.2rem', color: '#FF6B35', fontWeight: '900', display: 'block', marginTop: '2px',
+            fontSize: '1.2rem', color: '#E53935', fontWeight: '900', display: 'block', marginTop: '2px',
           }}>
             ₹{itemTotal.toLocaleString('en-IN')}
           </strong>
@@ -997,25 +997,25 @@ function OrderItemCard({ item, isDelivered }) {
       {isDelivered && productId && (
         <div style={{
           padding: '12px 18px',
-          background: existingReview ? 'linear-gradient(135deg, #F0FDF4, #ECFDF5)' : 'linear-gradient(135deg, #FFF9FB, #FFF5F7)',
-          borderTop: `1.5px dashed ${existingReview ? '#86EFAC' : '#F9A8D4'}`,
+          background: existingReview ? 'linear-gradient(135deg, #F0FDF4, #ECFDF5)' : 'linear-gradient(135deg, #FFF5F4, #FFF5F4)',
+          borderTop: `1.5px dashed ${existingReview ? '#86EFAC' : '#F5B7B5'}`,
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
           gap: '10px', flexWrap: 'wrap', borderRadius: '0 0 14px 14px',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
             <div style={{
               width: '34px', height: '34px', borderRadius: '50%',
-              background: existingReview ? 'linear-gradient(135deg, #10B981, #059669)' : 'linear-gradient(135deg, #FBBF24, #F59E0B)',
+              background: existingReview ? 'linear-gradient(135deg, #43A047, #388E3C)' : 'linear-gradient(135deg, #F2B33D, #F2B33D)',
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: '0.95rem', color: 'white', fontWeight: '900', flexShrink: 0,
             }}>
               {existingReview ? '✓' : '⭐'}
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
-              <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: '800', color: existingReview ? '#065F46' : '#BE185D' }}>
+              <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: '800', color: existingReview ? '#1B5E20' : '#C62828' }}>
                 {existingReview ? 'Your Review Posted' : 'Share Your Experience'}
               </p>
-              <p style={{ margin: 0, fontSize: '0.7rem', color: '#9585B0', fontWeight: '600' }}>
+              <p style={{ margin: 0, fontSize: '0.7rem', color: '#8A9BA3', fontWeight: '600' }}>
                 {existingReview ? 'Thanks for your feedback!' : 'Help others make the right choice'}
               </p>
             </div>
@@ -1030,9 +1030,9 @@ function OrderItemCard({ item, isDelivered }) {
             disabled={loadingReview}
             style={{
               padding: '9px 18px',
-              background: existingReview ? 'white' : 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
-              color: existingReview ? '#065F46' : 'white',
-              border: existingReview ? '2px solid #10B981' : 'none',
+              background: existingReview ? 'white' : 'linear-gradient(135deg, #3A6373, #264653)',
+              color: existingReview ? '#1B5E20' : 'white',
+              border: existingReview ? '2px solid #43A047' : 'none',
               borderRadius: '10px', fontSize: '0.78rem', fontWeight: '900',
               cursor: loadingReview ? 'wait' : 'pointer', fontFamily: 'inherit',
               whiteSpace: 'nowrap', flexShrink: 0,
@@ -1133,16 +1133,16 @@ function ReviewModal({ productId, productName, productImage, existingReview, onC
         position: 'relative', // Ensures modal contents are placed properly
       }}>
         <div style={{
-          padding: '24px 26px', borderBottom: '1px solid #FFE4EC',
-          background: 'linear-gradient(135deg, #FFF5F7, #F3E8FF)', borderRadius: '20px 20px 0 0',
+          padding: '24px 26px', borderBottom: '1px solid #FDE7E6',
+          background: 'linear-gradient(135deg, #FFF5F4, #EEF3F5)', borderRadius: '20px 20px 0 0',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
         }}>
           <div>
-            <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900', color: '#BE185D' }}>
+            <h2 style={{ margin: 0, fontSize: '1.2rem', fontWeight: '900', color: '#C62828' }}>
               {existingReview ? '✏️ Edit Review' : '⭐ Write Review'}
             </h2>
           </div>
-          <CloseBtn onClose={onClose} color="#BE185D" />
+          <CloseBtn onClose={onClose} color="#C62828" />
         </div>
 
         <div style={{ padding: '22px 26px' }}>
@@ -1154,7 +1154,7 @@ function ReviewModal({ productId, productName, productImage, existingReview, onC
             {productImage && (
               <img src={productImage} alt={productName} style={{
                 width: '56px', height: '56px', objectFit: 'cover',
-                borderRadius: '10px', flexShrink: 0, border: '2px solid #F3E8FF',
+                borderRadius: '10px', flexShrink: 0, border: '2px solid #EEF3F5',
               }} />
             )}
             <div style={{ flex: 1, minWidth: 0 }}>
@@ -1167,8 +1167,8 @@ function ReviewModal({ productId, productName, productImage, existingReview, onC
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div>
-              <label style={{ fontSize: '0.85rem', fontWeight: '900', color: '#6B4E8A', marginBottom: '8px', display: 'block' }}>
-                Your Rating <span style={{ color: '#EF4444' }}>*</span>
+              <label style={{ fontSize: '0.85rem', fontWeight: '900', color: '#4F6B76', marginBottom: '8px', display: 'block' }}>
+                Your Rating <span style={{ color: '#E53935' }}>*</span>
               </label>
               <div style={{ display: 'flex', gap: '6px', alignItems: 'center' }}>
                 {[1,2,3,4,5].map(s => (
@@ -1177,7 +1177,7 @@ function ReviewModal({ productId, productName, productImage, existingReview, onC
                     onMouseEnter={() => setHover(s)} onMouseLeave={() => setHover(0)}
                     style={{
                       background: 'none', border: 'none', cursor: 'pointer', fontSize: '2.4rem',
-                      color: s <= (hover || rating) ? '#FBBF24' : '#E5E7EB', padding: '2px', lineHeight: 1,
+                      color: s <= (hover || rating) ? '#F2B33D' : '#E5E7EB', padding: '2px', lineHeight: 1,
                     }}
                   >★</button>
                 ))}
@@ -1185,28 +1185,28 @@ function ReviewModal({ productId, productName, productImage, existingReview, onC
             </div>
 
             <div>
-              <label style={{ fontSize: '0.85rem', fontWeight: '900', color: '#6B4E8A', marginBottom: '8px', display: 'block' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '900', color: '#4F6B76', marginBottom: '8px', display: 'block' }}>
                 Title (optional)
               </label>
               <input
                 type="text" value={title} onChange={e => setTitle(e.target.value)}
                 placeholder="e.g. Excellent quality!" maxLength={100}
                 style={{
-                  width: '100%', padding: '12px 14px', border: '2px solid #EDD9FF', borderRadius: '10px',
+                  width: '100%', padding: '12px 14px', border: '2px solid #E8E2D2', borderRadius: '10px',
                   fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
                 }}
               />
             </div>
 
             <div>
-              <label style={{ fontSize: '0.85rem', fontWeight: '900', color: '#6B4E8A', marginBottom: '8px', display: 'block' }}>
-                Your Review <span style={{ color: '#EF4444' }}>*</span>
+              <label style={{ fontSize: '0.85rem', fontWeight: '900', color: '#4F6B76', marginBottom: '8px', display: 'block' }}>
+                Your Review <span style={{ color: '#E53935' }}>*</span>
               </label>
               <textarea
                 value={comment} onChange={e => setComment(e.target.value)}
                 placeholder="Share your experience..." rows={4} maxLength={1000} required
                 style={{
-                  width: '100%', padding: '12px 14px', border: '2px solid #EDD9FF', borderRadius: '10px',
+                  width: '100%', padding: '12px 14px', border: '2px solid #E8E2D2', borderRadius: '10px',
                   fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', resize: 'vertical', boxSizing: 'border-box',
                 }}
               />
@@ -1218,7 +1218,7 @@ function ReviewModal({ productId, productName, productImage, existingReview, onC
                 color: '#6B7280', fontWeight: '800', cursor: 'pointer', fontFamily: 'inherit',
               }}>Cancel</button>
               <button type="submit" disabled={submitting || uploading} style={{
-                flex: 1, padding: '13px 22px', background: submitting ? '#ccc' : 'linear-gradient(135deg, #FF6B35, #7B2FBE)',
+                flex: 1, padding: '13px 22px', background: submitting ? '#ccc' : 'linear-gradient(135deg, #3A6373, #264653)',
                 color: 'white', border: 'none', borderRadius: '12px', fontWeight: '900', cursor: submitting ? 'not-allowed' : 'pointer',
               }}>
                 {submitting ? '⏳ Posting...' : existingReview ? '💾 Update' : '✨ Post Review'}
@@ -1319,12 +1319,12 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
       }}>
         {/* Header */}
         <div style={{
-          padding: '20px 24px', borderBottom: '1.5px solid #F3E8FF',
+          padding: '20px 24px', borderBottom: '1.5px solid #EEF3F5',
           display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          background: 'linear-gradient(135deg, #FFF5F7, #F3E8FF)',
+          background: 'linear-gradient(135deg, #FFF5F4, #EEF3F5)',
           borderRadius: '24px 24px 0 0',
         }}>
-          <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '900', color: '#1F0F3A' }}>
+          <h3 style={{ margin: 0, fontSize: '1.15rem', fontWeight: '900', color: '#1B3540' }}>
             Cancel Order
           </h3>
           <button onClick={onClose} style={{
@@ -1337,14 +1337,14 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
         {/* Form */}
         <form onSubmit={handleSubmit} style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
           <div>
-            <label style={{ fontSize: '0.85rem', fontWeight: '900', color: '#6B4E8A', marginBottom: '8px', display: 'block' }}>
+            <label style={{ fontSize: '0.85rem', fontWeight: '900', color: '#4F6B76', marginBottom: '8px', display: 'block' }}>
               Reason for Cancellation
             </label>
             <select
               value={reason}
               onChange={e => setReason(e.target.value)}
               style={{
-                width: '100%', padding: '12px', border: '2px solid #EDD9FF', borderRadius: '12px',
+                width: '100%', padding: '12px', border: '2px solid #E8E2D2', borderRadius: '12px',
                 fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', background: 'white',
               }}
             >
@@ -1358,7 +1358,7 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
 
           {reason === 'Other' && (
             <div>
-              <label style={{ fontSize: '0.85rem', fontWeight: '900', color: '#6B4E8A', marginBottom: '8px', display: 'block' }}>
+              <label style={{ fontSize: '0.85rem', fontWeight: '900', color: '#4F6B76', marginBottom: '8px', display: 'block' }}>
                 Specify Reason
               </label>
               <input
@@ -1368,7 +1368,7 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
                 onChange={e => setCustomReason(e.target.value)}
                 placeholder="Please specify why you are cancelling..."
                 style={{
-                  width: '100%', padding: '12px', border: '2px solid #EDD9FF', borderRadius: '12px',
+                  width: '100%', padding: '12px', border: '2px solid #E8E2D2', borderRadius: '12px',
                   fontSize: '0.9rem', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
                 }}
               />
@@ -1377,10 +1377,10 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
 
           {requiresBankDetails && (
             <div style={{
-              background: '#F9F6FF', border: '1.5px dashed #D6BCFA', borderRadius: '16px',
+              background: '#FFFBF2', border: '1.5px dashed #C9D6DB', borderRadius: '16px',
               padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px',
             }}>
-              <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: '800', color: '#5B21B6' }}>
+              <p style={{ margin: 0, fontSize: '0.82rem', fontWeight: '800', color: '#1B3540' }}>
                 💵 COD Refund Details Required
               </p>
               <p style={{ margin: 0, fontSize: '0.72rem', color: '#6B7280', fontWeight: '600' }}>
@@ -1393,9 +1393,9 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
                   onClick={() => setRefundMethod('upi')}
                   style={{
                     flex: 1, padding: '8px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '800',
-                    cursor: 'pointer', border: refundMethod === 'upi' ? '2px solid #7B2FBE' : '1px solid #E5E7EB',
-                    background: refundMethod === 'upi' ? '#F3E8FF' : 'white',
-                    color: refundMethod === 'upi' ? '#7B2FBE' : '#6B7280',
+                    cursor: 'pointer', border: refundMethod === 'upi' ? '2px solid #264653' : '1px solid #E5E7EB',
+                    background: refundMethod === 'upi' ? '#EEF3F5' : 'white',
+                    color: refundMethod === 'upi' ? '#264653' : '#6B7280',
                   }}
                 >
                   UPI Transfer
@@ -1405,9 +1405,9 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
                   onClick={() => setRefundMethod('bank')}
                   style={{
                     flex: 1, padding: '8px 12px', borderRadius: '8px', fontSize: '0.8rem', fontWeight: '800',
-                    cursor: 'pointer', border: refundMethod === 'bank' ? '2px solid #7B2FBE' : '1px solid #E5E7EB',
-                    background: refundMethod === 'bank' ? '#F3E8FF' : 'white',
-                    color: refundMethod === 'bank' ? '#7B2FBE' : '#6B7280',
+                    cursor: 'pointer', border: refundMethod === 'bank' ? '2px solid #264653' : '1px solid #E5E7EB',
+                    background: refundMethod === 'bank' ? '#EEF3F5' : 'white',
+                    color: refundMethod === 'bank' ? '#264653' : '#6B7280',
                   }}
                 >
                   Bank Transfer
@@ -1416,7 +1416,7 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
 
               {refundMethod === 'upi' ? (
                 <div>
-                  <label style={{ fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '6px', display: 'block' }}>
+                  <label style={{ fontSize: '0.78rem', fontWeight: '800', color: '#4F6B76', marginBottom: '6px', display: 'block' }}>
                     UPI ID (e.g. name@upi)
                   </label>
                   <input
@@ -1426,7 +1426,7 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
                     onChange={e => setUpiId(e.target.value)}
                     placeholder="Enter your UPI ID"
                     style={{
-                      width: '100%', padding: '10px', border: '2px solid #EDD9FF', borderRadius: '10px',
+                      width: '100%', padding: '10px', border: '2px solid #E8E2D2', borderRadius: '10px',
                       fontSize: '0.85rem', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
                     }}
                   />
@@ -1434,7 +1434,7 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
               ) : (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                   <div>
-                    <label style={{ fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '4px', display: 'block' }}>
+                    <label style={{ fontSize: '0.78rem', fontWeight: '800', color: '#4F6B76', marginBottom: '4px', display: 'block' }}>
                       Account Holder Name
                     </label>
                     <input
@@ -1444,13 +1444,13 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
                       onChange={e => setAccountHolderName(e.target.value)}
                       placeholder="Full Name"
                       style={{
-                        width: '100%', padding: '10px', border: '2px solid #EDD9FF', borderRadius: '10px',
+                        width: '100%', padding: '10px', border: '2px solid #E8E2D2', borderRadius: '10px',
                         fontSize: '0.85rem', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
                       }}
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '4px', display: 'block' }}>
+                    <label style={{ fontSize: '0.78rem', fontWeight: '800', color: '#4F6B76', marginBottom: '4px', display: 'block' }}>
                       Account Number
                     </label>
                     <input
@@ -1460,14 +1460,14 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
                       onChange={e => setAccountNumber(e.target.value)}
                       placeholder="Account Number"
                       style={{
-                        width: '100%', padding: '10px', border: '2px solid #EDD9FF', borderRadius: '10px',
+                        width: '100%', padding: '10px', border: '2px solid #E8E2D2', borderRadius: '10px',
                         fontSize: '0.85rem', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
                       }}
                     />
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                     <div>
-                      <label style={{ fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '4px', display: 'block' }}>
+                      <label style={{ fontSize: '0.78rem', fontWeight: '800', color: '#4F6B76', marginBottom: '4px', display: 'block' }}>
                         IFSC Code
                       </label>
                       <input
@@ -1477,13 +1477,13 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
                         onChange={e => setIfscCode(e.target.value.toUpperCase())}
                         placeholder="IFSC Code"
                         style={{
-                          width: '100%', padding: '10px', border: '2px solid #EDD9FF', borderRadius: '10px',
+                          width: '100%', padding: '10px', border: '2px solid #E8E2D2', borderRadius: '10px',
                           fontSize: '0.85rem', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
                         }}
                       />
                     </div>
                     <div>
-                      <label style={{ fontSize: '0.78rem', fontWeight: '800', color: '#6B4E8A', marginBottom: '4px', display: 'block' }}>
+                      <label style={{ fontSize: '0.78rem', fontWeight: '800', color: '#4F6B76', marginBottom: '4px', display: 'block' }}>
                         Bank Name
                       </label>
                       <input
@@ -1493,7 +1493,7 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
                         onChange={e => setBankName(e.target.value)}
                         placeholder="Bank Name"
                         style={{
-                          width: '100%', padding: '10px', border: '2px solid #EDD9FF', borderRadius: '10px',
+                          width: '100%', padding: '10px', border: '2px solid #E8E2D2', borderRadius: '10px',
                           fontSize: '0.85rem', outline: 'none', fontFamily: 'inherit', boxSizing: 'border-box',
                         }}
                       />
@@ -1521,10 +1521,10 @@ function CancelOrderModal({ order, onClose, onSuccess }) {
               type="submit"
               disabled={loading}
               style={{
-                flex: 1.5, padding: '12px', background: 'linear-gradient(135deg, #EF4444, #DC2626)',
+                flex: 1.5, padding: '12px', background: 'linear-gradient(135deg, #E53935, #C62828)',
                 color: 'white', border: 'none', borderRadius: '12px', fontSize: '0.9rem',
                 fontWeight: '900', cursor: 'pointer', fontFamily: 'inherit',
-                boxShadow: '0 4px 12px rgba(239, 68, 68, 0.25)',
+                boxShadow: '0 4px 12px rgba(229,57,53, 0.25)',
               }}
             >
               {loading ? '⏳ Processing...' : 'Confirm Cancellation'}
