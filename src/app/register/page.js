@@ -1,8 +1,10 @@
 'use client';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import TurnstileWidget from '@/components/auth/TurnstileWidget';
+import { takePendingSignup } from '@/lib/pendingSignup';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -11,6 +13,24 @@ export default function RegisterPage() {
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [accepted, setAccepted] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState('');
+  const [fromLogin, setFromLogin] = useState(false);
+  const captchaRef = useRef(null);
+
+  // Sent here from the login page: fill in what was already typed there
+  useEffect(() => {
+    const pending = takePendingSignup();
+    if (pending?.email) {
+      setForm(f => ({
+        ...f,
+        email: pending.email,
+        password: pending.password || '',
+        confirmPassword: pending.password || '',
+      }));
+      setFromLogin(true);
+    }
+  }, []);
 
   // ✅ Smart back navigation
   const handleBack = () => {
@@ -35,6 +55,14 @@ export default function RegisterPage() {
       toast.error('Password must be at least 6 characters');
       return;
     }
+    if (!accepted) {
+      toast.error('Please accept the Terms & Conditions and policies');
+      return;
+    }
+    if (!captchaToken) {
+      toast.error('Please confirm you are human');
+      return;
+    }
     setLoading(true);
     try {
       const res = await fetch('/api/users/register', {
@@ -45,14 +73,19 @@ export default function RegisterPage() {
           email: form.email,
           phone: form.phone,
           password: form.password,
+          acceptedPolicies: accepted,
+          captchaToken,
         }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
       toast.success('Account created! Please login 🎉');
-      router.push('/login');
+      const redirect = new URLSearchParams(window.location.search).get('redirect');
+      router.push(redirect ? `/login?redirect=${encodeURIComponent(redirect)}` : '/login');
     } catch (err) {
       toast.error(err.message);
+      // A verification token works only once
+      captchaRef.current?.reset();
     } finally {
       setLoading(false);
     }
@@ -64,6 +97,8 @@ export default function RegisterPage() {
     color: '#1B3540', background: 'transparent',
     fontFamily: 'inherit',
   };
+
+  const policyLinkStyle = { color: '#264653', fontWeight: '800', textDecoration: 'underline' };
 
   const iconBoxStyle = {
     padding: '11px 13px', fontSize: '1rem',
@@ -203,6 +238,15 @@ export default function RegisterPage() {
           </p>
         </div>
 
+        {fromLogin && (
+          <div role="status" style={{
+            background: '#FFF6E5', border: '1.5px solid #F2B33D', borderRadius: '12px',
+            padding: '10px 14px', marginBottom: '16px', fontSize: '0.86rem', fontWeight: '700', color: '#264653',
+          }}>
+            👋 We couldn&apos;t find an account for <strong>{form.email}</strong>. Add your name below to create one.
+          </div>
+        )}
+
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
 
           {/* Name */}
@@ -295,6 +339,30 @@ export default function RegisterPage() {
               />
             </div>
           </div>
+
+          {/* Accept policies */}
+          <label style={{
+            display: 'flex', alignItems: 'flex-start', gap: '10px',
+            fontSize: '0.84rem', color: '#444', lineHeight: 1.5, cursor: 'pointer',
+          }}>
+            <input
+              type="checkbox"
+              checked={accepted}
+              onChange={e => setAccepted(e.target.checked)}
+              required
+              style={{ width: '18px', height: '18px', marginTop: '2px', accentColor: '#264653', flexShrink: 0, cursor: 'pointer' }}
+            />
+            <span>
+              I have read and accept the{' '}
+              <Link href="/terms" target="_blank" style={policyLinkStyle}>Terms &amp; Conditions</Link>,{' '}
+              <Link href="/privacy" target="_blank" style={policyLinkStyle}>Privacy Policy</Link>,{' '}
+              <Link href="/refund-policy" target="_blank" style={policyLinkStyle}>Refund &amp; Returns Policy</Link> and{' '}
+              <Link href="/shipping-policy" target="_blank" style={policyLinkStyle}>Shipping Policy</Link>. *
+            </span>
+          </label>
+
+          {/* Human verification */}
+          <TurnstileWidget ref={captchaRef} onVerify={setCaptchaToken} />
 
           {/* Submit */}
           <button

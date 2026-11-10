@@ -1,10 +1,11 @@
 // src/app/admin/login/page.js
 'use client';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import TurnstileWidget from '@/components/auth/TurnstileWidget';
 
 export default function AdminLoginPage() {
   const router = useRouter();
@@ -14,6 +15,8 @@ export default function AdminLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
   const [shake, setShake]               = useState(false);
+  const [captchaToken, setCaptchaToken] = useState('');
+  const captchaRef                      = useRef(null);
 
   // ✅ Already admin → hard redirect to dashboard
   useEffect(() => {
@@ -29,11 +32,16 @@ export default function AdminLoginPage() {
       toast.error('Please fill all fields');
       return;
     }
+    if (!captchaToken) {
+      toast.error('Please confirm you are human');
+      return;
+    }
     setLoading(true);
     try {
       const result = await signIn('credentials', {
         email:    form.email,
         password: form.password,
+        captchaToken,
         redirect: false,
       });
 
@@ -42,7 +50,11 @@ export default function AdminLoginPage() {
       if (result?.error) {
         setShake(true);
         setTimeout(() => setShake(false), 600);
-        throw new Error('Invalid email or password');
+        throw new Error(
+          result.error === 'CAPTCHA_FAILED'
+            ? 'Human verification failed. Please try again.'
+            : 'Invalid email or password'
+        );
       }
 
       if (result?.ok) {
@@ -54,6 +66,8 @@ export default function AdminLoginPage() {
       }
     } catch (err) {
       toast.error(err.message);
+      // A verification token works only once
+      captchaRef.current?.reset();
       setLoading(false);
     }
   };
@@ -353,6 +367,9 @@ export default function AdminLoginPage() {
                 </button>
               </div>
             </div>
+
+            {/* Human verification */}
+            <TurnstileWidget ref={captchaRef} onVerify={setCaptchaToken} theme="dark" />
 
             {/* Submit */}
             <button

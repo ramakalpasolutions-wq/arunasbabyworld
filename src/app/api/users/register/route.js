@@ -1,10 +1,26 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { verifyCaptcha, clientIp } from '@/lib/turnstile';
 
 export async function POST(request) {
   try {
-    const { name, email, password, phone } = await request.json();
+    const { name, email, password, phone, acceptedPolicies, captchaToken } = await request.json();
+
+    if (acceptedPolicies !== true) {
+      return NextResponse.json(
+        { error: 'Please accept the Terms & Conditions and store policies to create an account' },
+        { status: 400 }
+      );
+    }
+
+    const human = await verifyCaptcha(captchaToken, clientIp(request.headers));
+    if (!human) {
+      return NextResponse.json(
+        { error: 'Human verification failed. Please try again.', code: 'CAPTCHA_FAILED' },
+        { status: 400 }
+      );
+    }
 
     if (!name || !email || !password) {
       return NextResponse.json(

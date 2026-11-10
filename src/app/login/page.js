@@ -1,10 +1,12 @@
 'use client';
-import { useState, Suspense } from 'react';
+import { useState, useRef, Suspense } from 'react';
 import { signIn } from 'next-auth/react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
 import toast from 'react-hot-toast';
+import TurnstileWidget from '@/components/auth/TurnstileWidget';
+import { setPendingSignup } from '@/lib/pendingSignup';
 import './login.css';
 
 function LoginForm() {
@@ -16,6 +18,8 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
   const [rememberMe, setRememberMe] = useState(false);
+  const [captchaToken, setCaptchaToken] = useState('');
+  const captchaRef = useRef(null);
 
   const handleBack = () => {
     if (window.history.length > 1) {
@@ -31,19 +35,43 @@ function LoginForm() {
       toast.error('Please fill all fields');
       return;
     }
+    if (!captchaToken) {
+      toast.error('Please confirm you are human');
+      return;
+    }
     setLoading(true);
     try {
+      const email = form.email.toLowerCase().trim();
       const result = await signIn('credentials', {
-        email: form.email.toLowerCase().trim(),
+        email,
         password: form.password,
+        captchaToken,
         redirect: false,
       });
+
+      if (result?.error === 'USER_NOT_FOUND') {
+        // New shopper: carry what they typed over to the register page
+        setPendingSignup({ email, password: form.password });
+        toast('No account found with this email. Let\'s create one!', { icon: '👋' });
+        const next = redirect && redirect !== '/' ? `?redirect=${encodeURIComponent(redirect)}` : '';
+        router.push(`/register${next}`);
+        return;
+      }
+      if (result?.error === 'CAPTCHA_FAILED') {
+        throw new Error('Human verification failed. Please try again.');
+      }
+      if (result?.error === 'Account is deactivated') {
+        throw new Error('This account is deactivated. Please contact us.');
+      }
       if (result?.error) throw new Error('Invalid email or password');
+
       toast.success('Welcome back! 🎉');
       router.push(redirect);
       router.refresh();
     } catch (err) {
       toast.error(err.message);
+      // A verification token works only once
+      captchaRef.current?.reset();
     } finally {
       setLoading(false);
     }
@@ -157,6 +185,9 @@ function LoginForm() {
             </label>
             <Link href="/forgot-password" className="forgot">Forgot?</Link>
           </div>
+
+          {/* Human verification */}
+          <TurnstileWidget ref={captchaRef} onVerify={setCaptchaToken} />
 
           {/* Submit */}
           <button

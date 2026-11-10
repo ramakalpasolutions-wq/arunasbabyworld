@@ -4,6 +4,7 @@ import NextAuth from 'next-auth';
 import CredentialsProvider from 'next-auth/providers/credentials';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
+import { verifyCaptcha, clientIp } from '@/lib/turnstile';
 
 if (!process.env.NEXTAUTH_SECRET) {
   console.error('❌ CRITICAL: NEXTAUTH_SECRET is not set!');
@@ -16,9 +17,14 @@ export const authOptions = {
       credentials: {
         email:    { label: 'Email',    type: 'email' },
         password: { label: 'Password', type: 'password' },
+        captchaToken: { label: 'Captcha', type: 'text' },
       },
-      async authorize(credentials) {
+      async authorize(credentials, req) {
         try {
+          // Human verification comes first, before any database lookup
+          const human = await verifyCaptcha(credentials?.captchaToken, clientIp(req?.headers));
+          if (!human) throw new Error('CAPTCHA_FAILED');
+
           if (!credentials?.email || !credentials?.password) {
             throw new Error('Email and password required');
           }
@@ -28,7 +34,7 @@ export const authOptions = {
             where: { email: normalizedEmail },
           });
 
-          if (!user) throw new Error('No user found with this email');
+          if (!user) throw new Error('USER_NOT_FOUND');
           if (user.isActive === false) throw new Error('Account is deactivated');
           if (!user.password) throw new Error('Invalid credentials');
 

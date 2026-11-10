@@ -107,6 +107,9 @@ export default function Footer() {
                 <li><Link href="/">Home</Link></li>
                 <li><Link href="/products">All Products</Link></li>
                 <li><Link href="/contact">Contact</Link></li>
+                <li><Link href="/track-order">Track Order</Link></li>
+                <li><Link href="/shipping-policy">Shipping Policy</Link></li>
+                <li><Link href="/refund-policy">Refund &amp; Returns</Link></li>
               </ul>
             </div>
 
@@ -188,8 +191,10 @@ export default function Footer() {
           <div className={styles.bottomContent}>
             <p>© 2026 Arunas Baby World.</p>
             <div className={styles.bottomLinks}>
-              <Link href="/privacy">Privacy</Link>
-              <Link href="/terms">Terms</Link>
+              <Link href="/terms">Terms &amp; Conditions</Link>
+              <Link href="/privacy">Privacy Policy</Link>
+              <Link href="/refund-policy">Refund &amp; Returns</Link>
+              <Link href="/shipping-policy">Shipping Policy</Link>
               <Link href="/contact">Contact</Link>
             </div>
           </div>
