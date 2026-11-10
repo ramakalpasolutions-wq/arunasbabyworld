@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { adminGuard } from '@/lib/auth';
 
 export async function GET() {
+  // Admin only
+  const denied = await adminGuard();
+  if (denied) return denied;
+
   return NextResponse.json({
     message: 'Use POST method to run migration',
     instructions: 'Visit /migrate.html and click the button',
@@ -9,6 +14,10 @@ export async function GET() {
 }
 
 export async function POST() {
+  // Admin only
+  const denied = await adminGuard();
+  if (denied) return denied;
+
   try {
     // ✅ Find ALL orders with returnRequest (more aggressive)
     const allOrders = await prisma.order.findMany({

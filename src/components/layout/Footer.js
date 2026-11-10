@@ -118,10 +118,10 @@ export default function Footer() {
               <h4>Categories</h4>
               <ul>
                 <li><Link href="/products?category=clothing">Baby Clothing</Link></li>
-                <li><Link href="/products?category=toys-games">Toys & Games</Link></li>
+                <li><Link href="/products?category=toys">Toys & Games</Link></li>
                 <li><Link href="/products?category=baby-gear">Baby Gear</Link></li>
-                <li><Link href="/products?category=feeding">Feeding</Link></li>
-                <li><Link href="/products?category=health-safety">Health & Safety</Link></li>
+                <li><Link href="/products?category=baby-feeding">Feeding</Link></li>
+                <li><Link href="/products?category=health-care">Health Care</Link></li>
               </ul>
             </div>
 

@@ -1,11 +1,20 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { adminGuard } from '@/lib/auth';
 
 export async function GET() {
+  // Admin only
+  const denied = await adminGuard();
+  if (denied) return denied;
+
   return NextResponse.json({ message: 'Use POST to migrate' });
 }
 
 export async function POST() {
+  // Admin only
+  const denied = await adminGuard();
+  if (denied) return denied;
+
   try {
     const exchanges = await prisma.exchange.findMany();
     console.log(`Found ${exchanges.length} exchanges`);

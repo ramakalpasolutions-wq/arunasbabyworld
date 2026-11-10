@@ -202,7 +202,7 @@ function LoginForm() {
               <span className="custom-check" />
               <span>Remember me</span>
             </label>
-            <Link href="/forgot-password" className="forgot">Forgot?</Link>
+            <Link href="/forgot-password" className="forgot">Forgot password?</Link>
           </div>
 
           {/* Human verification */}

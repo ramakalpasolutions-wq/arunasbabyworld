@@ -1,7 +1,12 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { adminGuard } from '@/lib/auth';
 
 export async function GET() {
+  // Admin only
+  const denied = await adminGuard();
+  if (denied) return denied;
+
   try {
     // Check 1: Can we connect to Prisma?
     const prismaModels = Object.keys(prisma).filter(k => !k.startsWith('$') && !k.startsWith('_'));

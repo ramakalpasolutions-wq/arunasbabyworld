@@ -1,5 +1,6 @@
 import jwt from 'jsonwebtoken';
 import { getServerSession } from 'next-auth';
+import { NextResponse } from 'next/server';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
 const JWT_SECRET = process.env.JWT_SECRET || process.env.NEXTAUTH_SECRET || 'fallback_secret';
@@ -34,4 +35,15 @@ export const requireAdmin = async () => {
   const session = await getSession();
   if (!session || session.user.role !== 'admin') throw new Error('Not authorized');
   return session;
+};
+
+// For API routes: returns a 403 response when the caller is not a signed-in admin, otherwise null.
+//   const denied = await adminGuard();
+//   if (denied) return denied;
+export const adminGuard = async () => {
+  const session = await getSession();
+  if (!session || session.user?.role !== 'admin') {
+    return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+  }
+  return null;
 };

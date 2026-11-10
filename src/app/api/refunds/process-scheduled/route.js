@@ -2,8 +2,13 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { createRefund } from '@/lib/razorpay';
 import { sendRefundProcessed } from '@/lib/nodemailer';
+import { adminGuard } from '@/lib/auth';
 
 export async function POST(request) {
+  // Admin only
+  const denied = await adminGuard();
+  if (denied) return denied;
+
   try {
     const body = await request.json();
     const { refundId } = body;

@@ -2,8 +2,13 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { sendEmail } from '@/lib/nodemailer';
+import { adminGuard } from '@/lib/auth';
 
 export async function GET() {
+  // Admin only
+  const denied = await adminGuard();
+  if (denied) return denied;
+
   try {
     const contacts = await prisma.contact.findMany({
       orderBy: { createdAt: 'desc' },
@@ -120,6 +125,10 @@ export async function POST(request) {
 
 // ✅ NEW — Delete a contact message
 export async function DELETE(request) {
+  // Admin only
+  const denied = await adminGuard();
+  if (denied) return denied;
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');
