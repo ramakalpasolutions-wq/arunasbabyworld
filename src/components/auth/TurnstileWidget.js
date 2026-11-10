@@ -2,8 +2,14 @@
 import { forwardRef, useEffect, useImperativeHandle, useRef } from 'react';
 
 // Cloudflare Turnstile "verify you are human" box.
-// Uses Cloudflare's public test key until NEXT_PUBLIC_TURNSTILE_SITE_KEY is set in .env.
-const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '1x00000000000000000000AA';
+// The real key (NEXT_PUBLIC_TURNSTILE_SITE_KEY in .env) only works on the domains listed in
+// the Cloudflare dashboard, so local development (npm run dev) always uses Cloudflare's
+// public test key, which passes on any host. The server makes the same choice.
+const TEST_SITE_KEY = '1x00000000000000000000AA';
+const SITE_KEY =
+  process.env.NODE_ENV === 'development'
+    ? TEST_SITE_KEY
+    : process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || TEST_SITE_KEY;
 const SCRIPT_SRC = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
 
 let scriptPromise = null;

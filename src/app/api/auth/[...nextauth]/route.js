@@ -5,6 +5,7 @@ import CredentialsProvider from 'next-auth/providers/credentials';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { verifyCaptcha, clientIp } from '@/lib/turnstile';
+import { normalizePhone } from '@/lib/phone';
 
 if (!process.env.NEXTAUTH_SECRET) {
   console.error('❌ CRITICAL: NEXTAUTH_SECRET is not set!');
@@ -15,6 +16,7 @@ export const authOptions = {
     CredentialsProvider({
       name: 'credentials',
       credentials: {
+        phone:    { label: 'Phone',    type: 'tel' },
         email:    { label: 'Email',    type: 'email' },
         password: { label: 'Password', type: 'password' },
         captchaToken: { label: 'Captcha', type: 'text' },
@@ -25,21 +27,46 @@ export const authOptions = {
           const human = await verifyCaptcha(credentials?.captchaToken, clientIp(req?.headers));
           if (!human) throw new Error('CAPTCHA_FAILED');
 
-          if (!credentials?.email || !credentials?.password) {
-            throw new Error('Email and password required');
+          // Shoppers sign in with their phone number. The admin login, and older
+          // accounts that never saved a phone number, sign in with their email.
+          const identifier = String(credentials?.phone || credentials?.email || '').trim();
+
+          if (!identifier || !credentials?.password) {
+            throw new Error('Phone number and password required');
           }
 
-          const normalizedEmail = credentials.email.toLowerCase().trim();
-          const user = await prisma.user.findUnique({
-            where: { email: normalizedEmail },
-          });
+          let candidates = [];
 
-          if (!user) throw new Error('USER_NOT_FOUND');
+          if (identifier.includes('@')) {
+            const byEmail = await prisma.user.findUnique({
+              where: { email: identifier.toLowerCase() },
+            });
+            if (byEmail) candidates = [byEmail];
+          } else {
+            const phone = normalizePhone(identifier);
+            if (!phone) throw new Error('INVALID_PHONE');
+
+            // Older records may be stored as "+91 98765 43210" etc., so match on the last 10 digits
+            const matches = await prisma.user.findMany({
+              where: { phone: { endsWith: phone } },
+            });
+            candidates = matches.filter((u) => normalizePhone(u.phone) === phone);
+          }
+
+          if (candidates.length === 0) throw new Error('USER_NOT_FOUND');
+
+          // A phone number can belong to more than one old account: accept the one whose password matches
+          let user = null;
+          for (const candidate of candidates) {
+            if (!candidate.password) continue;
+            if (await bcrypt.compare(credentials.password, candidate.password)) {
+              user = candidate;
+              break;
+            }
+          }
+
+          if (!user) throw new Error('Invalid password');
           if (user.isActive === false) throw new Error('Account is deactivated');
-          if (!user.password) throw new Error('Invalid credentials');
-
-          const isValid = await bcrypt.compare(credentials.password, user.password);
-          if (!isValid) throw new Error('Invalid password');
 
           console.log('✅ Login successful for:', user.email);
 

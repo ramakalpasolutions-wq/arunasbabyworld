@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
+import { normalizePhone } from '@/lib/phone';
 
 export async function GET() {
   try {
@@ -41,7 +42,10 @@ export async function PUT(request) {
     // ✅ Build update data - name, phone, email all editable
     const updateData = {};
     if (data.name) updateData.name = data.name;
-    if (data.phone !== undefined) updateData.phone = data.phone || null;
+    if (data.phone !== undefined) {
+      // Keep phone numbers in the plain 10-digit form used for login
+      updateData.phone = data.phone ? (normalizePhone(data.phone) || String(data.phone).trim()) : null;
+    }
     if (data.email) updateData.email = data.email;
 
     // ✅ Check if email already taken by another user

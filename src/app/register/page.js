@@ -5,6 +5,7 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 import TurnstileWidget from '@/components/auth/TurnstileWidget';
 import { takePendingSignup } from '@/lib/pendingSignup';
+import { normalizePhone, isValidEmail } from '@/lib/phone';
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -21,10 +22,11 @@ export default function RegisterPage() {
   // Sent here from the login page: fill in what was already typed there
   useEffect(() => {
     const pending = takePendingSignup();
-    if (pending?.email) {
+    if (pending?.phone || pending?.email) {
       setForm(f => ({
         ...f,
-        email: pending.email,
+        phone: pending.phone || '',
+        email: pending.email || '',
         password: pending.password || '',
         confirmPassword: pending.password || '',
       }));
@@ -43,8 +45,16 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.name || !form.email || !form.password) {
+    if (!form.name || !form.phone || !form.email || !form.password) {
       toast.error('Please fill required fields');
+      return;
+    }
+    if (!normalizePhone(form.phone)) {
+      toast.error('Please enter a valid 10-digit mobile number');
+      return;
+    }
+    if (!isValidEmail(form.email)) {
+      toast.error('Please enter a valid email address');
       return;
     }
     if (form.password !== form.confirmPassword) {
@@ -71,7 +81,7 @@ export default function RegisterPage() {
         body: JSON.stringify({
           name: form.name,
           email: form.email,
-          phone: form.phone,
+          phone: normalizePhone(form.phone),
           password: form.password,
           acceptedPolicies: accepted,
           captchaToken,
@@ -243,7 +253,7 @@ export default function RegisterPage() {
             background: '#FFF6E5', border: '1.5px solid #F2B33D', borderRadius: '12px',
             padding: '10px 14px', marginBottom: '16px', fontSize: '0.86rem', fontWeight: '700', color: '#264653',
           }}>
-            👋 We couldn&apos;t find an account for <strong>{form.email}</strong>. Add your name below to create one.
+            👋 We couldn&apos;t find an account for <strong>{form.phone || form.email}</strong>. Fill in the remaining details to create one.
           </div>
         )}
 
@@ -266,6 +276,29 @@ export default function RegisterPage() {
             </div>
           </div>
 
+          {/* Phone */}
+          <div>
+            <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '700', color: '#444', marginBottom: '6px' }}>
+              Phone Number *
+            </label>
+            <div style={fieldWrapStyle}>
+              <span style={{ ...iconBoxStyle, color: '#1E88E5' }}>📞</span>
+              <input
+                type="tel"
+                inputMode="tel"
+                autoComplete="tel"
+                style={inputStyle}
+                value={form.phone}
+                onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                placeholder="10-digit mobile number"
+                required
+              />
+            </div>
+            <p style={{ margin: '5px 2px 0', fontSize: '0.74rem', color: '#888' }}>
+              You will use this number to log in.
+            </p>
+          </div>
+
           {/* Email */}
           <div>
             <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '700', color: '#444', marginBottom: '6px' }}>
@@ -280,22 +313,6 @@ export default function RegisterPage() {
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
                 placeholder="your@email.com"
                 required
-              />
-            </div>
-          </div>
-
-          {/* Phone */}
-          <div>
-            <label style={{ display: 'block', fontSize: '0.82rem', fontWeight: '700', color: '#444', marginBottom: '6px' }}>
-              Phone Number
-            </label>
-            <div style={fieldWrapStyle}>
-              <span style={{ ...iconBoxStyle, color: '#1E88E5' }}>📞</span>
-              <input
-                style={inputStyle}
-                value={form.phone}
-                onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                placeholder="+91 XXXXX XXXXX (optional)"
               />
             </div>
           </div>

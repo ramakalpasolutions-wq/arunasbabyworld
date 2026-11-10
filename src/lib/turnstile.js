@@ -14,14 +14,15 @@ let warned = false;
 export async function verifyCaptcha(token, remoteIp) {
   if (!token || typeof token !== 'string') return false;
 
-  let secret = process.env.TURNSTILE_SECRET_KEY;
-  if (!secret) {
+  // Local development always uses the test key, matching the widget (see TurnstileWidget.js)
+  let secret = process.env.NODE_ENV === 'development' ? TEST_SECRET_KEY : process.env.TURNSTILE_SECRET_KEY;
+  if (process.env.NODE_ENV !== 'development' && !secret) {
     if (!warned) {
       console.warn('⚠️ TURNSTILE_SECRET_KEY is not set: using the Cloudflare test key (captcha always passes).');
       warned = true;
     }
-    secret = TEST_SECRET_KEY;
   }
+  if (!secret) secret = TEST_SECRET_KEY;
 
   try {
     const body = new URLSearchParams({ secret, response: token });

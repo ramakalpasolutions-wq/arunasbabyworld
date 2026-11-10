@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import bcrypt from 'bcryptjs';
 import { verifyCaptcha, clientIp } from '@/lib/turnstile';
+import { normalizePhone, isValidEmail } from '@/lib/phone';
 
 export async function POST(request) {
   try {
@@ -22,9 +23,24 @@ export async function POST(request) {
       );
     }
 
-    if (!name || !email || !password) {
+    if (!name || !email || !phone || !password) {
       return NextResponse.json(
-        { error: 'Name, email and password are required' },
+        { error: 'Name, phone number, email and password are required' },
+        { status: 400 }
+      );
+    }
+
+    if (!isValidEmail(email)) {
+      return NextResponse.json(
+        { error: 'Please enter a valid email address' },
+        { status: 400 }
+      );
+    }
+
+    const normalizedPhone = normalizePhone(phone);
+    if (!normalizedPhone) {
+      return NextResponse.json(
+        { error: 'Please enter a valid 10-digit mobile number' },
         { status: 400 }
       );
     }
@@ -50,6 +66,18 @@ export async function POST(request) {
       );
     }
 
+    // The phone number is the login ID, so it must be unique too
+    const samePhone = await prisma.user.findMany({
+      where: { phone: { endsWith: normalizedPhone } },
+      select: { phone: true },
+    });
+    if (samePhone.some((u) => normalizePhone(u.phone) === normalizedPhone)) {
+      return NextResponse.json(
+        { error: 'An account with this phone number already exists. Please login.' },
+        { status: 409 }
+      );
+    }
+
     const hashedPassword = await bcrypt.hash(password, 12);
 
     const user = await prisma.user.create({
@@ -57,7 +85,7 @@ export async function POST(request) {
         name: name.trim(),
         email: normalizedEmail,
         password: hashedPassword,
-        phone: phone || null,
+        phone: normalizedPhone,
         isActive: true,    // ✅ Always true when registering
         role: 'user',      // ✅ Default role
       },

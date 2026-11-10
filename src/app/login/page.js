@@ -7,13 +7,14 @@ import Image from 'next/image';
 import toast from 'react-hot-toast';
 import TurnstileWidget from '@/components/auth/TurnstileWidget';
 import { setPendingSignup } from '@/lib/pendingSignup';
+import { normalizePhone } from '@/lib/phone';
 import './login.css';
 
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirect = searchParams.get('redirect') || '/';
-  const [form, setForm] = useState({ email: '', password: '' });
+  const [form, setForm] = useState({ phone: '', password: '' });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [focusedField, setFocusedField] = useState(null);
@@ -31,7 +32,7 @@ function LoginForm() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.email || !form.password) {
+    if (!form.phone || !form.password) {
       toast.error('Please fill all fields');
       return;
     }
@@ -39,11 +40,18 @@ function LoginForm() {
       toast.error('Please confirm you are human');
       return;
     }
+    // Phone number is the login ID. Older accounts without a phone number can type their email instead.
+    const typed = form.phone.trim();
+    const isEmail = typed.includes('@');
+    const phone = isEmail ? '' : normalizePhone(typed);
+    if (!isEmail && !phone) {
+      toast.error('Please enter a valid 10-digit mobile number');
+      return;
+    }
     setLoading(true);
     try {
-      const email = form.email.toLowerCase().trim();
       const result = await signIn('credentials', {
-        email,
+        phone: isEmail ? typed.toLowerCase() : phone,
         password: form.password,
         captchaToken,
         redirect: false,
@@ -51,8 +59,12 @@ function LoginForm() {
 
       if (result?.error === 'USER_NOT_FOUND') {
         // New shopper: carry what they typed over to the register page
-        setPendingSignup({ email, password: form.password });
-        toast('No account found with this email. Let\'s create one!', { icon: '👋' });
+        setPendingSignup({
+          phone,
+          email: isEmail ? typed.toLowerCase() : '',
+          password: form.password,
+        });
+        toast('No account found with these details. Let\'s create one!', { icon: '👋' });
         const next = redirect && redirect !== '/' ? `?redirect=${encodeURIComponent(redirect)}` : '';
         router.push(`/register${next}`);
         return;
@@ -63,7 +75,10 @@ function LoginForm() {
       if (result?.error === 'Account is deactivated') {
         throw new Error('This account is deactivated. Please contact us.');
       }
-      if (result?.error) throw new Error('Invalid email or password');
+      if (result?.error === 'INVALID_PHONE') {
+        throw new Error('Please enter a valid 10-digit mobile number');
+      }
+      if (result?.error) throw new Error('Invalid phone number or password');
 
       toast.success('Welcome back! 🎉');
       router.push(redirect);
@@ -124,24 +139,28 @@ function LoginForm() {
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="form">
-          {/* Email */}
+          {/* Phone number */}
           <div className="field">
-            <label className="label" htmlFor="email">Email Address</label>
-            <div className={`input-box ${focusedField === 'email' ? 'active' : ''}`}>
-              <span className="field-icon">✉️</span>
+            <label className="label" htmlFor="phone">Phone Number</label>
+            <div className={`input-box ${focusedField === 'phone' ? 'active' : ''}`}>
+              <span className="field-icon">📞</span>
               <input
-                id="email"
-                type="email"
-                value={form.email}
-                onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                placeholder="you@example.com"
+                id="phone"
+                type="tel"
+                inputMode="tel"
+                value={form.phone}
+                onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
+                placeholder="10-digit mobile number"
                 required
-                autoComplete="email"
+                autoComplete="tel"
                 className="input"
-                onFocus={() => setFocusedField('email')}
+                onFocus={() => setFocusedField('phone')}
                 onBlur={() => setFocusedField(null)}
               />
             </div>
+            <p style={{ margin: '6px 2px 0', fontSize: '0.74rem', color: '#8A9BA3', lineHeight: 1.4 }}>
+              Registered earlier without a phone number? Enter your email here instead.
+            </p>
           </div>
 
           {/* Password */}
