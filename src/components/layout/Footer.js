@@ -186,7 +186,7 @@ export default function Footer() {
       <div className={`${styles.bottom} ${styles.reveal}`}>
         <div className="container">
           <div className={styles.bottomContent}>
-            <p>© 2026 Arunas Baby World. Designed by <a href="https://ramakalpasolutions.com" target="_blank" rel="noopener noreferrer" style={{ color: '#F6D28B', textDecoration: 'none', fontWeight: 700 }}>Ramakalpa Solutions</a>.</p>
+            <p>© 2026 Arunas Baby World.</p>
             <div className={styles.bottomLinks}>
               <Link href="/privacy">Privacy</Link>
               <Link href="/terms">Terms</Link>
