@@ -1,7 +1,8 @@
 import MainLayout from '@/components/layout/MainLayout';
 import ExchangesHistoryClient from './ExchangesHistoryClient';
+import { privateMetadata } from '@/lib/seo';
 
-export const metadata = { title: 'My Exchanges | Arunas Baby World' };
+export const metadata = privateMetadata('My Exchanges');
 
 export default function MyExchangesPage() {
   return (

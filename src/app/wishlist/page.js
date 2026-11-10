@@ -1,7 +1,8 @@
 import MainLayout from '@/components/layout/MainLayout';
 import WishlistClient from './WishlistClient';
+import { privateMetadata } from '@/lib/seo';
 
-export const metadata = { title: 'My Wishlist | Arunas Baby World' };
+export const metadata = privateMetadata('My Wishlist');
 
 export default function WishlistPage() {
   return (

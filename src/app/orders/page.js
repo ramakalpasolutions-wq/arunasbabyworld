@@ -1,7 +1,8 @@
 import MainLayout from '@/components/layout/MainLayout';
 import Link from 'next/link';
+import { privateMetadata } from '@/lib/seo';
 
-export const metadata = { title: 'My Orders | Arunas Baby World' };
+export const metadata = privateMetadata('My Orders');
 
 export default function OrdersPage() {
   return (

@@ -340,7 +340,7 @@ function RefundCard({ order, status }) {
                 <img
                   key={i}
                   src={item.image || 'https://via.placeholder.com/40'}
-                  alt=""
+                  alt={item.name || 'Ordered product'}
                   style={{
                     width: '40px', height: '40px',
                     objectFit: 'cover', borderRadius: '8px',

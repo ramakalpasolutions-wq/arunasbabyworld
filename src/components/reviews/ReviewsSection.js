@@ -409,7 +409,7 @@ function ReviewCard({ review, currentUserId, isAdmin, onDelete, onEdit, onImageC
             <img
               key={i}
               src={img.url}
-              alt={`Review ${i + 1}`}
+              alt={`Customer review photo ${i + 1}`}
               onClick={() => onImageClick(i)}
               style={{
                 width: '80px', height: '80px', objectFit: 'cover',
@@ -614,7 +614,7 @@ function ReviewForm({ productId, productName, existingReview, onSuccess, onCance
         <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
           {images.map((img, i) => (
             <div key={i} style={{ position: 'relative' }}>
-              <img src={img.url} alt="" style={{ width: '70px', height: '70px', objectFit: 'cover', borderRadius: '8px', border: '2px solid #E5E7EB' }} />
+              <img src={img.url} alt={`Your review photo ${i + 1}`} style={{ width: '70px', height: '70px', objectFit: 'cover', borderRadius: '8px', border: '2px solid #E5E7EB' }} />
               <button
                 type="button"
                 onClick={() => removeImage(i)}
@@ -731,7 +731,7 @@ function ImageLightbox({ images, currentIndex, onClose }) {
 
       <img
         src={images[idx].url}
-        alt={`Review ${idx + 1}`}
+        alt={`Customer review photo ${idx + 1}`}
         onClick={(e) => e.stopPropagation()}
         style={{ maxWidth: '90vw', maxHeight: '90vh', objectFit: 'contain', borderRadius: '8px' }}
       />

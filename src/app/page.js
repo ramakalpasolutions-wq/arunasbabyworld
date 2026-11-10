@@ -1,14 +1,50 @@
 import MainLayout from '@/components/layout/MainLayout';
 import HomeClient from './HomeClient';
 import { unstable_noStore as noStore } from 'next/cache';
+import {
+  pageMetadata,
+  JsonLd,
+  absoluteUrl,
+  SITE_URL,
+  SITE_NAME,
+  DEFAULT_DESCRIPTION,
+} from '@/lib/seo';
 
 export const revalidate = 0;
 export const dynamic = 'force-dynamic';
 
-export const metadata = {
-  title: 'Arunas Baby World - Premium Baby & Kids Store',
-  description: 'Shop the best baby clothing, toys, gear, and more.',
-};
+export const metadata = pageMetadata({
+  title: 'Arunas Baby World - Baby & Kids Store Online',
+  absoluteTitle: true,
+  description: DEFAULT_DESCRIPTION,
+  path: '/',
+});
+
+const homeJsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Organization',
+    name: SITE_NAME,
+    url: SITE_URL,
+    logo: absoluteUrl('/logo.png'),
+    sameAs: [
+      'https://www.facebook.com/arunasbabyworld',
+      'https://www.instagram.com/arunasbabyworld',
+      'https://www.youtube.com/@arunasbabyworld',
+    ],
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebSite',
+    name: SITE_NAME,
+    url: SITE_URL,
+    potentialAction: {
+      '@type': 'SearchAction',
+      target: `${SITE_URL}/products?search={search_term_string}`,
+      'query-input': 'required name=search_term_string',
+    },
+  },
+];
 
 const BASE_URL =
   process.env.NEXTAUTH_URL ||
@@ -51,6 +87,7 @@ export default async function HomePage() {
 
   return (
     <MainLayout>
+      <JsonLd data={homeJsonLd} />
       <HomeClient
         heroBanners={bannerData.heroBanners || []}
         brands={bannerData.brands || []}

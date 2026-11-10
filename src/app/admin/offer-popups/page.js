@@ -142,7 +142,7 @@ export default function OfferPopupsPage() {
               {form.imageUrl && (
                 <img
                   src={form.imageUrl}
-                  alt="Preview"
+                  alt="Offer popup image preview"
                   className={styles.preview}
                 />
               )}

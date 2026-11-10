@@ -459,7 +459,7 @@ function BrandsTab() {
                     {uploading
                       ? <p style={{ color: form.color, fontWeight: '700' }}>⏳ Uploading...</p>
                       : form.logo?.url
-                        ? <img src={form.logo.url} alt="logo" style={{ height: '70px', objectFit: 'contain' }} />
+                        ? <img src={form.logo.url} alt={`${form.name || 'Brand'} logo`} style={{ height: '70px', objectFit: 'contain' }} />
                         : <div style={{ textAlign: 'center' }}><div style={{ fontSize: '22px' }}>🏷️</div><p style={{ fontSize: '12px', fontWeight: '700', color: form.color, margin: '4px 0 0' }}>Click to upload</p></div>
                     }
                   </div>
@@ -628,7 +628,7 @@ function CareGridManager({ type, title, accentColor, layout }) {
               <div style={{ width: '100%', height: '120px', border: `2px dashed ${accentColor}`, borderRadius: '10px', background: '#fff8fb', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                 {uplF ? <p style={{ color: accentColor, fontWeight: '700', fontSize: '11px', margin: 0 }}>⏳</p>
                   : frontImg
-                    ? <img src={frontImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ? <img src={frontImg} alt="Front image preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     : <div style={{ textAlign: 'center' }}><div style={{ fontSize: '20px' }}>📷</div><p style={{ margin: '3px 0 0', fontSize: '10px', fontWeight: '700', color: accentColor, fontFamily: 'Nunito, sans-serif' }}>Click</p></div>}
               </div>
             </label>
@@ -644,7 +644,7 @@ function CareGridManager({ type, title, accentColor, layout }) {
               <div style={{ width: '100%', height: '120px', border: `2px dashed #43A047`, borderRadius: '10px', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}>
                 {uplB ? <p style={{ color: '#43A047', fontWeight: '700', fontSize: '11px', margin: 0 }}>⏳</p>
                   : backImg
-                    ? <img src={backImg} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                    ? <img src={backImg} alt="Back image preview" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                     : <div style={{ textAlign: 'center' }}><div style={{ fontSize: '20px' }}>🔄</div><p style={{ margin: '3px 0 0', fontSize: '10px', fontWeight: '700', color: '#43A047', fontFamily: 'Nunito, sans-serif' }}>Click</p></div>}
               </div>
             </label>
@@ -1116,13 +1116,13 @@ export default function AdminBanners() {
             heroIsVideo ? (
               <video src={heroMedia} autoPlay muted loop playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              <img src={heroMedia} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={heroMedia} alt={banner.title || 'Hero banner'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             )
           ) : banner.image?.url ? (
             bannerImageIsVideo ? (
               <video src={banner.image.url} autoPlay muted loop playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             ) : (
-              <img src={banner.image.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <img src={banner.image.url} alt={banner.title || 'Banner image'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
             )
           ) : banner.type === 'budget' ? (
             <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
@@ -1184,7 +1184,7 @@ export default function AdminBanners() {
                 {isVideo ? (
                   <video src={value.url} autoPlay muted loop playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                 ) : (
-                  <img src={value.url} alt="" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '6px', boxSizing: 'border-box' }} />
+                  <img src={value.url} alt="Uploaded image preview" style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '6px', boxSizing: 'border-box' }} />
                 )}
                 <span style={{
                   position: 'absolute', top: '8px', right: '8px',

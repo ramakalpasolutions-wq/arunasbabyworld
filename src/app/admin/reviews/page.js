@@ -117,7 +117,7 @@ export default function AdminReviewsPage() {
                   {review.images?.length > 0 && (
                     <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '10px' }}>
                       {review.images.map((img, i) => (
-                        <img key={i} src={img.url} alt="" style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #E5E7EB' }} />
+                        <img key={i} src={img.url} alt={`Review photo ${i + 1}`} style={{ width: '60px', height: '60px', objectFit: 'cover', borderRadius: '6px', border: '1px solid #E5E7EB' }} />
                       ))}
                     </div>
                   )}

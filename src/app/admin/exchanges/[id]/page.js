@@ -298,7 +298,7 @@ export default function AdminExchangeDetail({ params }) {
             <div className="exd-products-grid">
               <div className="exd-product exd-product-old">
                 <span className="exd-product-badge exd-badge-old">↩️ Returning</span>
-                <img src={exchange.oldProductImage || 'https://via.placeholder.com/80'} alt="" />
+                <img src={exchange.oldProductImage || 'https://via.placeholder.com/80'} alt={exchange.oldProductName || 'Returned product'} />
                 <p className="exd-product-name">{exchange.oldProductName}</p>
                 <strong className="exd-product-price exd-price-old">
                   ₹{exchange.oldPrice?.toLocaleString('en-IN')}
@@ -310,7 +310,7 @@ export default function AdminExchangeDetail({ params }) {
 
               <div className="exd-product exd-product-new">
                 <span className="exd-product-badge exd-badge-new">📦 Replace With</span>
-                <img src={exchange.newProductImage || 'https://via.placeholder.com/80'} alt="" />
+                <img src={exchange.newProductImage || 'https://via.placeholder.com/80'} alt={exchange.newProductName || 'Replacement product'} />
                 <p className="exd-product-name">{exchange.newProductName}</p>
                 <strong className="exd-product-price exd-price-new">
                   ₹{exchange.newPrice?.toLocaleString('en-IN')}

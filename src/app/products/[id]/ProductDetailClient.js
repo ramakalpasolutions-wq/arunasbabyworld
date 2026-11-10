@@ -436,7 +436,7 @@ export default function ProductDetailClient({ id }) {
                     >
                       <Image
                         src={img.url}
-                        alt={`${product.name} ${i + 1}`}
+                        alt={`${product.name} - image ${i + 1}`}
                         width={120}
                         height={120}
                         style={{ width: '100%', height: '100%', objectFit: 'cover' }}

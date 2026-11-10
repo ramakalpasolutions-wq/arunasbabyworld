@@ -59,7 +59,7 @@ export default function OfferPopupModal() {
         <div className={styles.imageWrap} onClick={handleClick}>
           <img
             src={current.imageUrl}
-            alt={current.title}
+            alt={current.title || 'Special offer at Arunas Baby World'}
             className={styles.image}
           />
           {current.link && <div className={styles.tapHint}>Tap to shop →</div>}

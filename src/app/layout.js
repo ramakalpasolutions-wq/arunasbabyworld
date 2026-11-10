@@ -5,24 +5,61 @@ import { Toaster } from 'react-hot-toast';
 import Script from 'next/script';
 import Providers from './providers';
 import '@/styles/globals.css';
+import {
+  SITE_URL,
+  SITE_NAME,
+  DEFAULT_DESCRIPTION,
+  DEFAULT_KEYWORDS,
+  DEFAULT_OG_IMAGE,
+} from '@/lib/seo';
 
 // =========================================================
 // WEBSITE METADATA
 // =========================================================
 
 export const metadata = {
+  metadataBase: new URL(SITE_URL),
   title: {
-    default: 'Arunas Baby World',
-    template: '%s | Arunas Baby World',
+    default: `${SITE_NAME} - Baby & Kids Store Online`,
+    template: `%s | ${SITE_NAME}`,
   },
-  description:
-    'Shop the best baby clothing, toys, gear, and more. Premium quality for your little ones.',
-  keywords: [
-    'baby products',
-    'kids clothing',
-    'toys',
-    'baby gear',
-  ],
+  description: DEFAULT_DESCRIPTION,
+  keywords: DEFAULT_KEYWORDS,
+  applicationName: SITE_NAME,
+  authors: [{ name: SITE_NAME }],
+  creator: SITE_NAME,
+  publisher: SITE_NAME,
+  category: 'shopping',
+  formatDetection: { telephone: false },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+      'max-video-preview': -1,
+    },
+  },
+  openGraph: {
+    type: 'website',
+    siteName: SITE_NAME,
+    locale: 'en_IN',
+    title: `${SITE_NAME} - Baby & Kids Store Online`,
+    description: DEFAULT_DESCRIPTION,
+    images: [{ url: DEFAULT_OG_IMAGE, alt: SITE_NAME, width: 1200, height: 630, type: 'image/jpeg' }],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: `${SITE_NAME} - Baby & Kids Store Online`,
+    description: DEFAULT_DESCRIPTION,
+    images: [DEFAULT_OG_IMAGE],
+  },
+};
+
+export const viewport = {
+  themeColor: '#264653',
 };
 
 // =========================================================

@@ -1,7 +1,8 @@
 import MainLayout from '@/components/layout/MainLayout';
 import ExchangeRequestClient from './ExchangeRequestClient';
+import { privateMetadata } from '@/lib/seo';
 
-export const metadata = { title: 'Exchange Product | Arunas Baby World' };
+export const metadata = privateMetadata('Exchange Product');
 
 export default async function ExchangeRequestPage({ params }) {
   const { id } = await params;

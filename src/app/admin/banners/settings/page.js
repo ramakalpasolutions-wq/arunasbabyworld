@@ -417,7 +417,7 @@ function BrandsManager() {
                       <p style={{ color: form.color, fontWeight: '700', fontSize: '12px' }}>⏳ Uploading...</p>
                     ) : form.logo?.url ? (
                       <>
-                        <img src={form.logo.url} alt="" style={{ height: '60px', objectFit: 'contain' }} />
+                        <img src={form.logo.url} alt="Brand logo preview" style={{ height: '60px', objectFit: 'contain' }} />
                         <div style={{
                           position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.45)',
                           display: 'flex', alignItems: 'center', justifyContent: 'center',

@@ -596,6 +596,7 @@ function PromoSection({ banners, sectionSettings = {} }) {
               const isVideo   = isVideoUrl(mediaUrl);
               const isActive  = i === current;
               const cardTitle = b.title         || '';
+              const cardAlt   = cardTitle || 'Baby and kids offer at Arunas Baby World';
               const cardDesc  = b.description   || b.subtitle || '';
               const offerText = b.offer         || '';
               const btnText   = b.buttonText    || 'SHOP NOW';
@@ -608,9 +609,9 @@ function PromoSection({ banners, sectionSettings = {} }) {
                     <div className="promoMediaWrap">
                       {mediaUrl ? (
                         isVideo ? (
-                          <video key={`${b.id}-${isActive}`} src={mediaUrl} autoPlay loop muted playsInline className="promoMedia" />
+                          <video key={`${b.id}-${isActive}`} src={mediaUrl} aria-label={cardAlt} autoPlay loop muted playsInline className="promoMedia" />
                         ) : (
-                          <img src={mediaUrl} alt={cardTitle} className="promoMedia" loading="lazy" />
+                          <img src={mediaUrl} alt={cardAlt} className="promoMedia" loading="lazy" />
                         )
                       ) : (
                         <div className="promoNoMedia"><span>🎁</span></div>
@@ -733,7 +734,7 @@ function CategorySection({ banners, sectionSettings = {} }) {
                 >
                   <div className="promoImgWrap">
                     {imgUrl
-                      ? <img src={imgUrl} alt={name} style={{ width:'100%',height:'100%',objectFit:'cover',objectPosition:'center',display:'block',transition:'transform 0.4s ease' }} />
+                      ? <img src={imgUrl} alt={name || 'Shop by category'} style={{ width:'100%',height:'100%',objectFit:'cover',objectPosition:'center',display:'block',transition:'transform 0.4s ease' }} />
                       : <div style={{ width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'3rem',background:`${color}15`,color,fontWeight:'900' }}>{name.charAt(0)}</div>}
                   </div>
                   <div style={{ padding: '11px 6px', background: '#1B3540', textAlign: 'center' }}>
@@ -795,7 +796,7 @@ function BabyFoodSection({ banners, sectionSettings = {} }) {
                 <div className="bfCard" style={{ borderColor: `${color}40` }}>
                   <div className="bfImgWrap" style={{ background: frontImg ? '#f8f8f8' : `${color}12` }}>
                     {frontImg
-                      ? <img src={frontImg} alt={banner.title || ''} style={{ width:'100%',height:'100%',objectFit:'contain',padding:'8px',boxSizing:'border-box' }} />
+                      ? <img src={frontImg} alt={banner.title || 'Baby food and nutrition products'} style={{ width:'100%',height:'100%',objectFit:'contain',padding:'8px',boxSizing:'border-box' }} />
                       : <span style={{ fontSize:'4rem' }}>{banner.emoji||'🍼'}</span>}
                   </div>
                   <div className="bfInfo">
@@ -843,7 +844,7 @@ function ToysSection({ banners, sectionSettings = {} }) {
   return (
     <section style={{ position:'relative', padding:'clamp(36px,5vw,68px) clamp(12px,2vw,20px)', overflow:'hidden' }}>
       {sectionBg
-        ? <img src={sectionBg} alt="bg" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', opacity:0.18, filter:'blur(1px)' }} />
+        ? <img src={sectionBg} alt="" aria-hidden="true" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', opacity:0.18, filter:'blur(1px)' }} />
         : <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg,#FEF2F2 0%,#FFF7ED 50%,#FFFBF2 100%)' }} />}
       <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg,rgba(255,255,255,0.58),rgba(255,255,255,0.82))' }} />
 
@@ -871,7 +872,7 @@ function ToysSection({ banners, sectionSettings = {} }) {
                 <div className="toysCard">
                   <div className="toysImgWrap" style={{ background: frontImg ? '#FFFBF2' : 'linear-gradient(135deg,#FEF2F2,#FFF7ED)' }}>
                     {frontImg
-                      ? <img src={frontImg} alt={banner.title} style={{ width:'100%',height:'100%',objectFit:'contain',padding:'12px',boxSizing:'border-box' }} />
+                      ? <img src={frontImg} alt={banner.title || 'Toys and games for kids'} style={{ width:'100%',height:'100%',objectFit:'contain',padding:'12px',boxSizing:'border-box' }} />
                       : <span style={{ fontSize:'4rem' }}>{banner.emoji||'🧸'}</span>}
                     <div style={{ position:'absolute', top:'10px', left:'10px', padding:'4px 10px', borderRadius:'999px', background:color, color:'white', fontSize:'10px', fontWeight:'800', fontFamily:'Nunito,sans-serif' }}>Play</div>
                   </div>
@@ -924,6 +925,7 @@ function CareSection({ personalCareBanners, healthCareBanners, sectionSettings =
   const getImageItems = (arr, fallback) =>
     (arr || []).map(b => ({ 
       front: b.image?.url || '', 
+      title: b.title || '',
       link:  b.buttonLink || fallback 
     })).filter(it => it.front);
 
@@ -938,7 +940,7 @@ function CareSection({ personalCareBanners, healthCareBanners, sectionSettings =
         <div style={{ borderRadius:'20px', background:'#fff', border:`2px solid ${accentColor}30`, overflow:'hidden', width:'100%', height:'100%', transition:'transform 0.3s ease, box-shadow 0.3s ease' }}
           className="careImgCard">
           {item.front
-            ? <img src={item.front} alt="" style={{ width:'100%',height:'100%',objectFit:'cover',objectPosition:'center',display:'block' }} />
+            ? <img src={item.front} alt={item.title || 'Baby care products'} style={{ width:'100%',height:'100%',objectFit:'cover',objectPosition:'center',display:'block' }} />
             : <div style={{ width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'3.5rem',background:`${accentColor}10` }}>{fallbackEmoji}</div>}
         </div>
       </SimpleCard>
@@ -1087,7 +1089,7 @@ function EVSection({ banners, sectionSettings = {} }) {
                 <div className="evRedBorder">
                   <div className="evImgWrap" style={{ background: frontImg ? '#f0f8ff' : 'linear-gradient(135deg,#E0F2FE,#EEF3F5)' }}>
                     {frontImg
-                      ? <img src={frontImg} alt={item.title} style={{ width:'100%',height:'100%',objectFit:'contain',padding:'12px',boxSizing:'border-box' }} />
+                      ? <img src={frontImg} alt={item.title || 'Kids electric ride-on vehicle'} style={{ width:'100%',height:'100%',objectFit:'contain',padding:'12px',boxSizing:'border-box' }} />
                       : <span style={{ fontSize:'5rem' }}>{item.emoji||'🚗'}</span>}
                     {item.ageGroup && (
                       <div style={{ position:'absolute', top:'10px', right:'10px', padding:'4px 10px', background:'rgba(0,0,0,0.45)', color:'white', borderRadius:'999px', fontSize:'10px', fontWeight:'700', fontFamily:'Nunito,sans-serif', backdropFilter:'blur(4px)' }}>
@@ -1280,7 +1282,7 @@ function DynamicCustomSection({ sectionKey, banners = [], sectionSettings = {} }
                       isVideo ? (
                         <video src={frontImg} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
-                        <img src={frontImg} alt={banner.title || ''} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        <img src={frontImg} alt={banner.title || 'Arunas Baby World offer'} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       )
                     ) : (
                       <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '3.5rem' }}>

@@ -1,10 +1,9 @@
 import { Suspense } from 'react';
 import MainLayout from '@/components/layout/MainLayout';
 import ProfileClient from './ProfileClient';
+import { privateMetadata } from '@/lib/seo';
 
-export const metadata = {
-  title: 'My Profile | Arunas Baby World',
-};
+export const metadata = privateMetadata('My Profile');
 
 export default function ProfilePage() {
   return (
