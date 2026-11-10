@@ -767,3 +767,19 @@
     padding: 10px 8px;
   }
 }
+/* ============================================================
+   PHONE FIXES (kept last so they win over the tablet rules above)
+============================================================ */
+@media (max-width: 600px) {
+  .toolbarInner { gap: 8px; }
+  .toolbarRight { gap: 8px; min-width: 0; flex-shrink: 1; }
+  .sortWrap { min-width: 0; }
+  .sortWrap > span { display: none; }          /* hide the "Sort by:" label */
+  .sortSelect { max-width: 138px; min-width: 0; text-overflow: ellipsis; }
+  .filterToggle { flex-shrink: 0; }
+}
+
+@media (max-width: 480px) {
+  .productsGrid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+  .skeletonGrid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+}

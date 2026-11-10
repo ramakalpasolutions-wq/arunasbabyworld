@@ -228,6 +228,7 @@ export default function RegisterPage() {
         position: 'relative',
         zIndex: 1,
         marginTop: '40px',
+        animation: 'slideUp 0.55s cubic-bezier(0.22, 1, 0.36, 1) both',
       }}>
 
         {/* Logo */}

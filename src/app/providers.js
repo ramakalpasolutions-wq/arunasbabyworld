@@ -6,6 +6,7 @@ import { WishlistProvider } from '@/context/WishlistContext';
 import { LocationProvider } from '@/context/LocationContext';
 import FloatingWhatsApp from '@/components/layout/FloatingWhatsApp';
 import PageTracker from '@/components/layout/PageTracker';
+import MotionEffects from '@/components/layout/MotionEffects';
 
 export default function Providers({ children }) {
   return (
@@ -14,6 +15,7 @@ export default function Providers({ children }) {
         <CartProvider>
           <WishlistProvider>
             <PageTracker />
+            <MotionEffects />
             {children}
             <FloatingWhatsApp />
             <Toaster
