@@ -6,7 +6,7 @@ import { permanentRedirect, notFound } from 'next/navigation';
 import prisma from '@/lib/prisma';
 import {
   JsonLd, absoluteUrl, SITE_NAME, DEFAULT_OG_IMAGE,
-  productPrices, shippingDetailsLd, RETURN_POLICY_LD,
+  productPrices, productInStock, shippingCost, shippingDetailsLd, RETURN_POLICY_LD,
 } from '@/lib/seo';
 
 // ================================================
@@ -74,7 +74,7 @@ export async function generateMetadata({ params }) {
   }
 
   const title = shortName(product.name);
-  const price = productPrices(product).selling;
+  const { price: mrp, salePrice, selling: price } = productPrices(product);
 
   const description =
     cleanDescription(product.shortDescription || product.description) ||
@@ -126,7 +126,7 @@ export async function generateMetadata({ params }) {
 
 function productJsonLd(product) {
   const url = absoluteUrl(`/products/${product.slug || product.id}`);
-  const price = productPrices(product).selling;
+  const { price: mrp, salePrice, selling: price } = productPrices(product);
   // Prices are reviewed at least yearly; Google wants an end date for the offer
   const priceValidUntil = `${new Date().getFullYear() + 1}-12-31`;
   const images = productImages(product);
@@ -166,14 +166,29 @@ function productJsonLd(product) {
         priceCurrency: 'INR',
         price: Number(price || 0),
         priceValidUntil,
-        shippingDetails: shippingDetailsLd(price),
+        // Shown crossed out next to the sale price
+        ...(salePrice
+          ? {
+              priceSpecification: [
+                { '@type': 'UnitPriceSpecification', price: Number(price), priceCurrency: 'INR' },
+                {
+                  '@type': 'UnitPriceSpecification',
+                  priceType: 'https://schema.org/StrikethroughPrice',
+                  price: Number(mrp),
+                  priceCurrency: 'INR',
+                },
+              ],
+            }
+          : {}),
+        // Free-delivery products say so here; cheaper ones use the store-wide
+        // "free over ₹800" rates on the home page, so Google can show the threshold
+        ...(shippingCost(price) === 0 ? { shippingDetails: shippingDetailsLd(price) } : {}),
         hasMerchantReturnPolicy: RETURN_POLICY_LD,
-        availability:
-          product.stock > 0
-            ? 'https://schema.org/InStock'
-            : 'https://schema.org/OutOfStock',
+        availability: productInStock(product)
+          ? 'https://schema.org/InStock'
+          : 'https://schema.org/OutOfStock',
         itemCondition: 'https://schema.org/NewCondition',
-        seller: { '@type': 'Organization', name: SITE_NAME },
+        seller: { '@type': 'Organization', '@id': absoluteUrl('/#store'), name: SITE_NAME },
       },
     },
     {

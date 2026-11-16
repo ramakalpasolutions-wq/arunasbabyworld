@@ -14,6 +14,8 @@ import {
   SITE_URL,
   SITE_NAME,
   DEFAULT_DESCRIPTION,
+  SHIPPING_SERVICE_LD,
+  RETURN_POLICY_LD,
 } from '@/lib/seo';
 
 export const revalidate = 0;
@@ -50,6 +52,8 @@ const homeJsonLd = [
       addressCountry: 'IN',
     },
     areaServed: { '@type': 'Country', name: 'India' },
+    hasShippingService: SHIPPING_SERVICE_LD,
+    hasMerchantReturnPolicy: RETURN_POLICY_LD,
     contactPoint: {
       '@type': 'ContactPoint',
       telephone: STORE.phone.replace(/\s+/g, ''),

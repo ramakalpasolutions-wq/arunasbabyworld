@@ -4,7 +4,7 @@
 import prisma from '@/lib/prisma';
 import {
   SITE_URL, SITE_NAME, absoluteUrl, cleanText,
-  productPrices, shippingCost,
+  productPrices, productInStock, shippingCost,
 } from '@/lib/seo';
 
 export const revalidate = 3600;
@@ -30,8 +30,8 @@ function item(p) {
   const { price, salePrice, selling } = productPrices(p);
   if (!price) return '';
 
-  const variantStock = (p.colorVariants || []).reduce((n, v) => n + (Number(v.stock) || 0), 0);
-  const inStock = (Number(p.stock) || 0) > 0 || (p.hasVariants && variantStock > 0);
+  // Same stock status the product page shows, so Merchant Center finds no mismatch
+  const inStock = productInStock(p);
 
   return [
     '<item>',

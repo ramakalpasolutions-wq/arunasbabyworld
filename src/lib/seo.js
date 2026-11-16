@@ -123,6 +123,12 @@ export function productPrices(product) {
   return { price, salePrice: onSale ? discount : null, selling: onSale ? discount : price };
 }
 
+/** In stock as the product page first shows it (the first colour variant, when there are variants). */
+export function productInStock(product) {
+  const v = product.hasVariants && product.colorVariants?.length ? product.colorVariants[0] : null;
+  return (Number(v ? v.stock : product.stock) || 0) > 0;
+}
+
 export function shippingCost(sellingPrice) {
   return sellingPrice >= FREE_DELIVERY_FROM ? 0 : DELIVERY_CHARGE;
 }
@@ -140,6 +146,36 @@ export function shippingDetailsLd(sellingPrice) {
     },
   };
 }
+
+/**
+ * Store-wide delivery rates (free from FREE_DELIVERY_FROM). Google reads this from the
+ * home page and can show "Free delivery over ₹800" next to products in search results.
+ */
+const servicePeriod = (min, max) => ({
+  '@type': 'ServicePeriod',
+  duration: { '@type': 'QuantitativeValue', minValue: min, maxValue: max, unitCode: 'd' },
+});
+export const SHIPPING_SERVICE_LD = {
+  '@type': 'ShippingService',
+  name: 'Standard delivery across India',
+  handlingTime: servicePeriod(1, 2),
+  shippingConditions: [
+    {
+      '@type': 'ShippingConditions',
+      shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IN' },
+      orderValue: { '@type': 'MonetaryAmount', minValue: 0, maxValue: FREE_DELIVERY_FROM - 0.01, currency: 'INR' },
+      shippingRate: { '@type': 'MonetaryAmount', value: DELIVERY_CHARGE, currency: 'INR' },
+      transitTime: servicePeriod(3, 7),
+    },
+    {
+      '@type': 'ShippingConditions',
+      shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IN' },
+      orderValue: { '@type': 'MonetaryAmount', minValue: FREE_DELIVERY_FROM, currency: 'INR' },
+      shippingRate: { '@type': 'MonetaryAmount', value: 0, currency: 'INR' },
+      transitTime: servicePeriod(3, 7),
+    },
+  ],
+};
 
 export const RETURN_POLICY_LD = {
   '@type': 'MerchantReturnPolicy',
