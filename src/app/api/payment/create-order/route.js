@@ -11,7 +11,22 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
     }
 
-    const { amount, currency = 'INR', receipt } = await request.json();
+    // The amount always comes from the saved order, never from the client.
+    const { orderId } = await request.json();
+    if (!orderId) {
+      return NextResponse.json({ error: 'Order ID is required' }, { status: 400 });
+    }
+
+    const dbOrder = await prisma.order.findUnique({ where: { id: orderId } });
+    if (!dbOrder || dbOrder.userId !== session.user.id) {
+      return NextResponse.json({ error: 'Order not found' }, { status: 404 });
+    }
+    if (dbOrder.isPaid) {
+      return NextResponse.json({ error: 'Order is already paid' }, { status: 400 });
+    }
+    if (dbOrder.paymentMethod !== 'Razorpay') {
+      return NextResponse.json({ error: 'Order is not a Razorpay order' }, { status: 400 });
+    }
 
     const razorpay = new Razorpay({
       key_id: process.env.RAZORPAY_KEY_ID,
@@ -19,9 +34,13 @@ export async function POST(request) {
     });
 
     const order = await razorpay.orders.create({
-      amount: Math.round(amount * 100),
-      currency,
-      receipt: receipt || `receipt_${Date.now()}`,
+      amount: Math.round(dbOrder.totalPrice * 100),
+      currency: 'INR',
+      receipt: `order_${dbOrder.id.slice(-10)}`,
+      notes: {
+        orderId: dbOrder.id,
+        orderNumber: dbOrder.orderNumber?.toString() || '',
+      },
     });
 
     return NextResponse.json({ order });

@@ -78,6 +78,9 @@ export default function MotionEffects() {
       if (rect.width < 48 || rect.height < 24) return;
       if (rect.height > window.innerHeight * 1.2) return;   // too big: animate its parts instead
       if (rect.bottom < 0) return;                            // already scrolled past
+      // Never hide what the shopper can already see: content on screen stays put,
+      // only content below the fold animates in as it is scrolled to.
+      if (rect.top < window.innerHeight) return;
 
       const cs = getComputedStyle(el);
       if (cs.display === 'inline' || cs.display === 'contents' || cs.display === 'none') return;

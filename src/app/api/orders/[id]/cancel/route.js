@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
+import { releaseOrderStock } from '@/lib/inventory';
 import { createRefund } from '@/lib/razorpay';
 import {
   sendOrderCancelled,
@@ -49,6 +50,15 @@ export async function POST(request, context) {
     // Prevent duplicate processing
     if (order.isCancelled || order.orderStatus === 'Cancelled') {
       return NextResponse.json({ error: 'Order already cancelled' }, { status: 400 });
+    }
+
+    // Customers may only cancel before the order ships (admins use admin-cancel)
+    const CUSTOMER_CANCELLABLE = ['Pending', 'Confirmed', 'Processing'];
+    if (!isAdmin && (!CUSTOMER_CANCELLABLE.includes(order.orderStatus) || order.isDelivered || order.awbNumber)) {
+      return NextResponse.json(
+        { error: 'This order has already been shipped and can no longer be cancelled. You can request a return after delivery.' },
+        { status: 400 }
+      );
     }
 
     const isCOD = order.paymentMethod?.toUpperCase() === 'COD';
@@ -168,26 +178,8 @@ export async function POST(request, context) {
     }
 
     // Automatically restore product stock levels
-    if (order.orderItems && order.orderItems.length > 0) {
-      await Promise.allSettled(
-        order.orderItems.map(async (item) => {
-          if (item.productId) {
-            try {
-              await prisma.product.update({
-                where: { id: item.productId },
-                data: {
-                  stock: {
-                    increment: Number(item.quantity) || 1,
-                  },
-                },
-              });
-            } catch (stockErr) {
-              console.error(`❌ Failed to restore stock for item ${item.productId}:`, stockErr);
-            }
-          }
-        })
-      );
-    }
+    // Return stock only if this order is holding it (never double-restore)
+    await releaseOrderStock(order);
 
     // Update order status fields in DB
     const updatedOrder = await prisma.order.update({

@@ -2,7 +2,6 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
-import { createRefund } from '@/lib/razorpay';
 import {
   sendReturnRequestConfirmation,
   sendRefundRequestConfirmation,
@@ -70,6 +69,18 @@ export async function POST(request, { params }) {
       );
     }
 
+    // Refund & Returns Policy: requests must be raised within 3 days of delivery
+    const RETURN_WINDOW_DAYS = 3;
+    if (session.user.role !== 'admin' && order.deliveredAt) {
+      const ageMs = Date.now() - new Date(order.deliveredAt).getTime();
+      if (ageMs > RETURN_WINDOW_DAYS * 24 * 60 * 60 * 1000) {
+        return NextResponse.json(
+          { error: `Return/refund requests must be raised within ${RETURN_WINDOW_DAYS} days of delivery.` },
+          { status: 400 }
+        );
+      }
+    }
+
     /* ── Is this a Return or Refund request? ── */
     const isRefundOnly = reason === 'Refund requested by customer';
 
@@ -90,29 +101,13 @@ export async function POST(request, { params }) {
     };
 
     /* ══════════════════════════════════════════
-       STEP 1: TRY RAZORPAY AUTO REFUND first (if applicable)
+       STEP 1: NO AUTOMATIC REFUND AT REQUEST TIME
+       Per the Refund & Returns Policy a refund is issued after we approve the
+       request (admin: Refunds → Accept, which schedules the Razorpay refund).
     ══════════════════════════════════════════ */
-    let razorpayRefundResult = null;
-    let refundSpeed = 'normal';
-
-    if (order.isPaid && order.paymentMethod === 'Razorpay') {
-      const paymentId = order.paymentResult?.razorpayPaymentId;
-
-      if (paymentId) {
-        console.log('⚡ AUTO initiating instant Razorpay refund:', paymentId);
-        razorpayRefundResult = await createRefund(paymentId, order.totalPrice, {
-          reason: reason || 'Customer return/refund request',
-          orderId: order.id,
-        });
-
-        if (razorpayRefundResult.success) {
-          refundSpeed = razorpayRefundResult.speed || 'optimum';
-          console.log(`✅ Razorpay refund created: ${razorpayRefundResult.refund.id} | Speed: ${refundSpeed}`);
-        } else {
-          console.error('❌ Auto refund failed:', razorpayRefundResult.error);
-        }
-      }
-    }
+    const razorpayRefundResult = null;
+    const refundSpeed = 'normal';
+    const paidOnline = order.isPaid && order.paymentMethod === 'Razorpay' && !!order.paymentResult?.razorpayPaymentId;
 
     /* ══════════════════════════════════════════
        ✅ STEP 2: ALWAYS CREATE REFUND RECORD (KEY FIX!)
@@ -123,10 +118,10 @@ export async function POST(request, { params }) {
     let refundType;
     let refundStatus;
     
-    if (razorpayRefundResult?.success) {
-      // Razorpay auto-refund succeeded
+    if (paidOnline) {
+      // Refunded to the original payment method once an admin approves it
       refundType   = 'razorpay';
-      refundStatus = 'processing';
+      refundStatus = 'pending';
     } else if (refundMethod === 'upi') {
       // Manual UPI refund needed
       refundType   = 'upi_transfer';
@@ -267,7 +262,7 @@ export async function POST(request, { params }) {
         refundType,
         estimatedTime: razorpayRefundResult?.success
           ? (refundSpeed === 'optimum' ? 'Within 2–3 hours' : 'Within 5–7 business days')
-          : 'Manual processing — 5–7 business days',
+          : '5–7 business days after approval',
         razorpayRefundId: razorpayRefundResult?.refund?.id || null,
         refundRecordId: refundRecord.id,
       },

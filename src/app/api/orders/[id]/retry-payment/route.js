@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
 import Razorpay from 'razorpay';
+import { reserveOrderStock, outOfStockMessage } from '@/lib/inventory';
 
 const razorpay = new Razorpay({
   key_id:     process.env.RAZORPAY_KEY_ID,
@@ -40,6 +41,12 @@ export async function POST(request, { params }) {
 
     if (order.orderStatus === 'Cancelled') {
       return NextResponse.json({ error: 'Cancelled orders cannot be retried' }, { status: 400 });
+    }
+
+    // Stock was released when the earlier payment failed — reserve it again
+    const reservation = await reserveOrderStock(order);
+    if (!reservation.ok) {
+      return NextResponse.json({ error: outOfStockMessage(reservation.outOfStock) }, { status: 409 });
     }
 
     // ✅ Create new Razorpay order

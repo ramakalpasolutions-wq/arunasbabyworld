@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
-import { razorpay, createRefund } from '@/lib/razorpay';
+import { razorpay } from '@/lib/razorpay';
 import {
   sendExchangeRequestConfirmation,
   sendAdminExchangeNotification,
@@ -245,33 +245,8 @@ export async function POST(request) {
       }
     }
 
-    // 💸 New product is cheaper → auto-refund difference via Razorpay
-    if (priceDifference < 0 && order.paymentMethod === 'Razorpay' && order.paymentResult?.razorpayPaymentId) {
-      try {
-        const refundAmount = Math.abs(priceDifference);
-        const refundResult = await createRefund(
-          order.paymentResult.razorpayPaymentId,
-          refundAmount,
-          {
-            reason: 'Exchange price difference refund',
-            orderId,
-          }
-        );
-
-        if (refundResult.success) {
-          await prisma.exchange.update({
-            where: { id: exchange.id },
-            data: {
-              razorpayRefundId: refundResult.refund.id,
-              refundAmount,
-              refundedAt: new Date(),
-            },
-          });
-        }
-      } catch (refErr) {
-        console.error('❌ Auto-refund failed:', refErr);
-      }
-    }
+    // 💸 New product is cheaper → the difference is refunded when an admin
+    // approves the exchange (see /api/exchanges/[id]/approve), not on request.
 
     /* ── Update Order ── */
     await prisma.order.update({
@@ -304,7 +279,7 @@ export async function POST(request) {
       paymentLink: paymentLinkUrl,
       priceDifference,
       requiresPayment: priceDifference > 0,
-      autoRefunded: priceDifference < 0,
+      refundOnApproval: priceDifference < 0,
     }, { status: 201 });
   } catch (error) {
     console.error('Exchange POST error:', error);

@@ -3,22 +3,8 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
+import { getCategories, PREDEFINED_SLUGS } from '@/lib/categoryList';
 
-/* ============================================================
-   ✅ 9 PREDEFINED slugs — get priority order (0–8)
-   ✅ Custom categories are also allowed (get order 999+)
-   ============================================================ */
-const PREDEFINED_SLUGS = [
-  'clothing',
-  'personal-care',
-  'health-care',
-  'baby-gear',
-  'walkers',
-  'toys',
-  'cradles-cribs',
-  'electric-vehicles',
-  'food',
-];
 
 /* ✅ Slug override map — display name → correct slug */
 const SLUG_OVERRIDE = {
@@ -47,18 +33,6 @@ function generateSlug(name) {
     .replace(/^-|-$/g, '');
 }
 
-/* ── Sort: predefined first (in fixed order), then custom (alphabetical) ── */
-function sortByOrder(cats) {
-  return [...cats].sort((a, b) => {
-    const aIdx = PREDEFINED_SLUGS.indexOf(a.slug);
-    const bIdx = PREDEFINED_SLUGS.indexOf(b.slug);
-    const aOrder = aIdx === -1 ? 999 : aIdx;
-    const bOrder = bIdx === -1 ? 999 : bIdx;
-    if (aOrder !== bOrder) return aOrder - bOrder;
-    // Both custom — sort alphabetically
-    return a.name.localeCompare(b.name);
-  });
-}
 
 /* ============================================================
    GET — Fetch categories
@@ -69,28 +43,9 @@ export async function GET(request) {
     const withCount = searchParams.get('withCount');
     const all       = searchParams.get('all') === 'true';
 
-    const categories = await prisma.category.findMany({
-      where: all ? {} : { isActive: true },
-      orderBy: { order: 'asc' },
-    });
-
-    // ✅ Show ALL categories (predefined + custom), no filtering
-    const sorted = sortByOrder(categories);
-
-    // ✅ Add product counts if requested
-    if (withCount === 'true') {
-      const withCounts = await Promise.all(
-        sorted.map(async (cat) => {
-          const productCount = await prisma.product.count({
-            where: { categoryId: cat.id, isActive: true },
-          });
-          return { ...cat, productCount };
-        })
-      );
-      return NextResponse.json({ categories: withCounts });
-    }
-
-    return NextResponse.json({ categories: sorted });
+    const cacheHeaders = { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' };
+    const categories = await getCategories({ all, withCount: withCount === 'true' });
+    return NextResponse.json({ categories }, { headers: cacheHeaders });
 
   } catch (error) {
     console.error('Categories GET error:', error);

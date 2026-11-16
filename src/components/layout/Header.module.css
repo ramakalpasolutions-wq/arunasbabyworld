@@ -309,6 +309,15 @@
   display: none;
 }
 
+/* When the row is wider than the screen, fade the right edge so it reads as scrollable */
+@media (max-width: 1360px) {
+  .navContent {
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
+    padding-right: 32px;
+  }
+}
+
 .navItem {
   position: relative;
   flex-shrink: 0;

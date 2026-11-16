@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
+import { invalidateStorefront } from '@/lib/storefrontData';
 
 export async function GET() {
   try {
@@ -55,6 +56,8 @@ export async function POST(request) {
     }
 
     const brand = await prisma.brand.create({ data: brandData });
+
+    invalidateStorefront();
     return NextResponse.json({ brand }, { status: 201 });
 
   } catch (error) {

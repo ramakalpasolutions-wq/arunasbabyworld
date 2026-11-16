@@ -270,6 +270,7 @@ model Order {
   courierName     String?
   shipmentId      String?
   trackingUrl     String?
+  stockDeducted   Boolean?    // true while this order's items hold stock (see src/lib/inventory.js)
 }
 
 model CompanySettings {

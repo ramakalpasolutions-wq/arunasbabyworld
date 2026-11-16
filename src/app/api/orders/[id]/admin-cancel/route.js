@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
+import { releaseOrderStock } from '@/lib/inventory';
 import { createRefund } from '@/lib/razorpay';
 import {
   sendOrderCancelled,
@@ -174,26 +175,8 @@ export async function POST(request, context) {
     }
 
     // ✅ Restore stock levels instantly (never let API gateway errors block inventory updates)
-    if (order.orderItems && order.orderItems.length > 0) {
-      await Promise.allSettled(
-        order.orderItems.map(async (item) => {
-          if (item.productId) {
-            try {
-              await prisma.product.update({
-                where: { id: item.productId },
-                data: {
-                  stock: {
-                    increment: Number(item.quantity) || 1,
-                  },
-                },
-              });
-            } catch (stockErr) {
-              console.error(`❌ Failed to restore stock for item ${item.productId}:`, stockErr);
-            }
-          }
-        })
-      );
-    }
+    // Return stock only if this order is holding it (never double-restore)
+    await releaseOrderStock(order);
 
     // ✅ Update Order status to Cancelled
     const updatedOrder = await prisma.order.update({

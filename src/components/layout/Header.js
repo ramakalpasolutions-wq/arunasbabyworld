@@ -7,6 +7,7 @@ import { useWishlist } from '@/context/WishlistContext';
 import { useRouter } from 'next/navigation';
 import styles from './Header.module.css';
 import Image from 'next/image';
+import SearchSuggestPanel, { buildSuggestItems, categoryTermFor } from './SearchSuggestPanel';
 
 const CATEGORY_ORDER = [
   'clothing', 'personal-care',  'walkers',
@@ -26,7 +27,6 @@ export default function Header() {
 
   const [scrolled,      setScrolled]      = useState(false);
   const [searchQuery,   setSearchQuery]   = useState('');
-  const [activeMega,    setActiveMega]    = useState(null);
   const [mobileOpen,    setMobileOpen]    = useState(false);
   const [cartBounce,    setCartBounce]    = useState(false);
   const [profileOpen,   setProfileOpen]   = useState(false);
@@ -36,7 +36,7 @@ export default function Header() {
   // SEARCH STATES
   const [searchOpen,        setSearchOpen]        = useState(false);
   const [mobileSearchOpen,  setMobileSearchOpen]  = useState(false);
-  const [searchResults,     setSearchResults]     = useState([]);
+  const [suggestData,       setSuggestData]       = useState(null);
   const [searchLoading,     setSearchLoading]     = useState(false);
   const [recentSearches,    setRecentSearches]    = useState([]);
   const [selectedIndex,     setSelectedIndex]     = useState(-1);
@@ -47,6 +47,7 @@ export default function Header() {
   const searchInputRef = useRef(null);
   const mobileSearchInputRef = useRef(null);
   const debounceRef = useRef(null);
+  const suggestAbortRef = useRef(null);
 
   // Fetch categories
   useEffect(() => {
@@ -73,29 +74,37 @@ export default function Header() {
     }
   }, []);
 
-  // Debounced live search
+  // Debounced type-ahead (stale responses are cancelled so results always match the box)
   useEffect(() => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
+    const q = searchQuery.trim();
 
-    if (!searchQuery.trim() || searchQuery.trim().length < 2) {
-      setSearchResults([]);
+    if (q.length < 2) {
+      suggestAbortRef.current?.abort();
+      setSuggestData(null);
       setSearchLoading(false);
       return;
     }
 
     setSearchLoading(true);
     debounceRef.current = setTimeout(async () => {
+      suggestAbortRef.current?.abort();
+      const controller = new AbortController();
+      suggestAbortRef.current = controller;
       try {
-        const res = await fetch(`/api/products?search=${encodeURIComponent(searchQuery.trim())}&limit=6`);
+        const res = await fetch(`/api/search/suggest?q=${encodeURIComponent(q)}`, { signal: controller.signal });
         const data = await res.json();
-        setSearchResults(data.products || []);
+        if (controller.signal.aborted) return;
+        setSuggestData(res.ok ? data : { suggestions: [], categories: [], products: [], total: 0 });
+        setSelectedIndex(-1);
       } catch (err) {
+        if (err.name === 'AbortError') return;
         console.error('Search error:', err);
-        setSearchResults([]);
+        setSuggestData({ suggestions: [], categories: [], products: [], total: 0 });
       } finally {
-        setSearchLoading(false);
+        if (!controller.signal.aborted) setSearchLoading(false);
       }
-    }, 300);
+    }, 200);
 
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
@@ -201,26 +210,57 @@ export default function Header() {
     }
   };
 
+  const closeSearch = () => {
+    setSearchOpen(false);
+    setMobileSearchOpen(false);
+    setSearchQuery('');
+    setSelectedIndex(-1);
+    searchInputRef.current?.blur();
+    mobileSearchInputRef.current?.blur();
+  };
+
+  const pickProduct = (product) => {
+    saveRecentSearch(searchQuery);
+    closeSearch();
+    router.push(`/products/${product.slug || product.id}`);
+  };
+
+  const pickCategory = (cat, term) => {
+    const q = (term || categoryTermFor(suggestData, searchQuery)).trim();
+    saveRecentSearch(q);
+    closeSearch();
+    router.push(`/products?search=${encodeURIComponent(q)}&category=${encodeURIComponent(cat.slug)}`);
+  };
+
+  const browseAll = () => {
+    closeSearch();
+    router.push('/products');
+  };
+
+  // Keyboard navigation: ↑/↓ through suggestions, categories and products; Enter picks.
   const handleKeyDown = (e) => {
-    const totalItems = searchResults.length + (searchResults.length === 0 && !searchQuery ? recentSearches.length + TRENDING_SEARCHES.length : 0);
+    const hasQuery = searchQuery.trim().length >= 2;
+    const items = hasQuery ? buildSuggestItems(suggestData) : [];
+    const n = items.length;
 
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex(prev => (prev + 1) % Math.max(totalItems, 1));
+      if (!n) return;
+      const next = (selectedIndex + 1) % n;
+      setSelectedIndex(next);
+      if (items[next]?.type === 'suggestion' && hasQuery) setSearchOpen(true);
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelectedIndex(prev => (prev - 1 + totalItems) % Math.max(totalItems, 1));
+      if (!n) return;
+      setSelectedIndex(selectedIndex <= 0 ? n - 1 : selectedIndex - 1);
     } else if (e.key === 'Enter') {
       e.preventDefault();
-      if (selectedIndex >= 0 && searchResults[selectedIndex]) {
-        const product = searchResults[selectedIndex];
-        router.push(`/products/${product.slug || product.id}`);
-        setSearchOpen(false);
-        setSearchQuery('');
-        setSelectedIndex(-1);
-      } else {
-        handleSearch(e);
-      }
+      const item = selectedIndex >= 0 ? items[selectedIndex] : null;
+      if (item?.type === 'product') pickProduct(item.product);
+      else if (item?.type === 'category') pickCategory(item.cat);
+      else if (item?.type === 'suggestion') handleSearch(null, item.text);
+      else handleSearch(e);
+      setSelectedIndex(-1);
     }
   };
 
@@ -302,143 +342,22 @@ export default function Header() {
                 zIndex: 999,
                 animation: 'searchFadeIn 0.2s ease-out',
               }}>
-                {searchLoading && (
-                  <div style={{
-                    padding: '20px', textAlign: 'center',
-                    color: '#0369A1', fontSize: '0.86rem', fontWeight: '600',
-                  }}>
-                    <div style={{
-                      display: 'inline-block',
-                      width: '24px', height: '24px',
-                      border: '3px solid #E0F2FE',
-                      borderTop: '3px solid #0369A1',
-                      borderRadius: '50%',
-                      animation: 'spin 0.8s linear infinite',
-                      marginBottom: '8px',
-                    }} />
-                    <p style={{ margin: 0 }}>Searching...</p>
-                  </div>
+                {searchQuery.trim().length >= 2 && (
+                  <SearchSuggestPanel
+                    query={searchQuery}
+                    data={suggestData}
+                    loading={searchLoading}
+                    selectedIndex={selectedIndex}
+                    onHover={setSelectedIndex}
+                    onPickSuggestion={text => handleSearch(null, text)}
+                    onPickCategory={pickCategory}
+                    onPickProduct={pickProduct}
+                    onViewAll={() => handleSearch()}
+                    onBrowseAll={browseAll}
+                  />
                 )}
 
-                {!searchLoading && searchQuery && searchResults.length > 0 && (
-                  <div>
-                    <div style={{
-                      padding: '10px 16px',
-                      background: 'linear-gradient(90deg, #F0F9FF, #E0F2FE)',
-                      borderBottom: '1px solid #BAE6FD',
-                      fontSize: '0.72rem', fontWeight: '800',
-                      color: '#0369A1', textTransform: 'uppercase', letterSpacing: '0.5px',
-                    }}>
-                      🎯 {searchResults.length} Products Found
-                    </div>
-
-                    {searchResults.map((product, i) => {
-                      const imgUrl = product.images?.[0]?.url || product.images?.[0] || product.image || 'https://via.placeholder.com/48';
-                      const price = Math.round(product.discountPrice || product.price || 0);
-                      const oldPrice = product.discountPrice && product.discountPrice < product.price ? Math.round(product.price) : null;
-                      
-                      return (
-                        <Link
-                          key={product.id}
-                          href={`/products/${product.slug || product.id}`}
-                          onClick={() => {
-                            saveRecentSearch(searchQuery);
-                            setSearchOpen(false);
-                            setSearchQuery('');
-                            setSelectedIndex(-1);
-                          }}
-                          style={{
-                            display: 'flex', alignItems: 'center', gap: '12px',
-                            padding: '10px 14px', textDecoration: 'none', color: 'inherit',
-                            background: selectedIndex === i ? '#F0F9FF' : 'white',
-                            borderBottom: i < searchResults.length - 1 ? '1px solid #F1F5F9' : 'none',
-                            transition: 'background 0.15s',
-                          }}
-                          onMouseEnter={() => setSelectedIndex(i)}
-                        >
-                          <img
-                            src={imgUrl}
-                            alt={product.name}
-                            style={{
-                              width: '48px', height: '48px', borderRadius: '8px',
-                              objectFit: 'cover', flexShrink: 0, border: '1px solid #E5E7EB', background: '#F8FAFC'
-                            }}
-                          />
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <p style={{
-                              margin: 0, fontSize: '0.86rem', fontWeight: '800', color: '#0F172A',
-                              overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap',
-                            }}>
-                              {product.name}
-                            </p>
-                            {(product.brand || product.brandName) && (
-                              <p style={{ 
-                                margin: '3px 0 0', fontSize: '0.70rem', color: '#0369A1', fontWeight: '700',
-                                display: 'inline-block', background: '#E0F2FE', padding: '2px 8px', borderRadius: '4px' 
-                              }}>
-                                🏷️ {product.brand || product.brandName}
-                              </p>
-                            )}
-                          </div>
-                          <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                            <p style={{ margin: 0, fontSize: '0.90rem', fontWeight: '800', color: '#0369A1' }}>
-                              ₹{price.toLocaleString('en-IN')}
-                            </p>
-                            {oldPrice && (
-                              <p style={{
-                                margin: '2px 0 0', fontSize: '0.68rem', color: '#94A3B8',
-                                textDecoration: 'line-through', fontWeight: '600',
-                              }}>
-                                ₹{oldPrice.toLocaleString('en-IN')}
-                              </p>
-                            )}
-                          </div>
-                        </Link>
-                      );
-                    })}
-
-                    <button
-                      onClick={() => handleSearch()}
-                      style={{
-                        width: '100%', padding: '12px 16px',
-                        background: 'linear-gradient(135deg, #4FA3F0, #0369A1)',
-                        color: 'white', border: 'none',
-                        fontSize: '0.84rem', fontWeight: '800',
-                        cursor: 'pointer', display: 'flex',
-                        alignItems: 'center', justifyContent: 'center',
-                        gap: '6px', borderRadius: '0 0 14px 14px',
-                      }}
-                    >
-                      🔍 View All Results for "{searchQuery}" →
-                    </button>
-                  </div>
-                )}
-
-                {!searchLoading && searchQuery.length >= 2 && searchResults.length === 0 && (
-                  <div style={{ padding: '30px 20px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '2.5rem', marginBottom: '8px' }}>🔍</div>
-                    <p style={{ margin: 0, fontSize: '0.90rem', fontWeight: '800', color: '#0F172A' }}>
-                      No products found
-                    </p>
-                    <p style={{ margin: '4px 0 12px', fontSize: '0.80rem', color: '#64748B' }}>
-                      Try different keywords or browse categories
-                    </p>
-                    <Link
-                      href="/products"
-                      onClick={() => { setSearchOpen(false); setSearchQuery(''); }}
-                      style={{
-                        display: 'inline-block', padding: '8px 20px',
-                        background: '#4FA3F0', color: 'white',
-                        borderRadius: '8px', textDecoration: 'none',
-                        fontSize: '0.80rem', fontWeight: '700',
-                      }}
-                    >
-                      Browse All Products
-                    </Link>
-                  </div>
-                )}
-
-                {!searchQuery && (
+                {searchQuery.trim().length < 2 && (
                   <div>
                     {recentSearches.length > 0 && (
                       <div>
@@ -715,27 +634,10 @@ export default function Header() {
           </div>
 
           {navCategories.map(cat => (
-            <div
-              key={cat.id}
-              className={styles.navItem}
-              onMouseEnter={() => setActiveMega(cat.id)}
-              onMouseLeave={() => setActiveMega(null)}
-            >
+            <div key={cat.id} className={styles.navItem}>
               <Link href={`/products?category=${cat.slug || cat.id}`} className={styles.navLink}>
                 {cat.name}
               </Link>
-              {activeMega === cat.id && (
-                <div className={styles.megaMenu}>
-                  <div className={styles.megaContent}>
-                    <div className={styles.megaCategory}>
-                      <h3>{cat.name}</h3>
-                      <Link href={`/products?category=${cat.slug || cat.id}`} className={styles.viewAll}>
-                        View All →
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           ))}
 
@@ -778,11 +680,8 @@ export default function Header() {
                 type="text"
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
-                onKeyDown={e => {
-                  if (e.key === 'Enter' && searchQuery.trim()) {
-                    handleSearch(e);
-                  }
-                }}
+                onKeyDown={handleKeyDown}
+                enterKeyHint="search"
                 placeholder="Search products, brands..."
                 className={styles.mobileSearchInput}
                 autoComplete="off"
@@ -800,91 +699,22 @@ export default function Header() {
           </div>
 
           <div className={styles.mobileSearchContent}>
-            {searchLoading && (
-              <div className={styles.mobileSearchLoading}>
-                <div className={styles.mobileSearchSpinner} />
-                <p>Searching...</p>
-              </div>
+            {searchQuery.trim().length >= 2 && (
+              <SearchSuggestPanel
+                query={searchQuery}
+                data={suggestData}
+                loading={searchLoading}
+                selectedIndex={selectedIndex}
+                onHover={setSelectedIndex}
+                onPickSuggestion={text => handleSearch(null, text)}
+                onPickCategory={pickCategory}
+                onPickProduct={pickProduct}
+                onViewAll={() => handleSearch()}
+                onBrowseAll={browseAll}
+              />
             )}
 
-            {!searchLoading && searchQuery.length >= 2 && searchResults.length > 0 && (
-              <div>
-                <p className={styles.mobileSearchLabel}>
-                  🎯 {searchResults.length} Products Found
-                </p>
-                <div className={styles.mobileResultsList}>
-                  {searchResults.map(product => {
-                    const imgUrl = product.images?.[0]?.url || product.images?.[0] || product.image || 'https://via.placeholder.com/50';
-                    const price = Math.round(product.discountPrice || product.price || 0);
-                    const oldPrice = product.discountPrice && product.discountPrice < product.price ? Math.round(product.price) : null;
-
-                    return (
-                      <Link
-                        key={product.id}
-                        href={`/products/${product.slug || product.id}`}
-                        onClick={() => {
-                          saveRecentSearch(searchQuery);
-                          setMobileSearchOpen(false);
-                          setSearchQuery('');
-                        }}
-                        className={styles.mobileResultItem}
-                        style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 16px', textDecoration: 'none', borderBottom: '1px solid #F1F5F9' }}
-                      >
-                        <img
-                          src={imgUrl}
-                          alt={product.name}
-                          className={styles.mobileResultImg}
-                          style={{ width: '50px', height: '50px', borderRadius: '8px', objectFit: 'cover', border: '1px solid #E5E7EB' }}
-                        />
-                        <div className={styles.mobileResultInfo} style={{ flex: 1, minWidth: 0 }}>
-                          <p className={styles.mobileResultName} style={{ margin: '0 0 4px', fontSize: '0.9rem', fontWeight: '800', color: '#0F172A', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {product.name}
-                          </p>
-                          {(product.brand || product.brandName) && (
-                            <p style={{ margin: '0 0 4px', fontSize: '0.72rem', color: '#0369A1', fontWeight: '700', display: 'inline-block', background: '#E0F2FE', padding: '2px 8px', borderRadius: '4px' }}>
-                              🏷️ {product.brand || product.brandName}
-                            </p>
-                          )}
-                          <p className={styles.mobileResultPrice} style={{ margin: 0, fontSize: '0.9rem', fontWeight: '800', color: '#0369A1' }}>
-                            ₹{price.toLocaleString('en-IN')}
-                            {oldPrice && (
-                              <span className={styles.mobileResultOldPrice} style={{ marginLeft: '6px', fontSize: '0.75rem', color: '#94A3B8', textDecoration: 'line-through' }}>
-                                ₹{oldPrice.toLocaleString('en-IN')}
-                              </span>
-                            )}
-                          </p>
-                        </div>
-                        <span className={styles.mobileResultArrow} style={{ color: '#94A3B8', fontSize: '1.2rem' }}>›</span>
-                      </Link>
-                    );
-                  })}
-                </div>
-
-                <button
-                  onClick={() => handleSearch()}
-                  className={styles.mobileViewAllBtn}
-                >
-                  🔍 View All Results
-                </button>
-              </div>
-            )}
-
-            {!searchLoading && searchQuery.length >= 2 && searchResults.length === 0 && (
-              <div className={styles.mobileNoResults}>
-                <div className={styles.mobileNoResultsIcon}>🔍</div>
-                <p className={styles.mobileNoResultsTitle}>No products found</p>
-                <p className={styles.mobileNoResultsSub}>Try different keywords</p>
-                <Link
-                  href="/products"
-                  onClick={() => { setMobileSearchOpen(false); setSearchQuery(''); }}
-                  className={styles.mobileNoResultsBtn}
-                >
-                  Browse All Products
-                </Link>
-              </div>
-            )}
-
-            {!searchQuery && (
+            {searchQuery.trim().length < 2 && (
               <div>
                 {recentSearches.length > 0 && (
                   <div className={styles.mobileSearchSection}>

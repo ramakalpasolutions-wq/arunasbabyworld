@@ -13,12 +13,14 @@ import OfferPopupModal from "@/components/home/OfferPopupModal";
 ═══════════════════════════════════════ */
 function useSectionSettings(initialSettings = {}) {
   const [settings, setSettings] = useState(initialSettings);
+  const hasInitial = Object.keys(initialSettings || {}).length > 0;
   useEffect(() => {
+    if (hasInitial) return; // already rendered with server data
     fetch('/api/section-settings', { cache: 'no-store' })
       .then(r => r.json())
       .then(data => { if (data.settings) setSettings(data.settings); })
       .catch(() => {});
-  }, []);
+  }, [hasInitial]);
   return settings;
 }
 
@@ -157,7 +159,7 @@ function BrandsSection({ brands, sectionSettings = {} }) {
                     onMouseLeave={e => { e.currentTarget.style.background = `${brand.color || '#264653'}08`; e.currentTarget.style.borderColor = `${brand.color || '#264653'}25`; e.currentTarget.style.transform = 'translateY(0)'; }}
                   >
                     {brand.logo?.url ? (
-                      <img src={brand.logo.url} alt={brand.name || 'Brand'} style={{ width: brand.name ? '32px' : '80px', height: brand.name ? '49px' : '47px', objectFit: 'contain', borderRadius: '4px', flexShrink: 0 }} />
+                      <img src={brand.logo.url} alt={loopIdx === 2 ? '' : (brand.name || 'Brand')} loading="lazy" decoding="async" style={{ width: brand.name ? '32px' : '80px', height: brand.name ? '49px' : '47px', objectFit: 'contain', borderRadius: '4px', flexShrink: 0 }} />
                     ) : (
                       <div style={{ width: '7px', height: '7px', borderRadius: '50%', background: brand.color || '#264653', flexShrink: 0 }} />
                     )}
@@ -267,6 +269,8 @@ function SeasonBanner({ banners, sectionSettings = {} }) {
                         src={mediaUrl}
                         alt={b.title || 'Festival'}
                         className="kidMedia"
+                        loading="lazy"
+                        decoding="async"
                         onLoad={e => {
                           const img = e.currentTarget;
                           if (img.naturalWidth && img.naturalHeight)
@@ -450,7 +454,7 @@ function SunnySection({ banners, sectionSettings = {} }) {
                 <div className="sunnyDashedBorder">
                   <div className="sunnyImgWrap">
                     {frontImg
-                      ? <img src={frontImg} alt={banner.title || 'Collection'} style={{ width:'100%',height:'100%',objectFit:'cover',objectPosition:'center top',display:'block' }} />
+                      ? <img src={frontImg} alt={banner.title || 'Collection'} loading="lazy" decoding="async" style={{ width:'100%',height:'100%',objectFit:'cover',objectPosition:'center top',display:'block' }} />
                       : <div style={{ width:'100%',height:'100%',background:'linear-gradient(160deg,#c5e9f8,#8fd2f2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'4.5rem' }}>{banner.emoji||'👕'}</div>}
                     <div className="sunnyTitleStrip"><span>{banner.title}</span></div>
                   </div>
@@ -509,7 +513,7 @@ function GenderSection({ banners, sectionSettings = {} }) {
               return (
                 <div key={banner.id || i} className={`herHimImgWrap ${isHer ? 'herSide' : 'himSide'}`}>
                   {imgUrl ? (
-                    <img src={imgUrl} alt={banner.title || (isHer ? 'Girls' : 'Boys')} className="herHimImg" />
+                    <img src={imgUrl} alt={banner.title || (isHer ? 'Girls' : 'Boys')} className="herHimImg" loading="lazy" decoding="async" />
                   ) : (
                     <div className="herHimFallback"><span>{isHer ? '👧' : '👦'}</span></div>
                   )}
@@ -734,7 +738,7 @@ function CategorySection({ banners, sectionSettings = {} }) {
                 >
                   <div className="promoImgWrap">
                     {imgUrl
-                      ? <img src={imgUrl} alt={name || 'Shop by category'} style={{ width:'100%',height:'100%',objectFit:'cover',objectPosition:'center',display:'block',transition:'transform 0.4s ease' }} />
+                      ? <img src={imgUrl} alt={name || 'Shop by category'} loading="lazy" decoding="async" style={{ width:'100%',height:'100%',objectFit:'cover',objectPosition:'center',display:'block',transition:'transform 0.4s ease' }} />
                       : <div style={{ width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'3rem',background:`${color}15`,color,fontWeight:'900' }}>{name.charAt(0)}</div>}
                   </div>
                   <div style={{ padding: '11px 6px', background: '#1B3540', textAlign: 'center' }}>
@@ -796,7 +800,7 @@ function BabyFoodSection({ banners, sectionSettings = {} }) {
                 <div className="bfCard" style={{ borderColor: `${color}40` }}>
                   <div className="bfImgWrap" style={{ background: frontImg ? '#f8f8f8' : `${color}12` }}>
                     {frontImg
-                      ? <img src={frontImg} alt={banner.title || 'Baby food and nutrition products'} style={{ width:'100%',height:'100%',objectFit:'contain',padding:'8px',boxSizing:'border-box' }} />
+                      ? <img src={frontImg} alt={banner.title || 'Baby food and nutrition products'} loading="lazy" decoding="async" style={{ width:'100%',height:'100%',objectFit:'contain',padding:'8px',boxSizing:'border-box' }} />
                       : <span style={{ fontSize:'4rem' }}>{banner.emoji||'🍼'}</span>}
                   </div>
                   <div className="bfInfo">
@@ -844,7 +848,7 @@ function ToysSection({ banners, sectionSettings = {} }) {
   return (
     <section style={{ position:'relative', padding:'clamp(36px,5vw,68px) clamp(12px,2vw,20px)', overflow:'hidden' }}>
       {sectionBg
-        ? <img src={sectionBg} alt="" aria-hidden="true" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', opacity:0.18, filter:'blur(1px)' }} />
+        ? <img src={sectionBg} alt="" aria-hidden="true" loading="lazy" decoding="async" style={{ position:'absolute', inset:0, width:'100%', height:'100%', objectFit:'cover', opacity:0.18, filter:'blur(1px)' }} />
         : <div style={{ position:'absolute', inset:0, background:'linear-gradient(135deg,#FEF2F2 0%,#FFF7ED 50%,#FFFBF2 100%)' }} />}
       <div style={{ position:'absolute', inset:0, background:'linear-gradient(180deg,rgba(255,255,255,0.58),rgba(255,255,255,0.82))' }} />
 
@@ -872,7 +876,7 @@ function ToysSection({ banners, sectionSettings = {} }) {
                 <div className="toysCard">
                   <div className="toysImgWrap" style={{ background: frontImg ? '#FFFBF2' : 'linear-gradient(135deg,#FEF2F2,#FFF7ED)' }}>
                     {frontImg
-                      ? <img src={frontImg} alt={banner.title || 'Toys and games for kids'} style={{ width:'100%',height:'100%',objectFit:'contain',padding:'12px',boxSizing:'border-box' }} />
+                      ? <img src={frontImg} alt={banner.title || 'Toys and games for kids'} loading="lazy" decoding="async" style={{ width:'100%',height:'100%',objectFit:'contain',padding:'12px',boxSizing:'border-box' }} />
                       : <span style={{ fontSize:'4rem' }}>{banner.emoji||'🧸'}</span>}
                     <div style={{ position:'absolute', top:'10px', left:'10px', padding:'4px 10px', borderRadius:'999px', background:color, color:'white', fontSize:'10px', fontWeight:'800', fontFamily:'Nunito,sans-serif' }}>Play</div>
                   </div>
@@ -940,7 +944,7 @@ function CareSection({ personalCareBanners, healthCareBanners, sectionSettings =
         <div style={{ borderRadius:'20px', background:'#fff', border:`2px solid ${accentColor}30`, overflow:'hidden', width:'100%', height:'100%', transition:'transform 0.3s ease, box-shadow 0.3s ease' }}
           className="careImgCard">
           {item.front
-            ? <img src={item.front} alt={item.title || 'Baby care products'} style={{ width:'100%',height:'100%',objectFit:'cover',objectPosition:'center',display:'block' }} />
+            ? <img src={item.front} alt={item.title || 'Baby care products'} loading="lazy" decoding="async" style={{ width:'100%',height:'100%',objectFit:'cover',objectPosition:'center',display:'block' }} />
             : <div style={{ width:'100%',height:'100%',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'3.5rem',background:`${accentColor}10` }}>{fallbackEmoji}</div>}
         </div>
       </SimpleCard>
@@ -1089,7 +1093,7 @@ function EVSection({ banners, sectionSettings = {} }) {
                 <div className="evRedBorder">
                   <div className="evImgWrap" style={{ background: frontImg ? '#f0f8ff' : 'linear-gradient(135deg,#E0F2FE,#EEF3F5)' }}>
                     {frontImg
-                      ? <img src={frontImg} alt={item.title || 'Kids electric ride-on vehicle'} style={{ width:'100%',height:'100%',objectFit:'contain',padding:'12px',boxSizing:'border-box' }} />
+                      ? <img src={frontImg} alt={item.title || 'Kids electric ride-on vehicle'} loading="lazy" decoding="async" style={{ width:'100%',height:'100%',objectFit:'contain',padding:'12px',boxSizing:'border-box' }} />
                       : <span style={{ fontSize:'5rem' }}>{item.emoji||'🚗'}</span>}
                     {item.ageGroup && (
                       <div style={{ position:'absolute', top:'10px', right:'10px', padding:'4px 10px', background:'rgba(0,0,0,0.45)', color:'white', borderRadius:'999px', fontSize:'10px', fontWeight:'700', fontFamily:'Nunito,sans-serif', backdropFilter:'blur(4px)' }}>
@@ -1214,7 +1218,7 @@ function CTASection({ sectionSettings = {} }) {
                 </Link>
               </div>
               <div style={{ display:'flex', gap:'20px', marginTop:'28px', flexWrap:'wrap' }}>
-                {[{ icon:'🛡️', text:'100% Safe & Certified' }, {  }, ].map((b, i) => (
+                {[{ icon:'🛡️', text:'100% Safe & Certified' }].map((b, i) => (
                   <div key={i} style={{ display:'flex', alignItems:'center', gap:'5px', fontSize:'0.80rem', color:'rgba(255,255,255,0.85)', fontWeight:'600', fontFamily:'Nunito,sans-serif' }}>
                     <span>{b.icon}</span>{b.text}
                   </div>
@@ -1223,7 +1227,7 @@ function CTASection({ sectionSettings = {} }) {
             </div>
             <div style={{ position:'relative', flexShrink:0 }}>
               <div style={{ width:'clamp(200px,28vw,260px)', height:'clamp(260px,35vw,340px)', borderRadius:'22px', overflow:'hidden', boxShadow:'0 20px 56px rgba(0,0,0,0.25)', border:'4px solid rgba(255,255,255,0.28)' }}>
-                <img src="https://images.unsplash.com/photo-1519689680058-324335c77eba?w=520&h=680&fit=crop&auto=format" alt="Happy Baby" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
+                <img src="https://images.unsplash.com/photo-1519689680058-324335c77eba?w=520&h=680&fit=crop&auto=format" alt="Happy Baby" loading="lazy" decoding="async" style={{ width:'100%', height:'100%', objectFit:'cover' }} />
               </div>
               {[{ top:'16px', left:'-16px', icon:'🧸', num:'12k+', sub:'Happy Families', delay:'0s' }, { bottom:'16px', right:'-16px', icon:'⭐', num:'4.9', sub:'500+ Reviews', delay:'1.5s' }].map((b, i) => (
                 <div key={i} style={{ position:'absolute', top:b.top, bottom:b.bottom, left:b.left, right:b.right, background:'white', borderRadius:'12px', padding:'8px 12px', boxShadow:'0 8px 20px rgba(0,0,0,0.14)', display:'flex', alignItems:'center', gap:'7px', animation:`badgeFloat 3s ease-in-out infinite ${b.delay}` }}>

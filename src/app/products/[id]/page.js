@@ -4,7 +4,10 @@ import ProductDetailClient from './ProductDetailClient';
 import { cache } from 'react';
 import { permanentRedirect, notFound } from 'next/navigation';
 import prisma from '@/lib/prisma';
-import { JsonLd, absoluteUrl, SITE_NAME, DEFAULT_OG_IMAGE } from '@/lib/seo';
+import {
+  JsonLd, absoluteUrl, SITE_NAME, DEFAULT_OG_IMAGE,
+  productPrices, shippingDetailsLd, RETURN_POLICY_LD,
+} from '@/lib/seo';
 
 // ================================================
 // HELPERS
@@ -71,17 +74,20 @@ export async function generateMetadata({ params }) {
   }
 
   const title = shortName(product.name);
-  const price = product.discountPrice || product.price;
+  const price = productPrices(product).selling;
 
   const description =
     cleanDescription(product.shortDescription || product.description) ||
-    `Buy ${title} online at ${SITE_NAME}${price ? ` for ₹${price}` : ''}. Trusted baby and kids products with fast delivery across India.`;
+    `Buy ${title} online at ${SITE_NAME}${price ? ` for ₹${price}` : ''}. Genuine products, Cash on Delivery and delivery across India.`;
 
   const productPath = `/products/${product.slug || product.id}`;
   const images = productImages(product);
 
+  // Short names have room for buying words that people search with
+  const pageTitle = title.length <= 38 ? `${title} - Buy Online in India` : title;
+
   return {
-    title,
+    title: pageTitle,
     description,
     keywords: [
       title,
@@ -120,7 +126,9 @@ export async function generateMetadata({ params }) {
 
 function productJsonLd(product) {
   const url = absoluteUrl(`/products/${product.slug || product.id}`);
-  const price = product.discountPrice || product.price;
+  const price = productPrices(product).selling;
+  // Prices are reviewed at least yearly; Google wants an end date for the offer
+  const priceValidUntil = `${new Date().getFullYear() + 1}-12-31`;
   const images = productImages(product);
 
   const crumbs = [
@@ -157,6 +165,9 @@ function productJsonLd(product) {
         url,
         priceCurrency: 'INR',
         price: Number(price || 0),
+        priceValidUntil,
+        shippingDetails: shippingDetailsLd(price),
+        hasMerchantReturnPolicy: RETURN_POLICY_LD,
         availability:
           product.stock > 0
             ? 'https://schema.org/InStock'
@@ -198,7 +209,8 @@ export default async function ProductDetailPage({ params }) {
   return (
     <MainLayout>
       {product.isActive && <JsonLd data={productJsonLd(product)} />}
-      <ProductDetailClient id={product.id} />
+      {/* Same JSON shape as /api/products/[id], so the page renders without a second fetch */}
+      <ProductDetailClient id={product.id} initialProduct={JSON.parse(JSON.stringify(product))} />
     </MainLayout>
   );
 }

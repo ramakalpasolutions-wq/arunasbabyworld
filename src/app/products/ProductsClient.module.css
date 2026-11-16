@@ -1,4 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
 
 /* ============================================================
    TOKENS — Myntra Clean Style
@@ -782,4 +781,13 @@
 @media (max-width: 480px) {
   .productsGrid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
   .skeletonGrid { grid-template-columns: repeat(2, 1fr); gap: 8px; }
+}
+
+.heroCrumb a {
+  color: inherit;
+  text-decoration: none;
+}
+.heroCrumb a:hover {
+  color: var(--c-orange, #E53935);
+  text-decoration: underline;
 }

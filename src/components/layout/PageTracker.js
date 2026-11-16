@@ -5,17 +5,20 @@ import { useSession } from 'next-auth/react';
 
 export default function PageTracker() {
   const pathname = usePathname();
-  const { data: session } = useSession();
+  const { data: session, status } = useSession();
+  const userId = session?.user?.id || null;
 
+  // One visit per page: wait for the session to resolve instead of firing
+  // once while it loads and again when it arrives.
   useEffect(() => {
-    if (!pathname || pathname.startsWith('/admin')) return;
+    if (!pathname || pathname.startsWith('/admin') || status === 'loading') return;
 
     fetch('/api/track', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         path: pathname,
-        userId: session?.user?.id || null
+        userId,
       }),
     })
       .then(res => res.json())
@@ -25,7 +28,8 @@ export default function PageTracker() {
         }
       })
       .catch(() => {});
-  }, [pathname, session]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname, status === 'loading']);
 
   return null;
 }

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
+import { releaseOrderStock } from '@/lib/inventory';
 
 export async function POST(request, { params }) {
   try {
@@ -40,6 +41,9 @@ export async function POST(request, { params }) {
         notes: `Payment failed: ${reason || 'Unknown reason'}${errorCode ? ` (${errorCode})` : ''}`,
       },
     });
+
+    // Free the reserved stock; it is reserved again if the customer retries payment
+    await releaseOrderStock(order);
 
     console.log('❌ Payment marked failed for order:', id, 'Reason:', reason);
 

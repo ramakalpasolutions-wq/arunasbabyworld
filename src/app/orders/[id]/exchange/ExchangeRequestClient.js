@@ -129,9 +129,9 @@ export default function ExchangeRequestClient({ id }) {
         setTimeout(() => {
           window.location.href = data.paymentLink;
         }, 2500);
-      } else if (data.autoRefunded) {
+      } else if (data.refundOnApproval) {
         setTimeout(() => {
-          toast.success(`💸 ₹${Math.abs(data.priceDifference)} refund initiated for price difference!`, {
+          toast.success(`💸 ₹${Math.abs(data.priceDifference)} price difference will be refunded once your exchange is approved.`, {
             duration: 5000,
           });
         }, 600);

@@ -85,7 +85,14 @@ export default function ProductCard({ product }) {
   const { toggle, isWishlisted, isInWishlist } = useWishlist();
 
   const [imgLoaded, setImgLoaded] = useState(false);
+  const [imgFailed, setImgFailed] = useState(false);
   const [cartAdding, setCartAdding] = useState(false);
+
+  // An image served from cache can finish before React attaches onLoad, which
+  // left the card stuck on its placeholder. Check `complete` when the node mounts.
+  const imgRef = (node) => {
+    if (node && node.complete && node.naturalWidth > 0 && !imgLoaded) setImgLoaded(true);
+  };
 
   if (!product) return null;
 
@@ -206,7 +213,7 @@ export default function ProductCard({ product }) {
     >
       {/* ═══ IMAGE ═══ */}
       <div className={styles.imageWrap} style={{ background: accent.pastel }}>
-        {imageUrl ? (
+        {imageUrl && !imgFailed ? (
           <>
             {!imgLoaded && (
               <div className={styles.imgSkeleton}>
@@ -214,15 +221,18 @@ export default function ProductCard({ product }) {
               </div>
             )}
             <Image
+              ref={imgRef}
               src={imageUrl}
               alt={product.name}
               width={240}
               height={240}
               unoptimized={true}
               loading="lazy"
+              decoding="async"
               className={`${styles.image} ${imgLoaded ? styles.imageVisible : styles.imageHidden}`}
               style={{ objectFit: 'cover' }}
               onLoad={() => setImgLoaded(true)}
+              onError={() => setImgFailed(true)}
             />
           </>
         ) : (

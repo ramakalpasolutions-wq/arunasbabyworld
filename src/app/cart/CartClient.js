@@ -384,10 +384,10 @@ export default function CartClient() {
       const orderRes = await fetch('/api/payment/create-order', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ amount: totalPrice }),
+        body: JSON.stringify({ orderId }),
       });
       const orderData = await orderRes.json();
-      if (!orderRes.ok) throw new Error(orderData.order);
+      if (!orderRes.ok) throw new Error(orderData.error);
 
       clearCart();
 

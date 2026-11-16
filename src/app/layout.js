@@ -31,6 +31,11 @@ export const metadata = {
   publisher: SITE_NAME,
   category: 'shopping',
   formatDetection: { telephone: false },
+  // Search Console / Bing Webmaster ownership tags: set these in the hosting environment
+  verification: {
+    ...(process.env.GOOGLE_SITE_VERIFICATION ? { google: process.env.GOOGLE_SITE_VERIFICATION } : {}),
+    ...(process.env.BING_SITE_VERIFICATION ? { other: { 'msvalidate.01': process.env.BING_SITE_VERIFICATION } } : {}),
+  },
   robots: {
     index: true,
     follow: true,
@@ -78,7 +83,7 @@ export default async function RootLayout({ children }) {
   const userId = session?.user?.id || '';
 
   return (
-    <html lang="en">
+    <html lang="en-IN">
       <head>
         <link
           rel="preconnect"
@@ -88,6 +93,11 @@ export default async function RootLayout({ children }) {
           rel="preconnect"
           href="https://fonts.gstatic.com"
           crossOrigin="anonymous"
+        />
+        {/* eslint-disable-next-line @next/next/no-page-custom-font */}
+        <link
+          rel="stylesheet"
+          href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Baloo+2:wght@500;600;700;800&display=swap"
         />
       </head>
 

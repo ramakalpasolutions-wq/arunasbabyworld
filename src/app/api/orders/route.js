@@ -4,6 +4,8 @@ import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
 import { sendOrderConfirmation } from '@/lib/nodemailer';
 import { validateCheckoutRules, ELIGIBLE_GUNTUR_PINCODES } from '@/lib/checkoutRules';
+import { evaluateCoupon } from '@/lib/coupons';
+import { reserveStock, outOfStockMessage } from '@/lib/inventory';
 
 const STANDARD_SHIPPING_FEE = 50;
 const COD_EXTRA_FEE = 20;
@@ -238,15 +240,17 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Shipping address is required' }, { status: 400 });
     }
 
-    const {
-      shippingAddress,
-      paymentMethod,
-      couponCode,
-      isPaid,
-      paidAt,
-      orderStatus,
-      paymentStatus,
-    } = data;
+    // Payment state (isPaid, paidAt, orderStatus, paymentStatus) and money
+    // fields (discountAmount, taxPrice, totals) are never taken from the client.
+    const { shippingAddress, couponCode } = data;
+    const paymentMethod = data.paymentMethod === 'COD' ? 'COD' : 'Razorpay';
+
+    const badQty = data.orderItems.some(
+      (item) => !Number.isInteger(Number(item.quantity)) || Number(item.quantity) < 1
+    );
+    if (badQty) {
+      return NextResponse.json({ error: 'Invalid item quantity' }, { status: 400 });
+    }
 
     const isGuntur = isGunturLocation(shippingAddress);
 
@@ -259,6 +263,7 @@ export async function POST(request) {
             select: {
               price: true,
               discountPrice: true,
+              brand: true,
               categoryId: true,
               category: {
                 select: {
@@ -268,6 +273,8 @@ export async function POST(request) {
               },
             },
           });
+
+          if (!product) return { ...item, _missing: true };
 
           let categorySlug = product?.category?.slug || '';
           let categoryName = product?.category?.name || '';
@@ -292,11 +299,12 @@ export async function POST(request) {
           );
 
           // Standard Catalog price
-          const finalVerifiedPrice = product ? (product.discountPrice > 0 ? product.discountPrice : product.price) : (item.price || 0);
+          const finalVerifiedPrice = product.discountPrice > 0 ? product.discountPrice : product.price;
 
           return {
             ...item,
             price: finalVerifiedPrice,
+            brand: product.brand || '',
             categoryId,
             categorySlug,
             categoryName,
@@ -304,10 +312,18 @@ export async function POST(request) {
           };
         } catch (enrichErr) {
           console.error(`Error enriching item ${item.productId}:`, enrichErr);
-          return item;
+          return { ...item, _missing: true };
         }
       })
     );
+
+    // Never fall back to a client-supplied price
+    if (enrichedItems.some((item) => item._missing)) {
+      return NextResponse.json(
+        { error: 'One or more products in your cart are no longer available. Please refresh your cart.' },
+        { status: 400 }
+      );
+    }
 
     const foodItems = enrichedItems.filter(isFoodItem);
     const nonFoodItems = enrichedItems.filter(item => !isFoodItem(item));
@@ -333,8 +349,27 @@ export async function POST(request) {
       shippingAddress,
       paymentMethod
     );
-    const discountAmount = Number(data.discountAmount) || 0;
-    const taxPrice = Number(data.taxPrice) || 0;
+    // Recompute coupon discount server-side from verified catalog prices
+    let discountAmount = 0;
+    let appliedCouponCode = null;
+    let appliedCouponId = null;
+    if (couponCode) {
+      const couponResult = await evaluateCoupon({
+        code: couponCode,
+        orderTotal: itemsPrice,
+        items: enrichedItems,
+      });
+      if (couponResult.error) {
+        return NextResponse.json(
+          { error: `Coupon could not be applied: ${couponResult.error}` },
+          { status: 400 }
+        );
+      }
+      discountAmount = couponResult.discountAmount;
+      appliedCouponCode = couponResult.coupon.code;
+      appliedCouponId = couponResult.coupon.id;
+    }
+    const taxPrice = 0; // prices are tax-inclusive
     const totalPrice = Math.max(0, Math.round(itemsPrice + shippingPrice + taxPrice - discountAmount));
 
     const companySettings = await prisma.companySettings.findFirst({
@@ -365,6 +400,16 @@ export async function POST(request) {
 
     const orderNumber = await getNextOrderNumber();
 
+    // Reserve stock (atomic, all-or-nothing) before the order exists
+    const reservation = await reserveStock(enrichedItems);
+    if (!reservation.ok) {
+      return NextResponse.json(
+        { error: outOfStockMessage(reservation.outOfStock), outOfStock: reservation.outOfStock },
+        { status: 409 }
+      );
+    }
+
+
     const sanitizedOrderItems = enrichedItems.map((item) => ({
       productId: item.productId || null,
       name: item.name || '',
@@ -373,35 +418,53 @@ export async function POST(request) {
       quantity: Number(item.quantity) || 1,
     }));
 
-    const order = await prisma.order.create({
-      data: {
-        orderNumber:     orderNumber,
-        userId:          session.user.id,
-        orderItems:      sanitizedOrderItems,
-        shippingAddress: {
-          name:    shippingAddress.name || '',
-          phone:   shippingAddress.phone || '',
-          address: shippingAddress.address || '',
-          city:    shippingAddress.city || '',
-          state:   shippingAddress.state || '',
-          pincode: shippingAddress.pincode || '',
+    let order;
+    try {
+      order = await prisma.order.create({
+        data: {
+          orderNumber:     orderNumber,
+          userId:          session.user.id,
+          orderItems:      sanitizedOrderItems,
+          shippingAddress: {
+            name:    shippingAddress.name || '',
+            phone:   shippingAddress.phone || '',
+            address: shippingAddress.address || '',
+            city:    shippingAddress.city || '',
+            state:   shippingAddress.state || '',
+            pincode: shippingAddress.pincode || '',
+          },
+          paymentMethod:   paymentMethod,
+          itemsPrice:      itemsPrice,
+          shippingPrice:   shippingPrice,
+          taxPrice:        taxPrice,
+          discountAmount:  discountAmount,
+          totalPrice:      totalPrice,
+          couponCode:      appliedCouponCode,
+          isPaid:          false,
+          paidAt:          null,
+          orderStatus:     'Pending',
+          paymentStatus:   paymentMethod === 'COD' ? 'not_applicable' : 'pending',
+          stockDeducted:   true,
         },
-        paymentMethod:   paymentMethod || 'Razorpay',
-        itemsPrice:      itemsPrice,
-        shippingPrice:   shippingPrice,
-        taxPrice:        taxPrice,
-        discountAmount:  discountAmount,
-        totalPrice:      totalPrice,
-        couponCode:      couponCode    || null,
-        isPaid:          isPaid        || false,
-        paidAt:          paidAt        || null,
-        orderStatus:     orderStatus   || 'Pending',
-        paymentStatus:   paymentStatus || (paymentMethod === 'COD' ? 'not_applicable' : 'pending'),
-      },
-      include: {
-        user: { select: { name: true, email: true } },
-      },
-    });
+        include: {
+          user: { select: { name: true, email: true } },
+        },
+      });
+    } catch (createErr) {
+      // Give the reserved stock back if the order could not be saved
+      await Promise.allSettled(enrichedItems.filter(i => i.productId).map(i =>
+        prisma.product.update({ where: { id: i.productId }, data: { stock: { increment: Number(i.quantity) || 1 } } })
+      ));
+      throw createErr;
+    }
+
+    // Count the coupon use so usage limits take effect
+    if (appliedCouponId) {
+      await prisma.coupon.update({
+        where: { id: appliedCouponId },
+        data: { usedCount: { increment: 1 } },
+      }).catch((err) => console.error('Coupon usage update failed:', err));
+    }
 
     if (paymentMethod === 'COD') {
       try {

@@ -1,30 +1,16 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
+import { getSectionSettings, invalidateStorefront } from '@/lib/storefrontData';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 
-// GET — fetch all section settings
+// GET — fetch all section settings (cached briefly; admin saves clear the cache)
 export async function GET() {
   try {
-    const settings = await prisma.sectionSetting.findMany({
-      orderBy: { order: 'asc' },
+    const settings = await getSectionSettings();
+    return NextResponse.json({ settings }, {
+      headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=120' },
     });
-
-    const result = {};
-    settings.forEach(s => {
-      result[s.key] = {
-        id:          s.id,
-        key:         s.key,
-        title:       s.title,
-        emoji:       s.emoji,
-        description: s.description,
-        buttonText:  s.buttonText,
-        isVisible:   s.isVisible !== false,
-        order:       s.order || 0,
-      };
-    });
-
-    return NextResponse.json({ settings: result });
   } catch (error) {
     console.error('Section settings GET error:', error);
     return NextResponse.json({ settings: {} });
@@ -63,6 +49,7 @@ export async function POST(req) {
           order:       single.order       ?? 0,
         },
       });
+      invalidateStorefront();
       return NextResponse.json({ success: true, setting });
     }
 
@@ -97,6 +84,7 @@ export async function POST(req) {
     );
 
     await Promise.all(promises);
+    invalidateStorefront();
     return NextResponse.json({ success: true });
 
   } catch (error) {
@@ -135,6 +123,7 @@ export async function DELETE(req) {
     await prisma.sectionSetting.deleteMany({
       where: { key },
     });
+    invalidateStorefront();
 
     return NextResponse.json({ success: true });
   } catch (error) {

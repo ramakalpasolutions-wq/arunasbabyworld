@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
+import { invalidateStorefront } from '@/lib/storefrontData';
 
 export async function GET(request, { params }) {
   try {
@@ -49,6 +50,7 @@ export async function PUT(request, { params }) {
       where: { id },
       data:  updateData,
     });
+    invalidateStorefront();
 
     return NextResponse.json({ brand });
 
@@ -70,6 +72,7 @@ export async function DELETE(request, { params }) {
 
     const { id } = await params;
     await prisma.brand.delete({ where: { id } });
+    invalidateStorefront();
     return NextResponse.json({ message: 'Brand deleted successfully' });
 
   } catch (error) {

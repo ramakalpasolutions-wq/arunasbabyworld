@@ -104,3 +104,48 @@ export function JsonLd({ data }) {
     />
   );
 }
+
+// ---------------------------------------------------------------
+// Product offer details shared by structured data and the Google Shopping feed.
+// Must match src/lib/policies.js (shipping and exchange terms).
+// ---------------------------------------------------------------
+
+export const FREE_DELIVERY_FROM = 800;
+export const DELIVERY_CHARGE = 50;
+export const EXCHANGE_DAYS = 3;
+
+/** Regular and selling price as the product card shows them (first colour variant wins). */
+export function productPrices(product) {
+  const v = product.hasVariants && product.colorVariants?.length ? product.colorVariants[0] : null;
+  const price = Number(v?.price ?? product.price) || 0;
+  const discount = Number(v?.discountPrice ?? product.discountPrice) || 0;
+  const onSale = discount > 0 && discount < price;
+  return { price, salePrice: onSale ? discount : null, selling: onSale ? discount : price };
+}
+
+export function shippingCost(sellingPrice) {
+  return sellingPrice >= FREE_DELIVERY_FROM ? 0 : DELIVERY_CHARGE;
+}
+
+/** schema.org OfferShippingDetails for delivery anywhere in India. */
+export function shippingDetailsLd(sellingPrice) {
+  return {
+    '@type': 'OfferShippingDetails',
+    shippingRate: { '@type': 'MonetaryAmount', value: shippingCost(sellingPrice), currency: 'INR' },
+    shippingDestination: { '@type': 'DefinedRegion', addressCountry: 'IN' },
+    deliveryTime: {
+      '@type': 'ShippingDeliveryTime',
+      handlingTime: { '@type': 'QuantitativeValue', minValue: 1, maxValue: 2, unitCode: 'DAY' },
+      transitTime: { '@type': 'QuantitativeValue', minValue: 3, maxValue: 7, unitCode: 'DAY' },
+    },
+  };
+}
+
+export const RETURN_POLICY_LD = {
+  '@type': 'MerchantReturnPolicy',
+  applicableCountry: 'IN',
+  returnPolicyCategory: 'https://schema.org/MerchantReturnFiniteReturnWindow',
+  merchantReturnDays: EXCHANGE_DAYS,
+  returnMethod: 'https://schema.org/ReturnByMail',
+  merchantReturnLink: absoluteUrl('/refund-policy'),
+};

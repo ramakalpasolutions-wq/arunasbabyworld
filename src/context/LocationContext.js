@@ -29,7 +29,8 @@ export function LocationProvider({ children }) {
 
   useEffect(() => {
     // 1. Use saved location if available
-    const saved = localStorage.getItem('userLocation');
+    let saved = null;
+    try { saved = localStorage.getItem('userLocation'); } catch {}
     if (saved) {
       try {
         const { pincode, city } = JSON.parse(saved);
@@ -40,8 +41,15 @@ export function LocationProvider({ children }) {
       } catch {}
     }
 
-    // 2. No saved location → silent auto-detect (NO modal)
-    autoDetectLocation();
+    // 2. No saved location → silent IP lookup once the page is idle, so it never
+    //    competes with page loading and never shows a browser permission prompt.
+    const run = () => autoDetectLocation({ allowBrowserPrompt: false });
+    if (typeof window.requestIdleCallback === 'function') {
+      const id = window.requestIdleCallback(run, { timeout: 5000 });
+      return () => window.cancelIdleCallback?.(id);
+    }
+    const t = setTimeout(run, 2500);
+    return () => clearTimeout(t);
   }, []);
 
   const saveLocation = (pincode, city = '') => {
@@ -49,10 +57,11 @@ export function LocationProvider({ children }) {
     setUserCity(city);
     setIsLocationSet(true);
     setShowLocationModal(false);
-    localStorage.setItem('userLocation', JSON.stringify({ pincode, city }));
+    try { localStorage.setItem('userLocation', JSON.stringify({ pincode, city })); } catch {}
   };
 
-  const autoDetectLocation = async () => {
+  // allowBrowserPrompt: only true when the shopper asks to use their location
+  const autoDetectLocation = async ({ allowBrowserPrompt = true } = {}) => {
     // Method 1: IP geolocation (silent, no browser permission popup)
     try {
       const res = await fetch('https://ipapi.co/json/');
@@ -69,8 +78,8 @@ export function LocationProvider({ children }) {
       console.warn('IP geolocation failed, trying browser geolocation...', err);
     }
 
-    // Method 2: Browser geolocation fallback
-    if (!navigator.geolocation) return;
+    // Method 2: Browser geolocation fallback (shows a permission prompt)
+    if (!allowBrowserPrompt || !navigator.geolocation) return;
 
     navigator.geolocation.getCurrentPosition(
       async (position) => {

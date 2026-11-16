@@ -3,7 +3,11 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useSearchParams, usePathname, useRouter } from 'next/navigation';
 import ProductCard from '@/components/products/ProductCard';
 import styles from './ProductsClient.module.css';
+import Link from 'next/link';
+import { listingQuery } from '@/lib/listingParams';
+import { categorySeo } from '@/lib/categorySeo';
 
+const RELEVANCE_OPTION = { value: 'relevance', label: '🎯 Relevance' };
 const SORT_OPTIONS = [
   { value: 'createdAt-desc',       label: '✨ Newest First' },
   { value: 'createdAt-asc',        label: '📅 Oldest First' },
@@ -159,7 +163,22 @@ function AutoScrollCatBar({ categories, currentCategory, handleCategoryClick, ca
 /* ============================================================
    MAIN COMPONENT
 ============================================================ */
-export default function ProductsClient() {
+// Hides excluded categories and puts the main ones first
+function prepareCategories(allCats = []) {
+  const filtered = allCats.filter(cat => !EXCLUDED_SLUGS.includes(cat.slug));
+  filtered.sort((a, b) => {
+    const aIdx = CATEGORY_ORDER.indexOf(a.slug);
+    const bIdx = CATEGORY_ORDER.indexOf(b.slug);
+    return (aIdx === -1 ? 999 : aIdx) - (bIdx === -1 ? 999 : bIdx);
+  });
+  return filtered;
+}
+
+/**
+ * initialData (from the server render of the same URL) fills the first screen,
+ * so shoppers and search engines get the products in the HTML without waiting for a fetch.
+ */
+export default function ProductsClient({ initialData = null }) {
   const searchParams = useSearchParams();
   const pathname = usePathname();
   const router = useRouter();
@@ -173,7 +192,8 @@ export default function ProductsClient() {
     search: searchParams.get('search') || '',
     brand: searchParams.get('brand') || '',
     gender: searchParams.get('gender') || '',
-    sort: searchParams.get('sort') || 'createdAt-desc',
+    // Searches are ordered by relevance unless the shopper picks another sort
+    sort: searchParams.get('sort') || (searchParams.get('search') ? 'relevance' : 'createdAt-desc'),
     minPrice: searchParams.get('minPrice') || '',
     maxPrice: searchParams.get('maxPrice') || '',
     featured: searchParams.get('featured') || '',
@@ -183,15 +203,21 @@ export default function ProductsClient() {
     inStock: searchParams.get('inStock') === 'true',
   }), [filterQueryString]); // Only rebuild when URL changes
 
-  const [allProducts, setAllProducts] = useState([]);
-  const [categories, setCategories] = useState([]);
-  const [brands, setBrands] = useState([]);
+  const [allProducts, setAllProducts] = useState(() => initialData?.products || []);
+  const [categories, setCategories] = useState(() => prepareCategories(initialData?.categories || []));
+  const [brands, setBrands] = useState(() => initialData?.brands || []);
   const [brandsLoading, setBrandsLoading] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(!initialData);
   const [loadingMore, setLoadingMore] = useState(false);
-  const [catLoading, setCatLoading] = useState(true);
+  const [catLoading, setCatLoading] = useState(!initialData?.categories);
   const [page, setPage] = useState(1);
-  const [pagination, setPagination] = useState({ page: 1, pages: 1, total: 0 });
+  const [pagination, setPagination] = useState(() => initialData?.pagination || { page: 1, pages: 1, total: 0 });
+  const [searchMeta, setSearchMeta] = useState(() => ({
+    correctedQuery: initialData?.correctedQuery || null,
+    relaxed: !!initialData?.relaxed,
+  }));
+  // The server already loaded the first page for this URL: skip the first fetches
+  const skipFirst = useRef({ products: !!initialData, brands: !!initialData?.brands });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [activeQuick, setActiveQuick] = useState('all');
 
@@ -238,25 +264,18 @@ export default function ProductsClient() {
 
   // Fetch categories only once
   useEffect(() => {
+    if (initialData?.categories) return;
     setCatLoading(true);
     fetch('/api/categories?withCount=true&all=true')
       .then(r => r.json())
-      .then(d => {
-        const allCats = d.categories || [];
-        const filtered = allCats.filter(cat => !EXCLUDED_SLUGS.includes(cat.slug));
-        filtered.sort((a, b) => {
-          const aIdx = CATEGORY_ORDER.indexOf(a.slug);
-          const bIdx = CATEGORY_ORDER.indexOf(b.slug);
-          return (aIdx === -1 ? 999 : aIdx) - (bIdx === -1 ? 999 : bIdx);
-        });
-        setCategories(filtered);
-      })
+      .then(d => setCategories(prepareCategories(d.categories || [])))
       .catch(() => {})
       .finally(() => setCatLoading(false));
   }, []);
 
   // Fetch brands based on current filters
   useEffect(() => {
+    if (skipFirst.current.brands) { skipFirst.current.brands = false; return; }
     const controller = new AbortController();
     const fetchBrands = async () => {
       setBrandsLoading(true);
@@ -305,31 +324,9 @@ export default function ProductsClient() {
     }
 
     try {
-      const [sortField, sortOrder] = filters.sort.split('-');
-      let minP = filters.minPrice ? parseFloat(filters.minPrice) : null;
-      let maxP = filters.maxPrice ? parseFloat(filters.maxPrice) : null;
-      if (minP !== null && maxP !== null && minP > maxP) [minP, maxP] = [maxP, minP];
+      const query = listingQuery(searchParams, targetPage);
 
-      const paramObj = {
-        page: String(targetPage),
-        limit: '24',
-        sort: sortField,
-        order: sortOrder,
-      };
-
-      if (filters.search?.trim()) paramObj.search = filters.search.trim();
-      if (filters.category) paramObj.category = filters.category;
-      if (filters.brand) paramObj.brand = filters.brand;
-      if (filters.gender) paramObj.gender = filters.gender;
-      if (filters.featured) paramObj.featured = filters.featured;
-      if (filters.trending) paramObj.trending = filters.trending;
-      if (filters.discount) paramObj.discount = filters.discount;
-      if (filters.rating) paramObj.rating = filters.rating;
-      if (filters.inStock) paramObj.inStock = 'true';
-      if (minP !== null) paramObj.minPrice = String(minP);
-      if (maxP !== null) paramObj.maxPrice = String(maxP);
-
-      const res = await fetch(`/api/products?${new URLSearchParams(paramObj)}`, { signal: controller.signal });
+      const res = await fetch(`/api/products?${query}`, { signal: controller.signal });
       const data = await res.json();
       const newProducts = data.products || [];
 
@@ -347,6 +344,7 @@ export default function ProductsClient() {
       }
 
       setPagination(data.pagination || { page: 1, pages: 1, total: 0 });
+      setSearchMeta({ correctedQuery: data.correctedQuery || null, relaxed: !!data.relaxed });
     } catch (err) {
       if (err.name !== 'AbortError') {
         console.error('Fetch error:', err);
@@ -358,10 +356,11 @@ export default function ProductsClient() {
         setLoadingMore(false);
       }
     }
-  }, [filters]);
+  }, [searchParams]);
 
   // ✅ Fires new fetch every URL change - single source of truth
   useEffect(() => {
+    if (skipFirst.current.products) { skipFirst.current.products = false; return; }
     setPage(1);
     fetchProducts(1, false);
   }, [filterQueryString]);
@@ -395,11 +394,13 @@ export default function ProductsClient() {
     updateUrl({ minPrice: '', maxPrice: '' });
   };
 
+  // Clears filters but keeps the shopper's search text (like marketplace "Clear all")
   const clearAll = () => {
     setLocalMin(String(PRICE_MIN));
     setLocalMax(String(PRICE_MAX));
     setActiveQuick('all');
-    router.replace(pathname, { scroll: false });
+    const q = new URLSearchParams(window.location.search).get('search');
+    router.replace(q ? `${pathname}?search=${encodeURIComponent(q)}` : pathname, { scroll: false });
   };
 
   const handleCategoryClick = useCallback((categoryId) => {
@@ -425,11 +426,17 @@ export default function ProductsClient() {
   }, [selectedCategory, filters.category, updateUrl]);
   const selectedCategoryName = selectedCategory?.name || '';
 
+  const categoryHeading = selectedCategory ? categorySeo(selectedCategory).h1 : '';
+  // Brand as the catalog spells it ("r for rabbit" in the URL -> "R for Rabbit")
+  const brandLabel = filters.brand
+    ? brands.find(b => b.toLowerCase() === filters.brand.toLowerCase()) || filters.brand
+    : '';
   const pageTitle = filters.search
     ? `Results for "${filters.search}"`
     : filters.featured === 'true' ? 'Featured Products'
       : filters.trending === 'true' ? 'Trending Products'
-      : selectedCategoryName || 'All Products';
+      : categoryHeading && brandLabel ? `${brandLabel} ${categoryHeading}`
+      : categoryHeading || (brandLabel ? `${brandLabel} Products` : 'All Baby & Kids Products');
 
   const quickFilters = [
     { key: 'all', label: 'All', icon: '🌟', action: () => { clearAll(); setActiveQuick('all'); } },
@@ -662,11 +669,26 @@ export default function ProductsClient() {
       <div className={styles.heroStrip}>
         <div className={styles.heroStripInner}>
           <div className={styles.heroStripLeft}>
-            <span className={styles.heroCrumb}>Home / Products</span>
+            <nav aria-label="Breadcrumb" className={styles.heroCrumb}>
+              <Link href="/">Home</Link>{' / '}
+              <Link href="/products">Products</Link>
+              {selectedCategory && <>{' / '}<Link href={`/products?category=${selectedCategory.slug}`}>{selectedCategoryName}</Link></>}
+            </nav>
             <h1 className={styles.heroTitle}>
               <span>{pageTitle}</span>
               <span className={styles.heroSub}> - {pagination.total} items</span>
             </h1>
+            {filters.search && !loading && searchMeta.correctedQuery && (
+              <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#475569' }}>
+                Showing results for <strong style={{ color: '#0F172A' }}>{searchMeta.correctedQuery}</strong>
+                {' · '}No exact match for “{filters.search}”
+              </p>
+            )}
+            {filters.search && !loading && !searchMeta.correctedQuery && searchMeta.relaxed && pagination.total > 0 && (
+              <p style={{ margin: '4px 0 0', fontSize: '0.85rem', color: '#475569' }}>
+                No products match every word of “{filters.search}” — showing closest matches.
+              </p>
+            )}
           </div>
           <div className={styles.quickPillsWrap}>
             <div className={styles.quickPills}>
@@ -695,7 +717,7 @@ export default function ProductsClient() {
             <div className={styles.sortWrap}>
               <span style={{ fontSize: '0.82rem', color: '#94969F', fontWeight: '600' }}>Sort by:</span>
               <select value={filters.sort} onChange={e => updateUrl({ sort: e.target.value })} className={styles.sortSelect}>
-                {SORT_OPTIONS.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+                {(filters.search ? [RELEVANCE_OPTION, ...SORT_OPTIONS] : SORT_OPTIONS).map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
             <button

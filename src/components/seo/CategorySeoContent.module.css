@@ -1,0 +1,93 @@
+.wrap {
+  background: #FFFBF3;
+  border-top: 1px solid #F3E7CC;
+  padding: 32px 16px 40px;
+  font-family: 'Nunito', sans-serif;
+  color: #1B3540;
+}
+
+.inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.heading {
+  font-size: 1.25rem;
+  font-weight: 800;
+  margin: 0 0 12px;
+  color: #264653;
+}
+
+.sub {
+  font-size: 0.98rem;
+  font-weight: 800;
+  margin: 22px 0 10px;
+  color: #264653;
+}
+
+.text {
+  font-size: 0.92rem;
+  line-height: 1.7;
+  margin: 0 0 10px;
+  color: #3A5560;
+  max-width: 900px;
+}
+
+.links {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.links a {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  border: 1px solid #EADBB8;
+  background: #fff;
+  color: #264653;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: border-color 0.2s ease, color 0.2s ease;
+}
+
+.links a:hover {
+  border-color: #E53935;
+  color: #E53935;
+}
+
+.faqs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 900px;
+}
+
+.faq {
+  background: #fff;
+  border: 1px solid #F0E3C4;
+  border-radius: 10px;
+  padding: 12px 14px;
+}
+
+.faq summary {
+  cursor: pointer;
+  font-weight: 800;
+  font-size: 0.9rem;
+}
+
+.faq p {
+  margin: 8px 0 0;
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: #3A5560;
+}
+
+@media (max-width: 480px) {
+  .wrap { padding: 24px 16px 32px; }
+  .heading { font-size: 1.08rem; }
+}

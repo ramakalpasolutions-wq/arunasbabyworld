@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
+import { invalidateSearchIndex } from '@/lib/search';
 
 export async function GET(request, { params }) {
   try {
@@ -41,7 +42,13 @@ export async function PUT(request, { params }) {
 
     const data = await request.json();
 
-    if (data.discountPrice && data.price) {
+    // Empty / zero sale price clears the discount entirely
+    if (data.discountPrice === '' || data.discountPrice === 0 || data.discountPrice === '0') {
+      data.discountPrice = null;
+    }
+    if (data.discountPrice === null) {
+      data.discountPercent = null;
+    } else if (data.discountPrice && data.price) {
       data.discountPercent = Math.round(
         ((data.price - data.discountPrice) / data.price) * 100
       );
@@ -85,6 +92,7 @@ export async function PUT(request, { params }) {
       data,
     });
 
+    invalidateSearchIndex();
     return NextResponse.json({ product });
   } catch (error) {
     console.error('Product PUT error:', error);
@@ -107,6 +115,7 @@ export async function DELETE(request, { params }) {
 
     await prisma.review.deleteMany({ where: { productId: id } });
     await prisma.product.delete({ where: { id } });
+    invalidateSearchIndex();
 
     return NextResponse.json({ message: 'Product deleted successfully' });
   } catch (error) {

@@ -8,10 +8,11 @@ import toast from 'react-hot-toast';
 import styles from './ProductDetailClient.module.css';
 import ReviewsSection from '@/components/reviews/ReviewsSection';
 
-export default function ProductDetailClient({ id }) {
-  const [product,       setProduct]       = useState(null);
+export default function ProductDetailClient({ id, initialProduct = null }) {
+  const [product,       setProduct]       = useState(initialProduct);
   const [related,       setRelated]       = useState([]);
-  const [loading,       setLoading]       = useState(true);
+  const [loading,       setLoading]       = useState(!initialProduct);
+  const usedInitial = useRef(false);
   const [selectedImage, setSelectedImage] = useState(0);
   const [quantity,      setQuantity]      = useState(1);
   const [tab,           setTab]           = useState('description');
@@ -31,6 +32,31 @@ export default function ProductDetailClient({ id }) {
 
   /* ── Fetch product ── */
   useEffect(() => {
+    const loadRelated = (p) => {
+      if (!p?.categoryId) return;
+      fetch(`/api/products?category=${p.categoryId}&limit=8&sort=createdAt&order=desc`)
+        .then(r => r.json())
+        .then(rd => {
+          const filtered = (rd.products || []).filter(x => x.id !== p.id);
+          setRelated(filtered.slice(0, 6));
+        })
+        .catch(() => {});
+    };
+    const initVariant = (p) => {
+      if (p?.hasVariants && p?.colorVariants?.[0]?.sizes?.length > 0) {
+        setSelectedSize(p.colorVariants[0].sizes[0]);
+      }
+    };
+
+    // First render: the server already sent this product — use it, no second fetch
+    if (!usedInitial.current && initialProduct && initialProduct.id === id) {
+      usedInitial.current = true;
+      initVariant(initialProduct);
+      loadRelated(initialProduct);
+      return;
+    }
+    usedInitial.current = true;
+
     setLoading(true);
     setSelectedImage(0);
     setSelectedColorIdx(0);
@@ -41,22 +67,11 @@ export default function ProductDetailClient({ id }) {
       .then(d => {
         setProduct(d.product);
         setLoading(false);
-
-        if (d.product?.hasVariants && d.product?.colorVariants?.[0]?.sizes?.length > 0) {
-          setSelectedSize(d.product.colorVariants[0].sizes[0]);
-        }
-
-        if (d.product?.categoryId) {
-          fetch(`/api/products?category=${d.product.categoryId}&limit=8&sort=createdAt&order=desc`)
-            .then(r => r.json())
-            .then(rd => {
-              const filtered = (rd.products || []).filter(p => p.id !== d.product.id);
-              setRelated(filtered.slice(0, 6));
-            })
-            .catch(() => {});
-        }
+        initVariant(d.product);
+        loadRelated(d.product);
       })
       .catch(() => setLoading(false));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const hasVariants = product?.hasVariants && product?.colorVariants?.length > 0;
@@ -285,6 +300,7 @@ export default function ProductDetailClient({ id }) {
                   alt={product.name}
                   width={600}
                   height={600}
+                  ref={(n) => { if (n && n.complete && n.naturalWidth > 0 && !imgLoaded) setImgLoaded(true); }}
                   onLoad={() => setImgLoaded(true)}
                   priority
                   style={{
@@ -1365,6 +1381,8 @@ function RelatedCard({ product, index }) {
             alt={product.name}
             width={220}
             height={220}
+            loading="lazy"
+            ref={(n) => { if (n && n.complete && n.naturalWidth > 0 && !imgLoaded) setImgLoaded(true); }}
             onLoad={() => setImgLoaded(true)}
             style={{
               width: '100%', height: '100%',

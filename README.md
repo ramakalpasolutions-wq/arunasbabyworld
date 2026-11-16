@@ -1,174 +1,113 @@
-# 🍼 Arunas Baby World - Full-Stack eCommerce Platform
+# 🍼 Arunas Baby World
 
-A premium, production-ready eCommerce platform for baby & kids products built with **Next.js 14 App Router**, MongoDB, NextAuth, Razorpay, and Cloudinary.
+Full-stack eCommerce store for baby & kids products, built with **Next.js 16 (App Router)**, **Prisma on MongoDB**, NextAuth, Razorpay, NimbusPost and Cloudflare R2.
 
 ---
 
 ## 🚀 Features
 
-### User-Facing
-- 🎠 Dynamic Hero Banner Slider (managed from admin)
-- 🗂️ Category-based product browsing with mega menu
-- 📦 Product listing with filters, search, sorting & pagination
-- 🔍 Product detail with image gallery, 3D tilt, reviews
-- 🛒 Cart with coupon system and price calculations
-- 💳 Checkout with Razorpay payment integration
-- ❤️ Wishlist with localStorage persistence
-- 👤 User auth (login / register)
-- 📱 Fully responsive design
+### Storefront
+- Hero banners, offer popups and home sections managed from admin
+- Product listing with filters, search, sorting and pagination
+- Product detail with gallery, reviews and per-product OG share images
+- Cart, coupons (category- and brand-aware), wishlist
+- Checkout with Razorpay or Cash on Delivery (with Guntur-specific rules)
+- Order history, tracking, cancellation, returns/refunds and exchanges
+- Accounts with Turnstile-protected sign-up and email password reset
+- SEO: sitemap, robots, structured metadata; Google Analytics
 
-### Admin Dashboard (`/admin/dashboard`)
-- 📊 Dashboard with live stats
-- 📦 Product CRUD with image upload (Cloudinary)
-- 🗂️ Category management
-- 🖼️ Banner management
-- 🎟️ Coupon system (%, fixed, expiry, limits)
-- 🛍️ Order management with status updates
-- 👥 User management
-
-### Pages
-- `/` — Homepage
-- `/products` — Products listing with filters
-- `/products/[id]` — Product detail
-- `/cart` — Shopping cart
-- `/checkout` — Multi-step checkout with Razorpay
-- `/about` — About page with animated counters
-- `/contact` — Contact form with Google Maps
-- `/wishlist` — Saved products
-- `/login`, `/register` — Authentication
-- `/admin/dashboard` — Admin panel
+### Admin (`/admin`)
+- Dashboard, visitor heatmap and GST reports
+- Products (incl. bulk Excel upload), categories, brands, banners, offer popups
+- Orders, failed payments, manual payment confirmation, invoices (PDF)
+- Refunds (Razorpay auto-refund or manual UPI/bank), exchanges
+- Coupons, Guntur food discounts, reviews, users, contact messages, store settings
 
 ---
 
-## ⚙️ Setup Instructions
+## ⚙️ Setup
 
-### 1. Clone and install
+### 1. Install
 
-\`\`\`bash
-cd firstcry-clone
+```bash
 npm install
-\`\`\`
+```
 
-### 2. Configure environment variables
+### 2. Environment variables
 
-\`\`\`bash
-cp .env.local.example .env.local
-\`\`\`
+Create a `.env` file in the project root:
 
-Fill in your values:
-
-| Variable | Description |
+| Variable | Purpose |
 |---|---|
-| `MONGODB_URI` | MongoDB Atlas connection string |
-| `NEXTAUTH_SECRET` | Random secret string |
-| `CLOUDINARY_CLOUD_NAME` | Cloudinary cloud name |
-| `CLOUDINARY_API_KEY` | Cloudinary API key |
-| `CLOUDINARY_API_SECRET` | Cloudinary API secret |
-| `RAZORPAY_KEY_ID` | Razorpay key ID |
-| `RAZORPAY_KEY_SECRET` | Razorpay secret |
-| `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Same as above (public) |
-| `EMAIL_USER` | Gmail address for Nodemailer |
-| `EMAIL_PASS` | Gmail app password |
+| `DATABASE_URL` | MongoDB connection string (used by Prisma) |
+| `NEXTAUTH_URL`, `NEXTAUTH_SECRET`, `JWT_SECRET` | Authentication |
+| `CLOUDFLARE_R2_ACCOUNT_ID`, `CLOUDFLARE_R2_ACCESS_KEY_ID`, `CLOUDFLARE_R2_SECRET_ACCESS_KEY`, `CLOUDFLARE_R2_BUCKET_NAME`, `CLOUDFLARE_R2_PUBLIC_URL` | Image storage |
+| `RAZORPAY_KEY_ID`, `RAZORPAY_KEY_SECRET`, `NEXT_PUBLIC_RAZORPAY_KEY_ID` | Payments |
+| `NIMBUS_BASE_URL`, `NIMBUS_API_KEY`, `NIMBUS_API_SECRET`, `NIMBUS_WAREHOUSE_ID`, `NIMBUS_WAREHOUSE_NAME`, `NIMBUS_PICKUP_PINCODE` | Shipping (NimbusPost v2) |
+| `NIMBUS_DEFAULT_WEIGHT`, `NIMBUS_DEFAULT_LENGTH`, `NIMBUS_DEFAULT_BREADTH`, `NIMBUS_DEFAULT_HEIGHT`, `NIMBUS_COURIER_ID`, `NIMBUS_AUTO_BOOK` | Shipping defaults (optional) |
+| `EMAIL_HOST`, `EMAIL_PORT`, `EMAIL_USER`, `EMAIL_PASS`, `EMAIL_FROM` | Email (SMTP) |
+| `NEXT_PUBLIC_TURNSTILE_SITE_KEY`, `TURNSTILE_SECRET_KEY` | Cloudflare Turnstile captcha |
+| `NEXT_PUBLIC_GA_ID` | Google Analytics (optional) |
+| `NEXT_PUBLIC_SITE_URL` | Public site address used in canonical links, sitemap and feeds (default `https://www.arunasbabyworld.com`) |
+| `GOOGLE_SITE_VERIFICATION`, `BING_SITE_VERIFICATION` | Search Console / Bing Webmaster ownership codes (optional) |
 
-### 3. Seed the database (optional)
+### 3. Database
 
-\`\`\`bash
-node scripts/seed.js
-\`\`\`
+```bash
+npx prisma generate
+node scripts/seed.js          # optional sample data
+node scripts/createAdmin.js   # create/reset the admin account
+node scripts/addIndexes.js    # create MongoDB indexes
+```
 
-This creates:
-- Admin user: `admin@firstcry.com` / `admin123`
-- 8 categories, 3 banners, 8 sample products
+Change the default admin password from the scripts immediately after first login.
 
-### 4. Run the development server
+### 4. Run
 
-\`\`\`bash
-npm run dev
-\`\`\`
-
-Visit [http://localhost:3000](http://localhost:3000)
+```bash
+npm run dev     # http://localhost:3000
+npm run lint
+npm run build
+```
 
 ---
 
 ## 📁 Project Structure
 
-\`\`\`
+```
+prisma/schema.prisma   Data model (MongoDB)
+scripts/               seed, createAdmin, addIndexes
 src/
 ├── app/
-│   ├── api/              # All API routes
-│   │   ├── auth/
-│   │   ├── products/
-│   │   ├── categories/
-│   │   ├── banners/
-│   │   ├── orders/
-│   │   ├── coupons/
-│   │   ├── payment/
-│   │   ├── contact/
-│   │   └── upload/
-│   ├── admin/            # Admin dashboard
-│   │   ├── dashboard/
-│   │   ├── products/
-│   │   ├── categories/
-│   │   ├── banners/
-│   │   ├── orders/
-│   │   └── coupons/
-│   ├── products/         # Product pages
-│   ├── cart/
-│   ├── checkout/
-│   ├── about/
-│   ├── contact/
-│   ├── wishlist/
-│   ├── login/
-│   └── register/
-├── components/
-│   ├── layout/           # Header, Footer, MainLayout
-│   ├── home/             # HeroBanner
-│   ├── products/         # ProductCard
-│   └── admin/            # AdminSidebar, AdminGuard
-├── context/              # CartContext, WishlistContext
-├── hooks/                # useScrollReveal
-├── lib/                  # dbConnect, cloudinary, nodemailer, auth
-├── models/               # User, Product, Category, Order, Banner, Coupon
-└── styles/               # globals.css
-\`\`\`
+│   ├── api/           Route handlers (auth, products, orders, payment, shipping,
+│   │                  refunds, exchanges, coupons, reviews, upload, admin/*)
+│   ├── admin/         Admin panel pages
+│   ├── og/            Dynamic Open Graph images
+│   └── …              Storefront pages (page.js = server, *Client.js = client)
+├── components/        layout, home, products, reviews, admin, auth
+├── context/           Cart, Wishlist, Location providers
+├── hooks/             useScrollReveal
+├── lib/               prisma, auth, razorpay, coupons, nimbuspost, r2, nodemailer,
+│                      invoiceGenerator, checkoutRules, seo, turnstile, …
+└── styles/            globals.css
+```
 
 ---
 
-## 🎨 Tech Stack
+## 🔒 Payment integrity
 
-| Technology | Purpose |
-|---|---|
-| **Next.js 14** | React framework with App Router |
-| **MongoDB + Mongoose** | Database |
-| **NextAuth.js** | Authentication |
-| **Razorpay** | Payment gateway |
-| **Cloudinary** | Image storage |
-| **Nodemailer** | Email sending |
-| **CSS Modules** | Component-level styling |
-| **React Hot Toast** | Notifications |
+Order totals are always computed on the server:
 
----
-
-## 🔑 Default Admin Credentials
-
-After running the seed script:
-- **Email:** admin@firstcry.com
-- **Password:** admin123
+- `POST /api/orders` uses catalog prices from the database, recomputes the coupon
+  discount (`src/lib/coupons.js`), and always creates orders as unpaid / `Pending`.
+- `POST /api/payment/create-order` takes only an `orderId` and charges that order's
+  saved `totalPrice`.
+- `POST /api/payment/verify` checks the Razorpay signature, that the order belongs
+  to the user, and that the Razorpay order was created for this order and amount.
 
 ---
 
 ## 🚢 Deployment
 
-### Vercel (Recommended)
-\`\`\`bash
-npm run build
-vercel --prod
-\`\`\`
-
-Add all environment variables in Vercel dashboard.
-
----
-
-## 📝 License
-
-MIT — Built with ❤️ for the Arunas Baby World project.
+Deploy on Vercel (or any Node host). Add all environment variables in the host's
+dashboard; `npm run build` runs `prisma generate` automatically.

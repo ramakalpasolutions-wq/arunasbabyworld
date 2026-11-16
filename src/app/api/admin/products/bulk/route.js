@@ -2,12 +2,13 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
+import { invalidateSearchIndex } from '@/lib/search';
 
 export async function POST(request) {
   try {
     const session = await getServerSession(authOptions);
     if (!session || session.user.role !== 'admin') {
-      return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
+    return NextResponse.json({ error: 'Not authorized' }, { status: 403 });
     }
 
     const { products, categoryId } = await request.json();
@@ -93,6 +94,8 @@ export async function POST(request) {
         failed.push(p.name);
       }
     }
+
+    if (saved.length) invalidateSearchIndex();
 
     return NextResponse.json({
       message: `${saved.length} products saved successfully`,

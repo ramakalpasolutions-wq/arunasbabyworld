@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/app/api/auth/[...nextauth]/route';
 import prisma from '@/lib/prisma';
 import { sendExchangeApproved } from '@/lib/nodemailer';
+import { createRefund } from '@/lib/razorpay';
 
 // ============================================================
 // ✅ POST — Admin approves exchange request
@@ -52,6 +53,30 @@ export async function POST(request, { params }) {
       include: { user: { select: { name: true, email: true } } },
     });
 
+    // Replacement is cheaper → refund the difference now that the exchange is approved
+    let refundWarning = null;
+    if (exchange.priceDifference < 0 && !exchange.razorpayRefundId &&
+        order?.paymentMethod === 'Razorpay' && order?.isPaid && order.paymentResult?.razorpayPaymentId) {
+      const refundAmount = Math.abs(exchange.priceDifference);
+      try {
+        const refundResult = await createRefund(order.paymentResult.razorpayPaymentId, refundAmount, {
+          reason: 'Exchange price difference refund',
+          orderId: order.id,
+        });
+        if (refundResult.success) {
+          await prisma.exchange.update({
+            where: { id },
+            data: { razorpayRefundId: refundResult.refund.id, refundAmount, refundedAt: new Date() },
+          });
+        } else {
+          refundWarning = `Price-difference refund failed: ${refundResult.error || 'unknown error'}. Refund ₹${refundAmount} manually.`;
+        }
+      } catch (refErr) {
+        console.error('❌ Exchange difference refund failed:', refErr);
+        refundWarning = `Price-difference refund failed. Refund ₹${refundAmount} manually.`;
+      }
+    }
+
     if (order?.user?.email) {
       sendExchangeApproved(updated, order, order.user.email, order.user.name)
         .catch(e => console.error('❌ Approval email error:', e));
@@ -61,6 +86,7 @@ export async function POST(request, { params }) {
       success: true,
       message: 'Exchange approved successfully',
       exchange: updated,
+      ...(refundWarning && { warning: refundWarning }),
     });
   } catch (error) {
     console.error('Exchange approve error:', error);

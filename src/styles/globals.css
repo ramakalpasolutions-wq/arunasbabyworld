@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Baloo+2:wght@500;600;700;800&display=swap');
+/* Fonts (Nunito, Baloo 2) are loaded with a <link> in app/layout.js so they
+   download in parallel with this stylesheet instead of after it. */
 
 /* ============================================================
    GLOBAL DESIGN TOKENS
@@ -598,9 +599,10 @@ input, textarea, select {
    SITE-WIDE MOTION & INTERACTION  (see components/layout/MotionEffects.js)
    ============================================================ */
 
-/* Page fade on navigation (opacity only, nothing left behind afterwards) */
-.page-fade { animation: pageFade 0.35s ease backwards; }
-@keyframes pageFade { from { opacity: 0; } }
+/* Page fade on navigation (opacity only, nothing left behind afterwards).
+   Starts from 0.6 rather than 0 so content is readable from the first frame. */
+.page-fade { animation: pageFade 0.25s ease backwards; }
+@keyframes pageFade { from { opacity: 0.6; } }
 
 /* Scroll-in entrance */
 [data-anim="pending"] { opacity: 0; }

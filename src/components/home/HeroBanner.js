@@ -230,6 +230,17 @@ export default function HeroBanner({ banners = [] }) {
     if (current >= slides.length) setCurrent(0);
   }, [slides.length, current]);
 
+  // Warm the next slide's image so the carousel never flashes an empty panel
+  useEffect(() => {
+    if (slides.length <= 1) return;
+    const next = slides[(current + 1) % slides.length]?.bigMedia?.url;
+    if (next && !isVideoUrl(next)) {
+      const img = new Image();
+      img.decoding = 'async';
+      img.src = next;
+    }
+  }, [current, slides]);
+
   const slide = slides[current];
   const theme = themeMap[slide?.theme] || themeMap.cream;
   const media = slide?.bigMedia;
@@ -304,17 +315,18 @@ export default function HeroBanner({ banners = [] }) {
               </div>
             )}
 
-            <h1
+            {/* The page's single h1 is in the store introduction (see src/app/page.js) */}
+            <h2
               className={styles.headline}
               style={{ color: theme.titleColor }}
             >
-              {slide.title.split('\n').map((line, i) => (
+              {String(slide.title || '').split('\n').map((line, i) => (
                 <span key={i} className={styles.headlineLine}>
                   {line}
                   {i === 0 && <br />}
                 </span>
               ))}
-            </h1>
+            </h2>
 
             <p
               className={styles.subtitle}

@@ -7,7 +7,9 @@ export async function GET() {
       where: { active: true },
       orderBy: { sortOrder: "asc" },
     });
-    return NextResponse.json(popups);
+    return NextResponse.json(popups, {
+      headers: { 'Cache-Control': 'public, s-maxage=60, stale-while-revalidate=300' },
+    });
   } catch (err) {
     console.error("Error fetching offer popups:", err);
     return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
